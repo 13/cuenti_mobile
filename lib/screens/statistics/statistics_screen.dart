@@ -330,7 +330,7 @@ class _CashFlowLineChart extends StatelessWidget {
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
-              getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
+              getDotPainter: (spot, xVal, bar, idx) => FlDotCirclePainter(
                 radius: 4,
                 color: spot.y >= 0 ? Colors.green : Colors.red,
                 strokeWidth: 2,

@@ -246,13 +246,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: () async {
                   try {
                     final dp = context.read<DataProvider>();
+                    final auth = context.read<AuthProvider>();
+                    final nav = Navigator.of(ctx);
                     await dp.userApi.updateProfile({
                       'firstName': firstName.text,
                       'lastName': lastName.text,
                       'email': email.text,
                     });
-                    await context.read<AuthProvider>().refreshProfile();
-                    if (ctx.mounted) Navigator.pop(ctx);
+                    await auth.refreshProfile();
+                    if (ctx.mounted) nav.pop();
                   } catch (e) {
                     if (ctx.mounted) {
                       ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Error: $e')));
@@ -375,6 +377,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showCurrencyPicker(BuildContext context) {
     final dp = context.read<DataProvider>();
+    final auth = context.read<AuthProvider>();
     showModalBottomSheet(
       context: context,
       builder: (ctx) => ListView(
@@ -382,9 +385,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           leading: Text(c.symbol, style: const TextStyle(fontSize: 20)),
           title: Text('${c.code} - ${c.name}'),
           onTap: () async {
+            final nav = Navigator.of(ctx);
             await dp.userApi.updatePreferences({'defaultCurrency': c.code});
-            await context.read<AuthProvider>().refreshProfile();
-            if (ctx.mounted) Navigator.pop(ctx);
+            await auth.refreshProfile();
+            if (ctx.mounted) nav.pop();
           },
         )).toList(),
       ),
@@ -393,16 +397,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showLocalePicker(BuildContext context) {
     final locales = ['en-US', 'de-DE', 'it-IT', 'fr-FR', 'es-ES'];
+    final dp = context.read<DataProvider>();
+    final auth = context.read<AuthProvider>();
     showModalBottomSheet(
       context: context,
       builder: (ctx) => ListView(
         children: locales.map((l) => ListTile(
           title: Text(l),
           onTap: () async {
-            final dp = context.read<DataProvider>();
+            final nav = Navigator.of(ctx);
             await dp.userApi.updatePreferences({'locale': l});
-            await context.read<AuthProvider>().refreshProfile();
-            if (ctx.mounted) Navigator.pop(ctx);
+            await auth.refreshProfile();
+            if (ctx.mounted) nav.pop();
           },
         )).toList(),
       ),

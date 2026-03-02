@@ -64,7 +64,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                         leading: CircleAvatar(child: Text(a.accountName[0].toUpperCase())),
                         title: Text(a.accountName),
                         subtitle: Text('${a.displayType} • ${a.institution ?? ''} • ${a.currency}'),
-                        trailing: Text('${a.balance.toStringAsFixed(2)}',
+                        trailing: Text(a.balance.toStringAsFixed(2),
                             style: TextStyle(fontWeight: FontWeight.bold,
                                 color: a.balance >= 0 ? Colors.green : Colors.red)),
                         onTap: () => _showEditDialog(context, a),

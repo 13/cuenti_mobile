@@ -87,9 +87,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               ),
                             GestureDetector(
                               onTap: () async {
+                                final messenger = ScaffoldMessenger.of(context);
                                 await dp.refreshAssetPrice(a.id!);
                                 if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  messenger.showSnackBar(
                                     SnackBar(content: Text('Price refreshed for ${a.symbol}')),
                                   );
                                 }
