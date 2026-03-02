@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../api/api_client.dart';
 import '../api/api_services.dart';
 import '../models/models.dart';
@@ -7,10 +8,17 @@ import '../models/models.dart';
 class AuthProvider extends ChangeNotifier {
   final ApiClient _client;
   late final AuthApi _authApi;
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   UserProfile? _user;
   bool _isLoading = false;
   String? _error;
+  bool _registrationEnabled = true;
+  Color _colorSchemeSeed = const Color(0xFF6750A4);
+  bool _biometricEnabled = false;
+
+  static const _colorKey = 'color_scheme_seed';
+  static const _biometricKey = 'biometric_enabled';
 
   AuthProvider(this._client) {
     _authApi = AuthApi(_client);
@@ -20,9 +28,21 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _user != null;
   String? get error => _error;
+  bool get registrationEnabled => _registrationEnabled;
+  Color get colorSchemeSeed => _colorSchemeSeed;
+  bool get biometricEnabled => _biometricEnabled;
 
   Future<void> init() async {
     await _client.init();
+
+    // Load local preferences
+    final colorHex = await _storage.read(key: _colorKey);
+    if (colorHex != null) {
+      _colorSchemeSeed = Color(int.parse(colorHex));
+    }
+    final bioStr = await _storage.read(key: _biometricKey);
+    _biometricEnabled = bioStr == 'true';
+
     if (await _client.hasToken()) {
       try {
         final userApi = UserApi(_client);
@@ -33,6 +53,31 @@ class AuthProvider extends ChangeNotifier {
         await _client.clearToken();
       }
     }
+
+    // Load registration setting
+    await _loadRegistrationSetting();
+  }
+
+  Future<void> _loadRegistrationSetting() async {
+    try {
+      final response = await _client.dio.get('/auth/settings');
+      _registrationEnabled = response.data['registrationEnabled'] ?? true;
+    } catch (_) {
+      _registrationEnabled = true;
+    }
+    notifyListeners();
+  }
+
+  Future<void> setColorSchemeSeed(Color color) async {
+    _colorSchemeSeed = color;
+    await _storage.write(key: _colorKey, value: color.toARGB32().toString());
+    notifyListeners();
+  }
+
+  Future<void> setBiometricEnabled(bool enabled) async {
+    _biometricEnabled = enabled;
+    await _storage.write(key: _biometricKey, value: enabled.toString());
+    notifyListeners();
   }
 
   Future<bool> login(String username, String password) async {

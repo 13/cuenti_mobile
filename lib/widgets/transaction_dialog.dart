@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/models.dart' as m;
 import '../providers/data_provider.dart';
+import '../utils/number_format.dart';
 
 class TransactionDialog extends StatefulWidget {
   final m.Transaction? transaction;
@@ -30,7 +31,7 @@ class _TransactionDialogState extends State<TransactionDialog> {
     super.initState();
     final t = widget.transaction;
     _type = t?.type ?? 'EXPENSE';
-    _amount = TextEditingController(text: t?.amount.toStringAsFixed(2) ?? '');
+    _amount = TextEditingController(text: t != null ? formatNumber(t.amount) : '');
     _payee = TextEditingController(text: t?.payee ?? '');
     _memo = TextEditingController(text: t?.memo ?? '');
     _tags = TextEditingController(text: t?.tags ?? '');
@@ -99,7 +100,8 @@ class _TransactionDialogState extends State<TransactionDialog> {
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Required';
-                  if (double.tryParse(v) == null) return 'Invalid number';
+                  final normalized = v.replaceAll('.', '').replaceAll(',', '.');
+                  if (double.tryParse(normalized) == null) return 'Invalid number';
                   return null;
                 },
               ),
@@ -223,7 +225,7 @@ class _TransactionDialogState extends State<TransactionDialog> {
 
     final data = {
       'type': _type,
-      'amount': double.parse(_amount.text),
+      'amount': double.parse(_amount.text.replaceAll('.', '').replaceAll(',', '.')),
       'transactionDate': _date.toIso8601String(),
       'fromAccountId': _fromAccountId,
       'toAccountId': _toAccountId,

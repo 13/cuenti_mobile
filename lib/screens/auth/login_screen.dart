@@ -46,8 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.account_balance, size: 72,
-                      color: Theme.of(context).colorScheme.primary),
+                  Image.asset('assets/CuentiLogo.png', width: 96, height: 96),
                   const SizedBox(height: 8),
                   Text('Cuenti', style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -121,10 +120,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () => context.go('/register'),
-                    child: const Text("Don't have an account? Register"),
-                  ),
+                  if (auth.registrationEnabled)
+                    TextButton(
+                      onPressed: () => context.go('/register'),
+                      child: const Text("Don't have an account? Register"),
+                    ),
                   TextButton(
                     onPressed: () => context.go('/server-setup'),
                     child: Text('Server: ${auth.serverUrl}',

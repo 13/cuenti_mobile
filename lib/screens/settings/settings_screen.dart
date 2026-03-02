@@ -13,6 +13,18 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+
+  static const _colorOptions = <String, Color>{
+    'Purple': Color(0xFF6750A4),
+    'Blue': Color(0xFF1565C0),
+    'Green': Color(0xFF2E7D32),
+    'Red': Color(0xFFC62828),
+    'Orange': Color(0xFFEF6C00),
+    'Teal': Color(0xFF00897B),
+    'Pink': Color(0xFFAD1457),
+    'Indigo': Color(0xFF283593),
+  };
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -65,6 +77,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
                 ListTile(
+                  title: const Text('Color Scheme'),
+                  subtitle: Text(_colorOptions.entries
+                      .firstWhere((e) => e.value.toARGB32() == auth.colorSchemeSeed.toARGB32(),
+                          orElse: () => _colorOptions.entries.first)
+                      .key),
+                  trailing: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: auth.colorSchemeSeed,
+                  ),
+                  onTap: () => _showColorPicker(context),
+                ),
+                ListTile(
                   title: const Text('Default Currency'),
                   trailing: Text(user.defaultCurrency,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -91,7 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Password Change
+        // Security
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -100,6 +124,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Text('Security', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 12),
+                SwitchListTile(
+                  title: const Text('Biometric Unlock'),
+                  subtitle: const Text('Require fingerprint/face to reopen app'),
+                  value: auth.biometricEnabled,
+                  onChanged: (v) => auth.setBiometricEnabled(v),
+                ),
+                const SizedBox(height: 8),
                 FilledButton.tonal(
                   onPressed: () => _showChangePasswordDialog(context),
                   child: const Text('Change Password'),
@@ -289,6 +320,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: const Text('Change'),
               )),
             ]),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showColorPicker(BuildContext context) {
+    final auth = context.read<AuthProvider>();
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Choose Color Scheme', style: Theme.of(ctx).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: _colorOptions.entries.map((e) {
+                final isSelected = e.value.toARGB32() == auth.colorSchemeSeed.toARGB32();
+                return GestureDetector(
+                  onTap: () {
+                    auth.setColorSchemeSeed(e.value);
+                    Navigator.pop(ctx);
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: e.value,
+                        child: isSelected
+                            ? const Icon(Icons.check, color: Colors.white)
+                            : null,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(e.key, style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
             const SizedBox(height: 16),
           ],
         ),

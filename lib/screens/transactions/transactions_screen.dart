@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart' as m;
 import '../../providers/data_provider.dart';
+import '../../utils/number_format.dart';
 import '../../widgets/transaction_dialog.dart';
 
 class TransactionsScreen extends StatefulWidget {
@@ -55,6 +57,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           t.amount.toString().contains(q)).toList();
     }
 
+    // Build grouped list items with monthly separators
+    final items = <_ListItem>[];
+    String? lastMonth;
+    for (final t in transactions) {
+      final monthKey = '${t.transactionDate.year}-${t.transactionDate.month.toString().padLeft(2, '0')}';
+      if (monthKey != lastMonth) {
+        final monthLabel = DateFormat('MMMM yyyy').format(t.transactionDate);
+        items.add(_ListItem(header: monthLabel));
+        lastMonth = monthKey;
+      }
+      items.add(_ListItem(transaction: t));
+    }
+
     return Scaffold(
       body: Column(
         children: [
@@ -102,7 +117,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : RefreshIndicator(
                     onRefresh: _load,
-                    child: transactions.isEmpty
+                    child: items.isEmpty
                         ? ListView(
                             children: const [
                               SizedBox(height: 200),
@@ -110,9 +125,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             ],
                           )
                         : ListView.builder(
-                            itemCount: transactions.length,
-                            itemBuilder: (context, i) =>
-                                _TransactionTile(transaction: transactions[i]),
+                            itemCount: items.length,
+                            itemBuilder: (context, i) {
+                              final item = items[i];
+                              if (item.header != null) {
+                                return _MonthHeader(title: item.header!);
+                              }
+                              return _TransactionTile(transaction: item.transaction!);
+                            },
                           ),
                   ),
           ),
@@ -131,6 +151,32 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       isScrollControlled: true,
       builder: (_) => const TransactionDialog(),
     ).then((_) => _load());
+  }
+}
+
+class _ListItem {
+  final String? header;
+  final m.Transaction? transaction;
+  _ListItem({this.header, this.transaction});
+}
+
+class _MonthHeader extends StatelessWidget {
+  final String title;
+  const _MonthHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+      ),
+    );
   }
 }
 
@@ -187,7 +233,7 @@ class _TransactionTile extends StatelessWidget {
         ),
         isThreeLine: true,
         trailing: Text(
-          '${isExpense ? '-' : (isIncome ? '+' : '')}${transaction.amount.toStringAsFixed(2)}',
+          '${isExpense ? '-' : (isIncome ? '+' : '')}${formatNumber(transaction.amount)}',
           style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16),
         ),
         onTap: () {

@@ -17,7 +17,6 @@ class _ShellScreenState extends State<ShellScreen> {
     (icon: Icons.dashboard, label: 'Dashboard', path: '/dashboard'),
     (icon: Icons.receipt_long, label: 'Transactions', path: '/transactions'),
     (icon: Icons.bar_chart, label: 'Statistics', path: '/statistics'),
-    (icon: Icons.settings, label: 'Settings', path: '/settings'),
   ];
 
   int _currentIndex(BuildContext context) {

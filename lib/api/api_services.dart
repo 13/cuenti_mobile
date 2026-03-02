@@ -269,10 +269,11 @@ class StatisticsApi {
   final ApiClient _client;
   StatisticsApi(this._client);
 
-  Future<Map<String, dynamic>> getStatistics({String? start, String? end}) async {
+  Future<Map<String, dynamic>> getStatistics({String? start, String? end, int? accountId}) async {
     final params = <String, dynamic>{};
     if (start != null) params['start'] = start;
     if (end != null) params['end'] = end;
+    if (accountId != null) params['accountId'] = accountId;
     final response = await _client.dio.get('/statistics', queryParameters: params);
     return response.data;
   }

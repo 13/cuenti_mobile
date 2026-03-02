@@ -442,8 +442,8 @@ class DataProvider extends ChangeNotifier {
   StatisticsData? _statistics;
   StatisticsData? get statistics => _statistics;
 
-  Future<void> loadStatistics({String? start, String? end}) async {
-    final data = await statisticsApi.getStatistics(start: start, end: end);
+  Future<void> loadStatistics({String? start, String? end, int? accountId}) async {
+    final data = await statisticsApi.getStatistics(start: start, end: end, accountId: accountId);
     _statistics = StatisticsData.fromJson(data);
     notifyListeners();
   }

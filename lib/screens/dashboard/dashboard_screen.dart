@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/data_provider.dart';
+import '../../utils/number_format.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -98,7 +99,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Text('Accounts Overview',
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          ...dashboard.accounts.map((a) => _AccountTile(account: a)),
+          ...dashboard.accounts
+              .where((a) => !a.excludeFromSummary && !a.excludeFromReports)
+              .map((a) => _AccountTile(account: a)),
         ],
       ),
     );
@@ -139,7 +142,7 @@ class _MetricCard extends StatelessWidget {
                 children: [
                   Text(title, style: Theme.of(context).textTheme.bodySmall),
                   Text(
-                    '${value.toStringAsFixed(2)} $currency',
+                    '${formatNumber(value)} $currency',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold),
                   ),
@@ -166,15 +169,15 @@ class _AssetTile extends StatelessWidget {
 
     return ListTile(
       title: Text(asset.assetName),
-      subtitle: Text('${asset.totalUnits.toStringAsFixed(4)} units • ${asset.assetSymbol}'),
+      subtitle: Text('${formatNumber(asset.totalUnits, decimals: 4)} units • ${asset.assetSymbol}'),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text('${asset.currentValue.toStringAsFixed(2)} $currency',
+          Text('${formatNumber(asset.currentValue)} $currency',
               style: const TextStyle(fontWeight: FontWeight.bold)),
           Text(
-            '${isPositive ? '+' : ''}${asset.gainLoss.toStringAsFixed(2)} (${asset.gainLossPercent.toStringAsFixed(2)}%)',
+            '${isPositive ? '+' : ''}${formatNumber(asset.gainLoss)} (${formatNumber(asset.gainLossPercent)}%)',
             style: TextStyle(color: color, fontSize: 12),
           ),
         ],
@@ -197,7 +200,7 @@ class _AccountTile extends StatelessWidget {
         title: Text(account.accountName),
         subtitle: Text('${account.displayType} • ${account.currency}'),
         trailing: Text(
-          '${account.balance.toStringAsFixed(2)} ${account.currency}',
+          '${formatNumber(account.balance)} ${account.currency}',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: account.balance >= 0 ? Colors.green : Colors.red,
