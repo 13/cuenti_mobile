@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'api/api_client.dart';
@@ -24,6 +25,7 @@ class _CuentiAppState extends State<CuentiApp> with WidgetsBindingObserver {
   late final ApiClient _apiClient;
   late final AuthProvider _authProvider;
   late final DataProvider _dataProvider;
+  late final GoRouter _router;
 
   @override
   void initState() {
@@ -32,11 +34,15 @@ class _CuentiAppState extends State<CuentiApp> with WidgetsBindingObserver {
     _apiClient = ApiClient();
     _authProvider = AuthProvider(_apiClient);
     _dataProvider = DataProvider(_apiClient);
+    // Create the router ONCE. It uses refreshListenable: auth internally
+    // so redirects re-evaluate on auth changes without rebuilding the router.
+    _router = AppRouter.router(_authProvider);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _router.dispose();
     super.dispose();
   }
 
@@ -89,7 +95,7 @@ class _CuentiAppState extends State<CuentiApp> with WidgetsBindingObserver {
               brightness: Brightness.dark,
             ),
             themeMode: auth.user?.darkMode == true ? ThemeMode.dark : ThemeMode.light,
-            routerConfig: AppRouter.router(auth),
+            routerConfig: _router,
             builder: (context, child) {
               if (_locked) {
                 return _LockScreen(onUnlock: _authenticate);

@@ -17,9 +17,13 @@ import 'screens/assets/assets_screen.dart';
 import 'screens/settings/settings_screen.dart';
 
 class AppRouter {
+  /// Create the router once and keep it alive for the lifetime of the app.
+  /// [refreshListenable] ensures redirects re-evaluate when auth state changes,
+  /// without rebuilding the entire GoRouter (which would freeze the UI).
   static GoRouter router(AuthProvider auth) {
     return GoRouter(
       initialLocation: '/login',
+      refreshListenable: auth,
       redirect: (context, state) {
         final loggedIn = auth.isLoggedIn;
         final loggingIn = state.matchedLocation == '/login' ||
