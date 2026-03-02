@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/data_provider.dart';
+import '../../utils/number_format.dart';
 
 class ScheduledScreen extends StatefulWidget {
   const ScheduledScreen({super.key});
@@ -41,9 +42,13 @@ class _ScheduledScreenState extends State<ScheduledScreen> {
       onRefresh: _load,
       child: items.isEmpty
           ? ListView(
-              children: const [
-                SizedBox(height: 200),
-                Center(child: Text('No scheduled transactions')),
+              children: [
+                const SizedBox(height: 120),
+                Icon(Icons.schedule, size: 64,
+                    color: Theme.of(context).colorScheme.outline),
+                const SizedBox(height: 16),
+                Center(child: Text('No scheduled transactions',
+                    style: Theme.of(context).textTheme.titleMedium)),
               ],
             )
           : ListView.builder(
@@ -68,7 +73,7 @@ class _ScheduledScreenState extends State<ScheduledScreen> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(st.amount.toStringAsFixed(2),
+                        Text(formatNumber(st.amount),
                             style: const TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(width: 4),
                         SizedBox(
@@ -117,10 +122,16 @@ class _ScheduledScreenState extends State<ScheduledScreen> {
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
+        icon: const Icon(Icons.delete_outline),
         title: const Text('Delete Schedule?'),
+        content: Text('Delete "${st.payee ?? st.type}" recurring transaction?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
-          TextButton(
+          OutlinedButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(c).colorScheme.error,
+              foregroundColor: Theme.of(c).colorScheme.onError,
+            ),
             onPressed: () {
               Navigator.pop(c);
               context.read<DataProvider>().deleteScheduledTransaction(st.id!);

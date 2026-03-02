@@ -18,8 +18,9 @@ class StatisticsScreen extends StatefulWidget {
 
 class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerProviderStateMixin {
   bool _loading = true;
+  String? _error;
   late TabController _tabController;
-  TimeRange _timeRange = TimeRange.monthly;
+  TimeRange _timeRange = TimeRange.yearly;
   int? _selectedAccountId;
   DateTimeRange? _customRange;
 
@@ -48,16 +49,23 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() { _loading = true; _error = null; });
     try {
+      final dp = context.read<DataProvider>();
+      // Ensure accounts are loaded for the filter dropdown
+      if (dp.accounts.isEmpty) {
+        await dp.loadAccounts();
+      }
       final range = _computeDateRange();
       final fmt = DateFormat('yyyy-MM-dd');
-      await context.read<DataProvider>().loadStatistics(
+      await dp.loadStatistics(
         start: fmt.format(range.start),
         end: fmt.format(range.end),
         accountId: _selectedAccountId,
       );
-    } catch (_) {}
+    } catch (e) {
+      _error = e.toString();
+    }
     if (mounted) setState(() => _loading = false);
   }
 
@@ -153,12 +161,40 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
         Expanded(
           child: _loading
               ? const Center(child: CircularProgressIndicator())
-              : stats == null
-                  ? const Center(child: Text('No data'))
+              : (stats == null || _error != null)
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.bar_chart, size: 64,
+                              color: Theme.of(context).colorScheme.outline),
+                          const SizedBox(height: 16),
+                          Text(_error != null ? 'Failed to load statistics' : 'No statistics available',
+                              style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 8),
+                          if (_error != null)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 32),
+                              child: Text(_error!,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.error),
+                                  textAlign: TextAlign.center),
+                            )
+                          else
+                            Text('Try selecting a different time range or account.',
+                                style: Theme.of(context).textTheme.bodySmall),
+                          const SizedBox(height: 16),
+                          FilledButton.tonal(
+                            onPressed: _load,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
                   : TabBarView(
                       controller: _tabController,
                       children: [
-                        _OverviewTab(stats: stats),
+                        _OverviewTab(stats: stats, onRefresh: _load),
                         _CategoryTab(data: stats.incomeByCategory, title: 'Income by Category', currency: stats.currency, color: Colors.green),
                         _CategoryTab(data: stats.expenseByCategory, title: 'Expense by Category', currency: stats.currency, color: Colors.red),
                       ],
@@ -177,12 +213,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
 
 class _OverviewTab extends StatelessWidget {
   final StatisticsData stats;
-  const _OverviewTab({required this.stats});
+  final Future<void> Function() onRefresh;
+  const _OverviewTab({required this.stats, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () => context.read<DataProvider>().loadStatistics(),
+      onRefresh: onRefresh,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [

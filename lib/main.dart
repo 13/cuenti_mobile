@@ -61,7 +61,6 @@ class _CuentiAppState extends State<CuentiApp> with WidgetsBindingObserver {
     try {
       final didAuth = await _localAuth.authenticate(
         localizedReason: 'Authenticate to unlock Cuenti',
-        options: const AuthenticationOptions(biometricOnly: false),
       );
       if (didAuth) {
         setState(() => _locked = false);
@@ -84,16 +83,8 @@ class _CuentiAppState extends State<CuentiApp> with WidgetsBindingObserver {
           return MaterialApp.router(
             title: 'Cuenti',
             debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              colorSchemeSeed: auth.colorSchemeSeed,
-              useMaterial3: true,
-              brightness: Brightness.light,
-            ),
-            darkTheme: ThemeData(
-              colorSchemeSeed: auth.colorSchemeSeed,
-              useMaterial3: true,
-              brightness: Brightness.dark,
-            ),
+            theme: _buildTheme(auth, Brightness.light),
+            darkTheme: _buildTheme(auth, Brightness.dark),
             themeMode: auth.user?.darkMode == true ? ThemeMode.dark : ThemeMode.light,
             routerConfig: _router,
             builder: (context, child) {
@@ -107,6 +98,37 @@ class _CuentiAppState extends State<CuentiApp> with WidgetsBindingObserver {
       ),
     );
   }
+}
+
+ThemeData _buildTheme(AuthProvider auth, Brightness brightness) {
+  return ThemeData(
+    colorSchemeSeed: auth.colorSchemeSeed,
+    useMaterial3: true,
+    brightness: brightness,
+    inputDecorationTheme: const InputDecorationTheme(
+      border: OutlineInputBorder(),
+      isDense: true,
+    ),
+    cardTheme: CardThemeData(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    dialogTheme: DialogThemeData(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      showDragHandle: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+    ),
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ),
+    navigationBarTheme: const NavigationBarThemeData(
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+    ),
+  );
 }
 
 class _LockScreen extends StatelessWidget {

@@ -39,7 +39,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       body: RefreshIndicator(
         onRefresh: _load,
         child: categories.isEmpty
-            ? const Center(child: Text('No categories'))
+            ? ListView(children: [
+                const SizedBox(height: 120),
+                Icon(Icons.category, size: 64,
+                    color: Theme.of(context).colorScheme.outline),
+                const SizedBox(height: 16),
+                Center(child: Text('No categories yet',
+                    style: Theme.of(context).textTheme.titleMedium)),
+                const SizedBox(height: 8),
+                Center(child: Text('Tap + to add a category.',
+                    style: Theme.of(context).textTheme.bodySmall)),
+              ])
             : ListView.builder(
                 itemCount: parents.length,
                 itemBuilder: (context, i) {
@@ -97,11 +107,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
+        icon: const Icon(Icons.delete_outline),
         title: const Text('Delete Category?'),
         content: Text('Delete "${category.fullName ?? category.name}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
-          TextButton(
+          OutlinedButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(c).colorScheme.error,
+              foregroundColor: Theme.of(c).colorScheme.onError,
+            ),
             onPressed: () {
               Navigator.pop(c);
               context.read<DataProvider>().deleteCategory(category.id!);

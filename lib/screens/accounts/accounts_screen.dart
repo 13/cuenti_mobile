@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/data_provider.dart';
+import '../../utils/number_format.dart';
 
 class AccountsScreen extends StatefulWidget {
   const AccountsScreen({super.key});
@@ -35,7 +36,17 @@ class _AccountsScreenState extends State<AccountsScreen> {
       body: RefreshIndicator(
         onRefresh: _load,
         child: dp.accounts.isEmpty
-            ? const Center(child: Text('No accounts'))
+            ? ListView(children: [
+                const SizedBox(height: 120),
+                Icon(Icons.account_balance_wallet, size: 64,
+                    color: Theme.of(context).colorScheme.outline),
+                const SizedBox(height: 16),
+                Center(child: Text('No accounts yet',
+                    style: Theme.of(context).textTheme.titleMedium)),
+                const SizedBox(height: 8),
+                Center(child: Text('Tap + to add your first account.',
+                    style: Theme.of(context).textTheme.bodySmall)),
+              ])
             : ReorderableListView.builder(
                 itemCount: dp.accounts.length,
                 onReorder: (old, newIdx) {
@@ -49,13 +60,23 @@ class _AccountsScreenState extends State<AccountsScreen> {
                   return Dismissible(
                     key: ValueKey(a.id),
                     direction: DismissDirection.endToStart,
-                    background: Container(color: Colors.red, alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 16), child: const Icon(Icons.delete, color: Colors.white)),
+                    background: Container(color: Theme.of(context).colorScheme.errorContainer, alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 16), child: Icon(Icons.delete, color: Theme.of(context).colorScheme.onErrorContainer)),
                     confirmDismiss: (_) => showDialog<bool>(context: context,
-                        builder: (c) => AlertDialog(title: const Text('Delete Account?'),
+                        builder: (c) => AlertDialog(
+                            icon: const Icon(Icons.delete_outline),
+                            title: const Text('Delete Account?'),
+                            content: const Text('All associated transactions will be affected.'),
                             actions: [
-                              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                              TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete')),
+                              OutlinedButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+                              FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Theme.of(c).colorScheme.error,
+                                  foregroundColor: Theme.of(c).colorScheme.onError,
+                                ),
+                                onPressed: () => Navigator.pop(c, true),
+                                child: const Text('Delete'),
+                              ),
                             ])),
                     onDismissed: (_) => dp.deleteAccount(a.id!),
                     child: Card(
@@ -64,7 +85,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                         leading: CircleAvatar(child: Text(a.accountName[0].toUpperCase())),
                         title: Text(a.accountName),
                         subtitle: Text('${a.displayType} • ${a.institution ?? ''} • ${a.currency}'),
-                        trailing: Text(a.balance.toStringAsFixed(2),
+                        trailing: Text('${formatNumber(a.balance)} ${a.currency}',
                             style: TextStyle(fontWeight: FontWeight.bold,
                                 color: a.balance >= 0 ? Colors.green : Colors.red)),
                         onTap: () => _showEditDialog(context, a),

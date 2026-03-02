@@ -119,9 +119,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     onRefresh: _load,
                     child: items.isEmpty
                         ? ListView(
-                            children: const [
-                              SizedBox(height: 200),
-                              Center(child: Text('No transactions')),
+                            children: [
+                              const SizedBox(height: 120),
+                              Icon(Icons.receipt_long, size: 64,
+                                  color: Theme.of(context).colorScheme.outline),
+                              const SizedBox(height: 16),
+                              Center(child: Text('No transactions',
+                                  style: Theme.of(context).textTheme.titleMedium)),
+                              const SizedBox(height: 8),
+                              Center(child: Text('Tap + to add your first transaction.',
+                                  style: Theme.of(context).textTheme.bodySmall)),
                             ],
                           )
                         : ListView.builder(
@@ -198,19 +205,27 @@ class _TransactionTile extends StatelessWidget {
       key: ValueKey(transaction.id),
       direction: DismissDirection.endToStart,
       background: Container(
-        color: Colors.red,
+        color: Theme.of(context).colorScheme.errorContainer,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
-        child: const Icon(Icons.delete, color: Colors.white),
+        child: Icon(Icons.delete, color: Theme.of(context).colorScheme.onErrorContainer),
       ),
       confirmDismiss: (_) => showDialog<bool>(
         context: context,
         builder: (c) => AlertDialog(
+          icon: const Icon(Icons.delete_outline),
           title: const Text('Delete Transaction?'),
           content: const Text('This action cannot be undone.'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete')),
+            OutlinedButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(c).colorScheme.error,
+                foregroundColor: Theme.of(c).colorScheme.onError,
+              ),
+              onPressed: () => Navigator.pop(c, true),
+              child: const Text('Delete'),
+            ),
           ],
         ),
       ),
