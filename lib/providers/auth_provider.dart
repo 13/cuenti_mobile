@@ -8,7 +8,12 @@ import '../models/models.dart';
 class AuthProvider extends ChangeNotifier {
   final ApiClient _client;
   late final AuthApi _authApi;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      resetOnError: true,
+    ),
+  );
 
   UserProfile? _user;
   bool _isLoading = false;

@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset('assets/CuentiLogo.png', width: 96, height: 96),
+                  Image.asset('assets/Cuenti.png', width: 96, height: 96),
                   const SizedBox(height: 8),
                   Text('Cuenti', style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,

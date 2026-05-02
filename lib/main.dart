@@ -142,7 +142,7 @@ class _LockScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset('assets/CuentiLogo.png', width: 100, height: 100),
+            Image.asset('assets/Cuenti.png', width: 100, height: 100),
             const SizedBox(height: 24),
             Text('Cuenti is Locked',
                 style: Theme.of(context).textTheme.headlineSmall),

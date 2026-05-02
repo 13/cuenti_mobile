@@ -1,6 +1,10 @@
-# Cuenti Mobile
+# <img src="assets/Cuenti.png" width="30" height="30" /> Cuenti Mobile
 
-Flutter client for the [Cuenti](https://github.com/your-org/cuenti) personal-finance server.
+Flutter client for the [Cuenti](https://github.com/13/cuenti) personal-finance server.
+
+<p align="center">
+  <img src="assets/screenshot.png" width="200" />
+</p>
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-blue?logo=flutter)
 ![Android](https://img.shields.io/badge/Android-9%2B-green?logo=android)
@@ -35,7 +39,7 @@ Flutter client for the [Cuenti](https://github.com/your-org/cuenti) personal-fin
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-org/cuenti_mobile.git
+git clone https://github.com/13/cuenti_mobile.git
 cd cuenti_mobile
 ```
 

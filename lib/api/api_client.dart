@@ -8,7 +8,12 @@ class ApiClient {
   static const String _serverUrlKey = 'server_url';
   static const String defaultServerUrl = 'https://cuenti.muh';
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      resetOnError: true,
+    ),
+  );
   late Dio dio;
   String _baseUrl = defaultServerUrl;
 
