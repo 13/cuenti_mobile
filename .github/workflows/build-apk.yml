@@ -35,7 +35,10 @@ jobs:
         run: flutter analyze --no-fatal-infos
 
       - name: Build release APK
-        run: flutter build apk --release
+        run: |
+          BUILD_DATE=$(date +'%Y-%m-%d')
+          BUILD_TIME=$(date +'%H:%M:%S')
+          flutter build apk --release --dart-define=BUILD_DATE=$BUILD_DATE --dart-define=BUILD_TIME=$BUILD_TIME
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -45,7 +48,10 @@ jobs:
           retention-days: 30
 
       - name: Build split APKs
-        run: flutter build apk --split-per-abi
+        run: |
+          BUILD_DATE=$(date +'%Y-%m-%d')
+          BUILD_TIME=$(date +'%H:%M:%S')
+          flutter build apk --split-per-abi --dart-define=BUILD_DATE=$BUILD_DATE --dart-define=BUILD_TIME=$BUILD_TIME
 
       - name: Upload split APK artifacts
         uses: actions/upload-artifact@v4
@@ -82,4 +88,3 @@ jobs:
           files: |
             artifacts/app-release.apk
             artifacts/split/app-*-release.apk
-
