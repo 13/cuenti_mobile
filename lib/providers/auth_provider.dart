@@ -10,7 +10,6 @@ class AuthProvider extends ChangeNotifier {
   late final AuthApi _authApi;
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
     aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
       resetOnError: true,
     ),
   );
