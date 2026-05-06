@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/data_provider.dart';
@@ -14,28 +13,11 @@ class ShellScreen extends StatefulWidget {
 }
 
 class _ShellScreenState extends State<ShellScreen> {
-  PackageInfo? _packageInfo;
-
   static const _navItems = [
     (icon: Icons.dashboard, label: 'Dashboard', path: '/dashboard'),
     (icon: Icons.receipt_long, label: 'Transactions', path: '/transactions'),
     (icon: Icons.bar_chart, label: 'Statistics', path: '/statistics'),
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _initPackageInfo();
-  }
-
-  Future<void> _initPackageInfo() async {
-    final info = await PackageInfo.fromPlatform();
-    if (mounted) {
-      setState(() {
-        _packageInfo = info;
-      });
-    }
-  }
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
@@ -45,26 +27,23 @@ class _ShellScreenState extends State<ShellScreen> {
     return 0;
   }
 
-  void _showAbout(BuildContext context) {
-    final version = _packageInfo?.version ?? '...';
-    final buildNumber = _packageInfo?.buildNumber ?? '...';
-    final appName = _packageInfo?.appName ?? 'Cuenti';
-
-    const buildDate = String.fromEnvironment('BUILD_DATE', defaultValue: 'Development');
-    const buildTime = String.fromEnvironment('BUILD_TIME', defaultValue: '');
-
-    showAboutDialog(
-      context: context,
-      applicationName: appName,
-      applicationVersion: '$version+$buildNumber',
-      applicationIcon: Image.asset('assets/Cuenti.png', width: 48, height: 48),
-      children: [
-        const Text('A mobile cuenti app'),
-        const SizedBox(height: 12),
-        Text('Build: $buildDate $buildTime'.trim(),
-             style: const TextStyle(fontSize: 12, color: Colors.grey)),
-      ],
-    );
+  String _getTitle(BuildContext context) {
+    final location = GoRouterState.of(context).matchedLocation;
+    switch (location) {
+      case '/dashboard': return 'Dashboard';
+      case '/transactions': return 'Transactions';
+      case '/scheduled': return 'Scheduled';
+      case '/statistics': return 'Statistics';
+      case '/accounts': return 'Accounts';
+      case '/payees': return 'Payees';
+      case '/categories': return 'Categories';
+      case '/tags': return 'Tags';
+      case '/currencies': return 'Currencies';
+      case '/assets': return 'Assets';
+      case '/settings': return 'Settings';
+      case '/about': return 'About';
+      default: return 'Cuenti';
+    }
   }
 
   @override
@@ -144,14 +123,7 @@ class _ShellScreenState extends State<ShellScreen> {
             const Divider(),
             _buildSection(context, 'Settings'),
             _buildNavItem(context, Icons.settings, 'Settings', '/settings'),
-            ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('About'),
-              onTap: () {
-                Navigator.pop(context);
-                _showAbout(context);
-              },
-            ),
+            _buildNavItem(context, Icons.info_outline, 'About', '/about'),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
@@ -166,7 +138,7 @@ class _ShellScreenState extends State<ShellScreen> {
         ),
       ),
       appBar: AppBar(
-        title: const Text('Cuenti'),
+        title: Text(_getTitle(context)),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

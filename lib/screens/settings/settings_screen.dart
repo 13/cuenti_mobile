@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
@@ -14,7 +13,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  PackageInfo? _packageInfo;
 
   static const _colorOptions = <String, Color>{
     'Purple': Color(0xFF6750A4),
@@ -26,21 +24,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     'Pink': Color(0xFFAD1457),
     'Indigo': Color(0xFF283593),
   };
-
-  @override
-  void initState() {
-    super.initState();
-    _initPackageInfo();
-  }
-
-  Future<void> _initPackageInfo() async {
-    final info = await PackageInfo.fromPlatform();
-    if (mounted) {
-      setState(() {
-        _packageInfo = info;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: const Icon(Icons.info_outline),
             title: const Text('About'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showAboutDialog(context),
+            onTap: () => context.push('/about'),
           ),
         ),
         const SizedBox(height: 12),
@@ -239,30 +222,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
         ],
       ),
-    );
-  }
-
-  void _showAboutDialog(BuildContext context) {
-    final version = _packageInfo?.version ?? '...';
-    final buildNumber = _packageInfo?.buildNumber ?? '...';
-    final appName = _packageInfo?.appName ?? 'Cuenti';
-
-    // Note: Build date/time is typically injected at build time.
-    // Here we use a common convention or a placeholder that suggests it's from the build environment.
-    const buildDate = String.fromEnvironment('BUILD_DATE', defaultValue: 'Unknown');
-    const buildTime = String.fromEnvironment('BUILD_TIME', defaultValue: '');
-
-    showAboutDialog(
-      context: context,
-      applicationName: appName,
-      applicationVersion: '$version+$buildNumber',
-      applicationIcon: Image.asset('assets/Cuenti.png', width: 48, height: 48),
-      children: [
-        const Text('A mobile cuenti app'),
-        const SizedBox(height: 12),
-        Text('Build: $buildDate $buildTime'.trim(),
-             style: const TextStyle(fontSize: 12, color: Colors.grey)),
-      ],
     );
   }
 

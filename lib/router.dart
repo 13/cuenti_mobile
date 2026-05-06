@@ -15,6 +15,7 @@ import 'screens/tags/tags_screen.dart';
 import 'screens/currencies/currencies_screen.dart';
 import 'screens/assets/assets_screen.dart';
 import 'screens/settings/settings_screen.dart';
+import 'screens/settings/about_screen.dart';
 
 class AppRouter {
   /// Create the router once and keep it alive for the lifetime of the app.
@@ -52,6 +53,7 @@ class AppRouter {
             GoRoute(path: '/currencies', builder: (_, s) => const CurrenciesScreen()),
             GoRoute(path: '/assets', builder: (_, s) => const AssetsScreen()),
             GoRoute(path: '/settings', builder: (_, s) => const SettingsScreen()),
+            GoRoute(path: '/about', builder: (_, s) => const AboutScreen()),
           ],
         ),
       ],
