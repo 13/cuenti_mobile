@@ -1,7 +1,5 @@
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/features/audit/data/audit_repository.dart';
-import 'package:cuentimobile/features/audit/domain/audit_entry.dart';
-import 'package:cuentimobile/features/audit/domain/audit_page.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -10,17 +8,6 @@ import '../../helpers/fake_dio.dart';
 void main() {
   late MockDio dio;
   late AuditRepository repo;
-
-  AuditEntry entry(int id) => AuditEntry(
-        id: id,
-        userId: 1,
-        username: 'admin',
-        timestamp: DateTime(2026, 1, id),
-        entityType: 'Transaction',
-        entityId: 10,
-        action: 'CREATE',
-        details: 'Created transaction',
-      );
 
   setUp(() {
     dio = MockDio();
@@ -65,7 +52,7 @@ void main() {
           'page': 0,
           'size': 50,
         })).thenAnswer((_) async => ok({
-      'content': [],
+      'content': <dynamic>[],
       'page': 0,
       'size': 50,
       'totalElements': 0,
@@ -86,7 +73,7 @@ void main() {
           'page': 0,
           'size': 50,
         })).thenAnswer((_) async => ok({
-      'content': [],
+      'content': <dynamic>[],
       'page': 0,
       'size': 50,
       'totalElements': 0,

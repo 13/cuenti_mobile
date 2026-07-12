@@ -191,9 +191,10 @@ class _AuditTile extends StatelessWidget {
         ? '${entry.entityType} · ${entry.details}'
         : (entry.entityType ?? entry.details ?? '—');
 
-    final subtitle = entry.username != null && entry.timestamp != null
-        ? '${entry.username} · ${DateFormat('dd.MM.yyyy HH:mm').format(entry.timestamp)}'
-        : '—';
+    final formattedTs = DateFormat('dd.MM.yyyy HH:mm').format(entry.timestamp);
+    final subtitle = entry.username != null
+        ? '${entry.username} · $formattedTs'
+        : formattedTs;
 
     return ListTile(
       leading: CircleAvatar(

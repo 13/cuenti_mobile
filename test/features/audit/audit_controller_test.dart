@@ -1,4 +1,3 @@
-import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/features/audit/data/audit_repository.dart';
 import 'package:cuentimobile/features/audit/domain/audit_entry.dart';
 import 'package:cuentimobile/features/audit/domain/audit_page.dart';
