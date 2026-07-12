@@ -53,9 +53,22 @@ Automated gates already green: `flutter analyze` (0 warnings/errors),
 - [ ] Admin panel (admin user): user list + registration/API toggles work
 - [ ] About screen shows version
 
-## Known accepted quirks (Phase 2)
+## Known accepted quirks (Phase 2/3)
 - Admin settings toggles briefly flicker (refetch instead of optimistic).
 - Editing the amount of a transaction that has splits (created on web) is
   rejected with a validation message — split editing arrives in Phase 4.
-- Transaction search filters only the pages loaded so far; server-side search
-  lands in a later phase.
+
+## Phase 3 visual checklist (run after UI overhaul)
+- [ ] Light AND dark theme: every screen readable, no washed-out text
+- [ ] Dashboard hero card gradient renders; amounts use tabular figures
+- [ ] Transactions: sticky day headers pin while scrolling; swipe left =
+      delete (confirm sheet), swipe right = edit; filter chips (type,
+      category, date range, account) narrow the list server-side
+- [ ] Search is server-side now (finds old transactions beyond loaded pages)
+- [ ] Transaction dialog: segmented type selector recolors; amount field
+      first and centered
+- [ ] Statistics: charts use brand palette; tap shows tooltips; legend chips
+- [ ] Scheduled: enabled switch toggles a schedule (new in Phase 3)
+- [ ] Empty states show icons + actions; loading shows skeleton shimmer
+- [ ] Reduced-motion (system setting) disables transitions/stagger/shimmer
+- [ ] Color-scheme picker is GONE from settings (fixed brand palette now)
