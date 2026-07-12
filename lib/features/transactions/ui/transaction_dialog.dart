@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart';
 import '../../../core/api/api_exception.dart';
-import '../../../providers/data_provider.dart';
 import '../../../utils/number_format.dart';
 import '../../accounts/ui/accounts_controller.dart';
+import '../../categories/ui/categories_controller.dart';
 import '../domain/transaction.dart';
 import 'transactions_controller.dart';
 
@@ -50,10 +49,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   @override
   Widget build(BuildContext context) {
     final accounts = ref.watch(accountsControllerProvider).value ?? [];
-    // TODO(task-6): categories/payees/tags still come from the legacy
-    // DataProvider (Provider-era) until they migrate to Riverpod repositories
-    // in Task 6. Accounts already migrated in Task 4, hence the mixed state.
-    final dp = context.watch<DataProvider>();
+    final categories = ref.watch(categoriesControllerProvider).value ?? [];
 
     return Padding(
       padding: EdgeInsets.only(
@@ -154,12 +150,12 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
 
               // Category
               DropdownButtonFormField<int?>(
-                initialValue: _categoryId == null || dp.categories.any((c) => c.id == _categoryId) ? _categoryId : null,
+                initialValue: _categoryId == null || categories.any((c) => c.id == _categoryId) ? _categoryId : null,
                 decoration: const InputDecoration(
                   labelText: 'Category', border: OutlineInputBorder()),
                 items: [
                   const DropdownMenuItem(value: null, child: Text('None')),
-                  ...dp.categories
+                  ...categories
                       .where((c) => _type == 'TRANSFER' || c.type == _type)
                       .map((c) => DropdownMenuItem(
                             value: c.id, child: Text(c.fullName ?? c.name))),
