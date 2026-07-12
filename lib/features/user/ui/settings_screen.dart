@@ -495,20 +495,10 @@ class _AdminPanel extends ConsumerWidget {
           Text('Users (${users.length})', style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 8),
           ...users.map((u) => ListTile(
-            leading: CircleAvatar(
-                child: Text(u.firstName.isNotEmpty
-                    ? u.firstName[0].toUpperCase()
-                    : '?')),
+            leading: CircleAvatar(child: Text(u.firstName[0].toUpperCase())),
             title: Text('${u.firstName} ${u.lastName}'),
             subtitle: Text('${u.username} • ${u.roles.join(', ')}'),
-            trailing: PopupMenuButton<String>(
-              onSelected: (action) => _onUserAction(context, ref, u, action),
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'enable', child: Text('Enable')),
-                PopupMenuItem(value: 'disable', child: Text('Disable')),
-                PopupMenuItem(value: 'delete', child: Text('Delete')),
-              ],
-            ),
+            trailing: Text(u.apiEnabled ? 'API ✓' : '', style: const TextStyle(fontSize: 12)),
           )),
           const SizedBox(height: 16),
           OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
@@ -516,47 +506,5 @@ class _AdminPanel extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _onUserAction(
-      BuildContext context, WidgetRef ref, UserProfile user, String action) async {
-    final repo = ref.read(userRepositoryProvider);
-    try {
-      switch (action) {
-        case 'enable':
-          await repo.setUserEnabled(user.id!, true);
-        case 'disable':
-          await repo.setUserEnabled(user.id!, false);
-        case 'delete':
-          final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (c) => AlertDialog(
-                  icon: const Icon(Icons.delete_outline),
-                  title: const Text('Delete User?'),
-                  content: Text('This will permanently remove ${user.username}.'),
-                  actions: [
-                    OutlinedButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Theme.of(c).colorScheme.error,
-                        foregroundColor: Theme.of(c).colorScheme.onError,
-                      ),
-                      onPressed: () => Navigator.pop(c, true),
-                      child: const Text('Delete'),
-                    ),
-                  ],
-                ),
-              ) ??
-              false;
-          if (!confirmed) return;
-          await repo.deleteUser(user.id!);
-      }
-      ref.invalidate(adminUsersProvider);
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    }
   }
 }
