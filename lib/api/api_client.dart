@@ -35,6 +35,16 @@ class ApiClient {
 
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
+        // transitional: legacy client mirrors server_url per-request; removed in Task 10
+        // The new core ApiClient (Riverpod auth stack) may change server_url
+        // at any time (server-setup flow); re-read it here so this legacy
+        // client never serves requests against a stale baseUrl.
+        final url = await _storage.read(key: _serverUrlKey);
+        if (url != null && url.isNotEmpty) {
+          final normalized =
+              url.endsWith('/') ? url.substring(0, url.length - 1) : url;
+          options.baseUrl = '$normalized/api';
+        }
         final token = await getToken();
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';

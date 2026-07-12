@@ -57,8 +57,14 @@ void main() {
       ),
     );
 
-    expect(() => repo.login('demo', 'bad'),
-        throwsA(isA<UnauthorizedException>()));
+    expect(
+      () => repo.login('demo', 'bad'),
+      throwsA(isA<UnauthorizedException>().having(
+        (e) => e.message,
+        'message',
+        'Invalid username or password',
+      )),
+    );
   });
 
   test('logout clears token', () async {

@@ -23,7 +23,15 @@ class AuthRepository {
       });
       return _saveTokenAndBuildProfile(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      throw ApiException.fromDio(e);
+      final mapped = ApiException.fromDio(e);
+      // Parity with the old AuthProvider: a 401 on the login endpoint means
+      // bad credentials, not an expired session. Surface the specific message
+      // here (NOT in ApiException.fromDio, where a generic 401 elsewhere
+      // means the session expired). 403 keeps its own fromDio message.
+      if (mapped is UnauthorizedException && e.response?.statusCode == 401) {
+        throw const UnauthorizedException('Invalid username or password');
+      }
+      throw mapped;
     }
   }
 
