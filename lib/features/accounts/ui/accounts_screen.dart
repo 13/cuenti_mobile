@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/widgets/async_value_widget.dart';
-import '../../../providers/data_provider.dart';
 import '../../../utils/number_format.dart';
+import '../../currencies/domain/currency.dart';
+import '../../currencies/ui/currencies_controller.dart';
 import '../domain/account.dart';
 import 'accounts_controller.dart';
 
@@ -19,6 +19,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
   @override
   Widget build(BuildContext context) {
     final accountsAsync = ref.watch(accountsControllerProvider);
+    final currencies = ref.watch(currenciesControllerProvider).value ?? [];
 
     return Scaffold(
       body: RefreshIndicator(
@@ -81,7 +82,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                           trailing: Text('${formatNumber(a.balance)} ${a.currency}',
                               style: TextStyle(fontWeight: FontWeight.bold,
                                   color: a.balance >= 0 ? Colors.green : Colors.red)),
-                          onTap: () => _showEditDialog(context, a),
+                          onTap: () => _showEditDialog(context, a, currencies),
                         ),
                       ),
                     );
@@ -90,7 +91,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showEditDialog(context, null),
+        onPressed: () => _showEditDialog(context, null, currencies),
         child: const Icon(Icons.add),
       ),
     );
@@ -124,7 +125,8 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
     }
   }
 
-  void _showEditDialog(BuildContext context, Account? account) {
+  void _showEditDialog(
+      BuildContext context, Account? account, List<Currency> currencies) {
     final name = TextEditingController(text: account?.accountName ?? '');
     final institution = TextEditingController(text: account?.institution ?? '');
     final group = TextEditingController(text: account?.accountGroup ?? '');
@@ -168,7 +170,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                 DropdownButtonFormField<String>(
                   initialValue: currency,
                   decoration: const InputDecoration(labelText: 'Currency', border: OutlineInputBorder()),
-                  items: context.read<DataProvider>().currencies.map((c) => DropdownMenuItem(value: c.code, child: Text('${c.code} - ${c.name}'))).toList(),
+                  items: currencies.map((c) => DropdownMenuItem(value: c.code, child: Text('${c.code} - ${c.name}'))).toList(),
                   onChanged: (v) => setModalState(() => currency = v ?? 'EUR'),
                 ),
                 const SizedBox(height: 12),

@@ -15,8 +15,8 @@ import 'features/categories/ui/categories_screen.dart';
 import 'features/tags/ui/tags_screen.dart';
 import 'features/currencies/ui/currencies_screen.dart';
 import 'features/assets/ui/assets_screen.dart';
-import 'screens/settings/settings_screen.dart';
-import 'screens/settings/about_screen.dart';
+import 'features/user/ui/settings_screen.dart';
+import 'features/user/ui/about_screen.dart';
 
 /// Bridges Riverpod's `ref.listen` callback (imperative) into a
 /// `Listenable` that `GoRouter.refreshListenable` can consume.

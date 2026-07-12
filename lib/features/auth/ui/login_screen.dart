@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import '../../../providers/data_provider.dart';
 import 'auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -28,7 +26,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _initialized = true;
       ref.read(authControllerProvider.notifier).init().then((_) {
         if (mounted && ref.read(authControllerProvider).isLoggedIn) {
-          context.read<DataProvider>().loadAll();
           context.go('/dashboard');
         }
       });
@@ -154,7 +151,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
     if (!mounted) return;
     if (error == null) {
-      context.read<DataProvider>().loadAll();
       context.go('/dashboard');
     } else {
       setState(() {

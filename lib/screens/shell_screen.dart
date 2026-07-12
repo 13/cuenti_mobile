@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import '../features/auth/ui/auth_controller.dart';
-import '../providers/data_provider.dart';
 
-class ShellScreen extends ConsumerStatefulWidget {
+class ShellScreen extends ConsumerWidget {
   final Widget child;
   const ShellScreen({super.key, required this.child});
 
-  @override
-  ConsumerState<ShellScreen> createState() => _ShellScreenState();
-}
-
-class _ShellScreenState extends ConsumerState<ShellScreen> {
   static const _navItems = [
     (icon: Icons.dashboard, label: 'Dashboard', path: '/dashboard'),
     (icon: Icons.receipt_long, label: 'Transactions', path: '/transactions'),
@@ -48,29 +41,8 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
-    final dp = context.watch<DataProvider>();
-
-    // Show error snackbar when DataProvider has an error
-    if (dp.lastError != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && dp.lastError != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(dp.lastError!),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              action: SnackBarAction(
-                label: 'Dismiss',
-                textColor: Theme.of(context).colorScheme.onError,
-                onPressed: () {},
-              ),
-            ),
-          );
-          dp.clearError();
-        }
-      });
-    }
 
     return Scaffold(
       drawer: Drawer(
@@ -130,7 +102,6 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
               title: const Text('Logout'),
               onTap: () {
                 Navigator.pop(context);
-                context.read<DataProvider>().clearAll();
                 ref.read(authControllerProvider.notifier).logout();
                 context.go('/login');
               },
@@ -145,12 +116,11 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: () {
               ref.read(authControllerProvider.notifier).refreshProfile();
-              context.read<DataProvider>().loadAll();
             },
           ),
         ],
       ),
-      body: widget.child,
+      body: child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex(context),
         onDestinationSelected: (index) {

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import '../../features/auth/ui/auth_controller.dart';
-import '../../features/user/domain/user_profile.dart' as auth_user;
-import '../../models/models.dart';
-import '../../providers/data_provider.dart';
+import '../../auth/ui/auth_controller.dart';
+import '../../currencies/domain/currency.dart';
+import '../../currencies/ui/currencies_controller.dart';
+import '../data/user_repository.dart';
+import '../domain/user_profile.dart';
+import 'user_controller.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -32,6 +33,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final authState = ref.watch(authControllerProvider);
     final auth = ref.read(authControllerProvider.notifier);
     final user = authState.user;
+    final currencies = ref.watch(currenciesControllerProvider).value ?? [];
 
     if (user == null) return const Center(child: Text('Not logged in'));
 
@@ -74,8 +76,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   title: const Text('Dark Mode'),
                   value: user.darkMode,
                   onChanged: (v) async {
-                    final dp = context.read<DataProvider>();
-                    await dp.userApi.updatePreferences({'darkMode': v});
+                    await ref
+                        .read(userRepositoryProvider)
+                        .updatePreferences({'darkMode': v});
                     await auth.refreshProfile();
                   },
                 ),
@@ -95,7 +98,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   title: const Text('Default Currency'),
                   trailing: Text(user.defaultCurrency,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
-                  onTap: () => _showCurrencyPicker(context),
+                  onTap: () => _showCurrencyPicker(context, currencies),
                 ),
                 ListTile(
                   title: const Text('Locale'),
@@ -107,8 +110,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   subtitle: const Text('Enable API access for this account'),
                   value: user.apiEnabled,
                   onChanged: (v) async {
-                    final dp = context.read<DataProvider>();
-                    await dp.userApi.updatePreferences({'apiEnabled': v});
+                    await ref
+                        .read(userRepositoryProvider)
+                        .updatePreferences({'apiEnabled': v});
                     await auth.refreshProfile();
                   },
                 ),
@@ -203,7 +207,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed: () {
-              context.read<DataProvider>().clearAll();
               auth.logout();
               context.go('/login');
             },
@@ -228,7 +231,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  void _showEditProfileDialog(BuildContext context, auth_user.UserProfile user) {
+  void _showEditProfileDialog(BuildContext context, UserProfile user) {
     final firstName = TextEditingController(text: user.firstName);
     final lastName = TextEditingController(text: user.lastName);
     final email = TextEditingController(text: user.email);
@@ -259,14 +262,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Expanded(child: FilledButton(
                 onPressed: () async {
                   try {
-                    final dp = context.read<DataProvider>();
                     final auth = ref.read(authControllerProvider.notifier);
                     final nav = Navigator.of(ctx);
-                    await dp.userApi.updateProfile({
-                      'firstName': firstName.text,
-                      'lastName': lastName.text,
-                      'email': email.text,
-                    });
+                    await ref.read(userRepositoryProvider).updateProfile(
+                          email: email.text,
+                          firstName: firstName.text,
+                          lastName: lastName.text,
+                        );
                     await auth.refreshProfile();
                     if (ctx.mounted) nav.pop();
                   } catch (e) {
@@ -321,7 +323,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     return;
                   }
                   try {
-                    await context.read<DataProvider>().userApi.updatePassword(oldPw.text, newPw.text);
+                    await ref
+                        .read(userRepositoryProvider)
+                        .updatePassword(oldPw.text, newPw.text);
                     if (ctx.mounted) {
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -390,18 +394,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  void _showCurrencyPicker(BuildContext context) {
-    final dp = context.read<DataProvider>();
+  void _showCurrencyPicker(BuildContext context, List<Currency> currencies) {
     final auth = ref.read(authControllerProvider.notifier);
     showModalBottomSheet(
       context: context,
       builder: (ctx) => ListView(
-        children: dp.currencies.map((c) => ListTile(
+        children: currencies.map((c) => ListTile(
           leading: Text(c.symbol, style: const TextStyle(fontSize: 20)),
           title: Text('${c.code} - ${c.name}'),
           onTap: () async {
             final nav = Navigator.of(ctx);
-            await dp.userApi.updatePreferences({'defaultCurrency': c.code});
+            await ref
+                .read(userRepositoryProvider)
+                .updatePreferences({'defaultCurrency': c.code});
             await auth.refreshProfile();
             if (ctx.mounted) nav.pop();
           },
@@ -412,7 +417,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _showLocalePicker(BuildContext context) {
     final locales = ['en-US', 'de-DE', 'it-IT', 'fr-FR', 'es-ES'];
-    final dp = context.read<DataProvider>();
     final auth = ref.read(authControllerProvider.notifier);
     showModalBottomSheet(
       context: context,
@@ -421,7 +425,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           title: Text(l),
           onTap: () async {
             final nav = Navigator.of(ctx);
-            await dp.userApi.updatePreferences({'locale': l});
+            await ref
+                .read(userRepositoryProvider)
+                .updatePreferences({'locale': l});
             await auth.refreshProfile();
             if (ctx.mounted) nav.pop();
           },
@@ -439,45 +445,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
-class _AdminPanel extends StatefulWidget {
+class _AdminPanel extends ConsumerWidget {
   const _AdminPanel();
 
   @override
-  State<_AdminPanel> createState() => _AdminPanelState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final usersAsync = ref.watch(adminUsersProvider);
+    final settingsAsync = ref.watch(adminSettingsProvider);
 
-class _AdminPanelState extends State<_AdminPanel> {
-  bool _loading = true;
-  List<UserProfile> _users = [];
-  bool _registrationEnabled = true;
-  bool _apiEnabled = false;
+    if (usersAsync.isLoading || settingsAsync.isLoading) {
+      return const SizedBox(
+          height: 300, child: Center(child: CircularProgressIndicator()));
+    }
 
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() => _loading = true);
-    try {
-      final dp = context.read<DataProvider>();
-      final usersData = await dp.userApi.getAllUsers();
-      _users = usersData
-          .map((e) => UserProfile.fromJson(e as Map<String, dynamic>))
-          .toList();
-
-      final settings = await dp.userApi.getAdminSettings();
-      _registrationEnabled =
-          (settings['registrationEnabled'] as bool?) ?? true;
-      _apiEnabled = (settings['apiEnabled'] as bool?) ?? false;
-    } catch (_) {}
-    if (mounted) setState(() => _loading = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) return const SizedBox(height: 300, child: Center(child: CircularProgressIndicator()));
+    final users = usersAsync.value ?? [];
+    final settings = settingsAsync.value;
+    final registrationEnabled = settings?.registrationEnabled ?? true;
+    final apiEnabled = settings?.apiEnabled ?? false;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -489,28 +473,42 @@ class _AdminPanelState extends State<_AdminPanel> {
           const SizedBox(height: 16),
           SwitchListTile(
             title: const Text('Registration Enabled'),
-            value: _registrationEnabled,
+            value: registrationEnabled,
             onChanged: (v) async {
-              await context.read<DataProvider>().userApi.updateAdminSettings({'registrationEnabled': v});
-              setState(() => _registrationEnabled = v);
+              await ref
+                  .read(userRepositoryProvider)
+                  .updateAdminSettings(registrationEnabled: v);
+              ref.invalidate(adminSettingsProvider);
             },
           ),
           SwitchListTile(
             title: const Text('Global API Enabled'),
-            value: _apiEnabled,
+            value: apiEnabled,
             onChanged: (v) async {
-              await context.read<DataProvider>().userApi.updateAdminSettings({'apiEnabled': v});
-              setState(() => _apiEnabled = v);
+              await ref
+                  .read(userRepositoryProvider)
+                  .updateAdminSettings(apiEnabled: v);
+              ref.invalidate(adminSettingsProvider);
             },
           ),
           const Divider(),
-          Text('Users (${_users.length})', style: Theme.of(context).textTheme.titleSmall),
+          Text('Users (${users.length})', style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 8),
-          ..._users.map((u) => ListTile(
-            leading: CircleAvatar(child: Text(u.firstName[0].toUpperCase())),
+          ...users.map((u) => ListTile(
+            leading: CircleAvatar(
+                child: Text(u.firstName.isNotEmpty
+                    ? u.firstName[0].toUpperCase()
+                    : '?')),
             title: Text('${u.firstName} ${u.lastName}'),
             subtitle: Text('${u.username} • ${u.roles.join(', ')}'),
-            trailing: Text(u.apiEnabled ? 'API ✓' : '', style: const TextStyle(fontSize: 12)),
+            trailing: PopupMenuButton<String>(
+              onSelected: (action) => _onUserAction(context, ref, u, action),
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'enable', child: Text('Enable')),
+                PopupMenuItem(value: 'disable', child: Text('Disable')),
+                PopupMenuItem(value: 'delete', child: Text('Delete')),
+              ],
+            ),
           )),
           const SizedBox(height: 16),
           OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
@@ -518,5 +516,47 @@ class _AdminPanelState extends State<_AdminPanel> {
         ],
       ),
     );
+  }
+
+  Future<void> _onUserAction(
+      BuildContext context, WidgetRef ref, UserProfile user, String action) async {
+    final repo = ref.read(userRepositoryProvider);
+    try {
+      switch (action) {
+        case 'enable':
+          await repo.setUserEnabled(user.id!, true);
+        case 'disable':
+          await repo.setUserEnabled(user.id!, false);
+        case 'delete':
+          final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (c) => AlertDialog(
+                  icon: const Icon(Icons.delete_outline),
+                  title: const Text('Delete User?'),
+                  content: Text('This will permanently remove ${user.username}.'),
+                  actions: [
+                    OutlinedButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Theme.of(c).colorScheme.error,
+                        foregroundColor: Theme.of(c).colorScheme.onError,
+                      ),
+                      onPressed: () => Navigator.pop(c, true),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                ),
+              ) ??
+              false;
+          if (!confirmed) return;
+          await repo.deleteUser(user.id!);
+      }
+      ref.invalidate(adminUsersProvider);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
   }
 }
