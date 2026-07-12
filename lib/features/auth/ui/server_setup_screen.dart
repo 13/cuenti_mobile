@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
+import 'auth_controller.dart';
 
-class ServerSetupScreen extends StatefulWidget {
+class ServerSetupScreen extends ConsumerStatefulWidget {
   const ServerSetupScreen({super.key});
 
   @override
-  State<ServerSetupScreen> createState() => _ServerSetupScreenState();
+  ConsumerState<ServerSetupScreen> createState() => _ServerSetupScreenState();
 }
 
-class _ServerSetupScreenState extends State<ServerSetupScreen> {
+class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
   final _controller = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    final auth = context.read<AuthProvider>();
-    _controller.text = auth.serverUrl;
+    _controller.text = ref.read(authControllerProvider.notifier).serverUrl;
   }
 
   @override
@@ -48,8 +47,9 @@ class _ServerSetupScreenState extends State<ServerSetupScreen> {
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () async {
-                final auth = context.read<AuthProvider>();
-                await auth.setServerUrl(_controller.text.trim());
+                await ref
+                    .read(authControllerProvider.notifier)
+                    .setServerUrl(_controller.text.trim());
                 if (context.mounted) context.go('/login');
               },
               child: const Text('Save & Continue'),

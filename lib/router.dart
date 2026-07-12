@@ -1,8 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
-import 'providers/auth_provider.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/auth/register_screen.dart';
-import 'screens/auth/server_setup_screen.dart';
+import 'features/auth/ui/auth_controller.dart';
+import 'features/auth/ui/login_screen.dart';
+import 'features/auth/ui/register_screen.dart';
+import 'features/auth/ui/server_setup_screen.dart';
 import 'screens/shell_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/transactions/transactions_screen.dart';
@@ -17,16 +18,24 @@ import 'screens/assets/assets_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/settings/about_screen.dart';
 
+/// Bridges Riverpod's `ref.listen` callback (imperative) into a
+/// `Listenable` that `GoRouter.refreshListenable` can consume.
+class GoRouterRefreshNotifier extends ChangeNotifier {
+  void refresh() => notifyListeners();
+}
+
 class AppRouter {
   /// Create the router once and keep it alive for the lifetime of the app.
-  /// [refreshListenable] ensures redirects re-evaluate when auth state changes,
+  /// [refresh] ensures redirects re-evaluate when auth state changes,
   /// without rebuilding the entire GoRouter (which would freeze the UI).
-  static GoRouter router(AuthProvider auth) {
+  /// [readAuth] returns the current [AuthState] synchronously for the
+  /// redirect closure below.
+  static GoRouter router(Listenable refresh, AuthState Function() readAuth) {
     return GoRouter(
       initialLocation: '/login',
-      refreshListenable: auth,
+      refreshListenable: refresh,
       redirect: (context, state) {
-        final loggedIn = auth.isLoggedIn;
+        final loggedIn = readAuth().isLoggedIn;
         final loggingIn = state.matchedLocation == '/login' ||
             state.matchedLocation == '/register' ||
             state.matchedLocation == '/server-setup';

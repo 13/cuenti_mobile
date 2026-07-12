@@ -12,22 +12,26 @@ class ApiClient {
   late Dio dio;
   String _baseUrl = defaultServerUrl;
 
-  ApiClient(this._storage) {
-    dio = Dio(BaseOptions(
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 30),
-      headers: {'Content-Type': 'application/json'},
-    ));
+  ApiClient(this._storage, {Dio? dioOverride}) {
+    if (dioOverride != null) {
+      dio = dioOverride;
+    } else {
+      dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {'Content-Type': 'application/json'},
+      ));
 
-    // Bypass certificate verification for self-signed certs
-    dio.httpClientAdapter = IOHttpClientAdapter(
-      createHttpClient: () {
-        final client = HttpClient();
-        client.badCertificateCallback =
-            (X509Certificate cert, String host, int port) => true;
-        return client;
-      },
-    );
+      // Bypass certificate verification for self-signed certs
+      dio.httpClientAdapter = IOHttpClientAdapter(
+        createHttpClient: () {
+          final client = HttpClient();
+          client.badCertificateCallback =
+              (X509Certificate cert, String host, int port) => true;
+          return client;
+        },
+      );
+    }
 
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {

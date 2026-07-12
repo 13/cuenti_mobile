@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/data_provider.dart';
+import '../../../providers/data_provider.dart';
+import 'auth_controller.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _submitting = false;
+  String? _error;
   bool _initialized = false;
 
   @override
@@ -23,8 +26,8 @@ class _LoginScreenState extends State<LoginScreen> {
     super.didChangeDependencies();
     if (!_initialized) {
       _initialized = true;
-      context.read<AuthProvider>().init().then((_) {
-        if (mounted && context.read<AuthProvider>().isLoggedIn) {
+      ref.read(authControllerProvider.notifier).init().then((_) {
+        if (mounted && ref.read(authControllerProvider).isLoggedIn) {
           context.read<DataProvider>().loadAll();
           context.go('/dashboard');
         }
@@ -34,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final auth = ref.watch(authControllerProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -85,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                     onFieldSubmitted: (_) => _login(),
                   ),
-                  if (auth.error != null) ...[
+                  if (_error != null) ...[
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -98,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Icon(Icons.error_outline,
                               color: Theme.of(context).colorScheme.error),
                           const SizedBox(width: 8),
-                          Expanded(child: Text(auth.error!,
+                          Expanded(child: Text(_error!,
                               style: TextStyle(
                                   color: Theme.of(context).colorScheme.error))),
                         ],
@@ -110,8 +113,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     height: 48,
                     child: FilledButton(
-                      onPressed: auth.isLoading ? null : _login,
-                      child: auth.isLoading
+                      onPressed: _submitting ? null : _login,
+                      child: _submitting
                           ? const SizedBox(
                               height: 20,
                               width: 20,
@@ -127,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   TextButton(
                     onPressed: () => context.go('/server-setup'),
-                    child: Text('Server: ${auth.serverUrl}',
+                    child: Text('Server: ${ref.read(authControllerProvider.notifier).serverUrl}',
                         style: Theme.of(context).textTheme.bodySmall),
                   ),
                 ],
@@ -141,14 +144,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-    final auth = context.read<AuthProvider>();
-    final success = await auth.login(
-      _usernameController.text.trim(),
-      _passwordController.text,
-    );
-    if (success && mounted) {
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    final error = await ref.read(authControllerProvider.notifier).login(
+          _usernameController.text.trim(),
+          _passwordController.text,
+        );
+    if (!mounted) return;
+    if (error == null) {
       context.read<DataProvider>().loadAll();
       context.go('/dashboard');
+    } else {
+      setState(() {
+        _submitting = false;
+        _error = error;
+      });
     }
   }
 

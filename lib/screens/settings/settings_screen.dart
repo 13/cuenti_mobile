@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../features/auth/ui/auth_controller.dart';
+import '../../features/user/domain/user_profile.dart' as auth_user;
 import '../../models/models.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/data_provider.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   static const _colorOptions = <String, Color>{
     'Purple': Color(0xFF6750A4),
@@ -27,8 +29,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final user = auth.user;
+    final authState = ref.watch(authControllerProvider);
+    final auth = ref.read(authControllerProvider.notifier);
+    final user = authState.user;
 
     if (user == null) return const Center(child: Text('Not logged in'));
 
@@ -79,12 +82,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ListTile(
                   title: const Text('Color Scheme'),
                   subtitle: Text(_colorOptions.entries
-                      .firstWhere((e) => e.value.toARGB32() == auth.colorSchemeSeed.toARGB32(),
+                      .firstWhere((e) => e.value.toARGB32() == authState.colorSchemeSeed.toARGB32(),
                           orElse: () => _colorOptions.entries.first)
                       .key),
                   trailing: CircleAvatar(
                     radius: 16,
-                    backgroundColor: auth.colorSchemeSeed,
+                    backgroundColor: authState.colorSchemeSeed,
                   ),
                   onTap: () => _showColorPicker(context),
                 ),
@@ -127,7 +130,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SwitchListTile(
                   title: const Text('Biometric Unlock'),
                   subtitle: const Text('Require fingerprint/face to reopen app'),
-                  value: auth.biometricEnabled,
+                  value: authState.biometricEnabled,
                   onChanged: (v) => auth.setBiometricEnabled(v),
                 ),
                 const SizedBox(height: 8),
@@ -225,7 +228,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showEditProfileDialog(BuildContext context, UserProfile user) {
+  void _showEditProfileDialog(BuildContext context, auth_user.UserProfile user) {
     final firstName = TextEditingController(text: user.firstName);
     final lastName = TextEditingController(text: user.lastName);
     final email = TextEditingController(text: user.email);
@@ -257,7 +260,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: () async {
                   try {
                     final dp = context.read<DataProvider>();
-                    final auth = context.read<AuthProvider>();
+                    final auth = ref.read(authControllerProvider.notifier);
                     final nav = Navigator.of(ctx);
                     await dp.userApi.updateProfile({
                       'firstName': firstName.text,
@@ -341,7 +344,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showColorPicker(BuildContext context) {
-    final auth = context.read<AuthProvider>();
+    final authState = ref.read(authControllerProvider);
+    final auth = ref.read(authControllerProvider.notifier);
     showModalBottomSheet(
       context: context,
       builder: (ctx) => Padding(
@@ -356,7 +360,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               spacing: 12,
               runSpacing: 12,
               children: _colorOptions.entries.map((e) {
-                final isSelected = e.value.toARGB32() == auth.colorSchemeSeed.toARGB32();
+                final isSelected = e.value.toARGB32() == authState.colorSchemeSeed.toARGB32();
                 return GestureDetector(
                   onTap: () {
                     auth.setColorSchemeSeed(e.value);
@@ -388,7 +392,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showCurrencyPicker(BuildContext context) {
     final dp = context.read<DataProvider>();
-    final auth = context.read<AuthProvider>();
+    final auth = ref.read(authControllerProvider.notifier);
     showModalBottomSheet(
       context: context,
       builder: (ctx) => ListView(
@@ -409,7 +413,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showLocalePicker(BuildContext context) {
     final locales = ['en-US', 'de-DE', 'it-IT', 'fr-FR', 'es-ES'];
     final dp = context.read<DataProvider>();
-    final auth = context.read<AuthProvider>();
+    final auth = ref.read(authControllerProvider.notifier);
     showModalBottomSheet(
       context: context,
       builder: (ctx) => ListView(

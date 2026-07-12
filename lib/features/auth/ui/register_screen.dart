@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/data_provider.dart';
+import '../../../providers/data_provider.dart';
+import 'auth_controller.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _firstName = TextEditingController();
   final _lastName = TextEditingController();
@@ -19,11 +20,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _confirmPassword = TextEditingController();
+  bool _submitting = false;
+  String? _error;
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-
     return Scaffold(
       appBar: AppBar(title: const Text('Register')),
       body: Center(
@@ -82,9 +83,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   validator: (v) =>
                       v != _password.text ? 'Passwords do not match' : null,
                 ),
-                if (auth.error != null) ...[
+                if (_error != null) ...[
                   const SizedBox(height: 12),
-                  Text(auth.error!,
+                  Text(_error!,
                       style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ],
                 const SizedBox(height: 24),
@@ -92,8 +93,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: double.infinity,
                   height: 48,
                   child: FilledButton(
-                    onPressed: auth.isLoading ? null : _register,
-                    child: auth.isLoading
+                    onPressed: _submitting ? null : _register,
+                    child: _submitting
                         ? const CircularProgressIndicator(strokeWidth: 2)
                         : const Text('Register'),
                   ),
@@ -113,17 +114,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
-    final auth = context.read<AuthProvider>();
-    final success = await auth.register(
-      username: _username.text.trim(),
-      email: _email.text.trim(),
-      password: _password.text,
-      firstName: _firstName.text.trim(),
-      lastName: _lastName.text.trim(),
-    );
-    if (success && mounted) {
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    final error = await ref.read(authControllerProvider.notifier).register(
+          username: _username.text.trim(),
+          email: _email.text.trim(),
+          password: _password.text,
+          firstName: _firstName.text.trim(),
+          lastName: _lastName.text.trim(),
+        );
+    if (!mounted) return;
+    if (error == null) {
       context.read<DataProvider>().loadAll();
       context.go('/dashboard');
+    } else {
+      setState(() {
+        _submitting = false;
+        _error = error;
+      });
     }
   }
 

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
+import '../features/auth/ui/auth_controller.dart';
 import '../providers/data_provider.dart';
 
-class ShellScreen extends StatefulWidget {
+class ShellScreen extends ConsumerStatefulWidget {
   final Widget child;
   const ShellScreen({super.key, required this.child});
 
   @override
-  State<ShellScreen> createState() => _ShellScreenState();
+  ConsumerState<ShellScreen> createState() => _ShellScreenState();
 }
 
-class _ShellScreenState extends State<ShellScreen> {
+class _ShellScreenState extends ConsumerState<ShellScreen> {
   static const _navItems = [
     (icon: Icons.dashboard, label: 'Dashboard', path: '/dashboard'),
     (icon: Icons.receipt_long, label: 'Transactions', path: '/transactions'),
@@ -48,7 +49,7 @@ class _ShellScreenState extends State<ShellScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final auth = ref.watch(authControllerProvider);
     final dp = context.watch<DataProvider>();
 
     // Show error snackbar when DataProvider has an error
@@ -130,7 +131,7 @@ class _ShellScreenState extends State<ShellScreen> {
               onTap: () {
                 Navigator.pop(context);
                 context.read<DataProvider>().clearAll();
-                auth.logout();
+                ref.read(authControllerProvider.notifier).logout();
                 context.go('/login');
               },
             ),
@@ -143,7 +144,7 @@ class _ShellScreenState extends State<ShellScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              context.read<AuthProvider>().refreshProfile();
+              ref.read(authControllerProvider.notifier).refreshProfile();
               context.read<DataProvider>().loadAll();
             },
           ),

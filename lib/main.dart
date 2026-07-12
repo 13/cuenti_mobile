@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-// `Consumer` is ambiguous between `provider` and `flutter_riverpod`; this
-// file uses the Provider-package widget tree exclusively in Task 1, so
-// only `ProviderScope` is imported from flutter_riverpod.
-import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
-import 'api/api_client.dart';
+// `DataProvider` (Provider-era, migrated in a later task) is still wired to
+// the OLD `lib/api/api_client.dart` `ApiClient`, a distinct type from the
+// new `lib/core/api/api_client.dart` `ApiClient` that the Riverpod auth
+// stack uses via `apiClientProvider`. Both read/write the same secure
+// storage keys, so they stay consistent even as two separate instances.
+import 'api/api_client.dart' as legacy;
 import 'core/theme/app_theme.dart';
-import 'providers/auth_provider.dart';
+import 'features/auth/ui/app_lock_observer.dart';
+import 'features/auth/ui/auth_controller.dart';
 import 'providers/data_provider.dart';
 import 'router.dart';
 
@@ -17,117 +19,61 @@ void main() {
   runApp(const ProviderScope(child: CuentiApp()));
 }
 
-class CuentiApp extends StatefulWidget {
+class CuentiApp extends ConsumerStatefulWidget {
   const CuentiApp({super.key});
 
   @override
-  State<CuentiApp> createState() => _CuentiAppState();
+  ConsumerState<CuentiApp> createState() => _CuentiAppState();
 }
 
-class _CuentiAppState extends State<CuentiApp> with WidgetsBindingObserver {
-  final _localAuth = LocalAuthentication();
-  bool _locked = false;
-  late final ApiClient _apiClient;
-  late final AuthProvider _authProvider;
+class _CuentiAppState extends ConsumerState<CuentiApp> {
   late final DataProvider _dataProvider;
+  late final GoRouterRefreshNotifier _refreshNotifier;
   late final GoRouter _router;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _apiClient = ApiClient();
-    _authProvider = AuthProvider(_apiClient);
-    _dataProvider = DataProvider(_apiClient);
-    // Create the router ONCE. It uses refreshListenable: auth internally
-    // so redirects re-evaluate on auth changes without rebuilding the router.
-    _router = AppRouter.router(_authProvider);
+    final legacyApiClient = legacy.ApiClient()..init();
+    _dataProvider = DataProvider(legacyApiClient);
+    _refreshNotifier = GoRouterRefreshNotifier();
+    // Create the router ONCE. The refresh notifier + readAuth callback bridge
+    // Riverpod's auth state into GoRouter's redirect so redirects re-evaluate
+    // on auth changes without rebuilding the router (which would freeze the
+    // UI).
+    _router = AppRouter.router(
+      _refreshNotifier,
+      () => ref.read(authControllerProvider),
+    );
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _router.dispose();
     super.dispose();
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!_authProvider.isLoggedIn || !_authProvider.biometricEnabled) return;
-
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
-      setState(() => _locked = true);
-    } else if (state == AppLifecycleState.resumed && _locked) {
-      _authenticate();
-    }
-  }
-
-  Future<void> _authenticate() async {
-    try {
-      final didAuth = await _localAuth.authenticate(
-        localizedReason: 'Authenticate to unlock Cuenti',
-      );
-      if (didAuth) {
-        setState(() => _locked = false);
-      }
-    } catch (_) {
-      // If biometric auth is unavailable, just unlock
-      setState(() => _locked = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // Any auth state change (login/logout/session restore) must re-trigger
+    // GoRouter's redirect logic.
+    ref.listen(authControllerProvider, (_, __) => _refreshNotifier.refresh());
+    final auth = ref.watch(authControllerProvider);
+
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: _authProvider),
         ChangeNotifierProvider.value(value: _dataProvider),
       ],
-      child: Consumer<AuthProvider>(
-        builder: (context, auth, _) {
-          return MaterialApp.router(
-            title: 'Cuenti',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.build(auth.colorSchemeSeed, Brightness.light),
-            darkTheme: AppTheme.build(auth.colorSchemeSeed, Brightness.dark),
-            themeMode: auth.user?.darkMode == true ? ThemeMode.dark : ThemeMode.light,
-            routerConfig: _router,
-            builder: (context, child) {
-              if (_locked) {
-                return _LockScreen(onUnlock: _authenticate);
-              }
-              return child ?? const SizedBox.shrink();
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _LockScreen extends StatelessWidget {
-  final VoidCallback onUnlock;
-  const _LockScreen({required this.onUnlock});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset('assets/Cuenti.png', width: 100, height: 100),
-            const SizedBox(height: 24),
-            Text('Cuenti is Locked',
-                style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: onUnlock,
-              icon: const Icon(Icons.fingerprint),
-              label: const Text('Unlock'),
-            ),
-          ],
-        ),
+      child: MaterialApp.router(
+        title: 'Cuenti',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.build(auth.colorSchemeSeed, Brightness.light),
+        darkTheme: AppTheme.build(auth.colorSchemeSeed, Brightness.dark),
+        themeMode:
+            auth.user?.darkMode == true ? ThemeMode.dark : ThemeMode.light,
+        routerConfig: _router,
+        builder: (context, child) =>
+            AppLockObserver(child: child ?? const SizedBox.shrink()),
       ),
     );
   }
