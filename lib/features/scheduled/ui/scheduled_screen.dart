@@ -126,7 +126,7 @@ class ScheduledScreen extends ConsumerWidget {
   }
 
   void _showDeleteDialog(BuildContext context, WidgetRef ref, ScheduledTransaction st) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (c) => AlertDialog(
         icon: const Icon(Icons.delete_outline),

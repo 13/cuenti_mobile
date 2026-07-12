@@ -137,7 +137,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
     bool excludeReports = account?.excludeFromReports ?? false;
     bool saving = false;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => StatefulBuilder(

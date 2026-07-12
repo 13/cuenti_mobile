@@ -1,4 +1,3 @@
-import 'package:cuentimobile/api/api_client.dart' as legacy;
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
@@ -6,12 +5,10 @@ import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
 import 'package:cuentimobile/features/transactions/ui/transaction_dialog.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
-import 'package:cuentimobile/providers/data_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:provider/provider.dart' hide Consumer;
 
 class MockTransactionsRepository extends Mock implements TransactionsRepository {}
 
@@ -24,12 +21,10 @@ void main() {
 
   late MockTransactionsRepository txRepo;
   late MockAccountsRepository accountsRepo;
-  late DataProvider dataProvider;
 
   setUp(() {
     txRepo = MockTransactionsRepository();
     accountsRepo = MockAccountsRepository();
-    dataProvider = DataProvider(legacy.ApiClient());
 
     when(() => accountsRepo.getAll()).thenAnswer(
         (_) async => [const Account(id: 1, accountName: 'Giro')]);
@@ -45,21 +40,16 @@ void main() {
           transactionsRepositoryProvider.overrideWithValue(txRepo),
           accountsRepositoryProvider.overrideWithValue(accountsRepo),
         ],
-        child: MultiProvider(
-          providers: [
-            ChangeNotifierProvider<DataProvider>.value(value: dataProvider),
-          ],
-          child: MaterialApp(
-            home: Scaffold(
-              // The real screen keeps the family provider alive by watching
-              // it while the modal sheet with the dialog is open; mirror
-              // that here so the dialog's `ref.invalidateSelf()` on save
-              // doesn't hit an already-disposed provider.
-              body: Consumer(builder: (context, ref, _) {
-                ref.watch(transactionsControllerProvider(accountId: null));
-                return const TransactionDialog(accountId: null);
-              }),
-            ),
+        child: MaterialApp(
+          home: Scaffold(
+            // The real screen keeps the family provider alive by watching
+            // it while the modal sheet with the dialog is open; mirror
+            // that here so the dialog's `ref.invalidateSelf()` on save
+            // doesn't hit an already-disposed provider.
+            body: Consumer(builder: (context, ref, _) {
+              ref.watch(transactionsControllerProvider(accountId: null));
+              return const TransactionDialog(accountId: null);
+            }),
           ),
         ),
       ),

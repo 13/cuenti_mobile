@@ -236,7 +236,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final lastName = TextEditingController(text: user.lastName);
     final email = TextEditingController(text: user.email);
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => Padding(
@@ -292,7 +292,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final newPw = TextEditingController();
     final confirmPw = TextEditingController();
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => Padding(
@@ -350,7 +350,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showColorPicker(BuildContext context) {
     final authState = ref.read(authControllerProvider);
     final auth = ref.read(authControllerProvider.notifier);
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(16),
@@ -396,7 +396,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _showCurrencyPicker(BuildContext context, List<Currency> currencies) {
     final auth = ref.read(authControllerProvider.notifier);
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       builder: (ctx) => ListView(
         children: currencies.map((c) => ListTile(
@@ -418,7 +418,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showLocalePicker(BuildContext context) {
     final locales = ['en-US', 'de-DE', 'it-IT', 'fr-FR', 'es-ES'];
     final auth = ref.read(authControllerProvider.notifier);
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       builder: (ctx) => ListView(
         children: locales.map((l) => ListTile(
@@ -437,7 +437,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showAdminPanel(BuildContext context) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => const _AdminPanel(),

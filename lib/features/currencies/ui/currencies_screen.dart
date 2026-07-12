@@ -106,7 +106,7 @@ class CurrenciesScreen extends ConsumerWidget {
     int fracDigits = currency?.fracDigits ?? 2;
     bool saving = false;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(

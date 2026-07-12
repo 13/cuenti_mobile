@@ -100,7 +100,7 @@ class TagsScreen extends ConsumerWidget {
     final name = TextEditingController(text: tag?.name ?? '');
     bool saving = false;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(

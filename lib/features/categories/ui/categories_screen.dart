@@ -92,7 +92,7 @@ class CategoriesScreen extends ConsumerWidget {
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, Category category) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (c) => AlertDialog(
         icon: const Icon(Icons.delete_outline),
@@ -136,7 +136,7 @@ class CategoriesScreen extends ConsumerWidget {
     final categories = ref.read(categoriesControllerProvider).value ?? [];
     final parentOptions = categories.where((c) => c.parentId == null && c.id != category?.id).toList();
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(

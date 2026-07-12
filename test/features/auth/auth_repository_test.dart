@@ -30,8 +30,10 @@ void main() {
   });
 
   test('login saves token and returns profile', () async {
-    when(() => dio.post('/auth/login', data: any(named: 'data')))
-        .thenAnswer((_) async => ok({
+    when(() => dio.post<Map<String, dynamic>>(
+          '/auth/login',
+          data: any(named: 'data'),
+        )).thenAnswer((_) async => ok({
               'token': 'jwt-abc',
               'username': 'demo',
               'email': 'd@x',
@@ -47,7 +49,10 @@ void main() {
   });
 
   test('login maps 401 to UnauthorizedException', () async {
-    when(() => dio.post('/auth/login', data: any(named: 'data'))).thenThrow(
+    when(() => dio.post<Map<String, dynamic>>(
+          '/auth/login',
+          data: any(named: 'data'),
+        )).thenThrow(
       DioException(
         requestOptions: RequestOptions(path: '/auth/login'),
         type: DioExceptionType.badResponse,

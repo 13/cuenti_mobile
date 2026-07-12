@@ -197,7 +197,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 
   void _showAddDialog(BuildContext context) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (_) => TransactionDialog(accountId: _selectedAccountId),
@@ -297,7 +297,7 @@ class _TransactionTile extends StatelessWidget {
           style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16),
         ),
         onTap: () {
-          showModalBottomSheet(
+          showModalBottomSheet<void>(
             context: context,
             isScrollControlled: true,
             builder: (_) => TransactionDialog(transaction: transaction, accountId: accountId),

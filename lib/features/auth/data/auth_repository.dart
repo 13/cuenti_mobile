@@ -17,7 +17,8 @@ class AuthRepository {
 
   Future<UserProfile> login(String username, String password) async {
     try {
-      final response = await _client.dio.post('/auth/login', data: {
+      final response =
+          await _client.dio.post<Map<String, dynamic>>('/auth/login', data: {
         'username': username,
         'password': password,
       });
@@ -43,7 +44,8 @@ class AuthRepository {
     required String lastName,
   }) async {
     try {
-      final response = await _client.dio.post('/auth/register', data: {
+      final response = await _client.dio
+          .post<Map<String, dynamic>>('/auth/register', data: {
         'username': username,
         'email': email,
         'password': password,
@@ -58,7 +60,8 @@ class AuthRepository {
 
   Future<UserProfile> getProfile() async {
     try {
-      final response = await _client.dio.get('/user/profile');
+      final response =
+          await _client.dio.get<Map<String, dynamic>>('/user/profile');
       return UserProfile.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
@@ -67,8 +70,9 @@ class AuthRepository {
 
   Future<bool> fetchRegistrationEnabled() async {
     try {
-      final response = await _client.dio.get('/auth/settings');
-      final data = response.data as Map<String, dynamic>?;
+      final response =
+          await _client.dio.get<Map<String, dynamic>>('/auth/settings');
+      final data = response.data;
       return (data?['registrationEnabled'] as bool?) ?? true;
     } on DioException {
       return true;

@@ -172,7 +172,7 @@ class AssetsScreen extends ConsumerWidget {
     String type = asset?.type ?? 'STOCK';
     bool saving = false;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(

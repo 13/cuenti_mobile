@@ -13,23 +13,6 @@ plugins:
   riverpod_lint: 3.1.4
 
 analyzer:
-  language:
-    # old-code, remove in Task 10: lib/api/api_services.dart (Provider-era
-    # data layer, deleted in Task 10) returns raw `dynamic` from
-    # `dio.get(...).data` without casts throughout; very_good_analysis's
-    # strict-casts turns every one of those into a hard analyzer error
-    # (206 occurrences). New code (lib/core/**, repositories added in later
-    # tasks) must not rely on this relaxation.
-    strict-casts: false
-  errors:
-    # old-code, remove in Task 10: every occurrence is an untyped
-    # `showModalBottomSheet(...)` call in Provider-era screens
-    # (lib/screens/**); this is a strict-inference analyzer diagnostic (not
-    # a `linter.rules` entry), and at warning severity it was the only
-    # thing blocking a clean `flutter analyze` exit code (117
-    # occurrences). Downgraded to info (not ignored) so it stays visible.
-    # New code must call showModalBottomSheet<T>(...) explicitly.
-    inference_failure_on_function_invocation: info
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
