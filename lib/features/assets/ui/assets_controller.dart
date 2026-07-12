@@ -29,8 +29,8 @@ class AssetsController extends _$AssetsController {
   }
 
   Future<void> refreshPrice(int id) async {
-    final asset = await ref.read(assetsRepositoryProvider).refreshPrice(id);
-    final previous = state.value ?? [];
-    state = AsyncData(previous.map((a) => a.id == id ? asset : a).toList());
+    await ref.read(assetsRepositoryProvider).refreshPrice(id);
+    ref.invalidateSelf();
+    await future;
   }
 }
