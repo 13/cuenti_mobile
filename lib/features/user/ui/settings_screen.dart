@@ -584,6 +584,7 @@ class _AdminPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final usersAsync = ref.watch(adminUsersProvider);
     final settingsAsync = ref.watch(adminSettingsProvider);
+    final authState = ref.watch(authControllerProvider);
 
     if (usersAsync.isLoading || settingsAsync.isLoading) {
       return const SizedBox(
@@ -632,15 +633,40 @@ class _AdminPanel extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           ...users.map(
-            (u) => ListTile(
-              leading: CircleAvatar(child: Text(u.firstName[0].toUpperCase())),
-              title: Text('${u.firstName} ${u.lastName}'),
-              subtitle: Text('${u.username} • ${u.roles.join(', ')}'),
-              trailing: Text(
-                u.apiEnabled ? 'API ✓' : '',
-                style: const TextStyle(fontSize: 12),
-              ),
-            ),
+            (u) {
+              final isCurrentUser = u.username == authState.user?.username;
+              return ListTile(
+                leading: CircleAvatar(child: Text(u.firstName[0].toUpperCase())),
+                title: Text('${u.firstName} ${u.lastName}'),
+                subtitle: Text('${u.username} • ${u.roles.join(', ')}'),
+                trailing: isCurrentUser
+                    ? Text(
+                        u.apiEnabled ? 'API ✓' : '',
+                        style: const TextStyle(fontSize: 12),
+                      )
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            u.apiEnabled ? 'API ✓' : '',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          PopupMenuButton<String>(
+                            onSelected: (action) =>
+                                _onUserAction(context, ref, u, action),
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(value: 'enable', child: Text('Enable')),
+                              PopupMenuItem(
+                                value: 'disable',
+                                child: Text('Disable'),
+                              ),
+                              PopupMenuItem(value: 'delete', child: Text('Delete')),
+                            ],
+                          ),
+                        ],
+                      ),
+              );
+            },
           ),
           const SizedBox(height: 16),
           OutlinedButton(
@@ -651,5 +677,40 @@ class _AdminPanel extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _onUserAction(
+    BuildContext context,
+    WidgetRef ref,
+    UserProfile user,
+    String action,
+  ) async {
+    final repo = ref.read(userRepositoryProvider);
+    try {
+      switch (action) {
+        case 'enable':
+          await repo.setUserEnabled(user.id!, true);
+        case 'disable':
+          await repo.setUserEnabled(user.id!, false);
+        case 'delete':
+          final confirmed = await showConfirmSheet(
+            context,
+            title: 'Delete ${user.username}?',
+            message: 'This permanently removes the user and their data.',
+          );
+          if (!confirmed) return;
+          await repo.deleteUser(user.id!);
+      }
+      ref.invalidate(adminUsersProvider);
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 }
