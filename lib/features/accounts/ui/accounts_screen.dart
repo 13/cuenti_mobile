@@ -76,86 +76,90 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                       onDismissed: (_) => _delete(a.id!),
                       child: Card(
                         margin: const EdgeInsets.only(bottom: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 48,
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withValues(alpha: 0.12),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Center(
-                                      child: Icon(
-                                        _iconForAccountType(a.accountType),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () => _showEditDialog(context, a, currencies),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
                                         color: Theme.of(context)
                                             .colorScheme
-                                            .primary,
+                                            .primary
+                                            .withValues(alpha: 0.12),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Center(
+                                        child: Icon(
+                                          _iconForAccountType(a.accountType),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          a.accountName,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleSmall,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        if (a.institution != null &&
-                                            a.institution!.isNotEmpty)
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
                                           Text(
-                                            a.institution!,
+                                            a.accountName,
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .labelSmall,
+                                                .titleSmall,
                                           ),
+                                          const SizedBox(height: 4),
+                                          if (a.institution != null &&
+                                              a.institution!.isNotEmpty)
+                                            Text(
+                                              a.institution!,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .labelSmall,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        AmountText(
+                                          a.balance,
+                                          currency: a.currency,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
                                       ],
                                     ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.end,
-                                    children: [
-                                      AmountText(
-                                        a.balance,
-                                        currency: a.currency,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                      ),
-                                    ],
+                                  ],
+                                ),
+                                if (a.accountGroup != null &&
+                                    a.accountGroup!.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Chip(
+                                      label: Text(a.accountGroup!),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
                                   ),
                                 ],
-                              ),
-                              if (a.accountGroup != null &&
-                                  a.accountGroup!.isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Chip(
-                                    label: Text(a.accountGroup!),
-                                    visualDensity: VisualDensity.compact,
-                                  ),
-                                ),
                               ],
-                            ],
+                            ),
                           ),
                         ),
                       ),
