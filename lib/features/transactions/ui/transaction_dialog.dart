@@ -15,8 +15,8 @@ import 'transactions_controller.dart';
 /// state across rebuilds; converted to [TransactionSplit] only on save.
 class _SplitDraft {
   _SplitDraft({this.categoryId, String amount = '', String memo = ''})
-      : amount = TextEditingController(text: amount),
-        memo = TextEditingController(text: memo);
+    : amount = TextEditingController(text: amount),
+      memo = TextEditingController(text: memo);
 
   int? categoryId;
   final TextEditingController amount;
@@ -78,11 +78,13 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     _paymentMethod = t?.paymentMethod ?? 'NONE';
     _date = t?.transactionDate ?? DateTime.now();
     for (final s in t?.splits ?? const <TransactionSplit>[]) {
-      _splits.add(_SplitDraft(
-        categoryId: s.categoryId,
-        amount: formatNumber(s.amount),
-        memo: s.memo ?? '',
-      ));
+      _splits.add(
+        _SplitDraft(
+          categoryId: s.categoryId,
+          amount: formatNumber(s.amount),
+          memo: s.memo ?? '',
+        ),
+      );
     }
   }
 
@@ -105,7 +107,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
       return 'Each split needs a category';
     }
     final sum = _splits.fold<double>(
-        0, (acc, s) => acc + (_parseAmount(s.amount.text) ?? 0));
+      0,
+      (acc, s) => acc + (_parseAmount(s.amount.text) ?? 0),
+    );
     final mainAmount = _parseAmount(_amount.text) ?? 0;
     if ((sum - mainAmount).abs() > 0.005) {
       return 'Splits must sum to the amount: '
@@ -148,8 +152,8 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                   controller: _amount,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                   decoration: const InputDecoration(
                     labelText: 'Amount',
                     border: OutlineInputBorder(),
@@ -160,7 +164,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Required';
-                    final normalized = v.replaceAll('.', '').replaceAll(',', '.');
+                    final normalized = v
+                        .replaceAll('.', '')
+                        .replaceAll(',', '.');
                     if (double.tryParse(normalized) == null) {
                       return 'Invalid number';
                     }
@@ -365,8 +371,8 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                               controller: _splits[i].amount,
                               keyboardType:
                                   const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
+                                    decimal: true,
+                                  ),
                               decoration: const InputDecoration(
                                 labelText: 'Amount',
                                 border: OutlineInputBorder(),
@@ -431,7 +437,8 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                   items: kPaymentMethods
                       .map((p) => DropdownMenuItem(value: p, child: Text(p)))
                       .toList(),
-                  onChanged: (v) => setState(() => _paymentMethod = v ?? 'NONE'),
+                  onChanged: (v) =>
+                      setState(() => _paymentMethod = v ?? 'NONE'),
                 ),
                 const SizedBox(height: 12),
 
@@ -457,10 +464,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                 const SizedBox(height: 24),
 
                 FilledButton(
-                  onPressed:
-                      _submitting || _splitsValidationMessage != null
-                          ? null
-                          : _save,
+                  onPressed: _submitting || _splitsValidationMessage != null
+                      ? null
+                      : _save,
                   child: _submitting
                       ? const SizedBox(
                           height: 20,
@@ -484,20 +490,26 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
 
     setState(() => _submitting = true);
 
-    // TRANSFER never carries splits, regardless of stale state left over
-    // from a type switch before saving.
-    final splitsTouched = _type != 'TRANSFER' && _splitsTouched;
+    // TRANSFER never carries splits. If the transaction being edited had
+    // existing splits, saving as TRANSFER must explicitly clear them
+    // server-side (splitsTouched: true + empty list) rather than omitting
+    // the splits key — omitting it makes the backend preserve the old
+    // splits on the now-transfer row permanently, since the dialog hides
+    // the splits section (and thus any way to fix it) for transfers.
+    final splitsTouched = _type == 'TRANSFER'
+        ? (widget.transaction?.splits.isNotEmpty ?? false)
+        : _splitsTouched;
     final splits = _type == 'TRANSFER'
         ? const <TransactionSplit>[]
         : _splits
-            .map(
-              (s) => TransactionSplit(
-                categoryId: s.categoryId,
-                amount: _parseAmount(s.amount.text) ?? 0,
-                memo: s.memo.text.isNotEmpty ? s.memo.text : null,
-              ),
-            )
-            .toList();
+              .map(
+                (s) => TransactionSplit(
+                  categoryId: s.categoryId,
+                  amount: _parseAmount(s.amount.text) ?? 0,
+                  memo: s.memo.text.isNotEmpty ? s.memo.text : null,
+                ),
+              )
+              .toList();
 
     final transaction = Transaction(
       id: widget.transaction?.id,

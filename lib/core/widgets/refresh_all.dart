@@ -1,14 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/accounts/ui/accounts_controller.dart';
 import '../../features/assets/ui/assets_controller.dart';
+import '../../features/audit/ui/audit_controller.dart';
+import '../../features/budgets/ui/budgets_controller.dart';
 import '../../features/categories/ui/categories_controller.dart';
 import '../../features/currencies/ui/currencies_controller.dart';
 import '../../features/dashboard/ui/dashboard_controller.dart';
+import '../../features/forecasts/ui/forecasts_controller.dart';
 import '../../features/payees/ui/payees_controller.dart';
 import '../../features/scheduled/ui/scheduled_controller.dart';
 import '../../features/statistics/ui/statistics_controller.dart';
 import '../../features/tags/ui/tags_controller.dart';
 import '../../features/transactions/ui/transactions_controller.dart';
+import '../../features/vehicles/ui/vehicles_controller.dart';
 
 /// Refresh-all parity with the old DataProvider.loadAll(): every data
 /// provider is invalidated so the next watch re-fetches. These are
@@ -18,6 +22,9 @@ import '../../features/transactions/ui/transactions_controller.dart';
 /// Shared by the shell's refresh button and the settings import flow (a
 /// successful import replaces server-side data wholesale, so every cached
 /// provider is stale afterwards too).
+///
+/// Note: savedViews is intentionally omitted — it self-invalidates whenever
+/// its sheet is opened, so there's no stale-cache risk to cover here.
 void invalidateAllData(WidgetRef ref) {
   ref
     ..invalidate(accountsControllerProvider)
@@ -29,5 +36,9 @@ void invalidateAllData(WidgetRef ref) {
     ..invalidate(scheduledControllerProvider)
     ..invalidate(transactionsControllerProvider)
     ..invalidate(dashboardProvider)
-    ..invalidate(statisticsProvider);
+    ..invalidate(statisticsProvider)
+    ..invalidate(budgetsControllerProvider)
+    ..invalidate(forecastProvider)
+    ..invalidate(vehicleReportProvider)
+    ..invalidate(auditControllerProvider);
 }

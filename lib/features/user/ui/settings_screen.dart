@@ -529,6 +529,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         );
       }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _exporting = false);
     }
@@ -567,6 +576,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Import failed: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -637,10 +655,13 @@ class _AdminPanel extends ConsumerWidget {
               // Positive, null-safe gate: only show the actions menu when we
               // know who the current user is AND this row is someone else.
               // A null auth user must never expose the menu.
-              final showMenu = authState.user != null &&
+              final showMenu =
+                  authState.user != null &&
                   u.username != authState.user!.username;
               return ListTile(
-                leading: CircleAvatar(child: Text(u.firstName[0].toUpperCase())),
+                leading: CircleAvatar(
+                  child: Text(u.firstName[0].toUpperCase()),
+                ),
                 title: Text('${u.firstName} ${u.lastName}'),
                 subtitle: Text('${u.username} • ${u.roles.join(', ')}'),
                 trailing: !showMenu
@@ -659,12 +680,18 @@ class _AdminPanel extends ConsumerWidget {
                             onSelected: (action) =>
                                 _onUserAction(context, ref, u, action),
                             itemBuilder: (_) => const [
-                              PopupMenuItem(value: 'enable', child: Text('Enable')),
+                              PopupMenuItem(
+                                value: 'enable',
+                                child: Text('Enable'),
+                              ),
                               PopupMenuItem(
                                 value: 'disable',
                                 child: Text('Disable'),
                               ),
-                              PopupMenuItem(value: 'delete', child: Text('Delete')),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text('Delete'),
+                              ),
                             ],
                           ),
                         ],

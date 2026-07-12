@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../core/api/api_exception.dart';
 import '../../../core/theme/cuenti_colors.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/async_value_widget.dart';
@@ -31,7 +32,10 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
   @override
   void initState() {
     super.initState();
-    _categoryId = ref.read(authControllerProvider).user?.defaultVehicleCategoryId;
+    _categoryId = ref
+        .read(authControllerProvider)
+        .user
+        ?.defaultVehicleCategoryId;
     final now = DateTime.now();
     _start = DateTime(now.year, 1, 1);
     _end = DateTime(now.year, 12, 31);
@@ -39,7 +43,8 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
 
   bool get _isThisYear {
     final now = DateTime.now();
-    return _start == DateTime(now.year, 1, 1) && _end == DateTime(now.year, 12, 31);
+    return _start == DateTime(now.year, 1, 1) &&
+        _end == DateTime(now.year, 12, 31);
   }
 
   @override
@@ -92,7 +97,10 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                 const SizedBox(height: 24),
                 const SectionHeader('Entries'),
                 const SizedBox(height: 8),
-                _EntriesList(entries: report.entries, currency: report.currency),
+                _EntriesList(
+                  entries: report.entries,
+                  currency: report.currency,
+                ),
                 const SizedBox(height: 16),
               ],
             ),
@@ -114,7 +122,11 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
         children: [
           InputChip(
             avatar: const Icon(Icons.directions_car, size: 18),
-            label: Text(selected != null ? (selected.fullName ?? selected.name) : 'Category'),
+            label: Text(
+              selected != null
+                  ? (selected.fullName ?? selected.name)
+                  : 'Category',
+            ),
             onPressed: () => _openCategorySheet(context),
           ),
           const SizedBox(width: 8),
@@ -133,7 +145,11 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
           const SizedBox(width: 8),
           InputChip(
             avatar: const Icon(Icons.date_range_outlined, size: 18),
-            label: Text(_isThisYear ? 'Custom range' : '${_shortDate(_start)} – ${_shortDate(_end)}'),
+            label: Text(
+              _isThisYear
+                  ? 'Custom range'
+                  : '${_shortDate(_start)} – ${_shortDate(_end)}',
+            ),
             onPressed: () => _pickCustomRange(context),
           ),
         ],
@@ -169,13 +185,18 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
 
   Future<void> _openCategorySheet(BuildContext context) async {
     final categories = ref.read(categoriesControllerProvider).value ?? [];
-    final expenseCategories = categories.where((c) => c.type == 'EXPENSE').toList();
+    final expenseCategories = categories
+        .where((c) => c.type == 'EXPENSE')
+        .toList();
 
     final selected = await showModalBottomSheet<int>(
       context: context,
       builder: (ctx) => Consumer(
         builder: (ctx, ref, _) {
-          final defaultId = ref.watch(authControllerProvider).user?.defaultVehicleCategoryId;
+          final defaultId = ref
+              .watch(authControllerProvider)
+              .user
+              ?.defaultVehicleCategoryId;
           return SafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -184,7 +205,10 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Fuel category', style: Theme.of(ctx).textTheme.titleMedium),
+                    child: Text(
+                      'Fuel category',
+                      style: Theme.of(ctx).textTheme.titleMedium,
+                    ),
                   ),
                 ),
                 for (final c in expenseCategories)
@@ -194,16 +218,22 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                     trailing: IconButton(
                       icon: Icon(
                         defaultId == c.id ? Icons.star : Icons.star_border,
-                        color: defaultId == c.id ? Theme.of(ctx).colorScheme.primary : null,
+                        color: defaultId == c.id
+                            ? Theme.of(ctx).colorScheme.primary
+                            : null,
                       ),
                       tooltip: 'Set as default',
                       onPressed: () async {
-                        await _setDefaultCategory(context, c.id!);
+                        final success = await _setDefaultCategory(
+                          context,
+                          c.id!,
+                        );
                         // Also select the starred category for the current
                         // view: close the sheet returning its id so
                         // _categoryId updates and the EmptyState doesn't
-                        // linger after setting a default.
-                        if (ctx.mounted) Navigator.pop(ctx, c.id);
+                        // linger after setting a default. Skip on failure so
+                        // the sheet stays open and the user can retry.
+                        if (success && ctx.mounted) Navigator.pop(ctx, c.id);
                       },
                     ),
                   ),
@@ -219,15 +249,30 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
     }
   }
 
-  Future<void> _setDefaultCategory(BuildContext context, int id) async {
-    await ref.read(userRepositoryProvider).updatePreferences({
-      'defaultVehicleCategoryId': id,
-    });
-    await ref.read(authControllerProvider.notifier).refreshProfile();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Default saved')),
-    );
+  /// Returns whether the update succeeded, so the caller can decide whether
+  /// it's safe to pop the sheet with the newly-starred selection.
+  Future<bool> _setDefaultCategory(BuildContext context, int id) async {
+    try {
+      await ref.read(userRepositoryProvider).updatePreferences({
+        'defaultVehicleCategoryId': id,
+      });
+      await ref.read(authControllerProvider.notifier).refreshProfile();
+      if (!mounted) return true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Default saved')),
+      );
+      return true;
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      return false;
+    }
   }
 }
 
@@ -332,7 +377,10 @@ class _ConsumptionChart extends StatelessWidget {
     if (points.length < 2) {
       return const SizedBox(
         height: 200,
-        child: EmptyState(icon: Icons.show_chart, message: 'Not enough data for a chart'),
+        child: EmptyState(
+          icon: Icons.show_chart,
+          message: 'Not enough data for a chart',
+        ),
       );
     }
 
@@ -343,7 +391,8 @@ class _ConsumptionChart extends StatelessWidget {
     final dateFmt = DateFormat('d MMM');
 
     final spots = [
-      for (var i = 0; i < points.length; i++) FlSpot(i.toDouble(), points[i].consumption!),
+      for (var i = 0; i < points.length; i++)
+        FlSpot(i.toDouble(), points[i].consumption!),
     ];
 
     return SizedBox(
@@ -353,7 +402,8 @@ class _ConsumptionChart extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            getDrawingHorizontalLine: (_) => FlLine(color: gridColor, strokeWidth: 1),
+            getDrawingHorizontalLine: (_) =>
+                FlLine(color: gridColor, strokeWidth: 1),
           ),
           titlesData: FlTitlesData(
             bottomTitles: AxisTitles(
@@ -364,16 +414,25 @@ class _ConsumptionChart extends StatelessWidget {
                   if (idx >= 0 && idx < points.length) {
                     return Padding(
                       padding: const EdgeInsets.only(top: 4),
-                      child: Text(dateFmt.format(points[idx].date), style: const TextStyle(fontSize: 10)),
+                      child: Text(
+                        dateFmt.format(points[idx].date),
+                        style: const TextStyle(fontSize: 10),
+                      ),
                     );
                   }
                   return const SizedBox.shrink();
                 },
               ),
             ),
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           borderData: FlBorderData(show: false),
           lineTouchData: LineTouchData(
@@ -381,21 +440,26 @@ class _ConsumptionChart extends StatelessWidget {
               return TouchedSpotIndicatorData(
                 FlLine(color: lineColor, strokeWidth: 2),
                 FlDotData(
-                  getDotPainter: (spot, percent, bar, idx) => FlDotCirclePainter(
-                    radius: 4,
-                    color: lineColor,
-                    strokeWidth: 2,
-                    strokeColor: colorScheme.surface,
-                  ),
+                  getDotPainter: (spot, percent, bar, idx) =>
+                      FlDotCirclePainter(
+                        radius: 4,
+                        color: lineColor,
+                        strokeWidth: 2,
+                        strokeColor: colorScheme.surface,
+                      ),
                 ),
               );
             }).toList(),
             touchTooltipData: LineTouchTooltipData(
               getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
-              getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
-                '${formatNumber(s.y, decimals: 1)} l/100km',
-                TextStyle(color: lineColor, fontWeight: FontWeight.bold),
-              )).toList(),
+              getTooltipItems: (spots) => spots
+                  .map(
+                    (s) => LineTooltipItem(
+                      '${formatNumber(s.y, decimals: 1)} l/100km',
+                      TextStyle(color: lineColor, fontWeight: FontWeight.bold),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
           lineBarsData: [
@@ -434,7 +498,10 @@ class _EntriesList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
-      return const EmptyState(icon: Icons.local_gas_station, message: 'No fuel entries in this period');
+      return const EmptyState(
+        icon: Icons.local_gas_station,
+        message: 'No fuel entries in this period',
+      );
     }
 
     final dateFmt = DateFormat('d MMM yyyy');
@@ -442,7 +509,8 @@ class _EntriesList extends StatelessWidget {
     return Column(
       children: entries.map((e) {
         final subtitleParts = <String>[
-          if (e.odometer != null) '${formatNumber(e.odometer!, decimals: 0)} km',
+          if (e.odometer != null)
+            '${formatNumber(e.odometer!, decimals: 0)} km',
           if (e.liters != null) '${formatNumber(e.liters!, decimals: 1)} L',
         ];
         return Padding(
@@ -457,7 +525,9 @@ class _EntriesList extends StatelessWidget {
                 children: [
                   if (subtitleParts.isNotEmpty) Text(subtitleParts.join(' · ')),
                   if (e.consumption != null)
-                    Text('${formatNumber(e.consumption!, decimals: 1)} l/100km'),
+                    Text(
+                      '${formatNumber(e.consumption!, decimals: 1)} l/100km',
+                    ),
                 ],
               ),
               trailing: Column(

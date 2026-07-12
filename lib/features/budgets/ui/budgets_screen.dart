@@ -38,8 +38,11 @@ class BudgetsScreen extends ConsumerWidget {
           right: 16,
           bottom: 16,
           child: FloatingActionButton(
-            onPressed: () => _openEditSheet(context,
-                existing: null, allProgress: progressAsync.value ?? []),
+            onPressed: () => _openEditSheet(
+              context,
+              existing: null,
+              allProgress: progressAsync.value ?? [],
+            ),
             child: const Icon(Icons.add),
           ),
         ),
@@ -88,8 +91,8 @@ class _BudgetsList extends ConsumerWidget {
           final bp = ordered[i];
           return _BudgetCard(
             progress: bp,
-            onTap: () => _openEditSheet(context,
-                existing: bp, allProgress: progress),
+            onTap: () =>
+                _openEditSheet(context, existing: bp, allProgress: progress),
             onDelete: () => _delete(context, ref, bp),
           );
         },
@@ -98,7 +101,10 @@ class _BudgetsList extends ConsumerWidget {
   }
 
   Future<void> _delete(
-      BuildContext context, WidgetRef ref, BudgetProgress bp) async {
+    BuildContext context,
+    WidgetRef ref,
+    BudgetProgress bp,
+  ) async {
     try {
       await ref.read(budgetsControllerProvider.notifier).delete(bp.budgetId);
     } on ApiException catch (e) {
@@ -254,10 +260,12 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
         .map((p) => p.categoryId)
         .toSet();
     final categoryOptions = categories
-        .where((c) =>
-            c.type == 'EXPENSE' &&
-            (!usedCategoryIds.contains(c.id) ||
-                c.id == widget.existing?.categoryId))
+        .where(
+          (c) =>
+              c.type == 'EXPENSE' &&
+              (!usedCategoryIds.contains(c.id) ||
+                  c.id == widget.existing?.categoryId),
+        )
         .toList();
 
     return Padding(
@@ -288,8 +296,9 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
                   border: OutlineInputBorder(),
                 ),
                 items: categoryOptions
-                    .map((c) =>
-                        DropdownMenuItem(value: c.id, child: Text(c.name)))
+                    .map(
+                      (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
+                    )
                     .toList(),
                 onChanged: (v) => setState(() => _categoryId = v),
                 validator: (v) => v == null ? 'Required' : null,
@@ -306,20 +315,24 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
                 ),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Required';
-                  final normalized =
-                      v.replaceAll('.', '').replaceAll(',', '.');
+                  final normalized = v.replaceAll('.', '').replaceAll(',', '.');
                   if (double.tryParse(normalized) == null) {
                     return 'Invalid number';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                title: const Text('Active'),
-                value: _active,
-                onChanged: (v) => setState(() => _active = v),
-              ),
+              // The backend ignores this flag on create (new budgets are
+              // always active there), so only show it when editing an
+              // existing budget where the toggle actually takes effect.
+              if (widget.existing != null) ...[
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  title: const Text('Active'),
+                  value: _active,
+                  onChanged: (v) => setState(() => _active = v),
+                ),
+              ],
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: _submitting ? null : _save,
@@ -355,7 +368,9 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
     setState(() => _submitting = true);
 
     try {
-      await ref.read(budgetsControllerProvider.notifier).save(
+      await ref
+          .read(budgetsControllerProvider.notifier)
+          .save(
             Budget(
               id: widget.existing?.budgetId,
               categoryId: _categoryId!,

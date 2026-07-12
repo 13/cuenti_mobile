@@ -80,7 +80,10 @@ void main() {
             body: Consumer(
               builder: (context, ref, _) {
                 ref.watch(transactionsControllerProvider(filter: filter));
-                return TransactionDialog(filter: filter, transaction: transaction);
+                return TransactionDialog(
+                  filter: filter,
+                  transaction: transaction,
+                );
               },
             ),
           ),
@@ -399,6 +402,68 @@ void main() {
       ).captured;
       expect((captured[0] as Transaction).splits, isEmpty);
       expect(captured[1], isFalse);
+    },
+  );
+
+  testWidgets(
+    'switching a transaction with existing splits to TRANSFER saves with '
+    'splitsTouched: true and an empty splits list (regression: omitting '
+    'the key let the backend preserve the old splits on the now-transfer '
+    'row permanently)',
+    (tester) async {
+      when(() => categoriesRepo.getAll(type: any(named: 'type'))).thenAnswer(
+        (_) async => const [
+          Category(id: 1, name: 'Food', type: 'EXPENSE'),
+          Category(id: 2, name: 'Transport', type: 'EXPENSE'),
+        ],
+      );
+      final existing = Transaction(
+        id: 5,
+        type: 'EXPENSE',
+        amount: 40,
+        fromAccountId: 1,
+        transactionDate: DateTime(2026, 1, 1),
+        splits: const [
+          TransactionSplit(id: 10, categoryId: 1, amount: 10),
+          TransactionSplit(id: 11, categoryId: 2, amount: 20),
+        ],
+      );
+      when(
+        () => txRepo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      ).thenAnswer(
+        (invocation) async =>
+            invocation.positionalArguments.single as Transaction,
+      );
+
+      await pumpDialog(tester, transaction: existing);
+
+      // Switch to TRANSFER without touching the splits section at all.
+      await tester.tap(find.text('Transfer'));
+      await tester.pumpAndSettle();
+      expect(find.text('Splits'), findsNothing);
+
+      // TRANSFER also needs a To Account before saving.
+      final toAccount = find.byType(DropdownButtonFormField<int>).at(1);
+      await tester.ensureVisible(toAccount);
+      await tester.pumpAndSettle();
+      await tester.tap(toAccount);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Giro').last);
+      await tester.pumpAndSettle();
+
+      final saveButton = find.widgetWithText(FilledButton, 'Save');
+      await tester.ensureVisible(saveButton);
+      await tester.tap(saveButton);
+      await tester.pumpAndSettle();
+
+      final captured = verify(
+        () => txRepo.save(
+          captureAny(),
+          splitsTouched: captureAny(named: 'splitsTouched'),
+        ),
+      ).captured;
+      expect((captured[0] as Transaction).splits, isEmpty);
+      expect(captured[1], isTrue);
     },
   );
 }
