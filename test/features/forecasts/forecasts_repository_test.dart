@@ -1,6 +1,5 @@
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/features/forecasts/data/forecasts_repository.dart';
-import 'package:cuentimobile/features/forecasts/domain/forecast_data.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -79,7 +78,7 @@ void main() {
             queryParameters: {'year': 2025}))
         .thenAnswer((_) async => ok({
           'year': 2025,
-          'months': [],
+          'months': <Map<String, dynamic>>[],
           'totalIncome': 0,
           'totalExpense': 0,
           'netForecast': 0,
