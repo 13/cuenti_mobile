@@ -634,12 +634,16 @@ class _AdminPanel extends ConsumerWidget {
           const SizedBox(height: 8),
           ...users.map(
             (u) {
-              final isCurrentUser = u.username == authState.user?.username;
+              // Positive, null-safe gate: only show the actions menu when we
+              // know who the current user is AND this row is someone else.
+              // A null auth user must never expose the menu.
+              final showMenu = authState.user != null &&
+                  u.username != authState.user!.username;
               return ListTile(
                 leading: CircleAvatar(child: Text(u.firstName[0].toUpperCase())),
                 title: Text('${u.firstName} ${u.lastName}'),
                 subtitle: Text('${u.username} • ${u.roles.join(', ')}'),
-                trailing: isCurrentUser
+                trailing: !showMenu
                     ? Text(
                         u.apiEnabled ? 'API ✓' : '',
                         style: const TextStyle(fontSize: 12),
@@ -701,7 +705,7 @@ class _AdminPanel extends ConsumerWidget {
           if (!confirmed) return;
           await repo.deleteUser(user.id!);
       }
-      ref.invalidate(adminUsersProvider);
+      if (context.mounted) ref.invalidate(adminUsersProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
