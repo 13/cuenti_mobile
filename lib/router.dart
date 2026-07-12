@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'core/router/transitions.dart';
 import 'features/auth/ui/auth_controller.dart';
 import 'features/auth/ui/login_screen.dart';
 import 'features/auth/ui/register_screen.dart';
@@ -36,7 +37,8 @@ class AppRouter {
       refreshListenable: refresh,
       redirect: (context, state) {
         final loggedIn = readAuth().isLoggedIn;
-        final loggingIn = state.matchedLocation == '/login' ||
+        final loggingIn =
+            state.matchedLocation == '/login' ||
             state.matchedLocation == '/register' ||
             state.matchedLocation == '/server-setup';
 
@@ -45,24 +47,84 @@ class AppRouter {
         return null;
       },
       routes: [
-        GoRoute(path: '/login', builder: (_, s) => const LoginScreen()),
-        GoRoute(path: '/register', builder: (_, s) => const RegisterScreen()),
-        GoRoute(path: '/server-setup', builder: (_, s) => const ServerSetupScreen()),
+        GoRoute(
+          path: '/login',
+          pageBuilder: (_, s) =>
+              fadeThroughPage(child: const LoginScreen(), state: s),
+        ),
+        GoRoute(
+          path: '/register',
+          pageBuilder: (_, s) =>
+              fadeThroughPage(child: const RegisterScreen(), state: s),
+        ),
+        GoRoute(
+          path: '/server-setup',
+          pageBuilder: (_, s) =>
+              fadeThroughPage(child: const ServerSetupScreen(), state: s),
+        ),
         ShellRoute(
           builder: (context, state, child) => ShellScreen(child: child),
           routes: [
-            GoRoute(path: '/dashboard', builder: (_, s) => const DashboardScreen()),
-            GoRoute(path: '/transactions', builder: (_, s) => const TransactionsScreen()),
-            GoRoute(path: '/scheduled', builder: (_, s) => const ScheduledScreen()),
-            GoRoute(path: '/statistics', builder: (_, s) => const StatisticsScreen()),
-            GoRoute(path: '/accounts', builder: (_, s) => const AccountsScreen()),
-            GoRoute(path: '/payees', builder: (_, s) => const PayeesScreen()),
-            GoRoute(path: '/categories', builder: (_, s) => const CategoriesScreen()),
-            GoRoute(path: '/tags', builder: (_, s) => const TagsScreen()),
-            GoRoute(path: '/currencies', builder: (_, s) => const CurrenciesScreen()),
-            GoRoute(path: '/assets', builder: (_, s) => const AssetsScreen()),
-            GoRoute(path: '/settings', builder: (_, s) => const SettingsScreen()),
-            GoRoute(path: '/about', builder: (_, s) => const AboutScreen()),
+            GoRoute(
+              path: '/dashboard',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const DashboardScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/transactions',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const TransactionsScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/scheduled',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const ScheduledScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/statistics',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const StatisticsScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/accounts',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const AccountsScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/payees',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const PayeesScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/categories',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const CategoriesScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/tags',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const TagsScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/currencies',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const CurrenciesScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/assets',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const AssetsScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/settings',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const SettingsScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/about',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const AboutScreen(), state: s),
+            ),
           ],
         ),
       ],
