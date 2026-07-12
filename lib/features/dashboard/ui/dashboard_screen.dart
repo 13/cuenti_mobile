@@ -1,108 +1,79 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../models/models.dart';
-import '../../providers/data_provider.dart';
-import '../../utils/number_format.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/async_value_widget.dart';
+import '../../../utils/number_format.dart';
+import '../../accounts/domain/account.dart';
+import '../domain/asset_performance.dart';
+import '../domain/dashboard_data.dart';
+import 'dashboard_controller.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends State<DashboardScreen> {
-  bool _loading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
-    try {
-      await context.read<DataProvider>().loadDashboard();
-    } catch (e) {
-      _error = e.toString();
-    }
-    if (mounted) setState(() => _loading = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dp = context.watch<DataProvider>();
-    final dashboard = dp.dashboard;
-
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error != null) {
-      return Center(child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Error: $_error'),
-          const SizedBox(height: 8),
-          FilledButton(onPressed: _load, child: const Text('Retry')),
-        ],
-      ));
-    }
-    if (dashboard == null) return const Center(child: Text('No data'));
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dashboardAsync = ref.watch(dashboardProvider);
 
     return RefreshIndicator(
-      onRefresh: _load,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Metric cards
-          _MetricCard(
-            title: 'Available Cash',
-            value: dashboard.availableCash,
-            currency: dashboard.defaultCurrency,
-            color: Colors.green,
-            icon: Icons.account_balance_wallet,
-          ),
-          const SizedBox(height: 12),
-          _MetricCard(
-            title: 'Portfolio Value',
-            value: dashboard.portfolioValue,
-            currency: dashboard.defaultCurrency,
-            color: Colors.blue,
-            icon: Icons.show_chart,
-          ),
-          const SizedBox(height: 12),
-          _MetricCard(
-            title: 'Net Worth',
-            value: dashboard.netWorth,
-            currency: dashboard.defaultCurrency,
-            color: Colors.purple,
-            icon: Icons.savings,
-          ),
-          const SizedBox(height: 24),
-
-          // Asset Performance
-          if (dashboard.assetPerformance.isNotEmpty) ...[
-            Text('Asset Performance',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Card(
-              child: Column(
-                children: dashboard.assetPerformance
-                    .map((a) => _AssetTile(asset: a, currency: dashboard.defaultCurrency))
-                    .toList(),
-              ),
+      onRefresh: () {
+        ref.invalidate(dashboardProvider);
+        return ref.read(dashboardProvider.future);
+      },
+      child: AsyncValueWidget<DashboardData>(
+        value: dashboardAsync,
+        data: (dashboard) => ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Metric cards
+            _MetricCard(
+              title: 'Available Cash',
+              value: dashboard.availableCash,
+              currency: dashboard.defaultCurrency,
+              color: Colors.green,
+              icon: Icons.account_balance_wallet,
+            ),
+            const SizedBox(height: 12),
+            _MetricCard(
+              title: 'Portfolio Value',
+              value: dashboard.portfolioValue,
+              currency: dashboard.defaultCurrency,
+              color: Colors.blue,
+              icon: Icons.show_chart,
+            ),
+            const SizedBox(height: 12),
+            _MetricCard(
+              title: 'Net Worth',
+              value: dashboard.netWorth,
+              currency: dashboard.defaultCurrency,
+              color: Colors.purple,
+              icon: Icons.savings,
             ),
             const SizedBox(height: 24),
-          ],
 
-          // Accounts
-          Text('Accounts Overview',
-              style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          ...dashboard.accounts
-              .where((a) => !a.excludeFromSummary && !a.excludeFromReports)
-              .map((a) => _AccountTile(account: a)),
-        ],
+            // Asset Performance
+            if (dashboard.assetPerformance.isNotEmpty) ...[
+              Text('Asset Performance',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Card(
+                child: Column(
+                  children: dashboard.assetPerformance
+                      .map((a) => _AssetTile(asset: a, currency: dashboard.defaultCurrency))
+                      .toList(),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            // Accounts
+            Text('Accounts Overview',
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            ...dashboard.accounts
+                .where((a) => !a.excludeFromSummary && !a.excludeFromReports)
+                .map((a) => _AccountTile(account: a)),
+          ],
+        ),
       ),
     );
   }

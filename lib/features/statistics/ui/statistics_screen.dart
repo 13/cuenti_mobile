@@ -1,24 +1,24 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
-import '../../models/models.dart';
-import '../../providers/data_provider.dart';
-import '../../utils/number_format.dart';
+import '../../../core/widgets/async_value_widget.dart';
+import '../../../utils/number_format.dart';
+import '../../accounts/ui/accounts_controller.dart';
+import '../domain/statistics_data.dart';
+import 'statistics_controller.dart';
 
 enum TimeRange { daily, weekly, monthly, yearly, custom }
 
-class StatisticsScreen extends StatefulWidget {
+class StatisticsScreen extends ConsumerStatefulWidget {
   const StatisticsScreen({super.key});
 
   @override
-  State<StatisticsScreen> createState() => _StatisticsScreenState();
+  ConsumerState<StatisticsScreen> createState() => _StatisticsScreenState();
 }
 
-class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerProviderStateMixin {
-  bool _loading = true;
-  String? _error;
+class _StatisticsScreenState extends ConsumerState<StatisticsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   TimeRange _timeRange = TimeRange.yearly;
   int? _selectedAccountId;
@@ -28,7 +28,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _load();
   }
 
   DateTimeRange _computeDateRange() {
@@ -48,27 +47,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
     }
   }
 
-  Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
-    try {
-      final dp = context.read<DataProvider>();
-      // Ensure accounts are loaded for the filter dropdown
-      if (dp.accounts.isEmpty) {
-        await dp.loadAccounts();
-      }
-      final range = _computeDateRange();
-      final fmt = DateFormat('yyyy-MM-dd');
-      await dp.loadStatistics(
-        start: fmt.format(range.start),
-        end: fmt.format(range.end),
-        accountId: _selectedAccountId,
-      );
-    } catch (e) {
-      _error = e.toString();
-    }
-    if (mounted) setState(() => _loading = false);
-  }
-
   Future<void> _pickCustomRange() async {
     final picked = await showDateRangePicker(
       context: context,
@@ -84,14 +62,19 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
         _customRange = picked;
         _timeRange = TimeRange.custom;
       });
-      _load();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final dp = context.watch<DataProvider>();
-    final stats = dp.statistics;
+    final accounts = ref.watch(accountsControllerProvider).value ?? [];
+    final range = _computeDateRange();
+    final fmt = DateFormat('yyyy-MM-dd');
+    final start = fmt.format(range.start);
+    final end = fmt.format(range.end);
+    final statsProvider = statisticsProvider(
+        start: start, end: end, accountId: _selectedAccountId);
+    final statsAsync = ref.watch(statsProvider);
 
     return Column(
       children: [
@@ -113,7 +96,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
                       _pickCustomRange();
                     } else if (selected) {
                       setState(() => _timeRange = range);
-                      _load();
                     }
                   },
                 ),
@@ -138,12 +120,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
                 isExpanded: true,
                 items: [
                   const DropdownMenuItem(value: null, child: Text('All Accounts')),
-                  ...dp.accounts.map((a) => DropdownMenuItem(
+                  ...accounts.map((a) => DropdownMenuItem(
                     value: a.id, child: Text(a.accountName))),
                 ],
                 onChanged: (v) {
                   setState(() => _selectedAccountId = v);
-                  _load();
                 },
               ),
             ),
@@ -159,46 +140,47 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
           ],
         ),
         Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : (stats == null || _error != null)
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.bar_chart, size: 64,
-                              color: Theme.of(context).colorScheme.outline),
-                          const SizedBox(height: 16),
-                          Text(_error != null ? 'Failed to load statistics' : 'No statistics available',
-                              style: Theme.of(context).textTheme.titleMedium),
-                          const SizedBox(height: 8),
-                          if (_error != null)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 32),
-                              child: Text(_error!,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.error),
-                                  textAlign: TextAlign.center),
-                            )
-                          else
-                            Text('Try selecting a different time range or account.',
-                                style: Theme.of(context).textTheme.bodySmall),
-                          const SizedBox(height: 16),
-                          FilledButton.tonal(
-                            onPressed: _load,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _OverviewTab(stats: stats, onRefresh: _load),
-                        _CategoryTab(data: stats.incomeByCategory, title: 'Income by Category', currency: stats.currency, color: Colors.green),
-                        _CategoryTab(data: stats.expenseByCategory, title: 'Expense by Category', currency: stats.currency, color: Colors.red),
-                      ],
-                    ),
+          child: AsyncValueWidget<StatisticsData>(
+            value: statsAsync,
+            error: (e) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.bar_chart, size: 64,
+                      color: Theme.of(context).colorScheme.outline),
+                  const SizedBox(height: 16),
+                  Text('Failed to load statistics',
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(e.toString(),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.error),
+                        textAlign: TextAlign.center),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.tonal(
+                    onPressed: () => ref.invalidate(statsProvider),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+            data: (stats) => TabBarView(
+              controller: _tabController,
+              children: [
+                _OverviewTab(
+                    stats: stats,
+                    onRefresh: () {
+                      ref.invalidate(statsProvider);
+                      return ref.read(statsProvider.future);
+                    }),
+                _CategoryTab(data: stats.incomeByCategory, title: 'Income by Category', currency: stats.currency, color: Colors.green),
+                _CategoryTab(data: stats.expenseByCategory, title: 'Expense by Category', currency: stats.currency, color: Colors.red),
+              ],
+            ),
+          ),
         ),
       ],
     );
