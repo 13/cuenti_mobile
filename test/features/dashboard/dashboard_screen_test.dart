@@ -111,6 +111,12 @@ void main() {
       await pumpScreen(tester);
 
       expect(tester.takeException(), isNull);
+      // Layout contract: the hero amount has no inline currency suffix —
+      // it renders in its own Text, wrapping instead of shrinking via
+      // FittedBox, with the currency as a separate Text underneath. Find
+      // the amount alone (no trailing " EUR") to prove the split.
+      expect(find.text('123.456.789.012,34'), findsOneWidget);
+      expect(find.text('EUR'), findsWidgets);
     },
   );
 

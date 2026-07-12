@@ -57,16 +57,27 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
+                    // No inline currency suffix: wrapping the amount alone
+                    // (instead of shrinking it via FittedBox) keeps it
+                    // readable for large net-worth values. The FittedBox
+                    // stays only as a last-resort backstop for pathological
+                    // widths.
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
                       child: AmountText(
                         dashboard.netWorth,
-                        currency: dashboard.defaultCurrency,
                         style: Theme.of(context).textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
                         ),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      dashboard.defaultCurrency,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -83,6 +94,7 @@ class DashboardScreen extends ConsumerWidget {
                               icon: Icons.account_balance_wallet,
                               label: 'Cash',
                               maskable: true,
+                              direction: Axis.vertical,
                               value:
                                   '${formatNumber(dashboard.availableCash)} ${dashboard.defaultCurrency}',
                             ),
@@ -100,6 +112,7 @@ class DashboardScreen extends ConsumerWidget {
                               icon: Icons.trending_up,
                               label: 'Portfolio',
                               maskable: true,
+                              direction: Axis.vertical,
                               value:
                                   '${formatNumber(dashboard.portfolioValue)} ${dashboard.defaultCurrency}',
                             ),
