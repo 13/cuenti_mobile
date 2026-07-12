@@ -1,10 +1,19 @@
+import 'dart:io';
+
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../core/api/api_exception.dart';
+import '../../../core/widgets/confirm_sheet.dart';
+import '../../../core/widgets/refresh_all.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../auth/ui/auth_controller.dart';
 import '../../currencies/domain/currency.dart';
 import '../../currencies/ui/currencies_controller.dart';
+import '../data/export_import_repository.dart';
 import '../data/user_repository.dart';
 import '../domain/user_profile.dart';
 import 'user_controller.dart';
@@ -17,6 +26,9 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _exporting = false;
+  bool _importing = false;
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
@@ -146,6 +158,47 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 OutlinedButton(
                   onPressed: () => context.go('/server-setup'),
                   child: const Text('Change Server'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Data (export/import)
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionHeader('Data'),
+                const SizedBox(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.upload_file),
+                  title: const Text('Export data'),
+                  trailing: _exporting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : null,
+                  onTap: _exporting ? null : () => _exportData(context),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.download),
+                  title: const Text('Import data'),
+                  trailing: _importing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : null,
+                  onTap: _importing ? null : () => _importData(context),
                 ),
               ],
             ),
@@ -457,6 +510,70 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       isScrollControlled: true,
       builder: (ctx) => const _AdminPanel(),
     );
+  }
+
+  Future<void> _exportData(BuildContext context) async {
+    setState(() => _exporting = true);
+    try {
+      final json = await ref.read(exportImportRepositoryProvider).exportJson();
+      final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final path = '${Directory.systemTemp.path}/cuenti-export-$date.json';
+      await File(path).writeAsString(json);
+      await SharePlus.instance.share(ShareParams(files: [XFile(path)]));
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  Future<void> _importData(BuildContext context) async {
+    final file = await openFile(
+      acceptedTypeGroups: [
+        XTypeGroup(label: 'JSON', extensions: ['json']),
+      ],
+    );
+    if (file == null) return;
+    if (!context.mounted) return;
+
+    final confirmed = await showConfirmSheet(
+      context,
+      title: 'Import data?',
+      message: 'This replaces data on the server with the file contents.',
+      confirmLabel: 'Import',
+    );
+    if (!confirmed) return;
+    if (!context.mounted) return;
+
+    setState(() => _importing = true);
+    try {
+      final json = await file.readAsString();
+      await ref.read(exportImportRepositoryProvider).importJson(json);
+      invalidateAllData(ref);
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Import complete')));
+      }
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _importing = false);
+    }
   }
 }
 
