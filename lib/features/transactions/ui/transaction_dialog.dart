@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_exception.dart';
+import '../../../core/theme/cuenti_colors.dart';
 import '../../../utils/number_format.dart';
 import '../../accounts/ui/accounts_controller.dart';
 import '../../categories/ui/categories_controller.dart';
@@ -37,7 +38,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   int? _categoryId;
   String _paymentMethod = 'NONE';
   late DateTime _date;
-  bool _saving = false;
+  bool _submitting = false;
 
   @override
   void initState() {
@@ -61,235 +62,238 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   Widget build(BuildContext context) {
     final accounts = ref.watch(accountsControllerProvider).value ?? [];
     final categories = ref.watch(categoriesControllerProvider).value ?? [];
+    final amountColor = amountColorFor(context, _type);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
-        top: 16,
-      ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                widget.transaction == null
-                    ? 'Add Transaction'
-                    : 'Edit Transaction',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-
-              // Type selector
-              SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(
-                    value: 'EXPENSE',
-                    label: Text('Expense'),
-                    icon: Icon(Icons.arrow_downward),
-                  ),
-                  ButtonSegment(
-                    value: 'INCOME',
-                    label: Text('Income'),
-                    icon: Icon(Icons.arrow_upward),
-                  ),
-                  ButtonSegment(
-                    value: 'TRANSFER',
-                    label: Text('Transfer'),
-                    icon: Icon(Icons.swap_horiz),
-                  ),
-                ],
-                selected: {_type},
-                onSelectionChanged: (v) => setState(() => _type = v.first),
-              ),
-              const SizedBox(height: 12),
-
-              // Date
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.calendar_today),
-                title: Text('${_date.day}.${_date.month}.${_date.year}'),
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _date,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                  );
-                  if (picked != null) setState(() => _date = picked);
-                },
-              ),
-
-              // Amount
-              TextFormField(
-                controller: _amount,
-                decoration: const InputDecoration(
-                  labelText: 'Amount',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.attach_money),
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          left: 20,
+          right: 20,
+          top: 20,
+        ),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  widget.transaction == null
+                      ? 'Add Transaction'
+                      : 'Edit Transaction',
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Required';
-                  final normalized = v.replaceAll('.', '').replaceAll(',', '.');
-                  if (double.tryParse(normalized) == null) {
-                    return 'Invalid number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
-              // From Account
-              if (_type == 'EXPENSE' || _type == 'TRANSFER')
-                DropdownButtonFormField<int>(
-                  initialValue: accounts.any((a) => a.id == _fromAccountId)
-                      ? _fromAccountId
-                      : null,
-                  decoration: const InputDecoration(
-                    labelText: 'From Account',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: accounts
-                      .map(
-                        (a) => DropdownMenuItem(
-                          value: a.id,
-                          child: Text(a.accountName),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() => _fromAccountId = v),
-                  validator: (v) => v == null ? 'Required' : null,
-                ),
-              if (_type == 'EXPENSE' || _type == 'TRANSFER')
-                const SizedBox(height: 12),
-
-              // To Account
-              if (_type == 'INCOME' || _type == 'TRANSFER')
-                DropdownButtonFormField<int>(
-                  initialValue: accounts.any((a) => a.id == _toAccountId)
-                      ? _toAccountId
-                      : null,
-                  decoration: const InputDecoration(
-                    labelText: 'To Account',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: accounts
-                      .map(
-                        (a) => DropdownMenuItem(
-                          value: a.id,
-                          child: Text(a.accountName),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() => _toAccountId = v),
-                  validator: (v) => v == null ? 'Required' : null,
-                ),
-              if (_type == 'INCOME' || _type == 'TRANSFER')
-                const SizedBox(height: 12),
-
-              // Payee
-              TextFormField(
-                controller: _payee,
-                decoration: const InputDecoration(
-                  labelText: 'Payee',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Category
-              DropdownButtonFormField<int?>(
-                initialValue:
-                    _categoryId == null ||
-                        categories.any((c) => c.id == _categoryId)
-                    ? _categoryId
-                    : null,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('None')),
-                  ...categories
-                      .where((c) => _type == 'TRANSFER' || c.type == _type)
-                      .map(
-                        (c) => DropdownMenuItem(
-                          value: c.id,
-                          child: Text(c.fullName ?? c.name),
-                        ),
+                // Amount (moved FIRST)
+                TextFormField(
+                  controller: _amount,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
-                ],
-                onChanged: (v) => setState(() => _categoryId = v),
-              ),
-              const SizedBox(height: 12),
-
-              // Payment method
-              DropdownButtonFormField<String>(
-                initialValue: _paymentMethod,
-                decoration: const InputDecoration(
-                  labelText: 'Payment Method',
-                  border: OutlineInputBorder(),
-                ),
-                items: kPaymentMethods
-                    .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                    .toList(),
-                onChanged: (v) => setState(() => _paymentMethod = v ?? 'NONE'),
-              ),
-              const SizedBox(height: 12),
-
-              // Memo
-              TextFormField(
-                controller: _memo,
-                decoration: const InputDecoration(
-                  labelText: 'Memo',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 12),
-
-              // Tags
-              TextFormField(
-                controller: _tags,
-                decoration: const InputDecoration(
-                  labelText: 'Tags (comma separated)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _saving ? null : () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
+                  decoration: const InputDecoration(
+                    labelText: 'Amount',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.attach_money),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: _saving ? null : _save,
-                      child: _saving
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Save'),
-                    ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ],
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Required';
+                    final normalized = v.replaceAll('.', '').replaceAll(',', '.');
+                    if (double.tryParse(normalized) == null) {
+                      return 'Invalid number';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Type selector
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(
+                      value: 'EXPENSE',
+                      label: Text('Expense'),
+                      icon: Icon(Icons.arrow_downward),
+                    ),
+                    ButtonSegment(
+                      value: 'INCOME',
+                      label: Text('Income'),
+                      icon: Icon(Icons.arrow_upward),
+                    ),
+                    ButtonSegment(
+                      value: 'TRANSFER',
+                      label: Text('Transfer'),
+                      icon: Icon(Icons.swap_horiz),
+                    ),
+                  ],
+                  selected: {_type},
+                  onSelectionChanged: (v) => setState(() => _type = v.first),
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return amountColor.withValues(alpha: 0.15);
+                      }
+                      return null;
+                    }),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Date
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.calendar_today),
+                  title: Text('${_date.day}.${_date.month}.${_date.year}'),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _date,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) setState(() => _date = picked);
+                  },
+                ),
+                const SizedBox(height: 12),
+
+                // From Account
+                if (_type == 'EXPENSE' || _type == 'TRANSFER')
+                  DropdownButtonFormField<int>(
+                    initialValue: accounts.any((a) => a.id == _fromAccountId)
+                        ? _fromAccountId
+                        : null,
+                    decoration: const InputDecoration(
+                      labelText: 'From Account',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: accounts
+                        .map(
+                          (a) => DropdownMenuItem(
+                            value: a.id,
+                            child: Text(a.accountName),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) => setState(() => _fromAccountId = v),
+                    validator: (v) => v == null ? 'Required' : null,
+                  ),
+                if (_type == 'EXPENSE' || _type == 'TRANSFER')
+                  const SizedBox(height: 12),
+
+                // To Account
+                if (_type == 'INCOME' || _type == 'TRANSFER')
+                  DropdownButtonFormField<int>(
+                    initialValue: accounts.any((a) => a.id == _toAccountId)
+                        ? _toAccountId
+                        : null,
+                    decoration: const InputDecoration(
+                      labelText: 'To Account',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: accounts
+                        .map(
+                          (a) => DropdownMenuItem(
+                            value: a.id,
+                            child: Text(a.accountName),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) => setState(() => _toAccountId = v),
+                    validator: (v) => v == null ? 'Required' : null,
+                  ),
+                if (_type == 'INCOME' || _type == 'TRANSFER')
+                  const SizedBox(height: 12),
+
+                // Payee
+                TextFormField(
+                  controller: _payee,
+                  decoration: const InputDecoration(
+                    labelText: 'Payee',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Category
+                DropdownButtonFormField<int?>(
+                  initialValue:
+                      _categoryId == null ||
+                          categories.any((c) => c.id == _categoryId)
+                      ? _categoryId
+                      : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('None')),
+                    ...categories
+                        .where((c) => _type == 'TRANSFER' || c.type == _type)
+                        .map(
+                          (c) => DropdownMenuItem(
+                            value: c.id,
+                            child: Text(c.fullName ?? c.name),
+                          ),
+                        ),
+                  ],
+                  onChanged: (v) => setState(() => _categoryId = v),
+                ),
+                const SizedBox(height: 12),
+
+                // Payment method
+                DropdownButtonFormField<String>(
+                  initialValue: _paymentMethod,
+                  decoration: const InputDecoration(
+                    labelText: 'Payment Method',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: kPaymentMethods
+                      .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _paymentMethod = v ?? 'NONE'),
+                ),
+                const SizedBox(height: 12),
+
+                // Memo
+                TextFormField(
+                  controller: _memo,
+                  decoration: const InputDecoration(
+                    labelText: 'Memo',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 12),
+
+                // Tags
+                TextFormField(
+                  controller: _tags,
+                  decoration: const InputDecoration(
+                    labelText: 'Tags (comma separated)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                FilledButton(
+                  onPressed: _submitting ? null : _save,
+                  child: _submitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Save'),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),
@@ -299,7 +303,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _saving = true);
+    setState(() => _submitting = true);
 
     final transaction = Transaction(
       id: widget.transaction?.id,
@@ -325,7 +329,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
       if (mounted) Navigator.pop(context);
     } on ApiException catch (e) {
       if (mounted) {
-        setState(() => _saving = false);
+        setState(() => _submitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.message}'),

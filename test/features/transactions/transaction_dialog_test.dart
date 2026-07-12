@@ -1,3 +1,4 @@
+import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
@@ -67,6 +68,7 @@ void main() {
           categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
         ],
         child: MaterialApp(
+          theme: AppTheme.light(),
           home: Scaffold(
             // The real screen keeps the family provider alive by watching
             // it while the modal sheet with the dialog is open; mirror
