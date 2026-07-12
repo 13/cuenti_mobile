@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuthState {
 
- UserProfile? get user; bool get registrationEnabled; Color get colorSchemeSeed; bool get biometricEnabled; bool get initialized;
+ UserProfile? get user; bool get registrationEnabled; bool get biometricEnabled; bool get initialized;
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $AuthStateCopyWith<AuthState> get copyWith => _$AuthStateCopyWithImpl<AuthState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthState&&(identical(other.user, user) || other.user == user)&&(identical(other.registrationEnabled, registrationEnabled) || other.registrationEnabled == registrationEnabled)&&(identical(other.colorSchemeSeed, colorSchemeSeed) || other.colorSchemeSeed == colorSchemeSeed)&&(identical(other.biometricEnabled, biometricEnabled) || other.biometricEnabled == biometricEnabled)&&(identical(other.initialized, initialized) || other.initialized == initialized));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthState&&(identical(other.user, user) || other.user == user)&&(identical(other.registrationEnabled, registrationEnabled) || other.registrationEnabled == registrationEnabled)&&(identical(other.biometricEnabled, biometricEnabled) || other.biometricEnabled == biometricEnabled)&&(identical(other.initialized, initialized) || other.initialized == initialized));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,user,registrationEnabled,colorSchemeSeed,biometricEnabled,initialized);
+int get hashCode => Object.hash(runtimeType,user,registrationEnabled,biometricEnabled,initialized);
 
 @override
 String toString() {
-  return 'AuthState(user: $user, registrationEnabled: $registrationEnabled, colorSchemeSeed: $colorSchemeSeed, biometricEnabled: $biometricEnabled, initialized: $initialized)';
+  return 'AuthState(user: $user, registrationEnabled: $registrationEnabled, biometricEnabled: $biometricEnabled, initialized: $initialized)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $AuthStateCopyWith<$Res>  {
   factory $AuthStateCopyWith(AuthState value, $Res Function(AuthState) _then) = _$AuthStateCopyWithImpl;
 @useResult
 $Res call({
- UserProfile? user, bool registrationEnabled, Color colorSchemeSeed, bool biometricEnabled, bool initialized
+ UserProfile? user, bool registrationEnabled, bool biometricEnabled, bool initialized
 });
 
 
@@ -62,12 +62,11 @@ class _$AuthStateCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? user = freezed,Object? registrationEnabled = null,Object? colorSchemeSeed = null,Object? biometricEnabled = null,Object? initialized = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? user = freezed,Object? registrationEnabled = null,Object? biometricEnabled = null,Object? initialized = null,}) {
   return _then(_self.copyWith(
 user: freezed == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as UserProfile?,registrationEnabled: null == registrationEnabled ? _self.registrationEnabled : registrationEnabled // ignore: cast_nullable_to_non_nullable
-as bool,colorSchemeSeed: null == colorSchemeSeed ? _self.colorSchemeSeed : colorSchemeSeed // ignore: cast_nullable_to_non_nullable
-as Color,biometricEnabled: null == biometricEnabled ? _self.biometricEnabled : biometricEnabled // ignore: cast_nullable_to_non_nullable
+as bool,biometricEnabled: null == biometricEnabled ? _self.biometricEnabled : biometricEnabled // ignore: cast_nullable_to_non_nullable
 as bool,initialized: null == initialized ? _self.initialized : initialized // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
@@ -166,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( UserProfile? user,  bool registrationEnabled,  Color colorSchemeSeed,  bool biometricEnabled,  bool initialized)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( UserProfile? user,  bool registrationEnabled,  bool biometricEnabled,  bool initialized)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthState() when $default != null:
-return $default(_that.user,_that.registrationEnabled,_that.colorSchemeSeed,_that.biometricEnabled,_that.initialized);case _:
+return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_that.initialized);case _:
   return orElse();
 
 }
@@ -187,10 +186,10 @@ return $default(_that.user,_that.registrationEnabled,_that.colorSchemeSeed,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( UserProfile? user,  bool registrationEnabled,  Color colorSchemeSeed,  bool biometricEnabled,  bool initialized)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( UserProfile? user,  bool registrationEnabled,  bool biometricEnabled,  bool initialized)  $default,) {final _that = this;
 switch (_that) {
 case _AuthState():
-return $default(_that.user,_that.registrationEnabled,_that.colorSchemeSeed,_that.biometricEnabled,_that.initialized);case _:
+return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_that.initialized);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +206,10 @@ return $default(_that.user,_that.registrationEnabled,_that.colorSchemeSeed,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( UserProfile? user,  bool registrationEnabled,  Color colorSchemeSeed,  bool biometricEnabled,  bool initialized)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( UserProfile? user,  bool registrationEnabled,  bool biometricEnabled,  bool initialized)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthState() when $default != null:
-return $default(_that.user,_that.registrationEnabled,_that.colorSchemeSeed,_that.biometricEnabled,_that.initialized);case _:
+return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_that.initialized);case _:
   return null;
 
 }
@@ -222,12 +221,11 @@ return $default(_that.user,_that.registrationEnabled,_that.colorSchemeSeed,_that
 
 
 class _AuthState extends AuthState {
-  const _AuthState({this.user, this.registrationEnabled = true, this.colorSchemeSeed = const Color(0xFF6750A4), this.biometricEnabled = false, this.initialized = false}): super._();
+  const _AuthState({this.user, this.registrationEnabled = true, this.biometricEnabled = false, this.initialized = false}): super._();
   
 
 @override final  UserProfile? user;
 @override@JsonKey() final  bool registrationEnabled;
-@override@JsonKey() final  Color colorSchemeSeed;
 @override@JsonKey() final  bool biometricEnabled;
 @override@JsonKey() final  bool initialized;
 
@@ -241,16 +239,16 @@ _$AuthStateCopyWith<_AuthState> get copyWith => __$AuthStateCopyWithImpl<_AuthSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthState&&(identical(other.user, user) || other.user == user)&&(identical(other.registrationEnabled, registrationEnabled) || other.registrationEnabled == registrationEnabled)&&(identical(other.colorSchemeSeed, colorSchemeSeed) || other.colorSchemeSeed == colorSchemeSeed)&&(identical(other.biometricEnabled, biometricEnabled) || other.biometricEnabled == biometricEnabled)&&(identical(other.initialized, initialized) || other.initialized == initialized));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthState&&(identical(other.user, user) || other.user == user)&&(identical(other.registrationEnabled, registrationEnabled) || other.registrationEnabled == registrationEnabled)&&(identical(other.biometricEnabled, biometricEnabled) || other.biometricEnabled == biometricEnabled)&&(identical(other.initialized, initialized) || other.initialized == initialized));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,user,registrationEnabled,colorSchemeSeed,biometricEnabled,initialized);
+int get hashCode => Object.hash(runtimeType,user,registrationEnabled,biometricEnabled,initialized);
 
 @override
 String toString() {
-  return 'AuthState(user: $user, registrationEnabled: $registrationEnabled, colorSchemeSeed: $colorSchemeSeed, biometricEnabled: $biometricEnabled, initialized: $initialized)';
+  return 'AuthState(user: $user, registrationEnabled: $registrationEnabled, biometricEnabled: $biometricEnabled, initialized: $initialized)';
 }
 
 
@@ -261,7 +259,7 @@ abstract mixin class _$AuthStateCopyWith<$Res> implements $AuthStateCopyWith<$Re
   factory _$AuthStateCopyWith(_AuthState value, $Res Function(_AuthState) _then) = __$AuthStateCopyWithImpl;
 @override @useResult
 $Res call({
- UserProfile? user, bool registrationEnabled, Color colorSchemeSeed, bool biometricEnabled, bool initialized
+ UserProfile? user, bool registrationEnabled, bool biometricEnabled, bool initialized
 });
 
 
@@ -278,12 +276,11 @@ class __$AuthStateCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? user = freezed,Object? registrationEnabled = null,Object? colorSchemeSeed = null,Object? biometricEnabled = null,Object? initialized = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? user = freezed,Object? registrationEnabled = null,Object? biometricEnabled = null,Object? initialized = null,}) {
   return _then(_AuthState(
 user: freezed == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as UserProfile?,registrationEnabled: null == registrationEnabled ? _self.registrationEnabled : registrationEnabled // ignore: cast_nullable_to_non_nullable
-as bool,colorSchemeSeed: null == colorSchemeSeed ? _self.colorSchemeSeed : colorSchemeSeed // ignore: cast_nullable_to_non_nullable
-as Color,biometricEnabled: null == biometricEnabled ? _self.biometricEnabled : biometricEnabled // ignore: cast_nullable_to_non_nullable
+as bool,biometricEnabled: null == biometricEnabled ? _self.biometricEnabled : biometricEnabled // ignore: cast_nullable_to_non_nullable
 as bool,initialized: null == initialized ? _self.initialized : initialized // ignore: cast_nullable_to_non_nullable
 as bool,
   ));

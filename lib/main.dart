@@ -52,8 +52,8 @@ class _CuentiAppState extends ConsumerState<CuentiApp> {
     return MaterialApp.router(
       title: 'Cuenti',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.build(auth.colorSchemeSeed, Brightness.light),
-      darkTheme: AppTheme.build(auth.colorSchemeSeed, Brightness.dark),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       themeMode:
           auth.user?.darkMode == true ? ThemeMode.dark : ThemeMode.light,
       routerConfig: _router,

@@ -16,18 +16,6 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-
-  static const _colorOptions = <String, Color>{
-    'Purple': Color(0xFF6750A4),
-    'Blue': Color(0xFF1565C0),
-    'Green': Color(0xFF2E7D32),
-    'Red': Color(0xFFC62828),
-    'Orange': Color(0xFFEF6C00),
-    'Teal': Color(0xFF00897B),
-    'Pink': Color(0xFFAD1457),
-    'Indigo': Color(0xFF283593),
-  };
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
@@ -81,18 +69,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         .updatePreferences({'darkMode': v});
                     await auth.refreshProfile();
                   },
-                ),
-                ListTile(
-                  title: const Text('Color Scheme'),
-                  subtitle: Text(_colorOptions.entries
-                      .firstWhere((e) => e.value.toARGB32() == authState.colorSchemeSeed.toARGB32(),
-                          orElse: () => _colorOptions.entries.first)
-                      .key),
-                  trailing: CircleAvatar(
-                    radius: 16,
-                    backgroundColor: authState.colorSchemeSeed,
-                  ),
-                  onTap: () => _showColorPicker(context),
                 ),
                 ListTile(
                   title: const Text('Default Currency'),
@@ -340,53 +316,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: const Text('Change'),
               )),
             ]),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showColorPicker(BuildContext context) {
-    final authState = ref.read(authControllerProvider);
-    final auth = ref.read(authControllerProvider.notifier);
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Choose Color Scheme', style: Theme.of(ctx).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: _colorOptions.entries.map((e) {
-                final isSelected = e.value.toARGB32() == authState.colorSchemeSeed.toARGB32();
-                return GestureDetector(
-                  onTap: () {
-                    auth.setColorSchemeSeed(e.value);
-                    Navigator.pop(ctx);
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircleAvatar(
-                        radius: 24,
-                        backgroundColor: e.value,
-                        child: isSelected
-                            ? const Icon(Icons.check, color: Colors.white)
-                            : null,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(e.key, style: const TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
             const SizedBox(height: 16),
           ],
         ),
