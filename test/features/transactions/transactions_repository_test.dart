@@ -17,7 +17,7 @@ void main() {
   });
 
   test('getPage parses envelope with query params', () async {
-    when(() => dio.get<Map<String, dynamic>>('/transactions',
+    when(() => dio.get<dynamic>('/transactions',
             queryParameters: {'accountId': 3, 'page': 0, 'size': 50}))
         .thenAnswer((_) async => ok({
               'content': [
@@ -43,8 +43,51 @@ void main() {
     expect(page.totalElements, 1);
   });
 
+  test(
+      'getPage tolerates a legacy plain-array response (pre-pagination server)',
+      () async {
+    when(() => dio.get<dynamic>('/transactions',
+            queryParameters: {'page': 0, 'size': 50}))
+        .thenAnswer((_) async => ok<dynamic>([
+              {
+                'id': 1,
+                'type': 'EXPENSE',
+                'amount': 12.5,
+                'transactionDate': '2026-01-01T00:00:00.000',
+              },
+              {
+                'id': 2,
+                'type': 'INCOME',
+                'amount': 5.0,
+                'transactionDate': '2026-01-02T00:00:00.000',
+              },
+            ]));
+
+    final page = await repo.getPage(page: 0, size: 50);
+
+    expect(page.content, hasLength(2));
+    expect(page.content[0].id, 1);
+    expect(page.content[1].id, 2);
+    expect(page.page, 0);
+    expect(page.size, 50);
+    expect(page.totalElements, 2);
+    expect(page.totalPages, 1);
+  });
+
+  test('getPage throws ServerException for a garbage (non-list, non-map) response',
+      () async {
+    when(() => dio.get<dynamic>('/transactions',
+            queryParameters: {'page': 0, 'size': 50}))
+        .thenAnswer((_) async => ok<dynamic>('not json'));
+
+    expect(
+      () => repo.getPage(page: 0, size: 50),
+      throwsA(isA<ServerException>()),
+    );
+  });
+
   test('getPage omits all filter query params when null', () async {
-    when(() => dio.get<Map<String, dynamic>>('/transactions',
+    when(() => dio.get<dynamic>('/transactions',
             queryParameters: {'page': 0, 'size': 50})).thenAnswer((_) async => ok({
           'content': <Map<String, dynamic>>[],
           'page': 0,
@@ -56,12 +99,12 @@ void main() {
     final page = await repo.getPage(page: 0, size: 50);
 
     expect(page.content, isEmpty);
-    verify(() => dio.get<Map<String, dynamic>>('/transactions',
+    verify(() => dio.get<dynamic>('/transactions',
         queryParameters: {'page': 0, 'size': 50})).called(1);
   });
 
   test('getPage serializes every filter field when set', () async {
-    when(() => dio.get<Map<String, dynamic>>('/transactions', queryParameters: {
+    when(() => dio.get<dynamic>('/transactions', queryParameters: {
           'accountId': 3,
           'type': 'EXPENSE',
           'categoryId': 7,
@@ -91,7 +134,7 @@ void main() {
         size: 50);
 
     expect(page.content, isEmpty);
-    verify(() => dio.get<Map<String, dynamic>>('/transactions', queryParameters: {
+    verify(() => dio.get<dynamic>('/transactions', queryParameters: {
           'accountId': 3,
           'type': 'EXPENSE',
           'categoryId': 7,
@@ -104,7 +147,7 @@ void main() {
   });
 
   test('getPage omits search when empty string', () async {
-    when(() => dio.get<Map<String, dynamic>>('/transactions',
+    when(() => dio.get<dynamic>('/transactions',
             queryParameters: {'page': 0, 'size': 50})).thenAnswer((_) async => ok({
           'content': <Map<String, dynamic>>[],
           'page': 0,
@@ -116,7 +159,7 @@ void main() {
     await repo.getPage(
         filter: const TransactionFilter(search: ''), page: 0, size: 50);
 
-    verify(() => dio.get<Map<String, dynamic>>('/transactions',
+    verify(() => dio.get<dynamic>('/transactions',
         queryParameters: {'page': 0, 'size': 50})).called(1);
   });
 
@@ -196,7 +239,7 @@ void main() {
   });
 
   test('getPage maps DioException to ApiException', () async {
-    when(() => dio.get<Map<String, dynamic>>('/transactions',
+    when(() => dio.get<dynamic>('/transactions',
             queryParameters: any(named: 'queryParameters'))).thenThrow(
       DioException(
         requestOptions: RequestOptions(path: '/transactions'),

@@ -14,7 +14,11 @@ class TransactionsRepository {
   TransactionsRepository(this._dio);
   final Dio _dio;
 
-  /// Paged fetch using the Phase 1 envelope.
+  /// Paged fetch using the Phase 1 envelope. Tolerates legacy (pre-pagination)
+  /// servers that respond with a plain JSON array instead of the paged
+  /// envelope: `res.data` is requested as `dynamic` and branched on shape
+  /// rather than statically cast, since a legacy server's plain-array
+  /// response would otherwise surface as an unhandled TypeError.
   Future<TransactionPage> getPage({
     TransactionFilter filter = const TransactionFilter(),
     int page = 0,
@@ -22,7 +26,7 @@ class TransactionsRepository {
   }) =>
       _guard(() async {
         final df = DateFormat('yyyy-MM-dd');
-        final res = await _dio.get<Map<String, dynamic>>('/transactions',
+        final res = await _dio.get<dynamic>('/transactions',
             queryParameters: {
               if (filter.accountId != null) 'accountId': filter.accountId,
               if (filter.type != null) 'type': filter.type,
@@ -34,7 +38,26 @@ class TransactionsRepository {
               'page': page,
               'size': size,
             });
-        return TransactionPage.fromJson(res.data!);
+        final data = res.data;
+        if (data is List) {
+          // Legacy server predating the pagination API: a single,
+          // already-exhausted page. Filters/search are still sent above but
+          // silently ignored by old servers.
+          final content = data
+              .map((e) => Transaction.fromJson(e as Map<String, dynamic>))
+              .toList();
+          return TransactionPage(
+            content: content,
+            page: page,
+            size: size,
+            totalElements: content.length,
+            totalPages: 1,
+          );
+        }
+        if (data is Map<String, dynamic>) {
+          return TransactionPage.fromJson(data);
+        }
+        throw const ServerException('Unexpected response from server');
       });
 
   /// [splitsTouched]: the caller explicitly manages splits. When false
@@ -82,5 +105,10 @@ Future<T> _guard<T>(Future<T> Function() fn) async {
     return await fn();
   } on DioException catch (e) {
     throw ApiException.fromDio(e);
+  } on TypeError catch (_) {
+    // A malformed/unexpected payload (e.g. a legacy server's response shape
+    // changing mid-migration) becomes a visible error card instead of an
+    // unhandled error escaping to the UI.
+    throw const ServerException('Unexpected response from server');
   }
 }
