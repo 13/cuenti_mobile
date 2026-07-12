@@ -44,9 +44,14 @@ class StatChip extends ConsumerWidget {
         child: PrivacyBlur(child: valueContent),
       );
     }
+    // Vertical chips left-align the full-width value under the label;
+    // horizontal chips keep FittedBox's default center alignment (the
+    // original single-line contract).
     final valueText = FittedBox(
       fit: BoxFit.scaleDown,
-      alignment: Alignment.centerLeft,
+      alignment: direction == Axis.vertical
+          ? Alignment.centerLeft
+          : Alignment.center,
       child: valueContent,
     );
 

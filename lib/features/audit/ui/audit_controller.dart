@@ -22,13 +22,24 @@ abstract class AuditState with _$AuditState {
 class AuditController extends _$AuditController {
   static const pageSize = 50;
 
+  /// Backends without a stable total order can repeat rows within and
+  /// across pages (e.g. pre-v2.10.1) — dedupe on id so we never hand the
+  /// UI duplicate ids, which would collide on ValueKey and crash.
+  static List<AuditEntry> _dedupeById(Iterable<AuditEntry> items) {
+    final seen = <int>{};
+    return [
+      for (final e in items)
+        if (seen.add(e.id)) e,
+    ];
+  }
+
   @override
   Future<AuditState> build({String? filter}) async {
     final page = await ref
         .read(auditRepositoryProvider)
         .getPage(filter: filter, page: 0, size: pageSize);
     return AuditState(
-      items: page.content,
+      items: _dedupeById(page.content),
       nextPage: 1,
       hasMore: page.totalPages > 1,
       filter: filter,
@@ -44,14 +55,8 @@ class AuditController extends _$AuditController {
           filter: current.filter,
           page: current.nextPage,
           size: pageSize);
-      // Backends without a stable total order can repeat rows across pages
-      // (e.g. pre-v2.10.1) — dedupe on append so we never hand the UI
-      // duplicate ids, which would collide on ValueKey and crash.
-      final existingIds = current.items.map((e) => e.id).toSet();
-      final fresh =
-          page.content.where((e) => !existingIds.contains(e.id)).toList();
       state = AsyncData(current.copyWith(
-        items: [...current.items, ...fresh],
+        items: _dedupeById([...current.items, ...page.content]),
         nextPage: current.nextPage + 1,
         hasMore: current.nextPage + 1 < page.totalPages,
         loadingMore: false,
