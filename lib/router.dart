@@ -6,7 +6,7 @@ import 'features/auth/ui/register_screen.dart';
 import 'features/auth/ui/server_setup_screen.dart';
 import 'screens/shell_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
-import 'screens/transactions/transactions_screen.dart';
+import 'features/transactions/ui/transactions_screen.dart';
 import 'screens/scheduled/scheduled_screen.dart';
 import 'screens/statistics/statistics_screen.dart';
 import 'features/accounts/ui/accounts_screen.dart';

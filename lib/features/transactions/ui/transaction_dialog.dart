@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart';
-import '../models/models.dart' as m;
-import '../providers/data_provider.dart';
-import '../utils/number_format.dart';
+import '../../../core/api/api_exception.dart';
+import '../../../providers/data_provider.dart';
+import '../../../utils/number_format.dart';
+import '../../accounts/ui/accounts_controller.dart';
+import '../domain/transaction.dart';
+import 'transactions_controller.dart';
 
-class TransactionDialog extends StatefulWidget {
-  final m.Transaction? transaction;
-  const TransactionDialog({super.key, this.transaction});
+class TransactionDialog extends ConsumerStatefulWidget {
+  final Transaction? transaction;
+  final int? accountId;
+  const TransactionDialog({super.key, this.transaction, this.accountId});
 
   @override
-  State<TransactionDialog> createState() => _TransactionDialogState();
+  ConsumerState<TransactionDialog> createState() => _TransactionDialogState();
 }
 
-class _TransactionDialogState extends State<TransactionDialog> {
+class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   final _formKey = GlobalKey<FormState>();
   late String _type;
   late TextEditingController _amount;
@@ -44,6 +49,10 @@ class _TransactionDialogState extends State<TransactionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final accounts = ref.watch(accountsControllerProvider).value ?? [];
+    // TODO(task-6): categories/payees/tags still come from the legacy
+    // DataProvider (Provider-era) until they migrate to Riverpod repositories
+    // in Task 6. Accounts already migrated in Task 4, hence the mixed state.
     final dp = context.watch<DataProvider>();
 
     return Padding(
@@ -110,10 +119,10 @@ class _TransactionDialogState extends State<TransactionDialog> {
               // From Account
               if (_type == 'EXPENSE' || _type == 'TRANSFER')
                 DropdownButtonFormField<int>(
-                  initialValue: dp.accounts.any((a) => a.id == _fromAccountId) ? _fromAccountId : null,
+                  initialValue: accounts.any((a) => a.id == _fromAccountId) ? _fromAccountId : null,
                   decoration: const InputDecoration(
                     labelText: 'From Account', border: OutlineInputBorder()),
-                  items: dp.accounts.map((a) => DropdownMenuItem(
+                  items: accounts.map((a) => DropdownMenuItem(
                     value: a.id, child: Text(a.accountName))).toList(),
                   onChanged: (v) => setState(() => _fromAccountId = v),
                   validator: (v) => v == null ? 'Required' : null,
@@ -124,10 +133,10 @@ class _TransactionDialogState extends State<TransactionDialog> {
               // To Account
               if (_type == 'INCOME' || _type == 'TRANSFER')
                 DropdownButtonFormField<int>(
-                  initialValue: dp.accounts.any((a) => a.id == _toAccountId) ? _toAccountId : null,
+                  initialValue: accounts.any((a) => a.id == _toAccountId) ? _toAccountId : null,
                   decoration: const InputDecoration(
                     labelText: 'To Account', border: OutlineInputBorder()),
-                  items: dp.accounts.map((a) => DropdownMenuItem(
+                  items: accounts.map((a) => DropdownMenuItem(
                     value: a.id, child: Text(a.accountName))).toList(),
                   onChanged: (v) => setState(() => _toAccountId = v),
                   validator: (v) => v == null ? 'Required' : null,
@@ -164,7 +173,7 @@ class _TransactionDialogState extends State<TransactionDialog> {
                 initialValue: _paymentMethod,
                 decoration: const InputDecoration(
                   labelText: 'Payment Method', border: OutlineInputBorder()),
-                items: m.Transaction.paymentMethods
+                items: kPaymentMethods
                     .map((p) => DropdownMenuItem(value: p, child: Text(p)))
                     .toList(),
                 onChanged: (v) => setState(() => _paymentMethod = v ?? 'NONE'),
@@ -223,29 +232,32 @@ class _TransactionDialogState extends State<TransactionDialog> {
 
     setState(() => _saving = true);
 
-    final data = {
-      'type': _type,
-      'amount': double.parse(_amount.text.replaceAll('.', '').replaceAll(',', '.')),
-      'transactionDate': _date.toIso8601String(),
-      'fromAccountId': _fromAccountId,
-      'toAccountId': _toAccountId,
-      'payee': _payee.text.isNotEmpty ? _payee.text : null,
-      'categoryId': _categoryId,
-      'memo': _memo.text.isNotEmpty ? _memo.text : null,
-      'tags': _tags.text.isNotEmpty ? _tags.text : null,
-      'paymentMethod': _paymentMethod,
-      'sortOrder': 0,
-    };
+    final transaction = Transaction(
+      id: widget.transaction?.id,
+      type: _type,
+      amount: double.parse(_amount.text.replaceAll('.', '').replaceAll(',', '.')),
+      transactionDate: _date,
+      fromAccountId: _fromAccountId,
+      toAccountId: _toAccountId,
+      payee: _payee.text.isNotEmpty ? _payee.text : null,
+      categoryId: _categoryId,
+      memo: _memo.text.isNotEmpty ? _memo.text : null,
+      tags: _tags.text.isNotEmpty ? _tags.text : null,
+      paymentMethod: _paymentMethod,
+      sortOrder: widget.transaction?.sortOrder ?? 0,
+    );
 
     try {
-      await context.read<DataProvider>().saveTransaction(data, id: widget.transaction?.id);
+      await ref
+          .read(transactionsControllerProvider(accountId: widget.accountId).notifier)
+          .save(transaction);
       if (mounted) Navigator.pop(context);
-    } catch (e) {
+    } on ApiException catch (e) {
       if (mounted) {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${context.read<DataProvider>().lastError ?? e}'),
+            content: Text('Error: ${e.message}'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

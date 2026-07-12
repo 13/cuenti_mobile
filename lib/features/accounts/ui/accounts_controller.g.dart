@@ -34,7 +34,7 @@ final class AccountsControllerProvider
 }
 
 String _$accountsControllerHash() =>
-    r'49e725c4ae9cc1c1c9ffaf92c88a21b66854153e';
+    r'5ff3a46b614b63c9dc8c3a5a36ee711efa72ecff';
 
 abstract class _$AccountsController extends $AsyncNotifier<List<Account>> {
   FutureOr<List<Account>> build();
