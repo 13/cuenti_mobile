@@ -54,8 +54,9 @@ class _CuentiAppState extends ConsumerState<CuentiApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      themeMode:
-          auth.user?.darkMode == true ? ThemeMode.dark : ThemeMode.light,
+      themeMode: auth.user != null
+          ? (auth.user!.darkMode ? ThemeMode.dark : ThemeMode.light)
+          : ThemeMode.system,
       routerConfig: _router,
       builder: (context, child) =>
           AppLockObserver(child: child ?? const SizedBox.shrink()),
