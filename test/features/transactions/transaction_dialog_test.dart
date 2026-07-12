@@ -323,4 +323,82 @@ void main() {
       expect(captured[1], isTrue);
     },
   );
+
+  testWidgets(
+    'switching to TRANSFER with an invalid split drafted re-enables Save '
+    'and saves with splitsTouched: false (regression: hidden splits '
+    'section kept Save permanently disabled)',
+    (tester) async {
+      when(() => categoriesRepo.getAll(type: any(named: 'type'))).thenAnswer(
+        (_) async => const [
+          Category(id: 1, name: 'Food', type: 'EXPENSE'),
+          Category(id: 2, name: 'Transport', type: 'EXPENSE'),
+        ],
+      );
+      final existing = Transaction(
+        id: 5,
+        type: 'EXPENSE',
+        amount: 40,
+        fromAccountId: 1,
+        transactionDate: DateTime(2026, 1, 1),
+      );
+      when(
+        () => txRepo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      ).thenAnswer(
+        (invocation) async =>
+            invocation.positionalArguments.single as Transaction,
+      );
+
+      await pumpDialog(tester, transaction: existing);
+
+      // Draft an invalid split (no category, empty amount) under EXPENSE:
+      // banner shown, Save disabled.
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+      expect(find.text('Each split needs a category'), findsOneWidget);
+      expect(
+        tester
+            .widget<FilledButton>(find.widgetWithText(FilledButton, 'Save'))
+            .onPressed,
+        isNull,
+      );
+
+      // Switch to TRANSFER: section and banner disappear, Save re-enabled.
+      await tester.tap(find.text('Transfer'));
+      await tester.pumpAndSettle();
+      expect(find.text('Each split needs a category'), findsNothing);
+      expect(find.text('Splits'), findsNothing);
+      expect(
+        tester
+            .widget<FilledButton>(find.widgetWithText(FilledButton, 'Save'))
+            .onPressed,
+        isNotNull,
+      );
+
+      // TRANSFER also needs a To Account before saving.
+      final toAccount = find.byType(DropdownButtonFormField<int>).at(1);
+      await tester.ensureVisible(toAccount);
+      await tester.pumpAndSettle();
+      await tester.tap(toAccount);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Giro').last);
+      await tester.pumpAndSettle();
+
+      final saveButton = find.widgetWithText(FilledButton, 'Save');
+      await tester.ensureVisible(saveButton);
+      await tester.tap(saveButton);
+      await tester.pumpAndSettle();
+
+      // splitsTouched: false → repository omits the splits key entirely
+      // (pinned by transaction_splits_payload_test.dart).
+      final captured = verify(
+        () => txRepo.save(
+          captureAny(),
+          splitsTouched: captureAny(named: 'splitsTouched'),
+        ),
+      ).captured;
+      expect((captured[0] as Transaction).splits, isEmpty);
+      expect(captured[1], isFalse);
+    },
+  );
 }

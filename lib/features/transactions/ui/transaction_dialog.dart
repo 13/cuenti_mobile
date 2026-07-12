@@ -96,8 +96,11 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
 
   /// Null when valid (or the section hasn't been touched / is empty) so the
   /// caller can use it both to gate the Save button and to show the banner.
+  /// Also null for TRANSFER, mirroring the section's visibility: an invalid
+  /// draft must not keep Save disabled after the user switches to a type
+  /// that hides the section (the save path drops splits for TRANSFER anyway).
   String? get _splitsValidationMessage {
-    if (!_splitsTouched || _splits.isEmpty) return null;
+    if (_type == 'TRANSFER' || !_splitsTouched || _splits.isEmpty) return null;
     if (_splits.any((s) => s.categoryId == null)) {
       return 'Each split needs a category';
     }
@@ -369,6 +372,13 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                                 border: OutlineInputBorder(),
                                 isDense: true,
                               ),
+                              validator: (v) {
+                                if (v == null || v.isEmpty) return 'Required';
+                                if (_parseAmount(v) == null) {
+                                  return 'Invalid number';
+                                }
+                                return null;
+                              },
                               onChanged: (_) =>
                                   setState(() => _splitsTouched = true),
                             ),
