@@ -41,6 +41,7 @@ class ShellScreen extends ConsumerWidget {
       case '/vehicles': return 'Vehicles';
       case '/settings': return 'Settings';
       case '/about': return 'About';
+      case '/audit': return 'Audit Log';
       default: return 'Cuenti';
     }
   }
@@ -103,6 +104,8 @@ class ShellScreen extends ConsumerWidget {
             _buildNavItem(context, Icons.directions_car, 'Vehicles', '/vehicles'),
             const Divider(),
             _buildSection(context, 'Settings'),
+            if (auth.user?.isAdmin == true)
+              _buildNavItem(context, Icons.history, 'Audit Log', '/audit'),
             _buildNavItem(context, Icons.settings, 'Settings', '/settings'),
             _buildNavItem(context, Icons.info_outline, 'About', '/about'),
             ListTile(

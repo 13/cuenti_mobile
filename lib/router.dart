@@ -21,6 +21,7 @@ import 'features/assets/ui/assets_screen.dart';
 import 'features/vehicles/ui/vehicles_screen.dart';
 import 'features/user/ui/settings_screen.dart';
 import 'features/user/ui/about_screen.dart';
+import 'features/audit/ui/audit_screen.dart';
 
 /// Bridges Riverpod's `ref.listen` callback (imperative) into a
 /// `Listenable` that `GoRouter.refreshListenable` can consume.
@@ -142,6 +143,11 @@ class AppRouter {
               path: '/about',
               pageBuilder: (_, s) =>
                   fadeThroughPage(child: const AboutScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/audit',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const AuditScreen(), state: s),
             ),
           ],
         ),
