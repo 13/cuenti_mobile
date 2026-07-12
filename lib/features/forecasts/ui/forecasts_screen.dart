@@ -188,6 +188,9 @@ class _MonthlyForecastChart extends ConsumerWidget {
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
             getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
+            // Tooltip text is painted inside the fl_chart canvas, not a
+            // real widget — PrivacyBlur can't wrap it, so keep the
+            // '•••••' string substitution here.
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final label = rodIndex == 0 ? 'Income' : 'Expense';
               return BarTooltipItem(

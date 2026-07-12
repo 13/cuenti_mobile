@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../privacy/privacy_mode.dart';
+import 'privacy_blur.dart';
 
 /// Small icon + label + value chip used for compact stats within cards.
-/// When [maskable] is true, the value is replaced with `•••••` while
-/// privacy mode is on.
+/// When [maskable] is true, the value is blurred via [PrivacyBlur] (and
+/// excluded from semantics) while privacy mode is on.
 ///
 /// [direction] controls the layout: [Axis.horizontal] (default) keeps
 /// icon + label + value on one line; [Axis.vertical] stacks icon+label on
@@ -30,18 +31,23 @@ class StatChip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = DefaultTextStyle.of(context).style;
     final hidden = maskable && ref.watch(privacyModeProvider);
-    final displayValue = hidden ? '•••••' : value;
 
+    Widget valueContent = Text(
+      value,
+      style: textTheme.copyWith(
+        fontWeight: FontWeight.w700,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
+    if (hidden) {
+      valueContent = ExcludeSemantics(
+        child: PrivacyBlur(child: valueContent),
+      );
+    }
     final valueText = FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.centerLeft,
-      child: Text(
-        displayValue,
-        style: textTheme.copyWith(
-          fontWeight: FontWeight.w700,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ),
-      ),
+      child: valueContent,
     );
 
     final labelText = Flexible(

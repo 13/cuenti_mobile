@@ -7,6 +7,7 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/async_value_widget.dart';
 import '../../../core/widgets/confirm_sheet.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/privacy_blur.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../../utils/number_format.dart';
 import '../../categories/ui/categories_controller.dart';
@@ -189,9 +190,28 @@ class _BudgetCard extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              Text(
-                'Remaining: ${hidden ? '•••••' : formatNumber(progress.remaining)}',
-                style: Theme.of(context).textTheme.labelSmall,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Remaining: ',
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                  if (hidden)
+                    ExcludeSemantics(
+                      child: PrivacyBlur(
+                        child: Text(
+                          formatNumber(progress.remaining),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ),
+                    )
+                  else
+                    Text(
+                      formatNumber(progress.remaining),
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                ],
               ),
             ],
           ),

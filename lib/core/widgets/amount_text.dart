@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/cuenti_colors.dart';
 import '../../utils/number_format.dart';
 import '../privacy/privacy_mode.dart';
+import 'privacy_blur.dart';
 
 /// Renders a monetary amount with tabular figures and, optionally, a
 /// semantic color + sign based on the transaction [type]
-/// (`EXPENSE` / `INCOME` / other → transfer). Masked to `•••••` app-wide
-/// when privacy mode is on.
+/// (`EXPENSE` / `INCOME` / other → transfer). Blurred app-wide via
+/// [PrivacyBlur] when privacy mode is on — the real text stays in the
+/// tree (so layout/size don't jump), but is excluded from semantics so
+/// screen readers don't read the number out.
 class AmountText extends ConsumerWidget {
   const AmountText(
     this.amount, {
@@ -33,10 +36,6 @@ class AmountText extends ConsumerWidget {
         ? baseStyle.copyWith(color: amountColorFor(context, type!))
         : baseStyle;
 
-    if (ref.watch(privacyModeProvider)) {
-      return Text('•••••', style: colored);
-    }
-
     final formatted = formatNumber(amount.abs());
     final prefix = signed && type != null
         ? (type == 'EXPENSE'
@@ -49,6 +48,14 @@ class AmountText extends ConsumerWidget {
         ? '$prefix$formatted $currency'
         : '$prefix$formatted';
 
-    return Text(text, style: colored);
+    final textWidget = Text(text, style: colored);
+
+    if (ref.watch(privacyModeProvider)) {
+      return ExcludeSemantics(
+        child: PrivacyBlur(child: textWidget),
+      );
+    }
+
+    return textWidget;
   }
 }

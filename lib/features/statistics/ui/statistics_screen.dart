@@ -7,6 +7,7 @@ import '../../../core/theme/cuenti_colors.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/async_value_widget.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/privacy_blur.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../../utils/number_format.dart';
@@ -299,6 +300,10 @@ class _IncomeExpenseDonut extends ConsumerWidget {
             PieChartData(
               sectionsSpace: 3,
               centerSpaceRadius: 50,
+              // Slice titles are painted TEXT inside the fl_chart canvas,
+              // not real widgets — PrivacyBlur (an ImageFiltered wrapper)
+              // can't reach into the chart painter, so keep the '•••••'
+              // string substitution here.
               sections: [
                 PieChartSectionData(
                   value: income,
@@ -415,6 +420,9 @@ class _CashFlowLineChart extends ConsumerWidget {
           }).toList(),
           touchTooltipData: LineTouchTooltipData(
             getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
+            // Tooltip text is painted inside the fl_chart canvas, not a
+            // real widget — PrivacyBlur can't wrap it, so keep the
+            // '•••••' string substitution here.
             getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
               hidden ? '•••••' : formatNumber(s.y),
               TextStyle(color: s.y >= 0 ? cuenti.income : cuenti.expense, fontWeight: FontWeight.bold),
@@ -515,6 +523,9 @@ class _MonthlyChart extends ConsumerWidget {
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
             getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
+            // Tooltip text is painted inside the fl_chart canvas, not a
+            // real widget — PrivacyBlur can't wrap it, so keep the
+            // '•••••' string substitution here.
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final label = rodIndex == 0 ? 'Income' : 'Expense';
               return BarTooltipItem(
@@ -671,11 +682,20 @@ class _CategoryTab extends ConsumerWidget {
                       ],
                     ),
                     // Percentages are inherently relative, so they stay
-                    // visible when privacy mode masks the absolute amount.
-                    Text(
-                      hidden
-                          ? '••••• (${pct.toStringAsFixed(1)}%)'
-                          : '${formatNumber(e.value)} $currency (${pct.toStringAsFixed(1)}%)',
+                    // visible when privacy mode blurs the absolute amount.
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (hidden)
+                          ExcludeSemantics(
+                            child: PrivacyBlur(
+                              child: Text('${formatNumber(e.value)} $currency'),
+                            ),
+                          )
+                        else
+                          Text('${formatNumber(e.value)} $currency'),
+                        Text(' (${pct.toStringAsFixed(1)}%)'),
+                      ],
                     ),
                   ],
                 ),
