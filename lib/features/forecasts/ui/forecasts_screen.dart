@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../core/privacy/privacy_mode.dart';
 import '../../../core/theme/cuenti_colors.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/async_value_widget.dart';
@@ -166,13 +167,14 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _MonthlyForecastChart extends StatelessWidget {
+class _MonthlyForecastChart extends ConsumerWidget {
   final List<MonthForecast> months;
 
   const _MonthlyForecastChart({required this.months});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hidden = ref.watch(privacyModeProvider);
     if (months.isEmpty) {
       return const EmptyState(icon: Icons.bar_chart, message: 'No data');
     }
@@ -189,7 +191,7 @@ class _MonthlyForecastChart extends StatelessWidget {
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final label = rodIndex == 0 ? 'Income' : 'Expense';
               return BarTooltipItem(
-                '$label\n${formatNumber(rod.toY)}',
+                '$label\n${hidden ? '•••••' : formatNumber(rod.toY)}',
                 TextStyle(color: rod.color, fontWeight: FontWeight.bold, fontSize: 12),
               );
             },

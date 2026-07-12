@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../core/privacy/privacy_mode.dart';
 import '../../../core/theme/cuenti_colors.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/async_value_widget.dart';
@@ -276,12 +277,13 @@ class _OverviewTab extends StatelessWidget {
   }
 }
 
-class _IncomeExpenseDonut extends StatelessWidget {
+class _IncomeExpenseDonut extends ConsumerWidget {
   final double income, expense;
   const _IncomeExpenseDonut({required this.income, required this.expense});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hidden = ref.watch(privacyModeProvider);
     if (income == 0 && expense == 0) {
       return const SizedBox(
         height: 200,
@@ -300,14 +302,14 @@ class _IncomeExpenseDonut extends StatelessWidget {
               sections: [
                 PieChartSectionData(
                   value: income,
-                  title: formatNumber(income),
+                  title: hidden ? '•••••' : formatNumber(income),
                   color: colors.income,
                   radius: 40,
                   titleStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 PieChartSectionData(
                   value: expense,
-                  title: formatNumber(expense),
+                  title: hidden ? '•••••' : formatNumber(expense),
                   color: colors.expense,
                   radius: 40,
                   titleStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
@@ -340,13 +342,14 @@ class _IncomeExpenseDonut extends StatelessWidget {
   }
 }
 
-class _CashFlowLineChart extends StatelessWidget {
+class _CashFlowLineChart extends ConsumerWidget {
   final Map<String, double> monthlyIncome;
   final Map<String, double> monthlyExpense;
   const _CashFlowLineChart({required this.monthlyIncome, required this.monthlyExpense});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hidden = ref.watch(privacyModeProvider);
     final allMonths = {...monthlyIncome.keys, ...monthlyExpense.keys}.toList()..sort();
     if (allMonths.isEmpty) {
       return const EmptyState(icon: Icons.show_chart, message: 'No data');
@@ -413,7 +416,7 @@ class _CashFlowLineChart extends StatelessWidget {
           touchTooltipData: LineTouchTooltipData(
             getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
             getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
-              formatNumber(s.y),
+              hidden ? '•••••' : formatNumber(s.y),
               TextStyle(color: s.y >= 0 ? cuenti.income : cuenti.expense, fontWeight: FontWeight.bold),
             )).toList(),
           ),
@@ -489,14 +492,15 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _MonthlyChart extends StatelessWidget {
+class _MonthlyChart extends ConsumerWidget {
   final Map<String, double> monthlyIncome;
   final Map<String, double> monthlyExpense;
 
   const _MonthlyChart({required this.monthlyIncome, required this.monthlyExpense});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hidden = ref.watch(privacyModeProvider);
     final allMonths = {...monthlyIncome.keys, ...monthlyExpense.keys}.toList()..sort();
     if (allMonths.isEmpty) {
       return const EmptyState(icon: Icons.bar_chart, message: 'No data');
@@ -514,7 +518,7 @@ class _MonthlyChart extends StatelessWidget {
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final label = rodIndex == 0 ? 'Income' : 'Expense';
               return BarTooltipItem(
-                '$label\n${formatNumber(rod.toY)}',
+                '$label\n${hidden ? '•••••' : formatNumber(rod.toY)}',
                 TextStyle(color: rod.color, fontWeight: FontWeight.bold, fontSize: 12),
               );
             },
@@ -568,7 +572,7 @@ class _MonthlyChart extends StatelessWidget {
   }
 }
 
-class _CategoryTab extends StatelessWidget {
+class _CategoryTab extends ConsumerWidget {
   final Map<String, double> data;
   final String title;
   final String currency;
@@ -582,7 +586,8 @@ class _CategoryTab extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hidden = ref.watch(privacyModeProvider);
     final sorted = data.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final total = sorted.fold<double>(0, (sum, e) => sum + e.value);
     final palette = context.cuentiColors.chartPalette;
@@ -665,7 +670,13 @@ class _CategoryTab extends StatelessWidget {
                         Text(e.key, overflow: TextOverflow.ellipsis),
                       ],
                     ),
-                    Text('${formatNumber(e.value)} $currency (${pct.toStringAsFixed(1)}%)'),
+                    // Percentages are inherently relative, so they stay
+                    // visible when privacy mode masks the absolute amount.
+                    Text(
+                      hidden
+                          ? '••••• (${pct.toStringAsFixed(1)}%)'
+                          : '${formatNumber(e.value)} $currency (${pct.toStringAsFixed(1)}%)',
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),

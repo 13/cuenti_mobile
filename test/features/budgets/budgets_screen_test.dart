@@ -1,3 +1,4 @@
+import 'package:cuentimobile/core/privacy/privacy_mode.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/features/budgets/data/budgets_repository.dart';
@@ -5,6 +6,7 @@ import 'package:cuentimobile/features/budgets/domain/budget_progress.dart';
 import 'package:cuentimobile/features/budgets/ui/budgets_screen.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
+import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -61,12 +63,13 @@ void main() {
     );
   });
 
-  Future<void> pumpScreen(WidgetTester tester) async {
+  Future<void> pumpScreen(WidgetTester tester, {bool privacyOn = false}) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           budgetsRepositoryProvider.overrideWithValue(budgetsRepo),
           categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
+          if (privacyOn) privacyModeProvider.overrideWithValue(true),
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
@@ -102,6 +105,30 @@ void main() {
     );
     expect(bars.where((b) => b.color == cuentiColors.expense), hasLength(1));
     expect(bars.where((b) => b.color == colorScheme.primary), hasLength(2));
+  });
+
+  testWidgets('privacy mode masks the remaining amount on budget cards', (
+    tester,
+  ) async {
+    await pumpScreen(tester, privacyOn: true);
+
+    // Every card's remaining line is masked; no raw remaining values leak.
+    expect(find.text('Remaining: •••••'), findsNWidgets(3));
+    expect(find.textContaining('Remaining: 60'), findsNothing);
+    expect(find.textContaining('Remaining: -50'), findsNothing);
+    expect(find.textContaining('Remaining: 500'), findsNothing);
+
+    // The spent/limit AmountTexts self-mask too.
+    expect(find.text('•••••'), findsWidgets);
+  });
+
+  testWidgets('shows the raw remaining amount when privacy mode is off', (
+    tester,
+  ) async {
+    await pumpScreen(tester);
+
+    expect(find.text('Remaining: •••••'), findsNothing);
+    expect(find.text('Remaining: ${formatNumber(60)}'), findsOneWidget);
   });
 
   testWidgets('tapping the FAB opens the add-budget sheet with a category dropdown', (

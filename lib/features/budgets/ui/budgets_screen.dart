@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_exception.dart';
+import '../../../core/privacy/privacy_mode.dart';
 import '../../../core/theme/cuenti_colors.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/async_value_widget.dart';
@@ -133,7 +134,7 @@ void _openEditSheet(
   );
 }
 
-class _BudgetCard extends StatelessWidget {
+class _BudgetCard extends ConsumerWidget {
   const _BudgetCard({
     required this.progress,
     required this.onTap,
@@ -145,7 +146,8 @@ class _BudgetCard extends StatelessWidget {
   final VoidCallback onDelete;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hidden = ref.watch(privacyModeProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final overBudget = progress.spent >= progress.monthlyLimit;
     final ratio = progress.monthlyLimit > 0
@@ -188,7 +190,7 @@ class _BudgetCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Remaining: ${formatNumber(progress.remaining)}',
+                'Remaining: ${hidden ? '•••••' : formatNumber(progress.remaining)}',
                 style: Theme.of(context).textTheme.labelSmall,
               ),
             ],
