@@ -8,6 +8,7 @@ import 'features/auth/ui/server_setup_screen.dart';
 import 'screens/shell_screen.dart';
 import 'features/dashboard/ui/dashboard_screen.dart';
 import 'features/transactions/ui/transactions_screen.dart';
+import 'features/budgets/ui/budgets_screen.dart';
 import 'features/scheduled/ui/scheduled_screen.dart';
 import 'features/statistics/ui/statistics_screen.dart';
 import 'features/accounts/ui/accounts_screen.dart';
@@ -74,6 +75,11 @@ class AppRouter {
               path: '/transactions',
               pageBuilder: (_, s) =>
                   fadeThroughPage(child: const TransactionsScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/budgets',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const BudgetsScreen(), state: s),
             ),
             GoRoute(
               path: '/scheduled',

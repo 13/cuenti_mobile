@@ -20,6 +20,7 @@ class ShellScreen extends ConsumerWidget {
   static const _navItems = [
     (icon: Icons.dashboard, label: 'Dashboard', path: '/dashboard'),
     (icon: Icons.receipt_long, label: 'Transactions', path: '/transactions'),
+    (icon: Icons.pie_chart, label: 'Budgets', path: '/budgets'),
     (icon: Icons.bar_chart, label: 'Statistics', path: '/statistics'),
   ];
 
@@ -36,6 +37,7 @@ class ShellScreen extends ConsumerWidget {
     switch (location) {
       case '/dashboard': return 'Dashboard';
       case '/transactions': return 'Transactions';
+      case '/budgets': return 'Budgets';
       case '/scheduled': return 'Scheduled';
       case '/statistics': return 'Statistics';
       case '/accounts': return 'Accounts';
@@ -93,6 +95,7 @@ class ShellScreen extends ConsumerWidget {
             _buildSection(context, 'General'),
             _buildNavItem(context, Icons.dashboard, 'Dashboard', '/dashboard'),
             _buildNavItem(context, Icons.receipt_long, 'Transactions', '/transactions'),
+            _buildNavItem(context, Icons.pie_chart, 'Budgets', '/budgets'),
             _buildNavItem(context, Icons.schedule, 'Scheduled', '/scheduled'),
             _buildNavItem(context, Icons.bar_chart, 'Statistics', '/statistics'),
             const Divider(),
