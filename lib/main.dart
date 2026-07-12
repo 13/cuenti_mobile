@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
+// `Consumer` is ambiguous between `provider` and `flutter_riverpod`; this
+// file uses the Provider-package widget tree exclusively in Task 1, so
+// only `ProviderScope` is imported from flutter_riverpod.
+import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'api/api_client.dart';
+import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/data_provider.dart';
 import 'router.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const CuentiApp());
+  runApp(const ProviderScope(child: CuentiApp()));
 }
 
 class CuentiApp extends StatefulWidget {
@@ -83,8 +88,8 @@ class _CuentiAppState extends State<CuentiApp> with WidgetsBindingObserver {
           return MaterialApp.router(
             title: 'Cuenti',
             debugShowCheckedModeBanner: false,
-            theme: _buildTheme(auth, Brightness.light),
-            darkTheme: _buildTheme(auth, Brightness.dark),
+            theme: AppTheme.build(auth.colorSchemeSeed, Brightness.light),
+            darkTheme: AppTheme.build(auth.colorSchemeSeed, Brightness.dark),
             themeMode: auth.user?.darkMode == true ? ThemeMode.dark : ThemeMode.light,
             routerConfig: _router,
             builder: (context, child) {
@@ -98,37 +103,6 @@ class _CuentiAppState extends State<CuentiApp> with WidgetsBindingObserver {
       ),
     );
   }
-}
-
-ThemeData _buildTheme(AuthProvider auth, Brightness brightness) {
-  return ThemeData(
-    colorSchemeSeed: auth.colorSchemeSeed,
-    useMaterial3: true,
-    brightness: brightness,
-    inputDecorationTheme: const InputDecorationTheme(
-      border: OutlineInputBorder(),
-      isDense: true,
-    ),
-    cardTheme: CardThemeData(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ),
-    dialogTheme: DialogThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-    ),
-    bottomSheetTheme: const BottomSheetThemeData(
-      showDragHandle: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-    ),
-    floatingActionButtonTheme: FloatingActionButtonThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    ),
-    navigationBarTheme: const NavigationBarThemeData(
-      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-    ),
-  );
 }
 
 class _LockScreen extends StatelessWidget {

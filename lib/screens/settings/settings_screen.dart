@@ -459,11 +459,14 @@ class _AdminPanelState extends State<_AdminPanel> {
     try {
       final dp = context.read<DataProvider>();
       final usersData = await dp.userApi.getAllUsers();
-      _users = usersData.map((e) => UserProfile.fromJson(e)).toList();
+      _users = usersData
+          .map((e) => UserProfile.fromJson(e as Map<String, dynamic>))
+          .toList();
 
       final settings = await dp.userApi.getAdminSettings();
-      _registrationEnabled = settings['registrationEnabled'] ?? true;
-      _apiEnabled = settings['apiEnabled'] ?? false;
+      _registrationEnabled =
+          (settings['registrationEnabled'] as bool?) ?? true;
+      _apiEnabled = (settings['apiEnabled'] as bool?) ?? false;
     } catch (_) {}
     if (mounted) setState(() => _loading = false);
   }
