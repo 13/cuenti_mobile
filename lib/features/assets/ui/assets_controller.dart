@@ -15,7 +15,7 @@ class AssetsController extends _$AssetsController {
     await future;
   }
 
-  /// Optimistic delete with revert on failure (matches old DataProvider).
+  /// Optimistic delete with revert on failure.
   Future<void> delete(int id) async {
     final previous = state.value ?? [];
     state = AsyncData(previous.where((a) => a.id != id).toList());

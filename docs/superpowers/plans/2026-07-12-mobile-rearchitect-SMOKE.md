@@ -57,3 +57,5 @@ Automated gates already green: `flutter analyze` (0 warnings/errors),
 - Admin settings toggles briefly flicker (refetch instead of optimistic).
 - Editing the amount of a transaction that has splits (created on web) is
   rejected with a validation message — split editing arrives in Phase 4.
+- Transaction search filters only the pages loaded so far; server-side search
+  lands in a later phase.

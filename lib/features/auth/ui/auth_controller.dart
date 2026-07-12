@@ -31,16 +31,23 @@ abstract class AuthState with _$AuthState {
 class AuthController extends _$AuthController {
   @override
   AuthState build() {
-    Future.microtask(_init);
+    Future.microtask(init);
     return const AuthState();
   }
 
   AuthRepository get _repo => ref.read(authRepositoryProvider);
   SecureStorage get _storage => ref.read(secureStorageProvider);
 
-  Future<void> _init() => init();
+  // Single-flight guard: `build()`'s microtask and `LoginScreen`'s
+  // `didChangeDependencies` both call `init()`. Without memoizing the
+  // in-flight future, two concurrent runs can race — a transient failure in
+  // one clears the token and stomps the other's restored user. Memoizing
+  // means both call sites share exactly one run.
+  Future<void>? _initFuture;
 
-  Future<void> init() async {
+  Future<void> init() => _initFuture ??= _init();
+
+  Future<void> _init() async {
     await ref.read(apiClientProvider).init();
 
     var colorSchemeSeed = state.colorSchemeSeed;

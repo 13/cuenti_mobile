@@ -37,10 +37,24 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   void _onScroll() {
     if (_scrollController.position.pixels >
         _scrollController.position.maxScrollExtent - 200) {
-      ref
+      _loadMore();
+    }
+  }
+
+  Future<void> _loadMore() async {
+    try {
+      await ref
           .read(transactionsControllerProvider(accountId: _selectedAccountId)
               .notifier)
           .loadMore();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
