@@ -7,7 +7,26 @@ import '../../accounts/ui/accounts_controller.dart';
 import '../../categories/ui/categories_controller.dart';
 import '../domain/transaction.dart';
 import '../domain/transaction_filter.dart';
+import '../domain/transaction_split.dart';
 import 'transactions_controller.dart';
+
+/// Mutable, in-progress row for the splits editor. Backed by
+/// [TextEditingController]s so field widgets keep their own cursor/selection
+/// state across rebuilds; converted to [TransactionSplit] only on save.
+class _SplitDraft {
+  _SplitDraft({this.categoryId, String amount = '', String memo = ''})
+      : amount = TextEditingController(text: amount),
+        memo = TextEditingController(text: memo);
+
+  int? categoryId;
+  final TextEditingController amount;
+  final TextEditingController memo;
+
+  void dispose() {
+    amount.dispose();
+    memo.dispose();
+  }
+}
 
 class TransactionDialog extends ConsumerStatefulWidget {
   final Transaction? transaction;
@@ -39,6 +58,8 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   String _paymentMethod = 'NONE';
   late DateTime _date;
   bool _submitting = false;
+  final List<_SplitDraft> _splits = [];
+  bool _splitsTouched = false;
 
   @override
   void initState() {
@@ -56,6 +77,38 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     _categoryId = t?.categoryId;
     _paymentMethod = t?.paymentMethod ?? 'NONE';
     _date = t?.transactionDate ?? DateTime.now();
+    for (final s in t?.splits ?? const <TransactionSplit>[]) {
+      _splits.add(_SplitDraft(
+        categoryId: s.categoryId,
+        amount: formatNumber(s.amount),
+        memo: s.memo ?? '',
+      ));
+    }
+  }
+
+  /// Same normalization as the main amount field: '.' thousands separator,
+  /// ',' decimal separator (e.g. "1.234,56" -> 1234.56).
+  double? _parseAmount(String text) {
+    if (text.isEmpty) return null;
+    final normalized = text.replaceAll('.', '').replaceAll(',', '.');
+    return double.tryParse(normalized);
+  }
+
+  /// Null when valid (or the section hasn't been touched / is empty) so the
+  /// caller can use it both to gate the Save button and to show the banner.
+  String? get _splitsValidationMessage {
+    if (!_splitsTouched || _splits.isEmpty) return null;
+    if (_splits.any((s) => s.categoryId == null)) {
+      return 'Each split needs a category';
+    }
+    final sum = _splits.fold<double>(
+        0, (acc, s) => acc + (_parseAmount(s.amount.text) ?? 0));
+    final mainAmount = _parseAmount(_amount.text) ?? 0;
+    if ((sum - mainAmount).abs() > 0.005) {
+      return 'Splits must sum to the amount: '
+          '${formatNumber(sum)} of ${formatNumber(mainAmount)}';
+    }
+    return null;
   }
 
   @override
@@ -246,6 +299,118 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                 ),
                 const SizedBox(height: 12),
 
+                // Splits (transfers can't be split across categories)
+                if (_type != 'TRANSFER') ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Splits',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        tooltip: 'Add split',
+                        onPressed: () => setState(() {
+                          _splits.add(_SplitDraft());
+                          _splitsTouched = true;
+                        }),
+                      ),
+                    ],
+                  ),
+                  for (var i = 0; i < _splits.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: DropdownButtonFormField<int?>(
+                              initialValue:
+                                  _splits[i].categoryId != null &&
+                                      categories.any(
+                                        (c) => c.id == _splits[i].categoryId,
+                                      )
+                                  ? _splits[i].categoryId
+                                  : null,
+                              decoration: const InputDecoration(
+                                labelText: 'Category',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              items: categories
+                                  .where((c) => c.type == _type)
+                                  .map(
+                                    (c) => DropdownMenuItem(
+                                      value: c.id,
+                                      child: Text(c.fullName ?? c.name),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (v) => setState(() {
+                                _splits[i].categoryId = v;
+                                _splitsTouched = true;
+                              }),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            flex: 2,
+                            child: TextFormField(
+                              controller: _splits[i].amount,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              decoration: const InputDecoration(
+                                labelText: 'Amount',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              onChanged: (_) =>
+                                  setState(() => _splitsTouched = true),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            flex: 2,
+                            child: TextFormField(
+                              controller: _splits[i].memo,
+                              decoration: const InputDecoration(
+                                labelText: 'Memo',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              onChanged: (_) =>
+                                  setState(() => _splitsTouched = true),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            tooltip: 'Remove split',
+                            onPressed: () => setState(() {
+                              _splits.removeAt(i).dispose();
+                              _splitsTouched = true;
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (_splitsValidationMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        _splitsValidationMessage!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                ],
+
                 // Payment method
                 DropdownButtonFormField<String>(
                   initialValue: _paymentMethod,
@@ -282,7 +447,10 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                 const SizedBox(height: 24),
 
                 FilledButton(
-                  onPressed: _submitting ? null : _save,
+                  onPressed:
+                      _submitting || _splitsValidationMessage != null
+                          ? null
+                          : _save,
                   child: _submitting
                       ? const SizedBox(
                           height: 20,
@@ -302,8 +470,24 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_splitsValidationMessage != null) return;
 
     setState(() => _submitting = true);
+
+    // TRANSFER never carries splits, regardless of stale state left over
+    // from a type switch before saving.
+    final splitsTouched = _type != 'TRANSFER' && _splitsTouched;
+    final splits = _type == 'TRANSFER'
+        ? const <TransactionSplit>[]
+        : _splits
+            .map(
+              (s) => TransactionSplit(
+                categoryId: s.categoryId,
+                amount: _parseAmount(s.amount.text) ?? 0,
+                memo: s.memo.text.isNotEmpty ? s.memo.text : null,
+              ),
+            )
+            .toList();
 
     final transaction = Transaction(
       id: widget.transaction?.id,
@@ -320,12 +504,13 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
       tags: _tags.text.isNotEmpty ? _tags.text : null,
       paymentMethod: _paymentMethod,
       sortOrder: widget.transaction?.sortOrder ?? 0,
+      splits: splits,
     );
 
     try {
       await ref
           .read(transactionsControllerProvider(filter: widget.filter).notifier)
-          .save(transaction);
+          .save(transaction, splitsTouched: splitsTouched);
       if (mounted) Navigator.pop(context);
     } on ApiException catch (e) {
       if (mounted) {
@@ -346,6 +531,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     _payee.dispose();
     _memo.dispose();
     _tags.dispose();
+    for (final s in _splits) {
+      s.dispose();
+    }
     super.dispose();
   }
 }

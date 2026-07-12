@@ -37,7 +37,12 @@ class TransactionsRepository {
         return TransactionPage.fromJson(res.data!);
       });
 
-  Future<Transaction> save(Transaction t) => _guard(() async {
+  /// [splitsTouched]: the caller explicitly manages splits. When false
+  /// (default) the splits key is stripped for backend back-compat (omitted =
+  /// unchanged server-side). When true, t.splits is sent verbatim — an empty
+  /// list means deliberate remove-all.
+  Future<Transaction> save(Transaction t, {bool splitsTouched = false}) =>
+      _guard(() async {
         final json = t.toJson()
           ..remove('id')
           ..remove('fromAccountName')
@@ -46,7 +51,17 @@ class TransactionsRepository {
           ..remove('assetName')
           ..remove('status');
         json['paymentMethod'] = t.paymentMethod ?? 'NONE';
-        if (t.splits.isEmpty) json.remove('splits');
+        if (!splitsTouched) {
+          json.remove('splits');
+        } else {
+          json['splits'] = t.splits
+              .map((s) => {
+                    'categoryId': s.categoryId,
+                    'amount': s.amount,
+                    if (s.memo != null) 'memo': s.memo,
+                  })
+              .toList();
+        }
         final res = t.id != null
             ? await _dio.put<Map<String, dynamic>>(
                 '/transactions/${t.id}', data: json)
