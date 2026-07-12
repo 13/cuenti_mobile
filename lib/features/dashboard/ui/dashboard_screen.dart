@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/cuenti_colors.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/async_value_widget.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/hero_card.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/skeleton_loader.dart';
@@ -37,111 +38,116 @@ class DashboardScreen extends ConsumerWidget {
             SkeletonLoader.tiles(items: 2, height: 72),
           ],
         ),
-        data: (dashboard) => ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Hero net-worth card
-            HeroCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Net worth',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withOpacity(0.8),
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  AmountText(
-                    dashboard.netWorth,
-                    currency: dashboard.defaultCurrency,
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.all(8),
-                          child: StatChip(
-                            icon: Icons.account_balance_wallet,
-                            label: 'Cash',
-                            value: formatNumber(dashboard.availableCash),
-                          ),
-                        ),
+        data: (dashboard) {
+          final accounts = dashboard.accounts
+              .where((a) => !a.excludeFromSummary && !a.excludeFromReports)
+              .toList();
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // Hero net-worth card
+              HeroCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Net worth',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withOpacity(0.8),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.all(8),
-                          child: StatChip(
-                            icon: Icons.trending_up,
-                            label: 'Portfolio',
-                            value: formatNumber(dashboard.portfolioValue),
+                    ),
+                    const SizedBox(height: 8),
+                    AmountText(
+                      dashboard.netWorth,
+                      currency: dashboard.defaultCurrency,
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: StatChip(
+                              icon: Icons.account_balance_wallet,
+                              label: 'Cash',
+                              value:
+                                  '${formatNumber(dashboard.availableCash)} ${dashboard.defaultCurrency}',
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Accounts section
-            SectionHeader('Accounts'),
-            const SizedBox(height: 12),
-            if (dashboard.accounts.isNotEmpty)
-              SizedBox(
-                height: 120,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: dashboard.accounts
-                      .where((a) => !a.excludeFromSummary && !a.excludeFromReports)
-                      .length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (_, idx) {
-                    final accounts = dashboard.accounts
-                        .where((a) => !a.excludeFromSummary && !a.excludeFromReports)
-                        .toList();
-                    final account = accounts[idx];
-                    return _AccountCard(account: account);
-                  },
-                ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Text(
-                  'No accounts',
-                  style: Theme.of(context).textTheme.bodySmall,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: StatChip(
+                              icon: Icons.trending_up,
+                              label: 'Portfolio',
+                              value:
+                                  '${formatNumber(dashboard.portfolioValue)} ${dashboard.defaultCurrency}',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Asset performance section
-            if (dashboard.assetPerformance.isNotEmpty) ...[
-              SectionHeader('Assets'),
+              // Accounts section
+              const SectionHeader('Accounts'),
               const SizedBox(height: 12),
-              Column(
-                children: dashboard.assetPerformance
-                    .map((a) => _AssetTile(asset: a, currency: dashboard.defaultCurrency))
-                    .toList(),
-              ),
+              if (accounts.isNotEmpty)
+                SizedBox(
+                  height: 120,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: accounts.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (_, idx) =>
+                        _AccountCard(account: accounts[idx]),
+                  ),
+                )
+              else
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: EmptyState(
+                    icon: Icons.account_balance_wallet,
+                    message: 'No accounts',
+                  ),
+                ),
+              const SizedBox(height: 24),
+
+              // Asset performance section
+              if (dashboard.assetPerformance.isNotEmpty) ...[
+                const SectionHeader('Assets'),
+                const SizedBox(height: 12),
+                Column(
+                  children: dashboard.assetPerformance
+                      .map(
+                        (a) => _AssetTile(
+                          asset: a,
+                          currency: dashboard.defaultCurrency,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
             ],
-          ],
-        ),
+          );
+        },
         onRetry: () => ref.invalidate(dashboardProvider),
       ),
     );
@@ -178,8 +184,8 @@ class _AccountCard extends StatelessWidget {
                 account.balance,
                 currency: account.currency,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -212,7 +218,10 @@ class _AssetTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(asset.assetName, style: Theme.of(context).textTheme.titleSmall),
+                  Text(
+                    asset.assetName,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                   Text(
                     '${formatNumber(asset.totalUnits, decimals: 4)} units • ${asset.assetSymbol}',
                     style: Theme.of(context).textTheme.labelSmall,
@@ -227,15 +236,15 @@ class _AssetTile extends StatelessWidget {
                   asset.currentValue,
                   currency: currency,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   '$arrow ${formatNumber(asset.gainLossPercent.abs())}%',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: gainLossColor,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
+                    color: gainLossColor,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ],
             ),
@@ -245,4 +254,3 @@ class _AssetTile extends StatelessWidget {
     );
   }
 }
-

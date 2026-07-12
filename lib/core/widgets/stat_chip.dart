@@ -23,7 +23,13 @@ class StatChip extends StatelessWidget {
         const SizedBox(width: 6),
         Text(label, style: textTheme.copyWith(fontSize: 12)),
         const SizedBox(width: 4),
-        Text(value, style: textTheme.copyWith(fontWeight: FontWeight.w700)),
+        Text(
+          value,
+          style: textTheme.copyWith(
+            fontWeight: FontWeight.w700,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
       ],
     );
   }

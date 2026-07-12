@@ -73,6 +73,9 @@ void main() {
 
     expect(find.text('Net worth'), findsOneWidget);
     expect(find.text('1.500,00 EUR'), findsWidgets);
+    // Cash stat chip keeps the currency suffix.
+    expect(find.text('500,00 EUR'), findsOneWidget);
+    expect(find.textContaining('EUR'), findsWidgets);
     expect(find.text('Main Bank'), findsOneWidget);
   });
 
