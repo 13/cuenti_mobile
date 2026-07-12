@@ -6,8 +6,9 @@ import 'transaction_filter.dart';
 
 /// Serializes TransactionFilter into the opaque `params` string stored by
 /// the saved-views API. Versioned envelope: {"v":1,"accountId":…,…}.
-/// Returns null from [decode] for anything it doesn't understand (e.g.
-/// params written by the web app).
+/// [decode] never throws: it returns null for anything it doesn't
+/// understand (e.g. params written by the web app, or a v1 envelope with
+/// wrong-typed or malformed fields).
 abstract final class TransactionFilterCodec {
   static String encode(TransactionFilter f) => jsonEncode({
         'v': 1,
@@ -37,7 +38,9 @@ abstract final class TransactionFilterCodec {
             : null,
         search: decoded['search'] as String?,
       );
-    } on FormatException {
+      // Defensive parser: any failure (bad JSON, wrong-typed fields, bad
+      // dates) means the params weren't written by this codec.
+    } catch (_) {
       return null;
     }
   }

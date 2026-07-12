@@ -51,5 +51,19 @@ void main() {
         isNull,
       );
     });
+
+    test('decode returns null when a v1 field has the wrong type', () {
+      expect(
+        TransactionFilterCodec.decode('{"v":1,"accountId":"abc"}'),
+        isNull,
+      );
+    });
+
+    test('decode returns null when a v1 date field is not a string', () {
+      expect(
+        TransactionFilterCodec.decode('{"v":1,"start":20260101}'),
+        isNull,
+      );
+    });
   });
 }
