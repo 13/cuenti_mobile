@@ -185,21 +185,22 @@ void main() {
     ).called(1);
   });
 
-  testWidgets('swipe endToStart on a tile shows the delete confirm sheet', (
-    tester,
-  ) async {
+  testWidgets('swipe endToStart shows the delete confirm sheet and confirming '
+      'removes the row', (tester) async {
+    var content = [tx(1)];
     when(
       () =>
           txRepo.getPage(filter: const TransactionFilter(), page: 0, size: 50),
     ).thenAnswer(
       (_) async => TransactionPage(
-        content: [tx(1)],
+        content: content,
         page: 0,
         size: 50,
-        totalElements: 1,
-        totalPages: 1,
+        totalElements: content.length,
+        totalPages: content.isEmpty ? 0 : 1,
       ),
     );
+    when(() => txRepo.delete(1)).thenAnswer((_) async => content = []);
 
     await pumpScreen(tester);
 
@@ -207,6 +208,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Delete transaction?'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    verify(() => txRepo.delete(1)).called(1);
+    expect(find.text('Payee 1'), findsNothing);
   });
 
   testWidgets('shows empty state with clear-filters action when no results', (

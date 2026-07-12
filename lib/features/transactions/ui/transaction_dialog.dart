@@ -10,8 +10,16 @@ import 'transactions_controller.dart';
 
 class TransactionDialog extends ConsumerStatefulWidget {
   final Transaction? transaction;
-  final int? accountId;
-  const TransactionDialog({super.key, this.transaction, this.accountId});
+
+  /// Filter of the transactions list this dialog was opened from. Saving
+  /// goes through the controller instance keyed by this exact filter so
+  /// the visible (possibly filtered) list refreshes after save.
+  final TransactionFilter filter;
+  const TransactionDialog({
+    super.key,
+    this.transaction,
+    this.filter = const TransactionFilter(),
+  });
 
   @override
   ConsumerState<TransactionDialog> createState() => _TransactionDialogState();
@@ -36,7 +44,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     super.initState();
     final t = widget.transaction;
     _type = t?.type ?? 'EXPENSE';
-    _amount = TextEditingController(text: t != null ? formatNumber(t.amount) : '');
+    _amount = TextEditingController(
+      text: t != null ? formatNumber(t.amount) : '',
+    );
     _payee = TextEditingController(text: t?.payee ?? '');
     _memo = TextEditingController(text: t?.memo ?? '');
     _tags = TextEditingController(text: t?.tags ?? '');
@@ -55,7 +65,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16, right: 16, top: 16,
+        left: 16,
+        right: 16,
+        top: 16,
       ),
       child: Form(
         key: _formKey,
@@ -65,7 +77,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                widget.transaction == null ? 'Add Transaction' : 'Edit Transaction',
+                widget.transaction == null
+                    ? 'Add Transaction'
+                    : 'Edit Transaction',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
@@ -73,9 +87,21 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
               // Type selector
               SegmentedButton<String>(
                 segments: const [
-                  ButtonSegment(value: 'EXPENSE', label: Text('Expense'), icon: Icon(Icons.arrow_downward)),
-                  ButtonSegment(value: 'INCOME', label: Text('Income'), icon: Icon(Icons.arrow_upward)),
-                  ButtonSegment(value: 'TRANSFER', label: Text('Transfer'), icon: Icon(Icons.swap_horiz)),
+                  ButtonSegment(
+                    value: 'EXPENSE',
+                    label: Text('Expense'),
+                    icon: Icon(Icons.arrow_downward),
+                  ),
+                  ButtonSegment(
+                    value: 'INCOME',
+                    label: Text('Income'),
+                    icon: Icon(Icons.arrow_upward),
+                  ),
+                  ButtonSegment(
+                    value: 'TRANSFER',
+                    label: Text('Transfer'),
+                    icon: Icon(Icons.swap_horiz),
+                  ),
                 ],
                 selected: {_type},
                 onSelectionChanged: (v) => setState(() => _type = v.first),
@@ -102,12 +128,19 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
               TextFormField(
                 controller: _amount,
                 decoration: const InputDecoration(
-                  labelText: 'Amount', border: OutlineInputBorder(), prefixIcon: Icon(Icons.attach_money)),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  labelText: 'Amount',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.attach_money),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Required';
                   final normalized = v.replaceAll('.', '').replaceAll(',', '.');
-                  if (double.tryParse(normalized) == null) return 'Invalid number';
+                  if (double.tryParse(normalized) == null) {
+                    return 'Invalid number';
+                  }
                   return null;
                 },
               ),
@@ -116,11 +149,21 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
               // From Account
               if (_type == 'EXPENSE' || _type == 'TRANSFER')
                 DropdownButtonFormField<int>(
-                  initialValue: accounts.any((a) => a.id == _fromAccountId) ? _fromAccountId : null,
+                  initialValue: accounts.any((a) => a.id == _fromAccountId)
+                      ? _fromAccountId
+                      : null,
                   decoration: const InputDecoration(
-                    labelText: 'From Account', border: OutlineInputBorder()),
-                  items: accounts.map((a) => DropdownMenuItem(
-                    value: a.id, child: Text(a.accountName))).toList(),
+                    labelText: 'From Account',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: accounts
+                      .map(
+                        (a) => DropdownMenuItem(
+                          value: a.id,
+                          child: Text(a.accountName),
+                        ),
+                      )
+                      .toList(),
                   onChanged: (v) => setState(() => _fromAccountId = v),
                   validator: (v) => v == null ? 'Required' : null,
                 ),
@@ -130,11 +173,21 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
               // To Account
               if (_type == 'INCOME' || _type == 'TRANSFER')
                 DropdownButtonFormField<int>(
-                  initialValue: accounts.any((a) => a.id == _toAccountId) ? _toAccountId : null,
+                  initialValue: accounts.any((a) => a.id == _toAccountId)
+                      ? _toAccountId
+                      : null,
                   decoration: const InputDecoration(
-                    labelText: 'To Account', border: OutlineInputBorder()),
-                  items: accounts.map((a) => DropdownMenuItem(
-                    value: a.id, child: Text(a.accountName))).toList(),
+                    labelText: 'To Account',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: accounts
+                      .map(
+                        (a) => DropdownMenuItem(
+                          value: a.id,
+                          child: Text(a.accountName),
+                        ),
+                      )
+                      .toList(),
                   onChanged: (v) => setState(() => _toAccountId = v),
                   validator: (v) => v == null ? 'Required' : null,
                 ),
@@ -145,21 +198,33 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
               TextFormField(
                 controller: _payee,
                 decoration: const InputDecoration(
-                  labelText: 'Payee', border: OutlineInputBorder()),
+                  labelText: 'Payee',
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 12),
 
               // Category
               DropdownButtonFormField<int?>(
-                initialValue: _categoryId == null || categories.any((c) => c.id == _categoryId) ? _categoryId : null,
+                initialValue:
+                    _categoryId == null ||
+                        categories.any((c) => c.id == _categoryId)
+                    ? _categoryId
+                    : null,
                 decoration: const InputDecoration(
-                  labelText: 'Category', border: OutlineInputBorder()),
+                  labelText: 'Category',
+                  border: OutlineInputBorder(),
+                ),
                 items: [
                   const DropdownMenuItem(value: null, child: Text('None')),
                   ...categories
                       .where((c) => _type == 'TRANSFER' || c.type == _type)
-                      .map((c) => DropdownMenuItem(
-                            value: c.id, child: Text(c.fullName ?? c.name))),
+                      .map(
+                        (c) => DropdownMenuItem(
+                          value: c.id,
+                          child: Text(c.fullName ?? c.name),
+                        ),
+                      ),
                 ],
                 onChanged: (v) => setState(() => _categoryId = v),
               ),
@@ -169,7 +234,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
               DropdownButtonFormField<String>(
                 initialValue: _paymentMethod,
                 decoration: const InputDecoration(
-                  labelText: 'Payment Method', border: OutlineInputBorder()),
+                  labelText: 'Payment Method',
+                  border: OutlineInputBorder(),
+                ),
                 items: kPaymentMethods
                     .map((p) => DropdownMenuItem(value: p, child: Text(p)))
                     .toList(),
@@ -181,7 +248,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
               TextFormField(
                 controller: _memo,
                 decoration: const InputDecoration(
-                  labelText: 'Memo', border: OutlineInputBorder()),
+                  labelText: 'Memo',
+                  border: OutlineInputBorder(),
+                ),
                 maxLines: 2,
               ),
               const SizedBox(height: 12),
@@ -190,7 +259,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
               TextFormField(
                 controller: _tags,
                 decoration: const InputDecoration(
-                  labelText: 'Tags (comma separated)', border: OutlineInputBorder()),
+                  labelText: 'Tags (comma separated)',
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 24),
 
@@ -210,7 +281,8 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2))
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : const Text('Save'),
                     ),
                   ),
@@ -232,7 +304,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     final transaction = Transaction(
       id: widget.transaction?.id,
       type: _type,
-      amount: double.parse(_amount.text.replaceAll('.', '').replaceAll(',', '.')),
+      amount: double.parse(
+        _amount.text.replaceAll('.', '').replaceAll(',', '.'),
+      ),
       transactionDate: _date,
       fromAccountId: _fromAccountId,
       toAccountId: _toAccountId,
@@ -246,9 +320,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
 
     try {
       await ref
-          .read(transactionsControllerProvider(
-                  filter: TransactionFilter(accountId: widget.accountId))
-              .notifier)
+          .read(transactionsControllerProvider(filter: widget.filter).notifier)
           .save(transaction);
       if (mounted) Navigator.pop(context);
     } on ApiException catch (e) {

@@ -173,7 +173,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       index: index,
                       child: _TransactionTile(
                         transaction: t,
-                        accountId: _filter.accountId,
+                        filter: _filter,
                         onDelete: _delete,
                       ),
                     );
@@ -428,7 +428,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => TransactionDialog(accountId: _filter.accountId),
+      builder: (_) => TransactionDialog(filter: _filter),
     );
   }
 }
@@ -539,12 +539,12 @@ class _StaggeredState extends State<_Staggered> {
 class _TransactionTile extends StatelessWidget {
   const _TransactionTile({
     required this.transaction,
-    required this.accountId,
+    required this.filter,
     required this.onDelete,
   });
 
   final Transaction transaction;
-  final int? accountId;
+  final TransactionFilter filter;
   final void Function(int id) onDelete;
 
   @override
@@ -626,7 +626,7 @@ class _TransactionTile extends StatelessWidget {
             isScrollControlled: true,
             builder: (_) => TransactionDialog(
               transaction: transaction,
-              accountId: accountId,
+              filter: filter,
             ),
           ),
         );
@@ -657,7 +657,7 @@ class _TransactionTile extends StatelessWidget {
             isScrollControlled: true,
             builder: (_) => TransactionDialog(
               transaction: transaction,
-              accountId: accountId,
+              filter: filter,
             ),
           );
         },
