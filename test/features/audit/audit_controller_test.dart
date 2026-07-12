@@ -77,6 +77,30 @@ void main() {
     expect(state.loadingMore, isFalse);
   });
 
+  test('loadMore dedupes ids when the backend repeats rows across pages',
+      () async {
+    // Backends without a stable total order (pre-v2.10.1) can hand back
+    // rows from the previous page — loadMore must not duplicate them.
+    when(() => repo.getPage(filter: null, page: 0, size: 50))
+        .thenAnswer((_) async => AuditPage(
+            content: [entry(1), entry(2)], page: 0, size: 50, totalElements: 3, totalPages: 2));
+    when(() => repo.getPage(filter: null, page: 1, size: 50))
+        .thenAnswer((_) async => AuditPage(
+            content: [entry(2), entry(3)], page: 1, size: 50, totalElements: 3, totalPages: 2));
+
+    await container
+        .read(auditControllerProvider(filter: null).future);
+    await container
+        .read(auditControllerProvider(filter: null).notifier)
+        .loadMore();
+
+    final state = container
+        .read(auditControllerProvider(filter: null))
+        .value!;
+    expect(state.items, [entry(1), entry(2), entry(3)]);
+    expect(state.items.map((e) => e.id).toSet().length, state.items.length);
+  });
+
   test('loadMore no-ops when hasMore is false', () async {
     when(() => repo.getPage(filter: null, page: 0, size: 50))
         .thenAnswer((_) async => AuditPage(

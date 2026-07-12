@@ -51,8 +51,14 @@ class TransactionsController extends _$TransactionsController {
           filter: current.filter,
           page: current.nextPage,
           size: pageSize);
+      // Backends without a stable total order can repeat rows across pages
+      // (e.g. pre-v2.10.1) — dedupe on append so we never hand the UI
+      // duplicate ids, which would collide on ValueKey and crash.
+      final existingIds = current.items.map((t) => t.id).toSet();
+      final fresh =
+          page.content.where((t) => !existingIds.contains(t.id)).toList();
       state = AsyncData(current.copyWith(
-        items: [...current.items, ...page.content],
+        items: [...current.items, ...fresh],
         nextPage: current.nextPage + 1,
         hasMore: current.nextPage + 1 < page.totalPages,
         loadingMore: false,

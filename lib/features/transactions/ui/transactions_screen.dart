@@ -168,9 +168,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     return CustomScrollView(
       controller: _scrollController,
       slivers: [
-        for (final group in groups)
+        for (final (groupIndex, group) in groups.indexed)
           SliverMainAxisGroup(
-            key: ValueKey(group.dayKey),
+            // Index-suffixed: even if a pathological backend hands us the
+            // same day twice (or duplicate ids slip past dedupe), sliver
+            // keys stay unique so the framework never throws "Duplicate
+            // keys found".
+            key: ValueKey('${group.dayKey}-$groupIndex'),
             slivers: [
               SliverPersistentHeader(
                 pinned: true,
