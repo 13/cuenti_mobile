@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/cuenti_colors.dart';
+import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/async_value_widget.dart';
+import '../../../core/widgets/hero_card.dart';
+import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/skeleton_loader.dart';
+import '../../../core/widgets/stat_chip.dart';
 import '../../../utils/number_format.dart';
 import '../../accounts/domain/account.dart';
 import '../domain/asset_performance.dart';
@@ -21,106 +27,162 @@ class DashboardScreen extends ConsumerWidget {
       },
       child: AsyncValueWidget<DashboardData>(
         value: dashboardAsync,
+        skeleton: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            SkeletonLoader.card(height: 160),
+            const SizedBox(height: 24),
+            SkeletonLoader.tiles(items: 3, height: 120),
+            const SizedBox(height: 24),
+            SkeletonLoader.tiles(items: 2, height: 72),
+          ],
+        ),
         data: (dashboard) => ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Metric cards
-            _MetricCard(
-              title: 'Available Cash',
-              value: dashboard.availableCash,
-              currency: dashboard.defaultCurrency,
-              color: Colors.green,
-              icon: Icons.account_balance_wallet,
-            ),
-            const SizedBox(height: 12),
-            _MetricCard(
-              title: 'Portfolio Value',
-              value: dashboard.portfolioValue,
-              currency: dashboard.defaultCurrency,
-              color: Colors.blue,
-              icon: Icons.show_chart,
-            ),
-            const SizedBox(height: 12),
-            _MetricCard(
-              title: 'Net Worth',
-              value: dashboard.netWorth,
-              currency: dashboard.defaultCurrency,
-              color: Colors.purple,
-              icon: Icons.savings,
+            // Hero net-worth card
+            HeroCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Net worth',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  AmountText(
+                    dashboard.netWorth,
+                    currency: dashboard.defaultCurrency,
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          child: StatChip(
+                            icon: Icons.account_balance_wallet,
+                            label: 'Cash',
+                            value: formatNumber(dashboard.availableCash),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          child: StatChip(
+                            icon: Icons.trending_up,
+                            label: 'Portfolio',
+                            value: formatNumber(dashboard.portfolioValue),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
 
-            // Asset Performance
-            if (dashboard.assetPerformance.isNotEmpty) ...[
-              Text('Asset Performance',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Card(
-                child: Column(
-                  children: dashboard.assetPerformance
-                      .map((a) => _AssetTile(asset: a, currency: dashboard.defaultCurrency))
-                      .toList(),
+            // Accounts section
+            SectionHeader('Accounts'),
+            const SizedBox(height: 12),
+            if (dashboard.accounts.isNotEmpty)
+              SizedBox(
+                height: 120,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: dashboard.accounts
+                      .where((a) => !a.excludeFromSummary && !a.excludeFromReports)
+                      .length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (_, idx) {
+                    final accounts = dashboard.accounts
+                        .where((a) => !a.excludeFromSummary && !a.excludeFromReports)
+                        .toList();
+                    final account = accounts[idx];
+                    return _AccountCard(account: account);
+                  },
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'No accounts',
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
-              const SizedBox(height: 24),
-            ],
+            const SizedBox(height: 24),
 
-            // Accounts
-            Text('Accounts Overview',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            ...dashboard.accounts
-                .where((a) => !a.excludeFromSummary && !a.excludeFromReports)
-                .map((a) => _AccountTile(account: a)),
+            // Asset performance section
+            if (dashboard.assetPerformance.isNotEmpty) ...[
+              SectionHeader('Assets'),
+              const SizedBox(height: 12),
+              Column(
+                children: dashboard.assetPerformance
+                    .map((a) => _AssetTile(asset: a, currency: dashboard.defaultCurrency))
+                    .toList(),
+              ),
+            ],
           ],
         ),
+        onRetry: () => ref.invalidate(dashboardProvider),
       ),
     );
   }
 }
 
-class _MetricCard extends StatelessWidget {
-  final String title;
-  final double value;
-  final String currency;
-  final Color color;
-  final IconData icon;
+class _AccountCard extends StatelessWidget {
+  final Account account;
 
-  const _MetricCard({
-    required this.title,
-    required this.value,
-    required this.currency,
-    required this.color,
-    required this.icon,
-  });
+  const _AccountCard({required this.account});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: color.withAlpha(30),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: color.withAlpha(50),
-              child: Icon(icon, color: color),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: Theme.of(context).textTheme.bodySmall),
-                  Text(
-                    '${formatNumber(value)} $currency',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold),
-                  ),
-                ],
+      child: SizedBox(
+        width: 160,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                account.accountName,
+                style: Theme.of(context).textTheme.titleSmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+              Text(
+                account.displayType,
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+              AmountText(
+                account.balance,
+                currency: account.currency,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -136,48 +198,51 @@ class _AssetTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPositive = asset.gainLoss >= 0;
-    final color = isPositive ? Colors.green : Colors.red;
+    final gainLossColor = isPositive
+        ? context.cuentiColors.income
+        : context.cuentiColors.expense;
+    final arrow = isPositive ? '▲' : '▼';
 
-    return ListTile(
-      title: Text(asset.assetName),
-      subtitle: Text('${formatNumber(asset.totalUnits, decimals: 4)} units • ${asset.assetSymbol}'),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text('${formatNumber(asset.currentValue)} $currency',
-              style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(
-            '${isPositive ? '+' : ''}${formatNumber(asset.gainLoss)} (${formatNumber(asset.gainLossPercent)}%)',
-            style: TextStyle(color: color, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AccountTile extends StatelessWidget {
-  final Account account;
-  const _AccountTile({required this.account});
-
-  @override
-  Widget build(BuildContext context) {
     return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          child: Text(account.accountName[0].toUpperCase()),
-        ),
-        title: Text(account.accountName),
-        subtitle: Text('${account.displayType} • ${account.currency}'),
-        trailing: Text(
-          '${formatNumber(account.balance)} ${account.currency}',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: account.balance >= 0 ? Colors.green : Colors.red,
-          ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(asset.assetName, style: Theme.of(context).textTheme.titleSmall),
+                  Text(
+                    '${formatNumber(asset.totalUnits, decimals: 4)} units • ${asset.assetSymbol}',
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                AmountText(
+                  asset.currentValue,
+                  currency: currency,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                Text(
+                  '$arrow ${formatNumber(asset.gainLossPercent.abs())}%',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: gainLossColor,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
