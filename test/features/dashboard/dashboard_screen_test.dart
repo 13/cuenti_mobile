@@ -29,7 +29,10 @@ void main() {
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
-          home: const DashboardScreen(),
+          // DashboardScreen is always mounted inside ShellScreen's Scaffold
+          // in the real app; wrap it here too so the themed DefaultTextStyle
+          // (set by Material) is present, matching production.
+          home: const Scaffold(body: DashboardScreen()),
         ),
       ),
     );
@@ -92,7 +95,10 @@ void main() {
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
-          home: const DashboardScreen(),
+          // DashboardScreen is always mounted inside ShellScreen's Scaffold
+          // in the real app; wrap it here too so the themed DefaultTextStyle
+          // (set by Material) is present, matching production.
+          home: const Scaffold(body: DashboardScreen()),
         ),
       ),
     );

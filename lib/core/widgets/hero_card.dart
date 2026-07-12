@@ -22,7 +22,7 @@ class HeroCard extends StatelessWidget {
         gradient: context.cuentiColors.heroGradient,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: DefaultTextStyle(
+      child: DefaultTextStyle.merge(
         style: const TextStyle(color: Colors.white),
         child: IconTheme(
           data: const IconThemeData(color: Colors.white),

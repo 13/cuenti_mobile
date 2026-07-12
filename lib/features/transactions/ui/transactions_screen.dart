@@ -127,17 +127,28 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     return ListView(
                       children: [
                         const SizedBox(height: 80),
-                        EmptyState(
-                          icon: Icons.receipt_long,
-                          message: 'No transactions match',
-                          actionLabel: 'Clear filters',
-                          onAction: _resetFilters,
-                        ),
+                        if (_filter == TransactionsController.defaultFilter)
+                          EmptyState(
+                            icon: Icons.receipt_long,
+                            message: 'No transactions yet',
+                            actionLabel: 'Add transaction',
+                            onAction: () => _showAddDialog(context),
+                          )
+                        else
+                          EmptyState(
+                            icon: Icons.receipt_long,
+                            message: 'No transactions match',
+                            actionLabel: 'Clear filters',
+                            onAction: _resetFilters,
+                          ),
                       ],
                     );
                   }
                   return _buildList(context, state);
                 },
+                onRetry: () => ref.invalidate(
+                  transactionsControllerProvider(filter: _filter),
+                ),
               ),
             ),
           ),

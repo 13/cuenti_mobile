@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 /// Fade + slight scale transition used for top-level page navigation.
-/// Respects reduced-motion settings by returning a [NoTransitionPage]
-/// when `MediaQuery.disableAnimationsOf` is true for the given context.
+/// Respects reduced-motion settings: when `MediaQuery.disableAnimationsOf`
+/// is true for the given context, `transitionsBuilder` returns the bare
+/// [child] with no fade/scale applied.
 Page<void> fadeThroughPage({
   required Widget child,
   required GoRouterState state,

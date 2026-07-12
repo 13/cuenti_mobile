@@ -216,25 +216,81 @@ void main() {
     expect(find.text('Payee 1'), findsNothing);
   });
 
-  testWidgets('shows empty state with clear-filters action when no results', (
-    tester,
-  ) async {
-    when(
-      () =>
-          txRepo.getPage(filter: const TransactionFilter(), page: 0, size: 50),
-    ).thenAnswer(
-      (_) async => const TransactionPage(
-        content: [],
-        page: 0,
-        size: 50,
-        totalElements: 0,
-        totalPages: 0,
-      ),
-    );
+  testWidgets(
+    'shows the no-transactions-yet empty state when no filters are active',
+    (tester) async {
+      when(
+        () => txRepo.getPage(
+          filter: const TransactionFilter(),
+          page: 0,
+          size: 50,
+        ),
+      ).thenAnswer(
+        (_) async => const TransactionPage(
+          content: [],
+          page: 0,
+          size: 50,
+          totalElements: 0,
+          totalPages: 0,
+        ),
+      );
 
-    await pumpScreen(tester);
+      await pumpScreen(tester);
 
-    expect(find.text('No transactions match'), findsOneWidget);
-    expect(find.widgetWithText(FilledButton, 'Clear filters'), findsOneWidget);
-  });
+      expect(find.text('No transactions yet'), findsOneWidget);
+      expect(
+        find.widgetWithText(FilledButton, 'Add transaction'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'shows empty state with clear-filters action when filters yield no '
+    'results',
+    (tester) async {
+      when(
+        () => txRepo.getPage(
+          filter: const TransactionFilter(),
+          page: 0,
+          size: 50,
+        ),
+      ).thenAnswer(
+        (_) async => TransactionPage(
+          content: [tx(1)],
+          page: 0,
+          size: 50,
+          totalElements: 1,
+          totalPages: 1,
+        ),
+      );
+      when(
+        () => txRepo.getPage(
+          filter: const TransactionFilter(search: 'coffee'),
+          page: 0,
+          size: 50,
+        ),
+      ).thenAnswer(
+        (_) async => const TransactionPage(
+          content: [],
+          page: 0,
+          size: 50,
+          totalElements: 0,
+          totalPages: 0,
+        ),
+      );
+
+      await pumpScreen(tester);
+
+      await tester.enterText(find.byType(TextField), 'coffee');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No transactions match'), findsOneWidget);
+      expect(
+        find.widgetWithText(FilledButton, 'Clear filters'),
+        findsOneWidget,
+      );
+    },
+  );
 }
