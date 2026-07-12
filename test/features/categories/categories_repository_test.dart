@@ -43,7 +43,8 @@ void main() {
   });
 
   test('save posts new category when id is null', () async {
-    const category = Category(name: 'New');
+    const category = Category(
+        name: 'New', parentId: 3, fullName: 'Parent > New', parentName: 'Parent');
     when(() => dio.post<Map<String, dynamic>>('/categories',
             data: any(named: 'data')))
         .thenAnswer((_) async => ok({'id': 5, 'name': 'New', 'type': 'EXPENSE'}));
@@ -55,9 +56,12 @@ void main() {
             data: captureAny(named: 'data')))
         .captured
         .single as Map<String, dynamic>;
-    expect(captured.containsKey('id'), isFalse);
-    expect(captured['name'], 'New');
-    expect(captured['type'], 'EXPENSE');
+    expect(captured, containsPair('name', 'New'));
+    expect(captured, containsPair('type', 'EXPENSE'));
+    expect(captured, containsPair('parentId', 3));
+    expect(captured.keys, isNot(contains('id')));
+    expect(captured.keys, isNot(contains('fullName')));
+    expect(captured.keys, isNot(contains('parentName')));
   });
 
   test('save puts existing category when id is set', () async {

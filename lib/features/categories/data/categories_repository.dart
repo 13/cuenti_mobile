@@ -22,7 +22,13 @@ class CategoriesRepository {
       });
 
   Future<Category> save(Category category) => _guard(() async {
-        final json = category.toJson()..remove('id');
+        // Explicit writable fields only (matches old Category.toJson body);
+        // derived fields like fullName/parentName must not be sent.
+        final json = {
+          'name': category.name,
+          'type': category.type,
+          'parentId': category.parentId,
+        };
         final res = category.id != null
             ? await _dio.put<Map<String, dynamic>>(
                 '/categories/${category.id}', data: json)

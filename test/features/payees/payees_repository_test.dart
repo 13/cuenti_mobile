@@ -43,7 +43,11 @@ void main() {
   });
 
   test('save posts new payee when id is null', () async {
-    const payee = Payee(name: 'New Payee');
+    const payee = Payee(
+        name: 'New Payee',
+        notes: 'a note',
+        defaultCategoryId: 4,
+        defaultCategoryName: 'Groceries');
     when(() => dio.post<Map<String, dynamic>>('/payees',
             data: any(named: 'data')))
         .thenAnswer((_) async => ok({'id': 5, 'name': 'New Payee'}));
@@ -55,9 +59,12 @@ void main() {
             data: captureAny(named: 'data')))
         .captured
         .single as Map<String, dynamic>;
-    expect(captured.containsKey('id'), isFalse);
-    expect(captured['name'], 'New Payee');
-    expect(captured['defaultPaymentMethod'], 'NONE');
+    expect(captured, containsPair('name', 'New Payee'));
+    expect(captured, containsPair('notes', 'a note'));
+    expect(captured, containsPair('defaultCategoryId', 4));
+    expect(captured, containsPair('defaultPaymentMethod', 'NONE'));
+    expect(captured.keys, isNot(contains('id')));
+    expect(captured.keys, isNot(contains('defaultCategoryName')));
   });
 
   test('save puts existing payee when id is set', () async {

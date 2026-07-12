@@ -22,9 +22,14 @@ class PayeesRepository {
       });
 
   Future<Payee> save(Payee payee) => _guard(() async {
-        final json = payee.toJson()..remove('id');
-        // Ensure defaultPaymentMethod defaults to 'NONE'
-        json['defaultPaymentMethod'] = json['defaultPaymentMethod'] ?? 'NONE';
+        // Explicit writable fields only (matches old Payee.toJson body);
+        // derived fields like defaultCategoryName must not be sent.
+        final json = {
+          'name': payee.name,
+          'notes': payee.notes,
+          'defaultCategoryId': payee.defaultCategoryId,
+          'defaultPaymentMethod': payee.defaultPaymentMethod ?? 'NONE',
+        };
         final res = payee.id != null
             ? await _dio.put<Map<String, dynamic>>(
                 '/payees/${payee.id}', data: json)
