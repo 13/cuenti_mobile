@@ -114,6 +114,42 @@ void main() {
     },
   );
 
+  testWidgets(
+    'shows accounts excluded from reports but hides accounts excluded from summary',
+    (tester) async {
+      when(
+        () => dashboardRepo.load(),
+      ).thenAnswer(
+        (_) async => const DashboardData(
+          availableCash: 500,
+          portfolioValue: 1000,
+          netWorth: 1500,
+          accounts: [
+            Account(
+              id: 1,
+              accountName: 'Reports-excluded Account',
+              accountType: 'BANK',
+              balance: 100,
+              excludeFromReports: true,
+            ),
+            Account(
+              id: 2,
+              accountName: 'Summary-excluded Account',
+              accountType: 'BANK',
+              balance: 200,
+              excludeFromSummary: true,
+            ),
+          ],
+        ),
+      );
+
+      await pumpScreen(tester);
+
+      expect(find.text('Reports-excluded Account'), findsOneWidget);
+      expect(find.text('Summary-excluded Account'), findsNothing);
+    },
+  );
+
   testWidgets('shows loading state with skeleton loaders', (tester) async {
     final completer = Completer<DashboardData>();
     when(

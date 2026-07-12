@@ -40,7 +40,7 @@ class DashboardScreen extends ConsumerWidget {
         ),
         data: (dashboard) {
           final accounts = dashboard.accounts
-              .where((a) => !a.excludeFromSummary && !a.excludeFromReports)
+              .where((a) => !a.excludeFromSummary)
               .toList();
           return ListView(
             padding: const EdgeInsets.all(16),
