@@ -47,6 +47,7 @@ class ShellScreen extends ConsumerWidget {
       case '/tags': return 'Tags';
       case '/currencies': return 'Currencies';
       case '/assets': return 'Assets';
+      case '/vehicles': return 'Vehicles';
       case '/settings': return 'Settings';
       case '/about': return 'About';
       default: return 'Cuenti';
@@ -108,6 +109,7 @@ class ShellScreen extends ConsumerWidget {
             _buildNavItem(context, Icons.label, 'Tags', '/tags'),
             _buildNavItem(context, Icons.currency_exchange, 'Currencies', '/currencies'),
             _buildNavItem(context, Icons.show_chart, 'Assets', '/assets'),
+            _buildNavItem(context, Icons.directions_car, 'Vehicles', '/vehicles'),
             const Divider(),
             _buildSection(context, 'Settings'),
             _buildNavItem(context, Icons.settings, 'Settings', '/settings'),

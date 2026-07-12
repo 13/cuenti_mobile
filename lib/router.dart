@@ -18,6 +18,7 @@ import 'features/categories/ui/categories_screen.dart';
 import 'features/tags/ui/tags_screen.dart';
 import 'features/currencies/ui/currencies_screen.dart';
 import 'features/assets/ui/assets_screen.dart';
+import 'features/vehicles/ui/vehicles_screen.dart';
 import 'features/user/ui/settings_screen.dart';
 import 'features/user/ui/about_screen.dart';
 
@@ -126,6 +127,11 @@ class AppRouter {
               path: '/assets',
               pageBuilder: (_, s) =>
                   fadeThroughPage(child: const AssetsScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/vehicles',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const VehiclesScreen(), state: s),
             ),
             GoRoute(
               path: '/settings',
