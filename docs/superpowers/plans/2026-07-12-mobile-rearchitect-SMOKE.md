@@ -55,8 +55,24 @@ Automated gates already green: `flutter analyze` (0 warnings/errors),
 
 ## Known accepted quirks (Phase 2/3)
 - Admin settings toggles briefly flicker (refetch instead of optimistic).
-- Editing the amount of a transaction that has splits (created on web) is
-  rejected with a validation message — split editing arrives in Phase 4.
+
+## Phase 4 checklist (feature screens)
+- [ ] Budgets (bottom nav): create budget, spend past the limit → bar turns
+      red; edit limit; delete; duplicate category rejected with message
+- [ ] Forecasts (drawer): switch years, chart tooltips, totals match web
+- [ ] Vehicles (drawer): pick fuel category, star sets default (persists
+      after restart), stats/consumption match web, full-tank badges
+- [ ] Splits: create transaction with 2 splits (sum must match), edit a
+      web-created split transaction without touching splits (they survive),
+      clear all splits (removed), mismatched sum blocks save
+- [ ] Export: share sheet opens with cuenti-export-<date>.json, file valid
+- [ ] Import: pick exported file, confirm sheet, data restored, lists refresh
+- [ ] Audit log (drawer, admin only): entries paged, filter works, system
+      entries show timestamp
+- [ ] Saved views: bookmark icon in transactions bar; save filtered view,
+      apply it, delete it; a view saved by the web app shows disabled
+- [ ] Admin panel: enable/disable/delete another user (menu absent on your
+      own row)
 
 ## Phase 3 visual checklist (run after UI overhaul)
 - [ ] Light AND dark theme: every screen readable, no washed-out text
