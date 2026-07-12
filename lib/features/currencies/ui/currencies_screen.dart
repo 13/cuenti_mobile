@@ -1,101 +1,103 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../models/models.dart';
-import '../../../providers/data_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api/api_exception.dart';
+import '../../../core/widgets/async_value_widget.dart';
+import '../domain/currency.dart';
+import 'currencies_controller.dart';
 
-class CurrenciesScreen extends StatefulWidget {
+class CurrenciesScreen extends ConsumerWidget {
   const CurrenciesScreen({super.key});
 
   @override
-  State<CurrenciesScreen> createState() => _CurrenciesScreenState();
-}
-
-class _CurrenciesScreenState extends State<CurrenciesScreen> {
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() => _loading = true);
-    try { await context.read<DataProvider>().loadCurrencies(); } catch (_) {}
-    if (mounted) setState(() => _loading = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dp = context.watch<DataProvider>();
-
-    if (_loading) return const Center(child: CircularProgressIndicator());
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currenciesAsync = ref.watch(currenciesControllerProvider);
 
     return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: dp.currencies.isEmpty
-            ? ListView(children: [
-                const SizedBox(height: 120),
-                Icon(Icons.currency_exchange, size: 64,
-                    color: Theme.of(context).colorScheme.outline),
-                const SizedBox(height: 16),
-                Center(child: Text('No currencies yet',
-                    style: Theme.of(context).textTheme.titleMedium)),
-                const SizedBox(height: 8),
-                Center(child: Text('Tap + to add a currency.',
-                    style: Theme.of(context).textTheme.bodySmall)),
-              ])
-            : ListView.builder(
-                itemCount: dp.currencies.length,
-                itemBuilder: (context, i) {
-                  final c = dp.currencies[i];
-                  return Dismissible(
-                    key: ValueKey(c.id),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      color: Theme.of(context).colorScheme.errorContainer,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 16),
-                      child: Icon(Icons.delete, color: Theme.of(context).colorScheme.onErrorContainer),
-                    ),
-                    confirmDismiss: (_) => showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        icon: const Icon(Icons.delete_outline),
-                        title: const Text('Delete Currency?'),
-                        actions: [
-                          OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                          FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: Theme.of(ctx).colorScheme.error,
-                              foregroundColor: Theme.of(ctx).colorScheme.onError,
-                            ),
-                            onPressed: () => Navigator.pop(ctx, true),
-                            child: const Text('Delete'),
-                          ),
-                        ],
+      body: AsyncValueWidget<List<Currency>>(
+        value: currenciesAsync,
+        data: (currencies) => RefreshIndicator(
+          onRefresh: () {
+            ref.invalidate(currenciesControllerProvider);
+            return ref.read(currenciesControllerProvider.future);
+          },
+          child: currencies.isEmpty
+              ? ListView(children: [
+                  const SizedBox(height: 120),
+                  Icon(Icons.currency_exchange, size: 64,
+                      color: Theme.of(context).colorScheme.outline),
+                  const SizedBox(height: 16),
+                  Center(child: Text('No currencies yet',
+                      style: Theme.of(context).textTheme.titleMedium)),
+                  const SizedBox(height: 8),
+                  Center(child: Text('Tap + to add a currency.',
+                      style: Theme.of(context).textTheme.bodySmall)),
+                ])
+              : ListView.builder(
+                  itemCount: currencies.length,
+                  itemBuilder: (context, i) {
+                    final c = currencies[i];
+                    return Dismissible(
+                      key: ValueKey(c.id),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: Theme.of(context).colorScheme.errorContainer,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Icon(Icons.delete, color: Theme.of(context).colorScheme.onErrorContainer),
                       ),
-                    ),
-                    onDismissed: (_) => dp.deleteCurrency(c.id!),
-                    child: ListTile(
-                      leading: CircleAvatar(child: Text(c.symbol)),
-                      title: Text('${c.code} - ${c.name}'),
-                      subtitle: Text('Symbol: ${c.symbol} • Decimals: ${c.fracDigits} • Dec: "${c.decimalChar}" Group: "${c.groupingChar}"'),
-                      onTap: () => _showEditDialog(context, c),
-                    ),
-                  );
-                },
-              ),
+                      confirmDismiss: (_) => showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          icon: const Icon(Icons.delete_outline),
+                          title: const Text('Delete Currency?'),
+                          actions: [
+                            OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                            FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Theme.of(ctx).colorScheme.error,
+                                foregroundColor: Theme.of(ctx).colorScheme.onError,
+                              ),
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: const Text('Delete'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      onDismissed: (_) => _delete(context, ref, c.id!),
+                      child: ListTile(
+                        leading: CircleAvatar(child: Text(c.symbol)),
+                        title: Text('${c.code} - ${c.name}'),
+                        subtitle: Text('Symbol: ${c.symbol} • Decimals: ${c.fracDigits} • Dec: "${c.decimalChar}" Group: "${c.groupingChar}"'),
+                        onTap: () => _showEditDialog(context, ref, c),
+                      ),
+                    );
+                  },
+                ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showEditDialog(context, null),
+        onPressed: () => _showEditDialog(context, ref, null),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _showEditDialog(BuildContext context, Currency? currency) {
+  Future<void> _delete(BuildContext context, WidgetRef ref, int id) async {
+    try {
+      await ref.read(currenciesControllerProvider.notifier).delete(id);
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showEditDialog(BuildContext context, WidgetRef ref, Currency? currency) {
     final code = TextEditingController(text: currency?.code ?? '');
     final name = TextEditingController(text: currency?.name ?? '');
     final symbol = TextEditingController(text: currency?.symbol ?? '');
@@ -152,21 +154,24 @@ class _CurrenciesScreenState extends State<CurrenciesScreen> {
                     onPressed: saving ? null : () async {
                       setModalState(() => saving = true);
                       try {
-                        await context.read<DataProvider>().saveCurrency({
-                          'code': code.text,
-                          'name': name.text,
-                          'symbol': symbol.text,
-                          'decimalChar': decimalChar.text,
-                          'groupingChar': groupingChar.text,
-                          'fracDigits': fracDigits,
-                        }, id: currency?.id);
+                        await ref.read(currenciesControllerProvider.notifier).save(
+                          Currency(
+                            id: currency?.id,
+                            code: code.text,
+                            name: name.text,
+                            symbol: symbol.text,
+                            decimalChar: decimalChar.text,
+                            groupingChar: groupingChar.text,
+                            fracDigits: fracDigits,
+                          ),
+                        );
                         if (ctx.mounted) Navigator.pop(ctx);
-                      } catch (e) {
+                      } on ApiException catch (e) {
                         setModalState(() => saving = false);
                         if (ctx.mounted) {
                           ScaffoldMessenger.of(ctx).showSnackBar(
                             SnackBar(
-                              content: Text('Error: ${context.read<DataProvider>().lastError ?? e}'),
+                              content: Text('Error: ${e.message}'),
                               backgroundColor: Theme.of(ctx).colorScheme.error,
                             ),
                           );
