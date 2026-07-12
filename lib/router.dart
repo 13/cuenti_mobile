@@ -7,14 +7,14 @@ import 'features/auth/ui/server_setup_screen.dart';
 import 'screens/shell_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'features/transactions/ui/transactions_screen.dart';
-import 'screens/scheduled/scheduled_screen.dart';
+import 'features/scheduled/ui/scheduled_screen.dart';
 import 'screens/statistics/statistics_screen.dart';
 import 'features/accounts/ui/accounts_screen.dart';
 import 'features/payees/ui/payees_screen.dart';
 import 'features/categories/ui/categories_screen.dart';
 import 'features/tags/ui/tags_screen.dart';
-import 'screens/currencies/currencies_screen.dart';
-import 'screens/assets/assets_screen.dart';
+import 'features/currencies/ui/currencies_screen.dart';
+import 'features/assets/ui/assets_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/settings/about_screen.dart';
 
