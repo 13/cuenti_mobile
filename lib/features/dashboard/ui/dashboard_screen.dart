@@ -57,12 +57,16 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    AmountText(
-                      dashboard.netWorth,
-                      currency: dashboard.defaultCurrency,
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: AmountText(
+                        dashboard.netWorth,
+                        currency: dashboard.defaultCurrency,
+                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -180,11 +184,15 @@ class _AccountCard extends StatelessWidget {
                 account.displayType,
                 style: Theme.of(context).textTheme.labelSmall,
               ),
-              AmountText(
-                account.balance,
-                currency: account.currency,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: AmountText(
+                  account.balance,
+                  currency: account.currency,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],

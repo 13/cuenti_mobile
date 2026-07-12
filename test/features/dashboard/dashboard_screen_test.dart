@@ -82,6 +82,38 @@ void main() {
     expect(find.text('Main Bank'), findsOneWidget);
   });
 
+  testWidgets(
+    'hero amount and stat chips fit without overflow for long values',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      when(
+        () => dashboardRepo.load(),
+      ).thenAnswer(
+        (_) async => const DashboardData(
+          availableCash: 123456789012.34,
+          portfolioValue: 123456789012.34,
+          netWorth: 123456789012.34,
+          accounts: [
+            Account(
+              id: 1,
+              accountName: 'Main Bank',
+              accountType: 'BANK',
+              balance: 123456789012.34,
+            ),
+          ],
+        ),
+      );
+
+      await pumpScreen(tester);
+
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('shows loading state with skeleton loaders', (tester) async {
     final completer = Completer<DashboardData>();
     when(

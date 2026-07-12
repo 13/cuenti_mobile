@@ -21,13 +21,24 @@ class StatChip extends StatelessWidget {
       children: [
         Icon(icon, size: 16),
         const SizedBox(width: 6),
-        Text(label, style: textTheme.copyWith(fontSize: 12)),
+        Flexible(
+          child: Text(
+            label,
+            style: textTheme.copyWith(fontSize: 12),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
         const SizedBox(width: 4),
-        Text(
-          value,
-          style: textTheme.copyWith(
-            fontWeight: FontWeight.w700,
-            fontFeatures: const [FontFeature.tabularFigures()],
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: textTheme.copyWith(
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
           ),
         ),
       ],
