@@ -120,7 +120,12 @@ class ShellScreen extends ConsumerWidget {
         ),
       ),
       appBar: AppBar(
-        title: Text(_getTitle(context)),
+        title: Text(
+          _getTitle(context),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

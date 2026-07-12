@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_exception.dart';
+import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/async_value_widget.dart';
-import '../../../utils/number_format.dart';
+import '../../../core/widgets/confirm_sheet.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/skeleton_loader.dart';
 import '../../currencies/domain/currency.dart';
 import '../../currencies/ui/currencies_controller.dart';
 import '../domain/account.dart';
@@ -29,19 +32,21 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
         },
         child: AsyncValueWidget<List<Account>>(
           value: accountsAsync,
+          skeleton: SkeletonLoader.tiles(items: 4, height: 88),
           data: (accounts) => accounts.isEmpty
-              ? ListView(children: [
-                  const SizedBox(height: 120),
-                  Icon(Icons.account_balance_wallet, size: 64,
-                      color: Theme.of(context).colorScheme.outline),
-                  const SizedBox(height: 16),
-                  Center(child: Text('No accounts yet',
-                      style: Theme.of(context).textTheme.titleMedium)),
-                  const SizedBox(height: 8),
-                  Center(child: Text('Tap + to add your first account.',
-                      style: Theme.of(context).textTheme.bodySmall)),
-                ])
+              ? ListView(
+                  children: [
+                    const SizedBox(height: 80),
+                    EmptyState(
+                      icon: Icons.account_balance_wallet,
+                      message: 'No accounts yet',
+                      actionLabel: 'Add account',
+                      onAction: () => _showEditDialog(context, null, currencies),
+                    ),
+                  ],
+                )
               : ReorderableListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   itemCount: accounts.length,
                   onReorder: (old, newIdx) {
                     final ids = accounts.map((a) => a.id!).toList();
@@ -54,40 +59,110 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                     return Dismissible(
                       key: ValueKey(a.id),
                       direction: DismissDirection.endToStart,
-                      background: Container(color: Theme.of(context).colorScheme.errorContainer, alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 16), child: Icon(Icons.delete, color: Theme.of(context).colorScheme.onErrorContainer)),
-                      confirmDismiss: (_) => showDialog<bool>(context: context,
-                          builder: (c) => AlertDialog(
-                              icon: const Icon(Icons.delete_outline),
-                              title: const Text('Delete Account?'),
-                              content: const Text('All associated transactions will be affected.'),
-                              actions: [
-                                OutlinedButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                                FilledButton(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: Theme.of(c).colorScheme.error,
-                                    foregroundColor: Theme.of(c).colorScheme.onError,
-                                  ),
-                                  onPressed: () => Navigator.pop(c, true),
-                                  child: const Text('Delete'),
-                                ),
-                              ])),
+                      background: Container(
+                        color: Theme.of(context).colorScheme.errorContainer,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Icon(
+                          Icons.delete,
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                      confirmDismiss: (_) => showConfirmSheet(
+                        context,
+                        title: 'Delete Account?',
+                        message: 'All associated transactions will be affected.',
+                      ),
                       onDismissed: (_) => _delete(a.id!),
                       child: Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        child: ListTile(
-                          leading: CircleAvatar(child: Text(a.accountName[0].toUpperCase())),
-                          title: Text(a.accountName),
-                          subtitle: Text('${a.displayType} • ${a.institution ?? ''} • ${a.currency}'),
-                          trailing: Text('${formatNumber(a.balance)} ${a.currency}',
-                              style: TextStyle(fontWeight: FontWeight.bold,
-                                  color: a.balance >= 0 ? Colors.green : Colors.red)),
-                          onTap: () => _showEditDialog(context, a, currencies),
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.12),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Icon(
+                                        _iconForAccountType(a.accountType),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          a.accountName,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        if (a.institution != null &&
+                                            a.institution!.isNotEmpty)
+                                          Text(
+                                            a.institution!,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelSmall,
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.end,
+                                    children: [
+                                      AmountText(
+                                        a.balance,
+                                        currency: a.currency,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              if (a.accountGroup != null &&
+                                  a.accountGroup!.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Chip(
+                                    label: Text(a.accountGroup!),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
                       ),
                     );
                   },
                 ),
+          onRetry: () => ref.invalidate(accountsControllerProvider),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -123,6 +198,18 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
         ),
       );
     }
+  }
+
+  IconData _iconForAccountType(String type) {
+    return switch (type) {
+      'CASH' => Icons.wallet,
+      'ASSET' => Icons.trending_up,
+      'CREDIT_CARD' => Icons.credit_card,
+      'LIABILITY' => Icons.account_balance,
+      'CURRENT' => Icons.account_balance,
+      'SAVINGS' => Icons.savings,
+      _ => Icons.account_balance,
+    };
   }
 
   void _showEditDialog(

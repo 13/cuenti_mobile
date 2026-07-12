@@ -46,15 +46,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset('assets/Cuenti.png', width: 96, height: 96),
-                  const SizedBox(height: 8),
-                  Text('Cuenti', style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  )),
-                  const SizedBox(height: 8),
-                  Text('Sign in to your account',
-                      style: Theme.of(context).textTheme.bodyLarge),
+                  Image.asset('assets/Cuenti.png', width: 80, height: 80),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Sign in',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 32),
                   TextFormField(
                     controller: _usernameController,
@@ -86,29 +85,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onFieldSubmitted: (_) => _login(),
                   ),
                   if (_error != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 16),
+                    Text(
+                      _error!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                        fontSize: 14,
                       ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.error_outline,
-                              color: Theme.of(context).colorScheme.error),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(_error!,
-                              style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error))),
-                        ],
-                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
-                    height: 48,
                     child: FilledButton(
                       onPressed: _submitting ? null : _login,
                       child: _submitting
