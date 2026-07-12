@@ -2,6 +2,7 @@ import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
 import 'package:cuentimobile/features/transactions/ui/transaction_dialog.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
@@ -28,8 +29,9 @@ void main() {
 
     when(() => accountsRepo.getAll()).thenAnswer(
         (_) async => [const Account(id: 1, accountName: 'Giro')]);
-    when(() => txRepo.getPage(accountId: null, page: 0, size: 50)).thenAnswer(
-        (_) async => const TransactionPage(
+    when(() =>
+            txRepo.getPage(filter: const TransactionFilter(), page: 0, size: 50))
+        .thenAnswer((_) async => const TransactionPage(
             content: [], page: 0, size: 50, totalElements: 0, totalPages: 0));
   });
 
@@ -47,7 +49,8 @@ void main() {
             // that here so the dialog's `ref.invalidateSelf()` on save
             // doesn't hit an already-disposed provider.
             body: Consumer(builder: (context, ref, _) {
-              ref.watch(transactionsControllerProvider(accountId: null));
+              ref.watch(
+                  transactionsControllerProvider(filter: const TransactionFilter()));
               return const TransactionDialog(accountId: null);
             }),
           ),

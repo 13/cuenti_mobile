@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/api/dio_provider.dart';
 import '../domain/transaction.dart';
+import '../domain/transaction_filter.dart';
 import '../domain/transaction_page.dart';
 
 final transactionsRepositoryProvider = Provider<TransactionsRepository>(
@@ -14,14 +16,21 @@ class TransactionsRepository {
 
   /// Paged fetch using the Phase 1 envelope.
   Future<TransactionPage> getPage({
-    int? accountId,
+    TransactionFilter filter = const TransactionFilter(),
     int page = 0,
     int size = 50,
   }) =>
       _guard(() async {
+        final df = DateFormat('yyyy-MM-dd');
         final res = await _dio.get<Map<String, dynamic>>('/transactions',
             queryParameters: {
-              if (accountId != null) 'accountId': accountId,
+              if (filter.accountId != null) 'accountId': filter.accountId,
+              if (filter.type != null) 'type': filter.type,
+              if (filter.categoryId != null) 'categoryId': filter.categoryId,
+              if (filter.start != null) 'start': df.format(filter.start!),
+              if (filter.end != null) 'end': df.format(filter.end!),
+              if (filter.search != null && filter.search!.isNotEmpty)
+                'search': filter.search,
               'page': page,
               'size': size,
             });

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TransactionsState {
 
- List<Transaction> get items; int get nextPage; bool get hasMore; bool get loadingMore; int? get accountId;
+ List<Transaction> get items; int get nextPage; bool get hasMore; bool get loadingMore; TransactionFilter get filter;
 /// Create a copy of TransactionsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $TransactionsStateCopyWith<TransactionsState> get copyWith => _$TransactionsStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TransactionsState&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.nextPage, nextPage) || other.nextPage == nextPage)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.accountId, accountId) || other.accountId == accountId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TransactionsState&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.nextPage, nextPage) || other.nextPage == nextPage)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.filter, filter) || other.filter == filter));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),nextPage,hasMore,loadingMore,accountId);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),nextPage,hasMore,loadingMore,filter);
 
 @override
 String toString() {
-  return 'TransactionsState(items: $items, nextPage: $nextPage, hasMore: $hasMore, loadingMore: $loadingMore, accountId: $accountId)';
+  return 'TransactionsState(items: $items, nextPage: $nextPage, hasMore: $hasMore, loadingMore: $loadingMore, filter: $filter)';
 }
 
 
@@ -45,11 +45,11 @@ abstract mixin class $TransactionsStateCopyWith<$Res>  {
   factory $TransactionsStateCopyWith(TransactionsState value, $Res Function(TransactionsState) _then) = _$TransactionsStateCopyWithImpl;
 @useResult
 $Res call({
- List<Transaction> items, int nextPage, bool hasMore, bool loadingMore, int? accountId
+ List<Transaction> items, int nextPage, bool hasMore, bool loadingMore, TransactionFilter filter
 });
 
 
-
+$TransactionFilterCopyWith<$Res> get filter;
 
 }
 /// @nodoc
@@ -62,17 +62,26 @@ class _$TransactionsStateCopyWithImpl<$Res>
 
 /// Create a copy of TransactionsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? nextPage = null,Object? hasMore = null,Object? loadingMore = null,Object? accountId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? nextPage = null,Object? hasMore = null,Object? loadingMore = null,Object? filter = null,}) {
   return _then(_self.copyWith(
 items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<Transaction>,nextPage: null == nextPage ? _self.nextPage : nextPage // ignore: cast_nullable_to_non_nullable
 as int,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
 as bool,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
-as bool,accountId: freezed == accountId ? _self.accountId : accountId // ignore: cast_nullable_to_non_nullable
-as int?,
+as bool,filter: null == filter ? _self.filter : filter // ignore: cast_nullable_to_non_nullable
+as TransactionFilter,
   ));
 }
-
+/// Create a copy of TransactionsState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TransactionFilterCopyWith<$Res> get filter {
+  
+  return $TransactionFilterCopyWith<$Res>(_self.filter, (value) {
+    return _then(_self.copyWith(filter: value));
+  });
+}
 }
 
 
@@ -154,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Transaction> items,  int nextPage,  bool hasMore,  bool loadingMore,  int? accountId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Transaction> items,  int nextPage,  bool hasMore,  bool loadingMore,  TransactionFilter filter)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TransactionsState() when $default != null:
-return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that.accountId);case _:
+return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that.filter);case _:
   return orElse();
 
 }
@@ -175,10 +184,10 @@ return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Transaction> items,  int nextPage,  bool hasMore,  bool loadingMore,  int? accountId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Transaction> items,  int nextPage,  bool hasMore,  bool loadingMore,  TransactionFilter filter)  $default,) {final _that = this;
 switch (_that) {
 case _TransactionsState():
-return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that.accountId);case _:
+return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that.filter);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -195,10 +204,10 @@ return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Transaction> items,  int nextPage,  bool hasMore,  bool loadingMore,  int? accountId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Transaction> items,  int nextPage,  bool hasMore,  bool loadingMore,  TransactionFilter filter)?  $default,) {final _that = this;
 switch (_that) {
 case _TransactionsState() when $default != null:
-return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that.accountId);case _:
+return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that.filter);case _:
   return null;
 
 }
@@ -210,7 +219,7 @@ return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that
 
 
 class _TransactionsState implements TransactionsState {
-  const _TransactionsState({final  List<Transaction> items = const [], this.nextPage = 0, this.hasMore = true, this.loadingMore = false, this.accountId}): _items = items;
+  const _TransactionsState({final  List<Transaction> items = const [], this.nextPage = 0, this.hasMore = true, this.loadingMore = false, this.filter = const TransactionFilter()}): _items = items;
   
 
  final  List<Transaction> _items;
@@ -223,7 +232,7 @@ class _TransactionsState implements TransactionsState {
 @override@JsonKey() final  int nextPage;
 @override@JsonKey() final  bool hasMore;
 @override@JsonKey() final  bool loadingMore;
-@override final  int? accountId;
+@override@JsonKey() final  TransactionFilter filter;
 
 /// Create a copy of TransactionsState
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +244,16 @@ _$TransactionsStateCopyWith<_TransactionsState> get copyWith => __$TransactionsS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TransactionsState&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.nextPage, nextPage) || other.nextPage == nextPage)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.accountId, accountId) || other.accountId == accountId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TransactionsState&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.nextPage, nextPage) || other.nextPage == nextPage)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.filter, filter) || other.filter == filter));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),nextPage,hasMore,loadingMore,accountId);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),nextPage,hasMore,loadingMore,filter);
 
 @override
 String toString() {
-  return 'TransactionsState(items: $items, nextPage: $nextPage, hasMore: $hasMore, loadingMore: $loadingMore, accountId: $accountId)';
+  return 'TransactionsState(items: $items, nextPage: $nextPage, hasMore: $hasMore, loadingMore: $loadingMore, filter: $filter)';
 }
 
 
@@ -255,11 +264,11 @@ abstract mixin class _$TransactionsStateCopyWith<$Res> implements $TransactionsS
   factory _$TransactionsStateCopyWith(_TransactionsState value, $Res Function(_TransactionsState) _then) = __$TransactionsStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<Transaction> items, int nextPage, bool hasMore, bool loadingMore, int? accountId
+ List<Transaction> items, int nextPage, bool hasMore, bool loadingMore, TransactionFilter filter
 });
 
 
-
+@override $TransactionFilterCopyWith<$Res> get filter;
 
 }
 /// @nodoc
@@ -272,18 +281,27 @@ class __$TransactionsStateCopyWithImpl<$Res>
 
 /// Create a copy of TransactionsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? nextPage = null,Object? hasMore = null,Object? loadingMore = null,Object? accountId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? nextPage = null,Object? hasMore = null,Object? loadingMore = null,Object? filter = null,}) {
   return _then(_TransactionsState(
 items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
 as List<Transaction>,nextPage: null == nextPage ? _self.nextPage : nextPage // ignore: cast_nullable_to_non_nullable
 as int,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
 as bool,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
-as bool,accountId: freezed == accountId ? _self.accountId : accountId // ignore: cast_nullable_to_non_nullable
-as int?,
+as bool,filter: null == filter ? _self.filter : filter // ignore: cast_nullable_to_non_nullable
+as TransactionFilter,
   ));
 }
 
-
+/// Create a copy of TransactionsState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TransactionFilterCopyWith<$Res> get filter {
+  
+  return $TransactionFilterCopyWith<$Res>(_self.filter, (value) {
+    return _then(_self.copyWith(filter: value));
+  });
+}
 }
 
 // dart format on

@@ -2,6 +2,7 @@ import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_screen.dart';
 import 'package:flutter/material.dart';
@@ -31,15 +32,17 @@ void main() {
     when(() => accountsRepo.getAll()).thenAnswer(
         (_) async => [const Account(id: 1, accountName: 'Giro')]);
 
-    when(() => txRepo.getPage(accountId: null, page: 0, size: 50)).thenAnswer(
-        (_) async => TransactionPage(
+    when(() =>
+            txRepo.getPage(filter: const TransactionFilter(), page: 0, size: 50))
+        .thenAnswer((_) async => TransactionPage(
             content: List.generate(50, (i) => tx(i + 1)),
             page: 0,
             size: 50,
             totalElements: 60,
             totalPages: 2));
-    when(() => txRepo.getPage(accountId: null, page: 1, size: 50)).thenAnswer(
-        (_) async => TransactionPage(
+    when(() =>
+            txRepo.getPage(filter: const TransactionFilter(), page: 1, size: 50))
+        .thenAnswer((_) async => TransactionPage(
             content: List.generate(10, (i) => tx(51 + i)),
             page: 1,
             size: 50,
@@ -69,6 +72,8 @@ void main() {
     await tester.drag(find.byType(ListView), const Offset(0, -100000));
     await tester.pumpAndSettle();
 
-    verify(() => txRepo.getPage(accountId: null, page: 1, size: 50)).called(1);
+    verify(() =>
+            txRepo.getPage(filter: const TransactionFilter(), page: 1, size: 50))
+        .called(1);
   });
 }

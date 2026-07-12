@@ -16,7 +16,7 @@ final class TransactionsControllerProvider
     extends $AsyncNotifierProvider<TransactionsController, TransactionsState> {
   TransactionsControllerProvider._({
     required TransactionsControllerFamily super.from,
-    required int? super.argument,
+    required TransactionFilter super.argument,
   }) : super(
          retry: null,
          name: r'transactionsControllerProvider',
@@ -52,7 +52,7 @@ final class TransactionsControllerProvider
 }
 
 String _$transactionsControllerHash() =>
-    r'c878e68d6ce31b8ad8a047bfbaa755d94d6ef0f0';
+    r'33eaebafef9ff885dd92e41be8c5b4af1b224437';
 
 final class TransactionsControllerFamily extends $Family
     with
@@ -61,7 +61,7 @@ final class TransactionsControllerFamily extends $Family
           AsyncValue<TransactionsState>,
           TransactionsState,
           FutureOr<TransactionsState>,
-          int?
+          TransactionFilter
         > {
   TransactionsControllerFamily._()
     : super(
@@ -72,8 +72,9 @@ final class TransactionsControllerFamily extends $Family
         isAutoDispose: true,
       );
 
-  TransactionsControllerProvider call({int? accountId}) =>
-      TransactionsControllerProvider._(argument: accountId, from: this);
+  TransactionsControllerProvider call({
+    TransactionFilter filter = TransactionsController.defaultFilter,
+  }) => TransactionsControllerProvider._(argument: filter, from: this);
 
   @override
   String toString() => r'transactionsControllerProvider';
@@ -81,10 +82,12 @@ final class TransactionsControllerFamily extends $Family
 
 abstract class _$TransactionsController
     extends $AsyncNotifier<TransactionsState> {
-  late final _$args = ref.$arg as int?;
-  int? get accountId => _$args;
+  late final _$args = ref.$arg as TransactionFilter;
+  TransactionFilter get filter => _$args;
 
-  FutureOr<TransactionsState> build({int? accountId});
+  FutureOr<TransactionsState> build({
+    TransactionFilter filter = TransactionsController.defaultFilter,
+  });
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -98,6 +101,6 @@ abstract class _$TransactionsController
               Object?,
               Object?
             >;
-    return element.handleCreate(ref, () => build(accountId: _$args));
+    return element.handleCreate(ref, () => build(filter: _$args));
   }
 }

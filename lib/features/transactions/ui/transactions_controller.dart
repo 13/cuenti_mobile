@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../accounts/ui/accounts_controller.dart';
 import '../data/transactions_repository.dart';
 import '../domain/transaction.dart';
+import '../domain/transaction_filter.dart';
 
 part 'transactions_controller.freezed.dart';
 part 'transactions_controller.g.dart';
@@ -15,24 +16,29 @@ abstract class TransactionsState with _$TransactionsState {
     @Default(0) int nextPage,
     @Default(true) bool hasMore,
     @Default(false) bool loadingMore,
-    int? accountId,
+    @Default(TransactionFilter()) TransactionFilter filter,
   }) = _TransactionsState;
 }
 
 @riverpod
 class TransactionsController extends _$TransactionsController {
   static const pageSize = 50;
+  // riverpod_generator can't revive an inline `const TransactionFilter()`
+  // constructor call as a build() default value (freezed's redirecting
+  // factory constructor isn't revivable); a static const reference works.
+  static const defaultFilter = TransactionFilter();
 
   @override
-  Future<TransactionsState> build({int? accountId}) async {
+  Future<TransactionsState> build(
+      {TransactionFilter filter = defaultFilter}) async {
     final page = await ref
         .read(transactionsRepositoryProvider)
-        .getPage(accountId: accountId, page: 0, size: pageSize);
+        .getPage(filter: filter, page: 0, size: pageSize);
     return TransactionsState(
       items: page.content,
       nextPage: 1,
       hasMore: page.totalPages > 1,
-      accountId: accountId,
+      filter: filter,
     );
   }
 
@@ -42,7 +48,7 @@ class TransactionsController extends _$TransactionsController {
     state = AsyncData(current.copyWith(loadingMore: true));
     try {
       final page = await ref.read(transactionsRepositoryProvider).getPage(
-          accountId: current.accountId,
+          filter: current.filter,
           page: current.nextPage,
           size: pageSize);
       state = AsyncData(current.copyWith(

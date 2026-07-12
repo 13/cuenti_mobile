@@ -6,6 +6,7 @@ import '../../../core/widgets/async_value_widget.dart';
 import '../../../utils/number_format.dart';
 import '../../accounts/ui/accounts_controller.dart';
 import '../domain/transaction.dart';
+import '../domain/transaction_filter.dart';
 import 'transaction_dialog.dart';
 import 'transactions_controller.dart';
 
@@ -34,6 +35,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     super.dispose();
   }
 
+  TransactionFilter get _filter => TransactionFilter(accountId: _selectedAccountId);
+
   void _onScroll() {
     if (_scrollController.position.pixels >
         _scrollController.position.maxScrollExtent - 200) {
@@ -44,8 +47,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   Future<void> _loadMore() async {
     try {
       await ref
-          .read(transactionsControllerProvider(accountId: _selectedAccountId)
-              .notifier)
+          .read(transactionsControllerProvider(filter: _filter).notifier)
           .loadMore();
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -61,7 +63,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     final transactionsAsync =
-        ref.watch(transactionsControllerProvider(accountId: _selectedAccountId));
+        ref.watch(transactionsControllerProvider(filter: _filter));
     final accounts = ref.watch(accountsControllerProvider).value ?? [];
 
     return Scaffold(
@@ -106,11 +108,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: () {
-                ref.invalidate(
-                    transactionsControllerProvider(accountId: _selectedAccountId));
-                return ref.read(
-                    transactionsControllerProvider(accountId: _selectedAccountId)
-                        .future);
+                ref.invalidate(transactionsControllerProvider(filter: _filter));
+                return ref
+                    .read(transactionsControllerProvider(filter: _filter).future);
               },
               child: AsyncValueWidget<TransactionsState>(
                 value: transactionsAsync,
@@ -196,8 +196,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   Future<void> _delete(int id) async {
     try {
       await ref
-          .read(transactionsControllerProvider(accountId: _selectedAccountId)
-              .notifier)
+          .read(transactionsControllerProvider(filter: _filter).notifier)
           .delete(id);
     } on ApiException catch (e) {
       if (!mounted) return;

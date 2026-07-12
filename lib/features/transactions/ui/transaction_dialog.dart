@@ -5,6 +5,7 @@ import '../../../utils/number_format.dart';
 import '../../accounts/ui/accounts_controller.dart';
 import '../../categories/ui/categories_controller.dart';
 import '../domain/transaction.dart';
+import '../domain/transaction_filter.dart';
 import 'transactions_controller.dart';
 
 class TransactionDialog extends ConsumerStatefulWidget {
@@ -245,7 +246,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
 
     try {
       await ref
-          .read(transactionsControllerProvider(accountId: widget.accountId).notifier)
+          .read(transactionsControllerProvider(
+                  filter: TransactionFilter(accountId: widget.accountId))
+              .notifier)
           .save(transaction);
       if (mounted) Navigator.pop(context);
     } on ApiException catch (e) {

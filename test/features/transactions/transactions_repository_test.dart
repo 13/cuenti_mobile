@@ -1,6 +1,7 @@
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -33,7 +34,8 @@ void main() {
               'totalPages': 1,
             }));
 
-    final page = await repo.getPage(accountId: 3, page: 0, size: 50);
+    final page = await repo.getPage(
+        filter: const TransactionFilter(accountId: 3), page: 0, size: 50);
 
     expect(page.content, hasLength(1));
     expect(page.content[0].id, 1);
@@ -41,7 +43,7 @@ void main() {
     expect(page.totalElements, 1);
   });
 
-  test('getPage omits accountId query param when null', () async {
+  test('getPage omits all filter query params when null', () async {
     when(() => dio.get<Map<String, dynamic>>('/transactions',
             queryParameters: {'page': 0, 'size': 50})).thenAnswer((_) async => ok({
           'content': <Map<String, dynamic>>[],
@@ -54,6 +56,66 @@ void main() {
     final page = await repo.getPage(page: 0, size: 50);
 
     expect(page.content, isEmpty);
+    verify(() => dio.get<Map<String, dynamic>>('/transactions',
+        queryParameters: {'page': 0, 'size': 50})).called(1);
+  });
+
+  test('getPage serializes every filter field when set', () async {
+    when(() => dio.get<Map<String, dynamic>>('/transactions', queryParameters: {
+          'accountId': 3,
+          'type': 'EXPENSE',
+          'categoryId': 7,
+          'start': '2026-02-01',
+          'end': '2026-02-28',
+          'search': 'coffee',
+          'page': 0,
+          'size': 50,
+        })).thenAnswer((_) async => ok({
+          'content': <Map<String, dynamic>>[],
+          'page': 0,
+          'size': 50,
+          'totalElements': 0,
+          'totalPages': 0,
+        }));
+
+    final page = await repo.getPage(
+        filter: TransactionFilter(
+          accountId: 3,
+          type: 'EXPENSE',
+          categoryId: 7,
+          start: DateTime(2026, 2, 1),
+          end: DateTime(2026, 2, 28),
+          search: 'coffee',
+        ),
+        page: 0,
+        size: 50);
+
+    expect(page.content, isEmpty);
+    verify(() => dio.get<Map<String, dynamic>>('/transactions', queryParameters: {
+          'accountId': 3,
+          'type': 'EXPENSE',
+          'categoryId': 7,
+          'start': '2026-02-01',
+          'end': '2026-02-28',
+          'search': 'coffee',
+          'page': 0,
+          'size': 50,
+        })).called(1);
+  });
+
+  test('getPage omits search when empty string', () async {
+    when(() => dio.get<Map<String, dynamic>>('/transactions',
+            queryParameters: {'page': 0, 'size': 50})).thenAnswer((_) async => ok({
+          'content': <Map<String, dynamic>>[],
+          'page': 0,
+          'size': 50,
+          'totalElements': 0,
+          'totalPages': 0,
+        }));
+
+    await repo.getPage(
+        filter: const TransactionFilter(search: ''), page: 0, size: 50);
+
     verify(() => dio.get<Map<String, dynamic>>('/transactions',
         queryParameters: {'page': 0, 'size': 50})).called(1);
   });

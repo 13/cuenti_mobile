@@ -6,6 +6,7 @@ import 'package:cuentimobile/features/scheduled/data/scheduled_repository.dart';
 import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
 import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -74,7 +75,9 @@ void main() {
     when(() => accountsRepo.getAll())
         .thenAnswer((_) async => const [Account(id: 1, accountName: 'Checking')]);
     when(() => transactionsRepo.getPage(
-            accountId: null, page: 0, size: TransactionsController.pageSize))
+            filter: const TransactionFilter(),
+            page: 0,
+            size: TransactionsController.pageSize))
         .thenAnswer((_) async => const TransactionPage(
             content: [], page: 0, size: 50, totalElements: 0, totalPages: 1));
 
@@ -83,11 +86,12 @@ void main() {
     container
       ..listen(scheduledControllerProvider, (_, _) {})
       ..listen(accountsControllerProvider, (_, _) {})
-      ..listen(transactionsControllerProvider(accountId: null), (_, _) {});
+      ..listen(transactionsControllerProvider(filter: const TransactionFilter()),
+          (_, _) {});
     await container.read(scheduledControllerProvider.future);
     await container.read(accountsControllerProvider.future);
-    await container
-        .read(transactionsControllerProvider(accountId: null).future);
+    await container.read(
+        transactionsControllerProvider(filter: const TransactionFilter()).future);
     verify(() => accountsRepo.getAll()).called(1);
 
     when(() => repo.post(1)).thenAnswer((_) async {});
@@ -95,8 +99,8 @@ void main() {
     await container.read(scheduledControllerProvider.notifier).post(1);
     // Settle rebuilds of the invalidated dependents.
     await container.read(accountsControllerProvider.future);
-    await container
-        .read(transactionsControllerProvider(accountId: null).future);
+    await container.read(
+        transactionsControllerProvider(filter: const TransactionFilter()).future);
 
     verify(() => repo.post(1)).called(1);
     // Self reloaded: build's getAll fetched again.
@@ -104,7 +108,9 @@ void main() {
     // Cross-invalidation: accounts and transactions refetched.
     verify(() => accountsRepo.getAll()).called(1);
     verify(() => transactionsRepo.getPage(
-            accountId: null, page: 0, size: TransactionsController.pageSize))
+            filter: const TransactionFilter(),
+            page: 0,
+            size: TransactionsController.pageSize))
         .called(2);
   });
 }
