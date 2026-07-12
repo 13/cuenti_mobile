@@ -40,6 +40,7 @@ class ShellScreen extends ConsumerWidget {
       case '/budgets': return 'Budgets';
       case '/scheduled': return 'Scheduled';
       case '/statistics': return 'Statistics';
+      case '/forecasts': return 'Forecasts';
       case '/accounts': return 'Accounts';
       case '/payees': return 'Payees';
       case '/categories': return 'Categories';
@@ -98,6 +99,7 @@ class ShellScreen extends ConsumerWidget {
             _buildNavItem(context, Icons.pie_chart, 'Budgets', '/budgets'),
             _buildNavItem(context, Icons.schedule, 'Scheduled', '/scheduled'),
             _buildNavItem(context, Icons.bar_chart, 'Statistics', '/statistics'),
+            _buildNavItem(context, Icons.query_stats, 'Forecasts', '/forecasts'),
             const Divider(),
             _buildSection(context, 'Management'),
             _buildNavItem(context, Icons.account_balance_wallet, 'Accounts', '/accounts'),

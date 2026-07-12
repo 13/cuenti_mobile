@@ -11,6 +11,7 @@ import 'features/transactions/ui/transactions_screen.dart';
 import 'features/budgets/ui/budgets_screen.dart';
 import 'features/scheduled/ui/scheduled_screen.dart';
 import 'features/statistics/ui/statistics_screen.dart';
+import 'features/forecasts/ui/forecasts_screen.dart';
 import 'features/accounts/ui/accounts_screen.dart';
 import 'features/payees/ui/payees_screen.dart';
 import 'features/categories/ui/categories_screen.dart';
@@ -90,6 +91,11 @@ class AppRouter {
               path: '/statistics',
               pageBuilder: (_, s) =>
                   fadeThroughPage(child: const StatisticsScreen(), state: s),
+            ),
+            GoRoute(
+              path: '/forecasts',
+              pageBuilder: (_, s) =>
+                  fadeThroughPage(child: const ForecastsScreen(), state: s),
             ),
             GoRoute(
               path: '/accounts',
