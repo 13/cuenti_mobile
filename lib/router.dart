@@ -9,7 +9,7 @@ import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/transactions/transactions_screen.dart';
 import 'screens/scheduled/scheduled_screen.dart';
 import 'screens/statistics/statistics_screen.dart';
-import 'screens/accounts/accounts_screen.dart';
+import 'features/accounts/ui/accounts_screen.dart';
 import 'screens/payees/payees_screen.dart';
 import 'screens/categories/categories_screen.dart';
 import 'screens/tags/tags_screen.dart';
