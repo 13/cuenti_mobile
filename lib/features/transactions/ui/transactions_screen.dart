@@ -13,6 +13,7 @@ import '../../accounts/domain/account.dart';
 import '../../accounts/ui/accounts_controller.dart';
 import '../../categories/domain/category.dart';
 import '../../categories/ui/categories_controller.dart';
+import '../../saved_views/ui/saved_views_sheet.dart';
 import '../domain/transaction.dart';
 import '../domain/transaction_filter.dart';
 import 'transaction_dialog.dart';
@@ -256,6 +257,20 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           _dateRangeChip(context),
           const SizedBox(width: 8),
           _accountChip(context, accounts),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.bookmark_outline),
+            tooltip: 'Saved views',
+            iconSize: 20,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            onPressed: () => showSavedViewsSheet(
+              context,
+              ref,
+              current: _filter,
+              onApply: (f) => setState(() => _filter = f),
+            ),
+          ),
         ],
       ),
     );
