@@ -197,7 +197,14 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                         color: defaultId == c.id ? Theme.of(ctx).colorScheme.primary : null,
                       ),
                       tooltip: 'Set as default',
-                      onPressed: () => _setDefaultCategory(context, c.id!),
+                      onPressed: () async {
+                        await _setDefaultCategory(context, c.id!);
+                        // Also select the starred category for the current
+                        // view: close the sheet returning its id so
+                        // _categoryId updates and the EmptyState doesn't
+                        // linger after setting a default.
+                        if (ctx.mounted) Navigator.pop(ctx, c.id);
+                      },
                     ),
                   ),
                 const SizedBox(height: 8),

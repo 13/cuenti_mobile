@@ -49,7 +49,7 @@ void main() {
 
     expect(report.entries, hasLength(2));
     final first = report.entries[0];
-    expect(first.date, DateTime.parse('2026-01-05'));
+    expect(first.date, DateTime(2026, 1, 5));
     expect(first.odometer, 12000.0);
     expect(first.liters, 40.5);
     expect(first.amount, 65.3);
