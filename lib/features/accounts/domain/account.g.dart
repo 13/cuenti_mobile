@@ -14,8 +14,10 @@ _Account _$AccountFromJson(Map<String, dynamic> json) => _Account(
   accountGroup: json['accountGroup'] as String?,
   institution: json['institution'] as String?,
   currency: json['currency'] as String? ?? 'EUR',
-  startBalance: (json['startBalance'] as num?)?.toDouble() ?? 0,
-  balance: (json['balance'] as num?)?.toDouble() ?? 0,
+  startBalance: json['startBalance'] == null
+      ? 0
+      : jsonToDouble(json['startBalance']),
+  balance: json['balance'] == null ? 0 : jsonToDouble(json['balance']),
   sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
   excludeFromSummary: json['excludeFromSummary'] as bool? ?? false,
   excludeFromReports: json['excludeFromReports'] as bool? ?? false,

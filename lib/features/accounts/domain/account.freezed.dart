@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Account {
 
- int? get id; String get accountName; String? get accountNumber; String get accountType; String? get accountGroup; String? get institution; String get currency; double get startBalance; double get balance; int get sortOrder; bool get excludeFromSummary; bool get excludeFromReports;
+ int? get id; String get accountName; String? get accountNumber; String get accountType; String? get accountGroup; String? get institution; String get currency;@JsonKey(fromJson: jsonToDouble) double get startBalance;@JsonKey(fromJson: jsonToDouble) double get balance; int get sortOrder; bool get excludeFromSummary; bool get excludeFromReports;
 /// Create a copy of Account
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $AccountCopyWith<$Res>  {
   factory $AccountCopyWith(Account value, $Res Function(Account) _then) = _$AccountCopyWithImpl;
 @useResult
 $Res call({
- int? id, String accountName, String? accountNumber, String accountType, String? accountGroup, String? institution, String currency, double startBalance, double balance, int sortOrder, bool excludeFromSummary, bool excludeFromReports
+ int? id, String accountName, String? accountNumber, String accountType, String? accountGroup, String? institution, String currency,@JsonKey(fromJson: jsonToDouble) double startBalance,@JsonKey(fromJson: jsonToDouble) double balance, int sortOrder, bool excludeFromSummary, bool excludeFromReports
 });
 
 
@@ -164,7 +164,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  String accountName,  String? accountNumber,  String accountType,  String? accountGroup,  String? institution,  String currency,  double startBalance,  double balance,  int sortOrder,  bool excludeFromSummary,  bool excludeFromReports)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  String accountName,  String? accountNumber,  String accountType,  String? accountGroup,  String? institution,  String currency, @JsonKey(fromJson: jsonToDouble)  double startBalance, @JsonKey(fromJson: jsonToDouble)  double balance,  int sortOrder,  bool excludeFromSummary,  bool excludeFromReports)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Account() when $default != null:
 return $default(_that.id,_that.accountName,_that.accountNumber,_that.accountType,_that.accountGroup,_that.institution,_that.currency,_that.startBalance,_that.balance,_that.sortOrder,_that.excludeFromSummary,_that.excludeFromReports);case _:
@@ -185,7 +185,7 @@ return $default(_that.id,_that.accountName,_that.accountNumber,_that.accountType
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  String accountName,  String? accountNumber,  String accountType,  String? accountGroup,  String? institution,  String currency,  double startBalance,  double balance,  int sortOrder,  bool excludeFromSummary,  bool excludeFromReports)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  String accountName,  String? accountNumber,  String accountType,  String? accountGroup,  String? institution,  String currency, @JsonKey(fromJson: jsonToDouble)  double startBalance, @JsonKey(fromJson: jsonToDouble)  double balance,  int sortOrder,  bool excludeFromSummary,  bool excludeFromReports)  $default,) {final _that = this;
 switch (_that) {
 case _Account():
 return $default(_that.id,_that.accountName,_that.accountNumber,_that.accountType,_that.accountGroup,_that.institution,_that.currency,_that.startBalance,_that.balance,_that.sortOrder,_that.excludeFromSummary,_that.excludeFromReports);case _:
@@ -205,7 +205,7 @@ return $default(_that.id,_that.accountName,_that.accountNumber,_that.accountType
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  String accountName,  String? accountNumber,  String accountType,  String? accountGroup,  String? institution,  String currency,  double startBalance,  double balance,  int sortOrder,  bool excludeFromSummary,  bool excludeFromReports)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  String accountName,  String? accountNumber,  String accountType,  String? accountGroup,  String? institution,  String currency, @JsonKey(fromJson: jsonToDouble)  double startBalance, @JsonKey(fromJson: jsonToDouble)  double balance,  int sortOrder,  bool excludeFromSummary,  bool excludeFromReports)?  $default,) {final _that = this;
 switch (_that) {
 case _Account() when $default != null:
 return $default(_that.id,_that.accountName,_that.accountNumber,_that.accountType,_that.accountGroup,_that.institution,_that.currency,_that.startBalance,_that.balance,_that.sortOrder,_that.excludeFromSummary,_that.excludeFromReports);case _:
@@ -220,7 +220,7 @@ return $default(_that.id,_that.accountName,_that.accountNumber,_that.accountType
 @JsonSerializable()
 
 class _Account extends Account {
-  const _Account({this.id, this.accountName = '', this.accountNumber, this.accountType = 'BANK', this.accountGroup, this.institution, this.currency = 'EUR', this.startBalance = 0, this.balance = 0, this.sortOrder = 0, this.excludeFromSummary = false, this.excludeFromReports = false}): super._();
+  const _Account({this.id, this.accountName = '', this.accountNumber, this.accountType = 'BANK', this.accountGroup, this.institution, this.currency = 'EUR', @JsonKey(fromJson: jsonToDouble) this.startBalance = 0, @JsonKey(fromJson: jsonToDouble) this.balance = 0, this.sortOrder = 0, this.excludeFromSummary = false, this.excludeFromReports = false}): super._();
   factory _Account.fromJson(Map<String, dynamic> json) => _$AccountFromJson(json);
 
 @override final  int? id;
@@ -230,8 +230,8 @@ class _Account extends Account {
 @override final  String? accountGroup;
 @override final  String? institution;
 @override@JsonKey() final  String currency;
-@override@JsonKey() final  double startBalance;
-@override@JsonKey() final  double balance;
+@override@JsonKey(fromJson: jsonToDouble) final  double startBalance;
+@override@JsonKey(fromJson: jsonToDouble) final  double balance;
 @override@JsonKey() final  int sortOrder;
 @override@JsonKey() final  bool excludeFromSummary;
 @override@JsonKey() final  bool excludeFromReports;
@@ -269,7 +269,7 @@ abstract mixin class _$AccountCopyWith<$Res> implements $AccountCopyWith<$Res> {
   factory _$AccountCopyWith(_Account value, $Res Function(_Account) _then) = __$AccountCopyWithImpl;
 @override @useResult
 $Res call({
- int? id, String accountName, String? accountNumber, String accountType, String? accountGroup, String? institution, String currency, double startBalance, double balance, int sortOrder, bool excludeFromSummary, bool excludeFromReports
+ int? id, String accountName, String? accountNumber, String accountType, String? accountGroup, String? institution, String currency,@JsonKey(fromJson: jsonToDouble) double startBalance,@JsonKey(fromJson: jsonToDouble) double balance, int sortOrder, bool excludeFromSummary, bool excludeFromReports
 });
 
 

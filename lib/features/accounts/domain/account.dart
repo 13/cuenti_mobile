@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:cuentimobile/features/json_converters.dart';
 
 part 'account.freezed.dart';
 part 'account.g.dart';
@@ -17,8 +18,8 @@ abstract class Account with _$Account {
     String? accountGroup,
     String? institution,
     @Default('EUR') String currency,
-    @Default(0) double startBalance,
-    @Default(0) double balance,
+    @JsonKey(fromJson: jsonToDouble) @Default(0) double startBalance,
+    @JsonKey(fromJson: jsonToDouble) @Default(0) double balance,
     @Default(0) int sortOrder,
     @Default(false) bool excludeFromSummary,
     @Default(false) bool excludeFromReports,
