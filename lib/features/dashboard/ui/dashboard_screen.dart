@@ -82,6 +82,7 @@ class DashboardScreen extends ConsumerWidget {
                             child: StatChip(
                               icon: Icons.account_balance_wallet,
                               label: 'Cash',
+                              maskable: true,
                               value:
                                   '${formatNumber(dashboard.availableCash)} ${dashboard.defaultCurrency}',
                             ),
@@ -98,6 +99,7 @@ class DashboardScreen extends ConsumerWidget {
                             child: StatChip(
                               icon: Icons.trending_up,
                               label: 'Portfolio',
+                              maskable: true,
                               value:
                                   '${formatNumber(dashboard.portfolioValue)} ${dashboard.defaultCurrency}',
                             ),

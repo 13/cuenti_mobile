@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/privacy/privacy_mode.dart';
 import '../core/widgets/refresh_all.dart';
 import '../features/auth/ui/auth_controller.dart';
 
@@ -49,6 +50,7 @@ class ShellScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
+    final privacyMode = ref.watch(privacyModeProvider);
 
     return Scaffold(
       drawer: Drawer(
@@ -128,6 +130,17 @@ class ShellScreen extends ConsumerWidget {
           ),
         ),
         actions: [
+          IconButton(
+            icon: Icon(
+              privacyMode
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
+            ),
+            tooltip: privacyMode ? 'Show amounts' : 'Hide amounts',
+            onPressed: () {
+              ref.read(privacyModeProvider.notifier).toggle();
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {

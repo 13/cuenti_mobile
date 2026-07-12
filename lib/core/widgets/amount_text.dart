@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/cuenti_colors.dart';
 import '../../utils/number_format.dart';
+import '../privacy/privacy_mode.dart';
 
 /// Renders a monetary amount with tabular figures and, optionally, a
 /// semantic color + sign based on the transaction [type]
-/// (`EXPENSE` / `INCOME` / other → transfer).
-class AmountText extends StatelessWidget {
+/// (`EXPENSE` / `INCOME` / other → transfer). Masked to `•••••` app-wide
+/// when privacy mode is on.
+class AmountText extends ConsumerWidget {
   const AmountText(
     this.amount, {
     this.type,
@@ -22,7 +25,18 @@ class AmountText extends StatelessWidget {
   final TextStyle? style;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final baseStyle = (style ?? DefaultTextStyle.of(context).style).copyWith(
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final colored = type != null
+        ? baseStyle.copyWith(color: amountColorFor(context, type!))
+        : baseStyle;
+
+    if (ref.watch(privacyModeProvider)) {
+      return Text('•••••', style: colored);
+    }
+
     final formatted = formatNumber(amount.abs());
     final prefix = signed && type != null
         ? (type == 'EXPENSE'
@@ -34,13 +48,6 @@ class AmountText extends StatelessWidget {
     final text = currency != null
         ? '$prefix$formatted $currency'
         : '$prefix$formatted';
-
-    final baseStyle = (style ?? DefaultTextStyle.of(context).style).copyWith(
-      fontFeatures: const [FontFeature.tabularFigures()],
-    );
-    final colored = type != null
-        ? baseStyle.copyWith(color: amountColorFor(context, type!))
-        : baseStyle;
 
     return Text(text, style: colored);
   }
