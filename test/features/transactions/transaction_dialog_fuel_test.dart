@@ -215,4 +215,81 @@ void main() {
     expect(odometer.controller!.text, '100700');
     expect(liters.controller!.text, '30');
   });
+
+  testWidgets('non-increasing odometer shows warning', (tester) async {
+    await pumpDialog(tester);
+    await selectCategory(tester, 'Tanken');
+
+    await tester.enterText(find.byKey(const Key('fuel-odometer')), '99000');
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('not higher than the last reading'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('plausible full-tank entry shows distance and consumption', (
+    tester,
+  ) async {
+    await pumpDialog(tester);
+    await selectCategory(tester, 'Tanken');
+
+    await tester.enterText(find.byKey(const Key('fuel-odometer')), '100340');
+    await tester.enterText(find.byKey(const Key('fuel-liters')), '41,3');
+    final fullSwitch = find.byKey(const Key('fuel-full'));
+    await tester.ensureVisible(fullSwitch);
+    await tester.pumpAndSettle();
+    await tester.tap(fullSwitch);
+    await tester.pumpAndSettle();
+
+    // 340 km since last, 41.3 / 340 * 100 = 12.1 L/100km
+    expect(find.textContaining('340 km since last'), findsOneWidget);
+    expect(find.textContaining('12.1'), findsOneWidget);
+  });
+
+  testWidgets('implausible liters shows field warning', (tester) async {
+    await pumpDialog(tester);
+    await selectCategory(tester, 'Tanken');
+
+    await tester.enterText(find.byKey(const Key('fuel-liters')), '413');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Implausible liters value'), findsOneWidget);
+  });
+
+  testWidgets('empty fuel fields on save show SnackBar, save proceeds', (
+    tester,
+  ) async {
+    when(() => txRepo.save(any())).thenAnswer(
+      (invocation) async =>
+          invocation.positionalArguments.single as Transaction,
+    );
+
+    await pumpDialog(tester);
+    await selectCategory(tester, 'Tanken');
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Amount'),
+      '60',
+    );
+    // EXPENSE requires a From Account.
+    await tester.tap(find.byType(DropdownButtonFormField<int>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Giro').last);
+    await tester.pumpAndSettle();
+
+    final saveButton = find.widgetWithText(FilledButton, 'Save');
+    await tester.ensureVisible(saveButton);
+    await tester.pumpAndSettle();
+    await tester.tap(saveButton);
+    await tester.pump(); // SnackBar appears before the dialog pops
+
+    expect(
+      find.textContaining('will not appear in the vehicle report'),
+      findsOneWidget,
+    );
+    await tester.pumpAndSettle();
+    verify(() => txRepo.save(any())).called(1);
+  });
 }

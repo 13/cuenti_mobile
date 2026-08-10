@@ -151,6 +151,43 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     _fuelSyncing = false;
   }
 
+  String? get _fuelLitersWarning {
+    final liters = _parseFuelNum(_fuelLiters.text);
+    if (liters == null) return null;
+    return (liters <= 0 || liters > 200) ? 'Implausible liters value' : null;
+  }
+
+  /// Message + isWarning for the line under the fuel fields; null when
+  /// nothing to show. First matching rule wins (mirrors the web app).
+  (String, bool)? _fuelInfoLine(double? lastOdometer) {
+    final odometer = _parseFuelNum(_fuelOdometer.text);
+    if (odometer == null || lastOdometer == null) return null;
+    final distance = odometer - lastOdometer;
+    if (distance <= 0) {
+      return (
+        'Odometer is not higher than the last reading '
+            '(${formatFuelNumber(lastOdometer)})',
+        true,
+      );
+    }
+    if (distance > 2000) {
+      return (
+        'Very large jump since the last reading '
+            '(${formatFuelNumber(distance)} km) — typo?',
+        true,
+      );
+    }
+    final liters = _parseFuelNum(_fuelLiters.text);
+    if (_fuelFullTank && liters != null && liters > 0) {
+      final consumption = (liters / distance * 100).toStringAsFixed(1);
+      return (
+        '${formatFuelNumber(distance)} km since last, ~$consumption L/100km',
+        false,
+      );
+    }
+    return ('${formatFuelNumber(distance)} km since last fill-up', false);
+  }
+
   /// Null when valid (or the section hasn't been touched / is empty) so the
   /// caller can use it both to gate the Save button and to show the banner.
   /// Also null for TRANSFER, mirroring the section's visibility: an invalid
@@ -398,9 +435,13 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Liters',
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
+                            helperText: _fuelLitersWarning,
+                            helperStyle: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
                           onChanged: (_) =>
                               setState(_syncMemoFromFuelFields),
@@ -408,6 +449,22 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                       ),
                     ],
                   ),
+                  if (_fuelInfoLine(fuelMeta?.lastOdometer) case (
+                    final message,
+                    final isWarning,
+                  ))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        message,
+                        key: const Key('fuel-info'),
+                        style: TextStyle(
+                          color: isWarning
+                              ? Theme.of(context).colorScheme.error
+                              : Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
                   SwitchListTile(
                     key: const Key('fuel-full'),
                     contentPadding: EdgeInsets.zero,
@@ -601,6 +658,19 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_splitsValidationMessage != null) return;
+
+    if (_fuelVisible &&
+        _parseFuelNum(_fuelOdometer.text) == null &&
+        _parseFuelNum(_fuelLiters.text) == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'No km/liters entered — this entry will not appear in the '
+            'vehicle report',
+          ),
+        ),
+      );
+    }
 
     setState(() => _submitting = true);
 
