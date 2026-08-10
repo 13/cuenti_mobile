@@ -95,6 +95,7 @@ class ShellScreen extends ConsumerWidget {
             _buildNavItem(context, Icons.schedule, 'Scheduled', '/scheduled'),
             _buildNavItem(context, Icons.bar_chart, 'Statistics', '/statistics'),
             _buildNavItem(context, Icons.query_stats, 'Forecasts', '/forecasts'),
+            _buildNavItem(context, Icons.directions_car, 'Vehicles', '/vehicles'),
             const Divider(),
             _buildSection(context, 'Management'),
             _buildNavItem(context, Icons.account_balance_wallet, 'Accounts', '/accounts'),
@@ -103,7 +104,6 @@ class ShellScreen extends ConsumerWidget {
             _buildNavItem(context, Icons.label, 'Tags', '/tags'),
             _buildNavItem(context, Icons.currency_exchange, 'Currencies', '/currencies'),
             _buildNavItem(context, Icons.show_chart, 'Assets', '/assets'),
-            _buildNavItem(context, Icons.directions_car, 'Vehicles', '/vehicles'),
             const Divider(),
             _buildSection(context, 'Settings'),
             if (auth.user?.isAdmin == true)

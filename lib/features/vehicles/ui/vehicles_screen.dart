@@ -184,11 +184,6 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
   }
 
   Future<void> _openCategorySheet(BuildContext context) async {
-    final categories = ref.read(categoriesControllerProvider).value ?? [];
-    final expenseCategories = categories
-        .where((c) => c.type == 'EXPENSE')
-        .toList();
-
     final selected = await showModalBottomSheet<int>(
       context: context,
       builder: (ctx) => Consumer(
@@ -197,9 +192,21 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
               .watch(authControllerProvider)
               .user
               ?.defaultVehicleCategoryId;
+          // Watch (not a one-shot read before the sheet opens): when the
+          // screen shows the no-category EmptyState nothing else has loaded
+          // the categories provider yet, so a read would return null and the
+          // sheet would render empty with no way to pick a fuel category.
+          final expenseCategories =
+              (ref.watch(categoriesControllerProvider).value ?? [])
+                  .where((c) => c.type == 'EXPENSE')
+                  .toList();
+          // shrinkWrap so a short list yields a short sheet, while a long
+          // list caps at the sheet's max height and scrolls (a plain Column
+          // would overflow and leave lower categories unreachable).
           return SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            child: ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.only(bottom: 8),
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
@@ -237,7 +244,6 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
                       },
                     ),
                   ),
-                const SizedBox(height: 8),
               ],
             ),
           );
