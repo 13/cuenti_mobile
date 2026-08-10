@@ -258,6 +258,48 @@ void main() {
     expect(find.text('Implausible liters value'), findsOneWidget);
   });
 
+  testWidgets(
+    'editing the newest fill-up compares against the prior reading, not '
+    'itself',
+    (tester) async {
+      // Two readings in the category: the transaction being edited is the
+      // newest one (2026-08-01, d=100650). The baseline for the warning
+      // must be the *older* reading (2026-07-01, d=100000) — comparing
+      // against itself would give distance 0 and a false warning.
+      when(
+        () => vehiclesRepo.getReport(
+          categoryId: 9,
+          start: any(named: 'start'),
+          end: any(named: 'end'),
+        ),
+      ).thenAnswer(
+        (_) async => VehicleReport(
+          entries: [
+            FuelEntry(date: DateTime(2026, 8, 1), odometer: 100650, liters: 40),
+            FuelEntry(date: DateTime(2026, 7, 1), odometer: 100000, liters: 38),
+          ],
+        ),
+      );
+
+      final existing = Transaction(
+        id: 5,
+        type: 'EXPENSE',
+        amount: 70,
+        fromAccountId: 1,
+        categoryId: 9,
+        transactionDate: DateTime(2026, 8, 1),
+        memo: 'd=100650 l=40',
+      );
+      await pumpDialog(tester, transaction: existing);
+
+      expect(
+        find.textContaining('not higher than'),
+        findsNothing,
+      );
+      expect(find.textContaining('650 km since last'), findsOneWidget);
+    },
+  );
+
   testWidgets('empty fuel fields on save show SnackBar, save proceeds', (
     tester,
   ) async {

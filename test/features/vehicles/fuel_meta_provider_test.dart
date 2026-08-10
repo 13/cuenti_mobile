@@ -19,7 +19,7 @@ void main() {
     addTearDown(container.dispose);
   });
 
-  test('entries present: isFuel with newest non-null odometer', () async {
+  test('entries present: isFuel with date-descending readings list', () async {
     when(
       () => repo.getReport(
         categoryId: 5,
@@ -30,7 +30,8 @@ void main() {
       (_) async => VehicleReport(
         entries: [
           // Server sends date-descending; newest first has no odometer,
-          // the next one does — provider must take the first non-null.
+          // the next one does — the readings list must skip null odometers
+          // but preserve the server's date-descending order.
           FuelEntry(date: DateTime(2026, 8, 1), liters: 40),
           FuelEntry(date: DateTime(2026, 7, 1), odometer: 44870, liters: 38),
           FuelEntry(date: DateTime(2026, 6, 1), odometer: 44000, liters: 41),
@@ -40,8 +41,40 @@ void main() {
 
     final meta = await container.read(fuelMetaProvider(5).future);
     expect(meta.isFuel, isTrue);
+    expect(meta.readings, [
+      (date: DateTime(2026, 7, 1), odometer: 44870.0),
+      (date: DateTime(2026, 6, 1), odometer: 44000.0),
+    ]);
     expect(meta.lastOdometer, 44870);
   });
+
+  test(
+    'entries with no parseable fuel data (non-fuel memos in category): '
+    'not a fuel category',
+    () async {
+      when(
+        () => repo.getReport(
+          categoryId: 8,
+          start: any(named: 'start'),
+          end: any(named: 'end'),
+        ),
+      ).thenAnswer(
+        // Server returns a FuelEntry for every expense in the category,
+        // including ones whose memo carries no fuel data at all.
+        (_) async => VehicleReport(
+          entries: [
+            FuelEntry(date: DateTime(2026, 8, 1)),
+            FuelEntry(date: DateTime(2026, 7, 1)),
+          ],
+        ),
+      );
+
+      final meta = await container.read(fuelMetaProvider(8).future);
+      expect(meta.isFuel, isFalse);
+      expect(meta.readings, isEmpty);
+      expect(meta.lastOdometer, isNull);
+    },
+  );
 
   test('no entries: not a fuel category', () async {
     when(

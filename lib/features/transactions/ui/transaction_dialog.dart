@@ -151,6 +151,21 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     _fuelSyncing = false;
   }
 
+  /// Odometer comparison baseline: the newest reading strictly before this
+  /// transaction's date (web parity — `VehicleReportService.lastOdometer`).
+  /// Using the newest reading overall would compare a fill-up against
+  /// itself when editing the most recent entry (distance 0, false
+  /// "not increasing" warning). Server dates are date-only, so compare on
+  /// the date part only.
+  double? _fuelBaseline(FuelMeta? meta) {
+    if (meta == null) return null;
+    final txDate = DateTime(_date.year, _date.month, _date.day);
+    for (final r in meta.readings) {
+      if (r.date.isBefore(txDate)) return r.odometer;
+    }
+    return null;
+  }
+
   String? get _fuelLitersWarning {
     final liters = _parseFuelNum(_fuelLiters.text);
     if (liters == null) return null;
@@ -222,6 +237,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     _fuelVisible = _type == 'EXPENSE' &&
         ((fuelMeta?.isFuel ?? false) ||
             parseFuelTokens(_memo.text).hasFuelData);
+    final fuelBaseline = _fuelBaseline(fuelMeta);
 
     return SafeArea(
       child: Padding(
@@ -419,8 +435,8 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                           decoration: InputDecoration(
                             labelText: 'Odometer (km)',
                             border: const OutlineInputBorder(),
-                            helperText: fuelMeta?.lastOdometer != null
-                                ? 'last: ${formatFuelNumber(fuelMeta!.lastOdometer!)}'
+                            helperText: fuelBaseline != null
+                                ? 'last: ${formatFuelNumber(fuelBaseline)}'
                                 : null,
                           ),
                           onChanged: (_) =>
@@ -449,7 +465,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                       ),
                     ],
                   ),
-                  if (_fuelInfoLine(fuelMeta?.lastOdometer) case (
+                  if (_fuelInfoLine(fuelBaseline) case (
                     final message,
                     final isWarning,
                   ))
@@ -717,6 +733,11 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
       await ref
           .read(transactionsControllerProvider(filter: widget.filter).notifier)
           .save(transaction, splitsTouched: splitsTouched);
+      // Kill the stale last-odometer hint so the next dialog for this
+      // category refetches instead of showing pre-save data.
+      if (_categoryId != null) {
+        ref.invalidate(fuelMetaProvider(_categoryId!));
+      }
       if (mounted) Navigator.pop(context);
     } on ApiException catch (e) {
       if (mounted) {

@@ -49,17 +49,30 @@ same values.
 
 Riverpod `FutureProvider.family<FuelMeta, int>`:
 
-- `class FuelMeta { final bool isFuel; final double? lastOdometer; }`
+- `class FuelMeta { final bool isFuel; final List<({DateTime date, double odometer})> readings; }`
+  (`readings` is date-descending; `lastOdometer` is a convenience getter for
+  `readings.firstOrNull?.odometer`.)
 - Implementation: `vehiclesRepository.getReport(categoryId, start: 2000-01-01, end: today)`.
-  `isFuel = entries.isNotEmpty`; `lastOdometer` = first entry (entries arrive
-  date-descending from the server) with a non-null odometer.
-- Any fetch error (offline, 401, 500) resolves to `FuelMeta(isFuel: false, lastOdometer: null)`
-  — the fuel section then appears only when the memo already parses, so the
-  dialog stays usable offline.
-- Provider cache is Riverpod-default (in-memory, per family arg); no manual
-  invalidation needed — a fresh dialog session may show a slightly stale
-  last-odometer hint after a same-session save, which is acceptable (hint is
-  advisory).
+  The server returns a `FuelEntry` for *every* expense in the category,
+  including ones whose memo carries no fuel data (null odometer AND liters)
+  — so `isFuel` must require at least one entry with a parseable odometer or
+  liters value, not merely `entries.isNotEmpty`. `readings` collects every
+  entry with a non-null odometer, preserving the server's date-descending
+  order.
+- The dialog does not simply use the newest reading as its comparison
+  baseline: it picks the first `readings` entry with `date` strictly before
+  the transaction's date (date-only compare), mirroring
+  `VehicleReportService.lastOdometer(user, categoryId, beforeDate)` on the
+  web app. Using the newest reading overall would compare a fill-up being
+  edited against itself when it *is* the newest entry, giving a false
+  "not higher than the last reading" warning.
+- Any fetch error (offline, 401, 500) resolves to `FuelMeta(isFuel: false)`
+  (empty `readings`) — the fuel section then appears only when the memo
+  already parses, so the dialog stays usable offline.
+- Provider cache is Riverpod-default (in-memory, per family arg). The dialog
+  calls `ref.invalidate(fuelMetaProvider(categoryId))` after a successful
+  save so the next dialog for that category refetches instead of showing a
+  stale last-odometer hint.
 
 ### 3. UI — fuel section in `TransactionDialog`
 
