@@ -5,6 +5,8 @@ import '../../../core/theme/cuenti_colors.dart';
 import '../../../utils/number_format.dart';
 import '../../accounts/ui/accounts_controller.dart';
 import '../../categories/ui/categories_controller.dart';
+import '../../vehicles/domain/fuel_memo.dart';
+import '../../vehicles/ui/fuel_meta_provider.dart';
 import '../domain/transaction.dart';
 import '../domain/transaction_filter.dart';
 import '../domain/transaction_split.dart';
@@ -60,6 +62,12 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   bool _submitting = false;
   final List<_SplitDraft> _splits = [];
   bool _splitsTouched = false;
+  late TextEditingController _fuelOdometer;
+  late TextEditingController _fuelLiters;
+  bool _fuelFullTank = false;
+  String _fuelRemainder = '';
+  bool _fuelSyncing = false;
+  bool _fuelVisible = false; // last built visibility, used by _save()
 
   @override
   void initState() {
@@ -77,6 +85,19 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     _categoryId = t?.categoryId;
     _paymentMethod = t?.paymentMethod ?? 'NONE';
     _date = t?.transactionDate ?? DateTime.now();
+    final fuelTokens = parseFuelTokens(t?.memo);
+    _fuelOdometer = TextEditingController(
+      text: fuelTokens.odometer != null
+          ? formatFuelNumber(fuelTokens.odometer!)
+          : '',
+    );
+    _fuelLiters = TextEditingController(
+      text: fuelTokens.liters != null
+          ? formatFuelNumber(fuelTokens.liters!)
+          : '',
+    );
+    _fuelFullTank = fuelTokens.fullTank;
+    _fuelRemainder = fuelTokens.remainderText;
     for (final s in t?.splits ?? const <TransactionSplit>[]) {
       _splits.add(
         _SplitDraft(
@@ -94,6 +115,40 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     if (text.isEmpty) return null;
     final normalized = text.replaceAll('.', '').replaceAll(',', '.');
     return double.tryParse(normalized);
+  }
+
+  /// Fuel numbers accept comma or dot decimals ("41,3" -> 41.3), unlike
+  /// _parseAmount which also strips thousands separators.
+  double? _parseFuelNum(String text) =>
+      text.isEmpty ? null : double.tryParse(text.replaceAll(',', '.'));
+
+  void _syncMemoFromFuelFields() {
+    if (_fuelSyncing) return;
+    _fuelSyncing = true;
+    _memo.text = buildFuelMemo(
+      _parseFuelNum(_fuelOdometer.text),
+      _parseFuelNum(_fuelLiters.text),
+      _fuelFullTank,
+      _fuelRemainder,
+    );
+    _fuelSyncing = false;
+  }
+
+  void _reparseFuelFromMemo(String memo) {
+    if (_fuelSyncing) return;
+    final tokens = parseFuelTokens(memo);
+    _fuelSyncing = true;
+    setState(() {
+      _fuelOdometer.text = tokens.odometer != null
+          ? formatFuelNumber(tokens.odometer!)
+          : '';
+      _fuelLiters.text = tokens.liters != null
+          ? formatFuelNumber(tokens.liters!)
+          : '';
+      _fuelFullTank = tokens.fullTank;
+      _fuelRemainder = tokens.remainderText;
+    });
+    _fuelSyncing = false;
   }
 
   /// Null when valid (or the section hasn't been touched / is empty) so the
@@ -123,6 +178,13 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     final accounts = ref.watch(accountsControllerProvider).value ?? [];
     final categories = ref.watch(categoriesControllerProvider).value ?? [];
     final amountColor = amountColorFor(context, _type);
+
+    final fuelMeta = _type == 'EXPENSE' && _categoryId != null
+        ? ref.watch(fuelMetaProvider(_categoryId!)).value
+        : null;
+    _fuelVisible = _type == 'EXPENSE' &&
+        ((fuelMeta?.isFuel ?? false) ||
+            parseFuelTokens(_memo.text).hasFuelData);
 
     return SafeArea(
       child: Padding(
@@ -308,6 +370,57 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                 ),
                 const SizedBox(height: 12),
 
+                // Fuel entry (structured tanking fields)
+                if (_fuelVisible) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          key: const Key('fuel-odometer'),
+                          controller: _fuelOdometer,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: 'Odometer (km)',
+                            border: const OutlineInputBorder(),
+                            helperText: fuelMeta?.lastOdometer != null
+                                ? 'last: ${formatFuelNumber(fuelMeta!.lastOdometer!)}'
+                                : null,
+                          ),
+                          onChanged: (_) =>
+                              setState(_syncMemoFromFuelFields),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextFormField(
+                          key: const Key('fuel-liters'),
+                          controller: _fuelLiters,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: 'Liters',
+                            border: OutlineInputBorder(),
+                          ),
+                          onChanged: (_) =>
+                              setState(_syncMemoFromFuelFields),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SwitchListTile(
+                    key: const Key('fuel-full'),
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Full tank'),
+                    value: _fuelFullTank,
+                    onChanged: (v) => setState(() {
+                      _fuelFullTank = v;
+                      _syncMemoFromFuelFields();
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
                 // Splits (transfers can't be split across categories)
                 if (_type != 'TRANSFER') ...[
                   Row(
@@ -450,6 +563,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 2,
+                  onChanged: _reparseFuelFromMemo,
                 ),
                 const SizedBox(height: 12),
 
@@ -553,6 +667,8 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     _payee.dispose();
     _memo.dispose();
     _tags.dispose();
+    _fuelOdometer.dispose();
+    _fuelLiters.dispose();
     for (final s in _splits) {
       s.dispose();
     }

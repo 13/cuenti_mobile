@@ -48,7 +48,7 @@ FuelTokens parseFuelTokens(String? memo) {
   );
 }
 
-String _formatFuelNumber(double v) =>
+String formatFuelNumber(double v) =>
     v == v.roundToDouble() ? v.toInt().toString() : v.toString();
 
 /// Inverse of [parseFuelTokens]: canonical "d=… l=… full <text>".
@@ -59,8 +59,8 @@ String buildFuelMemo(
   String remainderText,
 ) {
   final parts = <String>[
-    if (odometer != null) 'd=${_formatFuelNumber(odometer)}',
-    if (liters != null) 'l=${_formatFuelNumber(liters)}',
+    if (odometer != null) 'd=${formatFuelNumber(odometer)}',
+    if (liters != null) 'l=${formatFuelNumber(liters)}',
     if (fullTank) 'full',
     if (remainderText.trim().isNotEmpty) remainderText.trim(),
   ];
