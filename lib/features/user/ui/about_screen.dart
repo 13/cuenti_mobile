@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import '../../app_update/ui/update_check.dart';
 
-class AboutScreen extends StatefulWidget {
+class AboutScreen extends ConsumerStatefulWidget {
   const AboutScreen({super.key});
 
   @override
-  State<AboutScreen> createState() => _AboutScreenState();
+  ConsumerState<AboutScreen> createState() => _AboutScreenState();
 }
 
-class _AboutScreenState extends State<AboutScreen> {
+class _AboutScreenState extends ConsumerState<AboutScreen> {
   PackageInfo? _packageInfo;
 
   @override
@@ -76,6 +78,15 @@ class _AboutScreenState extends State<AboutScreen> {
                 _infoRow('Build Number', buildNumber),
                 _infoRow('Build Date', buildDate),
                 if (buildTime.isNotEmpty) _infoRow('Build Time', buildTime),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: () => checkForUpdates(context, ref),
+                    icon: const Icon(Icons.system_update_alt),
+                    label: const Text('Check for updates'),
+                  ),
+                ),
               ],
             ),
           ),
