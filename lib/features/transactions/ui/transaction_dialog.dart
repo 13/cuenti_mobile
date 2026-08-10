@@ -735,7 +735,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
           .save(transaction, splitsTouched: splitsTouched);
       // Kill the stale last-odometer hint so the next dialog for this
       // category refetches instead of showing pre-save data.
-      if (_categoryId != null) {
+      if (mounted && _categoryId != null) {
         ref.invalidate(fuelMetaProvider(_categoryId!));
       }
       if (mounted) Navigator.pop(context);
