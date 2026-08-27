@@ -9,6 +9,8 @@ part 'auth_controller.freezed.dart';
 part 'auth_controller.g.dart';
 
 const _biometricKey = 'biometric_enabled';
+const _savedUsernameKey = 'saved_username';
+const _savedPasswordKey = 'saved_password';
 
 @freezed
 abstract class AuthState with _$AuthState {
@@ -17,6 +19,8 @@ abstract class AuthState with _$AuthState {
     @Default(true) bool registrationEnabled,
     @Default(false) bool biometricEnabled,
     @Default(false) bool initialized,
+    String? savedUsername,
+    @Default(false) bool hasSavedPassword,
   }) = _AuthState;
 
   const AuthState._();
@@ -50,6 +54,9 @@ class AuthController extends _$AuthController {
     final bioStr = await _storage.read(_biometricKey);
     final biometricEnabled = bioStr == 'true';
 
+    final savedUsername = await _storage.read(_savedUsernameKey);
+    final savedPassword = await _storage.read(_savedPasswordKey);
+
     UserProfile? user;
     if (await _repo.hasToken()) {
       try {
@@ -66,6 +73,8 @@ class AuthController extends _$AuthController {
       biometricEnabled: biometricEnabled,
       registrationEnabled: registrationEnabled,
       initialized: true,
+      savedUsername: savedUsername,
+      hasSavedPassword: savedPassword != null && savedPassword.isNotEmpty,
     );
   }
 
@@ -73,6 +82,7 @@ class AuthController extends _$AuthController {
     try {
       final user = await _repo.login(username, password);
       state = state.copyWith(user: user);
+      await _saveCredentials(username, password);
       return null;
     } catch (e) {
       return _extractError(e);
@@ -95,6 +105,7 @@ class AuthController extends _$AuthController {
         lastName: lastName,
       );
       state = state.copyWith(user: user);
+      await _saveCredentials(username, password);
       return null;
     } catch (e) {
       return _extractError(e);
@@ -103,7 +114,13 @@ class AuthController extends _$AuthController {
 
   Future<void> logout() async {
     await _repo.logout();
-    state = state.copyWith(user: null);
+    await _storage.delete(_savedUsernameKey);
+    await _storage.delete(_savedPasswordKey);
+    state = state.copyWith(
+      user: null,
+      savedUsername: null,
+      hasSavedPassword: false,
+    );
   }
 
   Future<void> refreshProfile() async {
@@ -111,6 +128,12 @@ class AuthController extends _$AuthController {
       final user = await _repo.getProfile();
       state = state.copyWith(user: user);
     } catch (_) {}
+  }
+
+  Future<void> _saveCredentials(String username, String password) async {
+    await _storage.write(_savedUsernameKey, username);
+    await _storage.write(_savedPasswordKey, password);
+    state = state.copyWith(savedUsername: username, hasSavedPassword: true);
   }
 
   Future<void> setBiometricEnabled(bool enabled) async {

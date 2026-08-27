@@ -14,18 +14,19 @@ class MockApiClient extends Mock implements ApiClient {}
 
 class MemoryStorage extends SecureStorage {
   MemoryStorage() : super();
-  final Map<String, String> _data = {};
+  final Map<String, String> data = {};
   @override
-  Future<String?> read(String key) async => _data[key];
+  Future<String?> read(String key) async => data[key];
   @override
-  Future<void> write(String key, String value) async => _data[key] = value;
+  Future<void> write(String key, String value) async => data[key] = value;
   @override
-  Future<void> delete(String key) async => _data.remove(key);
+  Future<void> delete(String key) async => data.remove(key);
 }
 
 void main() {
   late MockAuthRepository repo;
   late MockApiClient apiClient;
+  late MemoryStorage storage;
   late ProviderContainer container;
 
   const user = UserProfile(
@@ -38,15 +39,17 @@ void main() {
   setUp(() {
     repo = MockAuthRepository();
     apiClient = MockApiClient();
+    storage = MemoryStorage();
     when(() => apiClient.init()).thenAnswer((_) async {});
     when(() => repo.hasToken()).thenAnswer((_) async => true);
     when(() => repo.getProfile()).thenAnswer((_) async => user);
     when(() => repo.fetchRegistrationEnabled()).thenAnswer((_) async => true);
+    when(() => repo.logout()).thenAnswer((_) async {});
 
     container = ProviderContainer(overrides: [
       authRepositoryProvider.overrideWithValue(repo),
       apiClientProvider.overrideWithValue(apiClient),
-      secureStorageProvider.overrideWithValue(MemoryStorage()),
+      secureStorageProvider.overrideWithValue(storage),
     ]);
     addTearDown(container.dispose);
   });
@@ -61,5 +64,100 @@ void main() {
 
     verify(() => repo.getProfile()).called(1);
     expect(container.read(authControllerProvider).user, user);
+  });
+
+  group('saved credentials', () {
+    test('login success persists username and password', () async {
+      when(() => repo.login('demo', 'secret')).thenAnswer((_) async => user);
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      final error = await notifier.login('demo', 'secret');
+
+      expect(error, isNull);
+      expect(storage.data['saved_username'], 'demo');
+      expect(storage.data['saved_password'], 'secret');
+      final state = container.read(authControllerProvider);
+      expect(state.savedUsername, 'demo');
+      expect(state.hasSavedPassword, isTrue);
+    });
+
+    test('login failure does not persist credentials', () async {
+      when(() => repo.login(any(), any()))
+          .thenThrow(Exception('Invalid username or password'));
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      final error = await notifier.login('demo', 'wrong');
+
+      expect(error, 'Invalid username or password');
+      expect(storage.data.containsKey('saved_username'), isFalse);
+      expect(storage.data.containsKey('saved_password'), isFalse);
+    });
+
+    test('register success persists username and password', () async {
+      when(() => repo.register(
+            username: 'new',
+            email: 'n@x',
+            password: 'pw',
+            firstName: 'N',
+            lastName: 'U',
+          )).thenAnswer((_) async => user);
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      await notifier.register(
+        username: 'new',
+        email: 'n@x',
+        password: 'pw',
+        firstName: 'N',
+        lastName: 'U',
+      );
+
+      expect(storage.data['saved_username'], 'new');
+      expect(storage.data['saved_password'], 'pw');
+      expect(container.read(authControllerProvider).savedUsername, 'new');
+    });
+
+    test('init restores savedUsername and hasSavedPassword from storage',
+        () async {
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      final notifier = container.read(authControllerProvider.notifier);
+
+      await notifier.init();
+
+      final state = container.read(authControllerProvider);
+      expect(state.savedUsername, 'demo');
+      expect(state.hasSavedPassword, isTrue);
+    });
+
+    test('init with username but no password: hasSavedPassword false',
+        () async {
+      storage.data['saved_username'] = 'demo';
+      final notifier = container.read(authControllerProvider.notifier);
+
+      await notifier.init();
+
+      final state = container.read(authControllerProvider);
+      expect(state.savedUsername, 'demo');
+      expect(state.hasSavedPassword, isFalse);
+    });
+
+    test('logout deletes both keys and clears state', () async {
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      await notifier.logout();
+
+      expect(storage.data.containsKey('saved_username'), isFalse);
+      expect(storage.data.containsKey('saved_password'), isFalse);
+      final state = container.read(authControllerProvider);
+      expect(state.savedUsername, isNull);
+      expect(state.hasSavedPassword, isFalse);
+      expect(state.user, isNull);
+    });
   });
 }
