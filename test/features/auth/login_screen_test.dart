@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
@@ -210,6 +212,51 @@ void main() {
 
     verifyNever(() => repo.login(any(), any()));
     expect(find.text('NotAvailable'), findsNothing);
+  });
+
+  testWidgets(
+      'biometric prompt disables both buttons until it resolves, then re-enables',
+      (tester) async {
+    final storage = _MemoryStorage()
+      ..data['biometric_enabled'] = 'true'
+      ..data['saved_username'] = 'demo'
+      ..data['saved_password'] = 'secret';
+    // First call is the auto-prompt fired from init(); it must resolve
+    // promptly so `pumpLogin`'s settle doesn't spin forever on the
+    // indeterminate progress indicator. The second call (the manual tap
+    // below) stays pending until the test completes it.
+    var callCount = 0;
+    final completer = Completer<bool>();
+    final authenticator = MockLocalAuthentication();
+    when(() => authenticator.authenticate(
+          localizedReason: any(named: 'localizedReason'),
+        )).thenAnswer((_) {
+      callCount++;
+      return callCount == 1 ? Future.value(false) : completer.future;
+    });
+
+    await pumpLogin(tester, storage: storage, authenticator: authenticator);
+
+    await tester.tap(find.text('Sign in with biometrics'));
+    await tester.pump();
+
+    final signInButton =
+        tester.widget<FilledButton>(find.byType(FilledButton));
+    final biometricButton =
+        tester.widget<OutlinedButton>(find.byType(OutlinedButton));
+    expect(signInButton.onPressed, isNull);
+    expect(biometricButton.onPressed, isNull);
+
+    completer.complete(false);
+    await tester.pumpAndSettle();
+
+    final signInButtonAfter =
+        tester.widget<FilledButton>(find.byType(FilledButton));
+    final biometricButtonAfter =
+        tester.widget<OutlinedButton>(find.byType(OutlinedButton));
+    expect(signInButtonAfter.onPressed, isNotNull);
+    expect(biometricButtonAfter.onPressed, isNotNull);
+    verifyNever(() => repo.login(any(), any()));
   });
 
   testWidgets('rejected saved password shows error and hides button',

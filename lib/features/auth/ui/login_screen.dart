@@ -205,6 +205,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _biometricLogin() async {
+    setState(() {
+      _submitting = true;
+    });
     bool didAuth;
     try {
       didAuth = await _localAuth.authenticate(
@@ -212,12 +215,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     } catch (_) {
       // Biometrics unavailable/cancelled: fall back to password entry.
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+        });
+      }
       return;
     }
-    if (!didAuth || !mounted) return;
+    if (!didAuth) {
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+        });
+      }
+      return;
+    }
+    if (!mounted) return;
 
     setState(() {
-      _submitting = true;
       _error = null;
     });
     final error = await ref
