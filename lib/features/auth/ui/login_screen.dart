@@ -14,6 +14,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordFocus = FocusNode();
   bool _obscurePassword = true;
   bool _submitting = false;
   String? _error;
@@ -25,11 +26,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!_initialized) {
       _initialized = true;
       ref.read(authControllerProvider.notifier).init().then((_) {
-        if (mounted && ref.read(authControllerProvider).isLoggedIn) {
+        if (!mounted) return;
+        final auth = ref.read(authControllerProvider);
+        if (auth.isLoggedIn) {
           context.go('/dashboard');
+          return;
         }
+        _applySavedCredentials(auth);
       });
     }
+  }
+
+  void _applySavedCredentials(AuthState auth) {
+    final saved = auth.savedUsername;
+    if (saved == null || saved.isEmpty) return;
+    _usernameController.text = saved;
+    _passwordFocus.requestFocus();
+  }
+
+  Future<void> _forgetSavedCredentials() async {
+    await ref.read(authControllerProvider.notifier).forgetSavedCredentials();
+    if (!mounted) return;
+    setState(() {
+      _usernameController.clear();
+      _passwordController.clear();
+      _error = null;
+    });
   }
 
   @override
@@ -65,9 +87,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                     textInputAction: TextInputAction.next,
                   ),
+                  if (auth.savedUsername != null)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _submitting ? null : _forgetSavedCredentials,
+                        child: const Text('Not you?'),
+                      ),
+                    ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
+                    focusNode: _passwordFocus,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
@@ -153,6 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 }

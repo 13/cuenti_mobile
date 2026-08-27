@@ -12,13 +12,13 @@ import 'package:mocktail/mocktail.dart';
 /// platform channel, which isn't available in widget tests.
 class _MemoryStorage extends SecureStorage {
   _MemoryStorage() : super();
-  final Map<String, String> _data = {};
+  final Map<String, String> data = {};
   @override
-  Future<String?> read(String key) async => _data[key];
+  Future<String?> read(String key) async => data[key];
   @override
-  Future<void> write(String key, String value) async => _data[key] = value;
+  Future<void> write(String key, String value) async => data[key] = value;
   @override
-  Future<void> delete(String key) async => _data.remove(key);
+  Future<void> delete(String key) async => data.remove(key);
 }
 
 class MockAuthRepository extends Mock implements AuthRepository {}
@@ -34,17 +34,22 @@ void main() {
     when(() => repo.serverUrl).thenReturn('https://cuenti.test');
   });
 
-  Future<void> pumpLogin(WidgetTester tester) async {
+  Future<_MemoryStorage> pumpLogin(
+    WidgetTester tester, {
+    _MemoryStorage? storage,
+  }) async {
+    final s = storage ?? _MemoryStorage();
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           authRepositoryProvider.overrideWithValue(repo),
-          secureStorageProvider.overrideWithValue(_MemoryStorage()),
+          secureStorageProvider.overrideWithValue(s),
         ],
         child: const MaterialApp(home: LoginScreen()),
       ),
     );
     await tester.pumpAndSettle();
+    return s;
   }
 
   testWidgets('calls repository with entered credentials and shows error on failure',
@@ -61,5 +66,39 @@ void main() {
 
     verify(() => repo.login('demo', 'wrong-password')).called(1);
     expect(find.text('Invalid username or password'), findsOneWidget);
+  });
+
+  testWidgets('prefills username from storage and shows Not you?',
+      (tester) async {
+    final storage = _MemoryStorage()..data['saved_username'] = 'demo';
+
+    await pumpLogin(tester, storage: storage);
+
+    final usernameField =
+        tester.widget<TextFormField>(find.byType(TextFormField).at(0));
+    expect(usernameField.controller!.text, 'demo');
+    expect(find.text('Not you?'), findsOneWidget);
+  });
+
+  testWidgets('no Not you? link without saved username', (tester) async {
+    await pumpLogin(tester);
+    expect(find.text('Not you?'), findsNothing);
+  });
+
+  testWidgets('Not you? clears fields and storage', (tester) async {
+    final storage = _MemoryStorage()
+      ..data['saved_username'] = 'demo'
+      ..data['saved_password'] = 'secret';
+
+    await pumpLogin(tester, storage: storage);
+    await tester.tap(find.text('Not you?'));
+    await tester.pumpAndSettle();
+
+    final usernameField =
+        tester.widget<TextFormField>(find.byType(TextFormField).at(0));
+    expect(usernameField.controller!.text, isEmpty);
+    expect(storage.data.containsKey('saved_username'), isFalse);
+    expect(storage.data.containsKey('saved_password'), isFalse);
+    expect(find.text('Not you?'), findsNothing);
   });
 }
