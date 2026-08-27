@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/local_auth.dart';
 import 'auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.authenticator});
+
+  /// Injectable seam for tests (the default constructs a real
+  /// [LocalAuthentication], which talks to a platform channel unavailable in
+  /// widget tests). Same pattern as `AppLockObserver`.
+  final LocalAuthentication? authenticator;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -15,6 +21,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _passwordFocus = FocusNode();
+  late final LocalAuthentication _localAuth =
+      widget.authenticator ?? LocalAuthentication();
+  bool _biometricAttempted = false;
   bool _obscurePassword = true;
   bool _submitting = false;
   String? _error;
@@ -42,6 +51,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (saved == null || saved.isEmpty) return;
     _usernameController.text = saved;
     _passwordFocus.requestFocus();
+    if (auth.biometricEnabled && auth.hasSavedPassword && !_biometricAttempted) {
+      _biometricAttempted = true;
+      _biometricLogin();
+    }
   }
 
   Future<void> _forgetSavedCredentials() async {
@@ -139,6 +152,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           : const Text('Sign In'),
                     ),
                   ),
+                  if (auth.biometricEnabled && auth.hasSavedPassword) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _submitting ? null : _biometricLogin,
+                        icon: const Icon(Icons.fingerprint),
+                        label: const Text('Sign in with biometrics'),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   if (auth.registrationEnabled)
                     TextButton(
@@ -177,6 +201,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _submitting = false;
         _error = error;
       });
+    }
+  }
+
+  Future<void> _biometricLogin() async {
+    bool didAuth;
+    try {
+      didAuth = await _localAuth.authenticate(
+        localizedReason: 'Sign in to Cuenti',
+      );
+    } catch (_) {
+      // Biometrics unavailable/cancelled: fall back to password entry.
+      return;
+    }
+    if (!didAuth || !mounted) return;
+
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    final error = await ref
+        .read(authControllerProvider.notifier)
+        .loginWithSavedCredentials();
+    if (!mounted) return;
+    if (error == null) {
+      context.go('/dashboard');
+    } else {
+      setState(() {
+        _submitting = false;
+        _error = error;
+      });
+      _passwordFocus.requestFocus();
     }
   }
 
