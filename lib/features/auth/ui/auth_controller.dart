@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/api/api_exception.dart';
 import '../../../core/api/dio_provider.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../user/domain/user_profile.dart';
@@ -114,13 +115,38 @@ class AuthController extends _$AuthController {
 
   Future<void> logout() async {
     await _repo.logout();
+    await forgetSavedCredentials();
+    state = state.copyWith(user: null);
+  }
+
+  /// Signs in with the credentials persisted by the last successful
+  /// [login]/[register]. Returns null on success, else an error message.
+  /// A 401 means the password changed server-side: the saved password is
+  /// dropped (username kept) so the UI falls back to manual entry.
+  Future<String?> loginWithSavedCredentials() async {
+    final username = state.savedUsername;
+    final password = await _storage.read(_savedPasswordKey);
+    if (username == null || password == null || password.isEmpty) {
+      state = state.copyWith(hasSavedPassword: false);
+      return 'No saved credentials';
+    }
+    try {
+      final user = await _repo.login(username, password);
+      state = state.copyWith(user: user);
+      return null;
+    } on UnauthorizedException {
+      await _storage.delete(_savedPasswordKey);
+      state = state.copyWith(hasSavedPassword: false);
+      return 'Saved password no longer valid';
+    } catch (e) {
+      return _extractError(e);
+    }
+  }
+
+  Future<void> forgetSavedCredentials() async {
     await _storage.delete(_savedUsernameKey);
     await _storage.delete(_savedPasswordKey);
-    state = state.copyWith(
-      user: null,
-      savedUsername: null,
-      hasSavedPassword: false,
-    );
+    state = state.copyWith(savedUsername: null, hasSavedPassword: false);
   }
 
   Future<void> refreshProfile() async {

@@ -1,4 +1,5 @@
 import 'package:cuentimobile/core/api/api_client.dart';
+import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
@@ -158,6 +159,84 @@ void main() {
       expect(state.savedUsername, isNull);
       expect(state.hasSavedPassword, isFalse);
       expect(state.user, isNull);
+    });
+
+    test('loginWithSavedCredentials calls repo with stored values', () async {
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      when(() => repo.login('demo', 'secret')).thenAnswer((_) async => user);
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      final error = await notifier.loginWithSavedCredentials();
+
+      expect(error, isNull);
+      verify(() => repo.login('demo', 'secret')).called(1);
+      expect(container.read(authControllerProvider).user, user);
+    });
+
+    test('loginWithSavedCredentials without stored password returns error',
+        () async {
+      storage.data['saved_username'] = 'demo';
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      final error = await notifier.loginWithSavedCredentials();
+
+      expect(error, 'No saved credentials');
+      verifyNever(() => repo.login(any(), any()));
+      expect(container.read(authControllerProvider).hasSavedPassword, isFalse);
+    });
+
+    test('loginWithSavedCredentials on 401 drops password, keeps username',
+        () async {
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'old';
+      when(() => repo.login('demo', 'old')).thenThrow(
+          const UnauthorizedException('Invalid username or password'));
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      final error = await notifier.loginWithSavedCredentials();
+
+      expect(error, 'Saved password no longer valid');
+      expect(storage.data['saved_username'], 'demo');
+      expect(storage.data.containsKey('saved_password'), isFalse);
+      final state = container.read(authControllerProvider);
+      expect(state.savedUsername, 'demo');
+      expect(state.hasSavedPassword, isFalse);
+    });
+
+    test('loginWithSavedCredentials on network error keeps credentials',
+        () async {
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      when(() => repo.login('demo', 'secret'))
+          .thenThrow(const NetworkException('No connection'));
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      final error = await notifier.loginWithSavedCredentials();
+
+      expect(error, isNotNull);
+      expect(storage.data['saved_password'], 'secret');
+      expect(container.read(authControllerProvider).hasSavedPassword, isTrue);
+    });
+
+    test('forgetSavedCredentials deletes both keys and clears state',
+        () async {
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      await notifier.forgetSavedCredentials();
+
+      expect(storage.data.containsKey('saved_username'), isFalse);
+      expect(storage.data.containsKey('saved_password'), isFalse);
+      final state = container.read(authControllerProvider);
+      expect(state.savedUsername, isNull);
+      expect(state.hasSavedPassword, isFalse);
     });
   });
 }
