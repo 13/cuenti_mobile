@@ -125,7 +125,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 SwitchListTile(
                   title: const Text('Biometric Unlock'),
                   subtitle: const Text(
-                    'Require fingerprint/face to reopen app',
+                    'Require fingerprint/face to reopen or sign in',
                   ),
                   value: authState.biometricEnabled,
                   onChanged: (v) => auth.setBiometricEnabled(v),
