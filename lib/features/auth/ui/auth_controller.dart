@@ -80,14 +80,14 @@ class AuthController extends _$AuthController {
   }
 
   Future<String?> login(String username, String password) async {
+    final UserProfile user;
     try {
-      final user = await _repo.login(username, password);
-      state = state.copyWith(user: user);
-      await _saveCredentials(username, password);
-      return null;
+      user = await _repo.login(username, password);
     } catch (e) {
       return _extractError(e);
     }
+    await _persistSuccessfulLogin(user, username, password);
+    return null;
   }
 
   Future<String?> register({
@@ -97,26 +97,26 @@ class AuthController extends _$AuthController {
     required String firstName,
     required String lastName,
   }) async {
+    final UserProfile user;
     try {
-      final user = await _repo.register(
+      user = await _repo.register(
         username: username,
         email: email,
         password: password,
         firstName: firstName,
         lastName: lastName,
       );
-      state = state.copyWith(user: user);
-      await _saveCredentials(username, password);
-      return null;
     } catch (e) {
       return _extractError(e);
     }
+    await _persistSuccessfulLogin(user, username, password);
+    return null;
   }
 
   Future<void> logout() async {
+    state = state.copyWith(user: null);
     await _repo.logout();
     await forgetSavedCredentials();
-    state = state.copyWith(user: null);
   }
 
   /// Signs in with the credentials persisted by the last successful
@@ -134,7 +134,8 @@ class AuthController extends _$AuthController {
       final user = await _repo.login(username, password);
       state = state.copyWith(user: user);
       return null;
-    } on UnauthorizedException {
+    } on UnauthorizedException catch (e) {
+      if (e.message != 'Invalid username or password') return _extractError(e);
       await _storage.delete(_savedPasswordKey);
       state = state.copyWith(hasSavedPassword: false);
       return 'Saved password no longer valid';
@@ -156,10 +157,22 @@ class AuthController extends _$AuthController {
     } catch (_) {}
   }
 
-  Future<void> _saveCredentials(String username, String password) async {
-    await _storage.write(_savedUsernameKey, username);
-    await _storage.write(_savedPasswordKey, password);
-    state = state.copyWith(savedUsername: username, hasSavedPassword: true);
+  /// Sets [user] on success and, best-effort, persists the credentials for
+  /// [loginWithSavedCredentials]. A storage failure must not surface as a
+  /// failed sign-in, so it is swallowed here and `savedUsername`/
+  /// `hasSavedPassword` are simply left unchanged.
+  Future<void> _persistSuccessfulLogin(
+      UserProfile user, String username, String password) async {
+    var persisted = false;
+    try {
+      await _storage.write(_savedUsernameKey, username);
+      await _storage.write(_savedPasswordKey, password);
+      persisted = true;
+    } catch (_) {}
+    state = persisted
+        ? state.copyWith(
+            user: user, savedUsername: username, hasSavedPassword: true)
+        : state.copyWith(user: user);
   }
 
   Future<void> setBiometricEnabled(bool enabled) async {

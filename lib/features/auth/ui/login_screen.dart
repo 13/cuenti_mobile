@@ -20,6 +20,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _usernameFocus = FocusNode();
   final _passwordFocus = FocusNode();
   late final LocalAuthentication _localAuth =
       widget.authenticator ?? LocalAuthentication();
@@ -65,6 +66,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _passwordController.clear();
       _error = null;
     });
+    _usernameFocus.requestFocus();
   }
 
   @override
@@ -92,6 +94,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 32),
                   TextFormField(
                     controller: _usernameController,
+                    focusNode: _usernameFocus,
                     decoration: const InputDecoration(
                       labelText: 'Username',
                       border: OutlineInputBorder(),
@@ -254,6 +257,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _usernameFocus.dispose();
     _passwordFocus.dispose();
     super.dispose();
   }

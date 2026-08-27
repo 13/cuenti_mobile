@@ -24,6 +24,18 @@ class MemoryStorage extends SecureStorage {
   Future<void> delete(String key) async => data.remove(key);
 }
 
+/// [MemoryStorage] variant whose `write` throws for a chosen key, to
+/// exercise persistence failures after a successful sign-in.
+class ThrowingWriteStorage extends MemoryStorage {
+  ThrowingWriteStorage(this.failingKey);
+  final String failingKey;
+  @override
+  Future<void> write(String key, String value) async {
+    if (key == failingKey) throw Exception('storage unavailable');
+    return super.write(key, value);
+  }
+}
+
 void main() {
   late MockAuthRepository repo;
   late MockApiClient apiClient;
@@ -96,6 +108,28 @@ void main() {
       expect(storage.data.containsKey('saved_password'), isFalse);
     });
 
+    test(
+        'login success with storage write failure still signs in, drops saved-password state',
+        () async {
+      final throwingStorage = ThrowingWriteStorage('saved_password');
+      final throwingContainer = ProviderContainer(overrides: [
+        authRepositoryProvider.overrideWithValue(repo),
+        apiClientProvider.overrideWithValue(apiClient),
+        secureStorageProvider.overrideWithValue(throwingStorage),
+      ]);
+      addTearDown(throwingContainer.dispose);
+      when(() => repo.login('demo', 'secret')).thenAnswer((_) async => user);
+      final notifier = throwingContainer.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      final error = await notifier.login('demo', 'secret');
+
+      expect(error, isNull);
+      final state = throwingContainer.read(authControllerProvider);
+      expect(state.user, user);
+      expect(state.hasSavedPassword, isFalse);
+    });
+
     test('register success persists username and password', () async {
       when(() => repo.register(
             username: 'new',
@@ -143,6 +177,22 @@ void main() {
       final state = container.read(authControllerProvider);
       expect(state.savedUsername, 'demo');
       expect(state.hasSavedPassword, isFalse);
+    });
+
+    test('session expiry on init keeps saved credentials', () async {
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      when(() => repo.hasToken()).thenAnswer((_) async => true);
+      when(() => repo.getProfile()).thenThrow(Exception('expired'));
+      final notifier = container.read(authControllerProvider.notifier);
+
+      await notifier.init();
+
+      final state = container.read(authControllerProvider);
+      expect(state.user, isNull);
+      expect(state.savedUsername, 'demo');
+      expect(state.hasSavedPassword, isTrue);
+      expect(storage.data['saved_password'], 'secret');
     });
 
     test('logout deletes both keys and clears state', () async {
@@ -205,6 +255,23 @@ void main() {
       final state = container.read(authControllerProvider);
       expect(state.savedUsername, 'demo');
       expect(state.hasSavedPassword, isFalse);
+    });
+
+    test('loginWithSavedCredentials on 403 keeps password, surfaces error',
+        () async {
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      when(() => repo.login('demo', 'secret')).thenThrow(
+          const UnauthorizedException('API access is not enabled'));
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      final error = await notifier.loginWithSavedCredentials();
+
+      expect(error, isNotNull);
+      expect(error, isNot('Saved password no longer valid'));
+      expect(storage.data['saved_password'], 'secret');
+      expect(container.read(authControllerProvider).hasSavedPassword, isTrue);
     });
 
     test('loginWithSavedCredentials on network error keeps credentials',

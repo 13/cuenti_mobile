@@ -136,6 +136,13 @@ void main() {
     expect(storage.data.containsKey('saved_username'), isFalse);
     expect(storage.data.containsKey('saved_password'), isFalse);
     expect(find.text('Not you?'), findsNothing);
+    final usernameEditableState = tester.state<EditableTextState>(
+      find.descendant(
+        of: find.byType(TextFormField).at(0),
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(usernameEditableState.widget.focusNode.hasFocus, isTrue);
   });
 
   testWidgets('no biometric button when biometric disabled', (tester) async {
