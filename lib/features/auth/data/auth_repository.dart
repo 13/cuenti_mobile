@@ -22,7 +22,8 @@ class AuthRepository {
         'username': username,
         'password': password,
       });
-      return _saveTokenAndBuildProfile(response.data as Map<String, dynamic>);
+      return await _saveTokenAndBuildProfile(
+          response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       final mapped = ApiException.fromDio(e);
       // Parity with the old AuthProvider: a 401 on the login endpoint means
@@ -52,7 +53,8 @@ class AuthRepository {
         'firstName': firstName,
         'lastName': lastName,
       });
-      return _saveTokenAndBuildProfile(response.data as Map<String, dynamic>);
+      return await _saveTokenAndBuildProfile(
+          response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
