@@ -1,9 +1,10 @@
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 
 /// Typed API error. Repositories throw only this; DioException never
 /// escapes the data layer.
 sealed class ApiException implements Exception {
-  const ApiException(this.message);
+  const ApiException(this.message, {this.serverMessage, this.statusCode});
 
   factory ApiException.fromDio(DioException e) {
     switch (e.type) {
@@ -34,38 +35,87 @@ sealed class ApiException implements Exception {
         }
         return ServerException(serverMessage ?? 'Server error ($status)');
       case DioExceptionType.badCertificate:
-        return const NetworkException(
-          'The server certificate is not trusted. Re-run Server Setup to '
-          'check its fingerprint and trust it.',
-        );
+        return const NetworkException(_certificateMessage);
       case DioExceptionType.cancel:
       case DioExceptionType.unknown:
         return UnknownApiException(e.message ?? 'An error occurred');
     }
   }
 
+  /// English, for logs and tests. [localizedMessage] is what the UI shows.
   final String message;
+
+  /// What the server itself said, when it said anything. Already in the
+  /// server's own language, so it is shown as-is rather than translated.
+  final String? serverMessage;
+
+  final int? statusCode;
+
+  /// The message to put in front of the user.
+  ///
+  /// A server that explained itself is quoted verbatim -- it knows why it
+  /// refused and this client does not. Only the fallbacks, written here, are
+  /// translated.
+  String localizedMessage(L l) {
+    final fromServer = serverMessage;
+    if (fromServer != null && fromServer.isNotEmpty) return fromServer;
+    return switch (this) {
+      NetworkException() =>
+        message == _certificateMessage ? l.errorCertificate : l.errorNetwork,
+      UnauthorizedException() =>
+        statusCode == 403 ? l.errorApiDisabled : l.errorNotAuthenticated,
+      ValidationException() => l.errorInvalidRequest,
+      ServerException() =>
+        statusCode == null
+            ? l.errorUnexpectedResponse
+            : l.errorServer('$statusCode'),
+      UnknownApiException() => l.errorUnknown,
+    };
+  }
 
   @override
   String toString() => message;
 }
 
+/// Kept as a constant so [ApiException.localizedMessage] can tell a
+/// certificate refusal from an ordinary connection failure without adding a
+/// subtype for it.
+const _certificateMessage =
+    'The server certificate is not trusted. Re-run Server Setup to '
+    'check its fingerprint and trust it.';
+
 final class NetworkException extends ApiException {
-  const NetworkException(super.message);
+  const NetworkException(
+    super.message, {
+    super.serverMessage,
+    super.statusCode,
+  });
 }
 
 final class UnauthorizedException extends ApiException {
-  const UnauthorizedException(super.message);
+  const UnauthorizedException(
+    super.message, {
+    super.serverMessage,
+    super.statusCode,
+  });
 }
 
 final class ValidationException extends ApiException {
-  const ValidationException(super.message);
+  const ValidationException(
+    super.message, {
+    super.serverMessage,
+    super.statusCode,
+  });
 }
 
 final class ServerException extends ApiException {
-  const ServerException(super.message);
+  const ServerException(super.message, {super.serverMessage, super.statusCode});
 }
 
 final class UnknownApiException extends ApiException {
-  const UnknownApiException(super.message);
+  const UnknownApiException(
+    super.message, {
+    super.serverMessage,
+    super.statusCode,
+  });
 }

@@ -119,7 +119,7 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
   Future<void> _authenticate() async {
     try {
       final didAuth = await _localAuth.authenticate(
-        localizedReason: 'Authenticate to unlock Cuenti',
+        localizedReason: L.of(context).authUnlockReason,
       );
       if (didAuth) {
         setState(() => _locked = false);

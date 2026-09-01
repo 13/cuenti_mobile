@@ -167,7 +167,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SectionHeader('Server'),
                 const SizedBox(height: 8),
                 Text(
-                  'Connected to: ${auth.serverUrl}',
+                  L.of(context).settingsConnectedTo(auth.serverUrl),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 8),
@@ -367,7 +367,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ScaffoldMessenger.of(
                               ctx,
                             ).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
+                              SnackBar(
+                                content: Text(L.of(context).commonError('$e')),
+                              ),
                             );
                           }
                         }
@@ -478,7 +480,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ScaffoldMessenger.of(
                               ctx,
                             ).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
+                              SnackBar(
+                                content: Text(L.of(context).commonError('$e')),
+                              ),
                             );
                           }
                         }
@@ -580,7 +584,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -589,7 +593,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Export failed: $e'),
+            content: Text(L.of(context).settingsExportFailed('$e')),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -633,7 +637,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -642,7 +646,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Import failed: $e'),
+            content: Text(L.of(context).settingsImportFailed('$e')),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -707,7 +711,7 @@ class _AdminPanel extends ConsumerWidget {
           ),
           const Divider(),
           Text(
-            'Users (${users.length})',
+            L.of(context).settingsUsersCount('${users.length}'),
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
@@ -787,7 +791,7 @@ class _AdminPanel extends ConsumerWidget {
         case 'delete':
           final confirmed = await showConfirmSheet(
             context,
-            title: 'Delete ${user.username}?',
+            title: L.of(context).settingsDeleteUserTitle(user.username),
             message: L.of(context).settingsDeleteUserBody,
           );
           if (!confirmed) return;
@@ -798,7 +802,7 @@ class _AdminPanel extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

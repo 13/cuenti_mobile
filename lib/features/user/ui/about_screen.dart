@@ -133,7 +133,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
         // Footer
         Center(
           child: Text(
-            '© ${DateTime.now().year} Cuenti Team',
+            L.of(context).aboutCopyright('${DateTime.now().year}'),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.outline,
             ),

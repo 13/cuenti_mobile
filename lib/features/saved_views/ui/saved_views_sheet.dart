@@ -117,7 +117,7 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
     final confirmed = await showConfirmSheet(
       context,
       title: L.of(context).savedViewsDeleteTitle,
-      message: 'Delete "${view.name}"?',
+      message: L.of(context).commonDeleteConfirm(view.name),
     );
     if (!confirmed || view.id == null) return;
     try {
@@ -126,7 +126,7 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.message),
+          content: Text(e.localizedMessage(L.of(context))),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -195,7 +195,9 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
                                 if (ctx.mounted) {
                                   ScaffoldMessenger.of(ctx).showSnackBar(
                                     SnackBar(
-                                      content: Text('Error: ${e.message}'),
+                                      content: Text(
+                                        e.localizedMessage(L.of(context)),
+                                      ),
                                       backgroundColor: Theme.of(
                                         ctx,
                                       ).colorScheme.error,

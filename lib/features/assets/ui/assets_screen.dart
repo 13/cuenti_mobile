@@ -62,7 +62,7 @@ class AssetsScreen extends ConsumerWidget {
                       confirmDismiss: (_) => showConfirmSheet(
                         context,
                         title: L.of(context).assetsDeleteTitle,
-                        message: 'Delete "${a.name}"?',
+                        message: L.of(context).commonDeleteConfirm(a.name),
                       ),
                       onDismissed: (_) => _delete(context, ref, a.id!),
                       child: _AssetTile(asset: a),
@@ -90,7 +90,7 @@ class AssetsScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -127,7 +127,9 @@ class AssetsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    asset == null ? 'Add Asset' : 'Edit Asset',
+                    asset == null
+                        ? L.of(context).assetsAddTitle
+                        : L.of(context).assetsEditTitle,
                     style: Theme.of(ctx).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16),
@@ -200,7 +202,11 @@ class AssetsScreen extends ConsumerWidget {
                                     if (ctx.mounted) {
                                       ScaffoldMessenger.of(ctx).showSnackBar(
                                         SnackBar(
-                                          content: Text('Error: ${e.message}'),
+                                          content: Text(
+                                            L
+                                                .of(context)
+                                                .commonError(e.message),
+                                          ),
                                           backgroundColor: Theme.of(
                                             ctx,
                                           ).colorScheme.error,
@@ -291,7 +297,7 @@ class _AssetTileState extends ConsumerState<_AssetTile> {
                   Text(
                     a.currentPrice != null
                         ? '${a.currentPrice!.toStringAsFixed(2)} ${a.currency ?? ''}'
-                        : 'No price',
+                        : L.of(context).assetsNoPrice,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -357,14 +363,14 @@ class _AssetTileState extends ConsumerState<_AssetTile> {
       await ref.read(assetsControllerProvider.notifier).refreshPrice(a.id!);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Price refreshed for ${a.symbol}')),
+          SnackBar(content: Text(L.of(context).assetsPriceRefreshed(a.symbol))),
         );
       }
     } on ApiException catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

@@ -162,7 +162,7 @@ class ScheduledScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -182,7 +182,7 @@ class ScheduledScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -202,7 +202,7 @@ class ScheduledScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -218,7 +218,7 @@ class ScheduledScreen extends ConsumerWidget {
     final confirmed = await showConfirmSheet(
       context,
       title: L.of(context).scheduledDeleteTitle,
-      message: 'Delete "${st.payee ?? st.type}" recurring transaction?',
+      message: L.of(context).scheduledDeleteBody(st.payee ?? st.type),
     );
     if (!confirmed) return;
     try {
@@ -227,7 +227,7 @@ class ScheduledScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

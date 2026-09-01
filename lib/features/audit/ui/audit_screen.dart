@@ -55,7 +55,7 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.message),
+          content: Text(e.localizedMessage(L.of(context))),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );

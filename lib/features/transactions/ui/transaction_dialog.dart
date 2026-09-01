@@ -180,8 +180,8 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
               children: [
                 Text(
                   widget.transaction == null
-                      ? 'Add Transaction'
-                      : 'Edit Transaction',
+                      ? L.of(context).txAddTitle
+                      : L.of(context).txEditTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
@@ -202,12 +202,14 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                     decimal: true,
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Required';
+                    if (v == null || v.isEmpty) {
+                      return L.of(context).commonRequired;
+                    }
                     final normalized = v
                         .replaceAll('.', '')
                         .replaceAll(',', '.');
                     if (double.tryParse(normalized) == null) {
-                      return 'Invalid number';
+                      return L.of(context).commonInvalidNumber;
                     }
                     return null;
                   },
@@ -430,14 +432,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     if (_fuelVisible &&
         parseFuelInput(_fuelOdometer.text) == null &&
         parseFuelInput(_fuelLiters.text) == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'No km/liters entered — this entry will not appear in the '
-            'vehicle report',
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(L.of(context).txFuelHint)));
     }
 
     setState(() => _submitting = true);
@@ -496,7 +493,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
         setState(() => _submitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.message}'),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

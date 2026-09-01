@@ -1,3 +1,4 @@
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Shows a bottom sheet asking the user to confirm a (typically
@@ -7,7 +8,7 @@ Future<bool> showConfirmSheet(
   BuildContext context, {
   required String title,
   String? message,
-  String confirmLabel = 'Delete',
+  String? confirmLabel,
 }) async {
   final result = await showModalBottomSheet<bool>(
     context: context,
@@ -30,7 +31,7 @@ Future<bool> showConfirmSheet(
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Cancel'),
+                    child: Text(L.of(context).commonCancel),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -41,7 +42,7 @@ Future<bool> showConfirmSheet(
                       foregroundColor: colorScheme.onError,
                     ),
                     onPressed: () => Navigator.of(context).pop(true),
-                    child: Text(confirmLabel),
+                    child: Text(confirmLabel ?? L.of(context).commonDelete),
                   ),
                 ),
               ],

@@ -117,7 +117,7 @@ class _BudgetsList extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -237,7 +237,7 @@ class _BudgetCard extends ConsumerWidget {
       confirmDismiss: (_) => showConfirmSheet(
         context,
         title: L.of(context).budgetsDeleteTitle,
-        message: 'Delete budget for "${progress.categoryName}"?',
+        message: L.of(context).budgetsDeleteBody(progress.categoryName ?? ''),
       ),
       onDismissed: (_) => onDelete(),
       child: Opacity(opacity: progress.active ? 1.0 : 0.5, child: card),
@@ -311,7 +311,9 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                widget.existing == null ? 'Add Budget' : 'Edit Budget',
+                widget.existing == null
+                    ? L.of(context).budgetsAddTitle
+                    : L.of(context).budgetsEditTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
@@ -334,10 +336,12 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
                   decimal: true,
                 ),
                 validator: (v) {
-                  if (v == null || v.isEmpty) return 'Required';
+                  if (v == null || v.isEmpty) {
+                    return L.of(context).commonRequired;
+                  }
                   final normalized = v.replaceAll('.', '').replaceAll(',', '.');
                   if (double.tryParse(normalized) == null) {
-                    return 'Invalid number';
+                    return L.of(context).commonInvalidNumber;
                   }
                   return null;
                 },
@@ -406,7 +410,7 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
         setState(() => _submitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -420,7 +424,7 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
     final confirmed = await showConfirmSheet(
       context,
       title: L.of(context).budgetsDeleteTitle,
-      message: 'Delete budget for "${existing.categoryName}"?',
+      message: L.of(context).budgetsDeleteBody(existing.categoryName ?? ''),
     );
     if (!confirmed) return;
 
@@ -435,7 +439,7 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
         setState(() => _submitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

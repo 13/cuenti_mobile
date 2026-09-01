@@ -48,6 +48,11 @@ void main() {
           'authRegister',
           'aboutSoftwareInfo',
           'commonName',
+          // 'Tags' is the same word in German; the other two are a
+          // label plus a value and a brand line.
+          'navTags',
+          'authServerLine',
+          'aboutCopyright',
         };
         final untranslated = [
           for (final k in keys)
@@ -178,6 +183,49 @@ void main() {
 
     test('a device with no preference gets English', () {
       expect(resolveAppLocale(null, L.supportedLocales), const Locale('en'));
+    });
+  });
+
+  group('no English is left where a literal could hide', () {
+    /// Walks the UI source for string literals sitting in positions the eye
+    /// reads -- Text(), labels, hints, tooltips, confirm messages. This is
+    /// the check that would have caught the entire drawer and every AppBar
+    /// title staying English after the first translation pass.
+    test('no user-visible literal remains in lib/features or lib/screens', () {
+      const allowed = {
+        // Brand name, deliberately the same in every language.
+        'Cuenti',
+        // An example address, not copy.
+        'http://192.168.1.100:8080',
+      };
+      final offenders = <String>[];
+      final pattern = RegExp(
+        r'(?:Text\(\s*|labelText:\s*|hintText:\s*|tooltip:\s*|'
+        r'message:\s*|title:\s*|actionLabel:\s*|localizedReason:\s*)'
+        r"'([^'\\\n]{4,})'",
+      );
+      for (final dir in ['lib/features', 'lib/screens']) {
+        for (final file in Directory(dir).listSync(recursive: true)) {
+          if (file is! File || !file.path.endsWith('.dart')) continue;
+          if (file.path.endsWith('.g.dart') ||
+              file.path.endsWith('.freezed.dart')) {
+            continue;
+          }
+          final src = file.readAsStringSync();
+          for (final m in pattern.allMatches(src)) {
+            final text = m.group(1)!;
+            if (allowed.contains(text)) continue;
+            // Interpolations and identifiers are not display copy.
+            if (text.contains(r'$') || !RegExp('[a-z]').hasMatch(text)) {
+              continue;
+            }
+            if (RegExp(r'^[a-z][a-zA-Z]*$').hasMatch(text)) continue;
+            final line = '\n'.allMatches(src.substring(0, m.start)).length + 1;
+            offenders.add('${file.path}:$line  "$text"');
+          }
+        }
+      }
+      expect(offenders, isEmpty, reason: 'untranslated user-visible strings');
     });
   });
 }

@@ -513,5 +513,203 @@
   "settingsAutoUpdate": "Automatic update check",
   "@settingsAutoUpdate": {},
   "settingsAutoUpdateSubtitle": "Look for a new release on GitHub when the app opens",
-  "@settingsAutoUpdateSubtitle": {}
+  "@settingsAutoUpdateSubtitle": {},
+  "commonError": "Error: {message}",
+  "@commonError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "commonDeleteConfirm": "Delete \"{name}\"?",
+  "@commonDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "commonRequired": "Required",
+  "@commonRequired": {},
+  "commonInvalidNumber": "Invalid number",
+  "@commonInvalidNumber": {},
+  "commonAll": "All",
+  "@commonAll": {},
+  "commonToday": "Today",
+  "@commonToday": {},
+  "commonYesterday": "Yesterday",
+  "@commonYesterday": {},
+  "commonCustom": "Custom",
+  "@commonCustom": {},
+  "commonDateRange": "Date range",
+  "@commonDateRange": {},
+  "navScheduled": "Scheduled",
+  "@navScheduled": {},
+  "navForecasts": "Forecasts",
+  "@navForecasts": {},
+  "navAccounts": "Accounts",
+  "@navAccounts": {},
+  "navPayees": "Payees",
+  "@navPayees": {},
+  "navCategories": "Categories",
+  "@navCategories": {},
+  "navTags": "Tags",
+  "@navTags": {},
+  "navCurrencies": "Currencies",
+  "@navCurrencies": {},
+  "navAssets": "Assets",
+  "@navAssets": {},
+  "navVehicles": "Vehicles",
+  "@navVehicles": {},
+  "navSettings": "Settings",
+  "@navSettings": {},
+  "navAbout": "About",
+  "@navAbout": {},
+  "navAuditLog": "Audit Log",
+  "@navAuditLog": {},
+  "navGeneral": "General",
+  "@navGeneral": {},
+  "navManagement": "Management",
+  "@navManagement": {},
+  "navSettingsSection": "Settings",
+  "@navSettingsSection": {},
+  "privacyShow": "Show amounts",
+  "@privacyShow": {},
+  "privacyHide": "Hide amounts",
+  "@privacyHide": {},
+  "accountsAddTitle": "Add Account",
+  "@accountsAddTitle": {},
+  "accountsEditTitle": "Edit Account",
+  "@accountsEditTitle": {},
+  "assetsAddTitle": "Add Asset",
+  "@assetsAddTitle": {},
+  "assetsEditTitle": "Edit Asset",
+  "@assetsEditTitle": {},
+  "budgetsAddTitle": "Add Budget",
+  "@budgetsAddTitle": {},
+  "budgetsEditTitle": "Edit Budget",
+  "@budgetsEditTitle": {},
+  "categoriesAddTitle": "Add Category",
+  "@categoriesAddTitle": {},
+  "categoriesEditTitle": "Edit Category",
+  "@categoriesEditTitle": {},
+  "currenciesAddTitle": "Add Currency",
+  "@currenciesAddTitle": {},
+  "currenciesEditTitle": "Edit Currency",
+  "@currenciesEditTitle": {},
+  "payeesAddTitle": "Add Payee",
+  "@payeesAddTitle": {},
+  "payeesEditTitle": "Edit Payee",
+  "@payeesEditTitle": {},
+  "tagsAddTitle": "Add Tag",
+  "@tagsAddTitle": {},
+  "tagsEditTitle": "Edit Tag",
+  "@tagsEditTitle": {},
+  "txAddTitle": "Add Transaction",
+  "@txAddTitle": {},
+  "txEditTitle": "Edit Transaction",
+  "@txEditTitle": {},
+  "txAllAccounts": "All accounts",
+  "@txAllAccounts": {},
+  "authBiometricReason": "Sign in to Cuenti",
+  "@authBiometricReason": {},
+  "authUnlockReason": "Authenticate to unlock Cuenti",
+  "@authUnlockReason": {},
+  "authServerLine": "Server: {url}",
+  "@authServerLine": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "assetsNoPrice": "No price",
+  "@assetsNoPrice": {},
+  "assetsPriceRefreshed": "Price refreshed for {symbol}",
+  "@assetsPriceRefreshed": {
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "statsTransactionsInPeriod": "{count} transactions in period",
+  "@statsTransactionsInPeriod": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "vehiclesCustomRange": "Custom range",
+  "@vehiclesCustomRange": {},
+  "scheduledDeleteBody": "Delete \"{name}\" recurring transaction?",
+  "@scheduledDeleteBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetsDeleteBody": "Delete budget for \"{category}\"?",
+  "@budgetsDeleteBody": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsUsersCount": "Users ({count})",
+  "@settingsUsersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDeleteUserTitle": "Delete {username}?",
+  "@settingsDeleteUserTitle": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutCopyright": "© {year} Cuenti Team",
+  "@aboutCopyright": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "txFuelHint": "No km/liters entered — this entry will not appear in the vehicle report",
+  "@txFuelHint": {},
+  "errorNetwork": "Cannot connect to server",
+  "@errorNetwork": {},
+  "errorNotAuthenticated": "Not authenticated",
+  "@errorNotAuthenticated": {},
+  "errorApiDisabled": "API access is not enabled",
+  "@errorApiDisabled": {},
+  "errorInvalidRequest": "Invalid request",
+  "@errorInvalidRequest": {},
+  "errorServer": "Server error ({status})",
+  "@errorServer": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCertificate": "The server certificate is not trusted. Re-run Server Setup to check its fingerprint and trust it.",
+  "@errorCertificate": {},
+  "errorUnknown": "An error occurred",
+  "@errorUnknown": {},
+  "errorNoSavedCredentials": "No saved credentials",
+  "@errorNoSavedCredentials": {},
+  "errorSavedPasswordInvalid": "Saved password no longer valid",
+  "@errorSavedPasswordInvalid": {},
+  "errorUnexpectedResponse": "Unexpected response from server",
+  "@errorUnexpectedResponse": {}
 }

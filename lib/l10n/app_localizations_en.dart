@@ -699,4 +699,226 @@ class LEn extends L {
   @override
   String get settingsAutoUpdateSubtitle =>
       'Look for a new release on GitHub when the app opens';
+
+  @override
+  String commonError(String message) {
+    return 'Error: $message';
+  }
+
+  @override
+  String commonDeleteConfirm(String name) {
+    return 'Delete \"$name\"?';
+  }
+
+  @override
+  String get commonRequired => 'Required';
+
+  @override
+  String get commonInvalidNumber => 'Invalid number';
+
+  @override
+  String get commonAll => 'All';
+
+  @override
+  String get commonToday => 'Today';
+
+  @override
+  String get commonYesterday => 'Yesterday';
+
+  @override
+  String get commonCustom => 'Custom';
+
+  @override
+  String get commonDateRange => 'Date range';
+
+  @override
+  String get navScheduled => 'Scheduled';
+
+  @override
+  String get navForecasts => 'Forecasts';
+
+  @override
+  String get navAccounts => 'Accounts';
+
+  @override
+  String get navPayees => 'Payees';
+
+  @override
+  String get navCategories => 'Categories';
+
+  @override
+  String get navTags => 'Tags';
+
+  @override
+  String get navCurrencies => 'Currencies';
+
+  @override
+  String get navAssets => 'Assets';
+
+  @override
+  String get navVehicles => 'Vehicles';
+
+  @override
+  String get navSettings => 'Settings';
+
+  @override
+  String get navAbout => 'About';
+
+  @override
+  String get navAuditLog => 'Audit Log';
+
+  @override
+  String get navGeneral => 'General';
+
+  @override
+  String get navManagement => 'Management';
+
+  @override
+  String get navSettingsSection => 'Settings';
+
+  @override
+  String get privacyShow => 'Show amounts';
+
+  @override
+  String get privacyHide => 'Hide amounts';
+
+  @override
+  String get accountsAddTitle => 'Add Account';
+
+  @override
+  String get accountsEditTitle => 'Edit Account';
+
+  @override
+  String get assetsAddTitle => 'Add Asset';
+
+  @override
+  String get assetsEditTitle => 'Edit Asset';
+
+  @override
+  String get budgetsAddTitle => 'Add Budget';
+
+  @override
+  String get budgetsEditTitle => 'Edit Budget';
+
+  @override
+  String get categoriesAddTitle => 'Add Category';
+
+  @override
+  String get categoriesEditTitle => 'Edit Category';
+
+  @override
+  String get currenciesAddTitle => 'Add Currency';
+
+  @override
+  String get currenciesEditTitle => 'Edit Currency';
+
+  @override
+  String get payeesAddTitle => 'Add Payee';
+
+  @override
+  String get payeesEditTitle => 'Edit Payee';
+
+  @override
+  String get tagsAddTitle => 'Add Tag';
+
+  @override
+  String get tagsEditTitle => 'Edit Tag';
+
+  @override
+  String get txAddTitle => 'Add Transaction';
+
+  @override
+  String get txEditTitle => 'Edit Transaction';
+
+  @override
+  String get txAllAccounts => 'All accounts';
+
+  @override
+  String get authBiometricReason => 'Sign in to Cuenti';
+
+  @override
+  String get authUnlockReason => 'Authenticate to unlock Cuenti';
+
+  @override
+  String authServerLine(String url) {
+    return 'Server: $url';
+  }
+
+  @override
+  String get assetsNoPrice => 'No price';
+
+  @override
+  String assetsPriceRefreshed(String symbol) {
+    return 'Price refreshed for $symbol';
+  }
+
+  @override
+  String statsTransactionsInPeriod(String count) {
+    return '$count transactions in period';
+  }
+
+  @override
+  String get vehiclesCustomRange => 'Custom range';
+
+  @override
+  String scheduledDeleteBody(String name) {
+    return 'Delete \"$name\" recurring transaction?';
+  }
+
+  @override
+  String budgetsDeleteBody(String category) {
+    return 'Delete budget for \"$category\"?';
+  }
+
+  @override
+  String settingsUsersCount(String count) {
+    return 'Users ($count)';
+  }
+
+  @override
+  String settingsDeleteUserTitle(String username) {
+    return 'Delete $username?';
+  }
+
+  @override
+  String aboutCopyright(String year) {
+    return '© $year Cuenti Team';
+  }
+
+  @override
+  String get txFuelHint =>
+      'No km/liters entered — this entry will not appear in the vehicle report';
+
+  @override
+  String get errorNetwork => 'Cannot connect to server';
+
+  @override
+  String get errorNotAuthenticated => 'Not authenticated';
+
+  @override
+  String get errorApiDisabled => 'API access is not enabled';
+
+  @override
+  String get errorInvalidRequest => 'Invalid request';
+
+  @override
+  String errorServer(String status) {
+    return 'Server error ($status)';
+  }
+
+  @override
+  String get errorCertificate =>
+      'The server certificate is not trusted. Re-run Server Setup to check its fingerprint and trust it.';
+
+  @override
+  String get errorUnknown => 'An error occurred';
+
+  @override
+  String get errorNoSavedCredentials => 'No saved credentials';
+
+  @override
+  String get errorSavedPasswordInvalid => 'Saved password no longer valid';
+
+  @override
+  String get errorUnexpectedResponse => 'Unexpected response from server';
 }

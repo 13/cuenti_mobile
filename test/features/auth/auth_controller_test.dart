@@ -5,6 +5,7 @@ import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
+import 'package:cuentimobile/l10n/app_localizations_en.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -234,7 +235,7 @@ void main() {
       final notifier = container.read(authControllerProvider.notifier);
       await notifier.init();
 
-      final error = await notifier.loginWithSavedCredentials();
+      final error = await notifier.loginWithSavedCredentials(LEn());
 
       expect(error, isNull);
       verify(() => repo.login('demo', 'secret')).called(1);
@@ -248,7 +249,7 @@ void main() {
         final notifier = container.read(authControllerProvider.notifier);
         await notifier.init();
 
-        final error = await notifier.loginWithSavedCredentials();
+        final error = await notifier.loginWithSavedCredentials(LEn());
 
         expect(error, 'No saved credentials');
         verifyNever(() => repo.login(any(), any()));
@@ -270,7 +271,7 @@ void main() {
         final notifier = container.read(authControllerProvider.notifier);
         await notifier.init();
 
-        final error = await notifier.loginWithSavedCredentials();
+        final error = await notifier.loginWithSavedCredentials(LEn());
 
         expect(error, 'Saved password no longer valid');
         expect(storage.data['saved_username'], 'demo');
@@ -292,7 +293,7 @@ void main() {
         final notifier = container.read(authControllerProvider.notifier);
         await notifier.init();
 
-        final error = await notifier.loginWithSavedCredentials();
+        final error = await notifier.loginWithSavedCredentials(LEn());
 
         expect(error, isNotNull);
         expect(error, isNot('Saved password no longer valid'));
@@ -312,7 +313,7 @@ void main() {
         final notifier = container.read(authControllerProvider.notifier);
         await notifier.init();
 
-        final error = await notifier.loginWithSavedCredentials();
+        final error = await notifier.loginWithSavedCredentials(LEn());
 
         expect(error, isNotNull);
         expect(storage.data['saved_password'], 'secret');

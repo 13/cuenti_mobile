@@ -36,8 +36,8 @@ Future<CategoryChoice?> showCategorySearchSheet(
   required List<Category> categories,
   int? selectedId,
   bool allowNone = true,
-  String title = 'Category',
-  String noneLabel = 'None',
+  String? title,
+  String? noneLabel,
   CategoryTrailingBuilder? trailingBuilder,
 }) {
   return showModalBottomSheet<CategoryChoice>(
@@ -48,8 +48,8 @@ Future<CategoryChoice?> showCategorySearchSheet(
       categories: categories,
       selectedId: selectedId,
       allowNone: allowNone,
-      title: title,
-      noneLabel: noneLabel,
+      title: title ?? L.of(context).categoryLabel,
+      noneLabel: noneLabel ?? L.of(context).commonNone,
       trailingBuilder: trailingBuilder,
     ),
   );
@@ -120,7 +120,11 @@ class _CategorySearchSheetState extends State<CategorySearchSheet> {
                 autofocus: true,
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
-                  hintText: 'Search ${widget.title.toLowerCase()}',
+                  hintText: L
+                      .of(context)
+                      .categorySearchHint(
+                        widget.title.toLowerCase(),
+                      ),
                   prefixIcon: const Icon(Icons.search),
                   border: const OutlineInputBorder(),
                   suffixIcon: _query.text.isEmpty
@@ -185,9 +189,9 @@ class CategoryPickerField extends StatelessWidget {
     super.key,
     this.allowNone = true,
     this.isDense = false,
-    this.labelText = 'Category',
-    this.placeholder = 'None',
-    this.noneLabel = 'None',
+    this.labelText,
+    this.placeholder,
+    this.noneLabel,
     this.validator,
   });
 
@@ -199,14 +203,15 @@ class CategoryPickerField extends StatelessWidget {
   final ValueChanged<int?> onChanged;
   final bool allowNone;
   final bool isDense;
-  final String labelText;
+  final String? labelText;
 
   /// Shown on the field itself when nothing is selected.
-  final String placeholder;
+  final String? placeholder;
 
   /// Label of the clear-the-selection entry inside the sheet. Filter-style
-  /// pickers want "All", form-style pickers want "None".
-  final String noneLabel;
+  /// pickers want "All", form-style pickers want "None". Null takes the
+  /// localised default -- a const parameter cannot hold one.
+  final String? noneLabel;
 
   /// Optional [FormField] validator, so the picker takes part in an
   /// enclosing [Form] the way the dropdown it replaces did.
@@ -229,7 +234,7 @@ class CategoryPickerField extends StatelessWidget {
       categories: categories,
       selectedId: selected?.id,
       allowNone: allowNone,
-      title: labelText,
+      title: labelText ?? L.of(context).categoryLabel,
       noneLabel: noneLabel,
     );
     if (choice == null) return;
@@ -255,7 +260,7 @@ class CategoryPickerField extends StatelessWidget {
       onTap: () => _open(context, field),
       child: InputDecorator(
         decoration: InputDecoration(
-          labelText: labelText,
+          labelText: labelText ?? L.of(context).categoryLabel,
           border: const OutlineInputBorder(),
           isDense: isDense,
           errorText: field.errorText,
@@ -264,7 +269,9 @@ class CategoryPickerField extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                selected == null ? placeholder : categoryLabel(selected),
+                selected == null
+                    ? (placeholder ?? L.of(context).commonNone)
+                    : categoryLabel(selected),
                 overflow: TextOverflow.ellipsis,
                 style: selected == null
                     ? theme.textTheme.bodyLarge?.copyWith(

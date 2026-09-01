@@ -65,7 +65,7 @@ class TagsScreen extends ConsumerWidget {
                         confirmDismiss: (_) => showConfirmSheet(
                           context,
                           title: L.of(context).tagsDeleteTitle,
-                          message: 'Delete "${tag.name}"?',
+                          message: L.of(context).commonDeleteConfirm(tag.name),
                         ),
                         onDismissed: (_) async {
                           try {
@@ -76,7 +76,9 @@ class TagsScreen extends ConsumerWidget {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Error: ${e.message}'),
+                                  content: Text(
+                                    e.localizedMessage(L.of(context)),
+                                  ),
                                   backgroundColor: Theme.of(
                                     context,
                                   ).colorScheme.error,
@@ -161,7 +163,9 @@ class TagsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  tag == null ? 'Add Tag' : 'Edit Tag',
+                  tag == null
+                      ? L.of(context).tagsAddTitle
+                      : L.of(context).tagsEditTitle,
                   style: Theme.of(ctx).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
@@ -203,7 +207,9 @@ class TagsScreen extends ConsumerWidget {
                                   if (ctx.mounted) {
                                     ScaffoldMessenger.of(ctx).showSnackBar(
                                       SnackBar(
-                                        content: Text('Error: ${e.message}'),
+                                        content: Text(
+                                          e.localizedMessage(L.of(context)),
+                                        ),
                                         backgroundColor: Theme.of(
                                           ctx,
                                         ).colorScheme.error,

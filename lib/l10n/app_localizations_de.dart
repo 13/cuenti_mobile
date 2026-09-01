@@ -702,4 +702,227 @@ class LDe extends L {
   @override
   String get settingsAutoUpdateSubtitle =>
       'Beim Öffnen der App auf GitHub nach einer neuen Version suchen';
+
+  @override
+  String commonError(String message) {
+    return 'Fehler: $message';
+  }
+
+  @override
+  String commonDeleteConfirm(String name) {
+    return 'Möchten Sie \"$name\" löschen?';
+  }
+
+  @override
+  String get commonRequired => 'Pflichtfeld';
+
+  @override
+  String get commonInvalidNumber => 'Ungültige Zahl';
+
+  @override
+  String get commonAll => 'Alle';
+
+  @override
+  String get commonToday => 'Heute';
+
+  @override
+  String get commonYesterday => 'Gestern';
+
+  @override
+  String get commonCustom => 'Benutzerdefiniert';
+
+  @override
+  String get commonDateRange => 'Zeitraum';
+
+  @override
+  String get navScheduled => 'Geplant';
+
+  @override
+  String get navForecasts => 'Prognosen';
+
+  @override
+  String get navAccounts => 'Konten';
+
+  @override
+  String get navPayees => 'Empfänger';
+
+  @override
+  String get navCategories => 'Kategorien';
+
+  @override
+  String get navTags => 'Tags';
+
+  @override
+  String get navCurrencies => 'Währungen';
+
+  @override
+  String get navAssets => 'Anlagen';
+
+  @override
+  String get navVehicles => 'Fahrzeuge';
+
+  @override
+  String get navSettings => 'Einstellungen';
+
+  @override
+  String get navAbout => 'Über';
+
+  @override
+  String get navAuditLog => 'Protokoll';
+
+  @override
+  String get navGeneral => 'Allgemein';
+
+  @override
+  String get navManagement => 'Verwaltung';
+
+  @override
+  String get navSettingsSection => 'Einstellungen';
+
+  @override
+  String get privacyShow => 'Beträge anzeigen';
+
+  @override
+  String get privacyHide => 'Beträge verbergen';
+
+  @override
+  String get accountsAddTitle => 'Konto hinzufügen';
+
+  @override
+  String get accountsEditTitle => 'Konto bearbeiten';
+
+  @override
+  String get assetsAddTitle => 'Anlage hinzufügen';
+
+  @override
+  String get assetsEditTitle => 'Anlage bearbeiten';
+
+  @override
+  String get budgetsAddTitle => 'Budget hinzufügen';
+
+  @override
+  String get budgetsEditTitle => 'Budget bearbeiten';
+
+  @override
+  String get categoriesAddTitle => 'Kategorie hinzufügen';
+
+  @override
+  String get categoriesEditTitle => 'Kategorie bearbeiten';
+
+  @override
+  String get currenciesAddTitle => 'Währung hinzufügen';
+
+  @override
+  String get currenciesEditTitle => 'Währung bearbeiten';
+
+  @override
+  String get payeesAddTitle => 'Empfänger hinzufügen';
+
+  @override
+  String get payeesEditTitle => 'Empfänger bearbeiten';
+
+  @override
+  String get tagsAddTitle => 'Tag hinzufügen';
+
+  @override
+  String get tagsEditTitle => 'Tag bearbeiten';
+
+  @override
+  String get txAddTitle => 'Buchung hinzufügen';
+
+  @override
+  String get txEditTitle => 'Buchung bearbeiten';
+
+  @override
+  String get txAllAccounts => 'Alle Konten';
+
+  @override
+  String get authBiometricReason => 'Bei Cuenti anmelden';
+
+  @override
+  String get authUnlockReason => 'Zum Entsperren von Cuenti authentifizieren';
+
+  @override
+  String authServerLine(String url) {
+    return 'Server: $url';
+  }
+
+  @override
+  String get assetsNoPrice => 'Kein Kurs';
+
+  @override
+  String assetsPriceRefreshed(String symbol) {
+    return 'Kurs für $symbol aktualisiert';
+  }
+
+  @override
+  String statsTransactionsInPeriod(String count) {
+    return '$count Buchungen im Zeitraum';
+  }
+
+  @override
+  String get vehiclesCustomRange => 'Eigener Zeitraum';
+
+  @override
+  String scheduledDeleteBody(String name) {
+    return 'Wiederkehrende Buchung \"$name\" löschen?';
+  }
+
+  @override
+  String budgetsDeleteBody(String category) {
+    return 'Budget für \"$category\" löschen?';
+  }
+
+  @override
+  String settingsUsersCount(String count) {
+    return 'Benutzer ($count)';
+  }
+
+  @override
+  String settingsDeleteUserTitle(String username) {
+    return '$username löschen?';
+  }
+
+  @override
+  String aboutCopyright(String year) {
+    return '© $year Cuenti Team';
+  }
+
+  @override
+  String get txFuelHint =>
+      'Keine km/Liter eingetragen — dieser Eintrag erscheint nicht im Fahrzeugbericht';
+
+  @override
+  String get errorNetwork => 'Keine Verbindung zum Server';
+
+  @override
+  String get errorNotAuthenticated => 'Nicht angemeldet';
+
+  @override
+  String get errorApiDisabled => 'API-Zugriff ist nicht aktiviert';
+
+  @override
+  String get errorInvalidRequest => 'Ungültige Anfrage';
+
+  @override
+  String errorServer(String status) {
+    return 'Serverfehler ($status)';
+  }
+
+  @override
+  String get errorCertificate =>
+      'Dem Serverzertifikat wird nicht vertraut. Führen Sie die Servereinrichtung erneut aus, um den Fingerabdruck zu prüfen und ihm zu vertrauen.';
+
+  @override
+  String get errorUnknown => 'Ein Fehler ist aufgetreten';
+
+  @override
+  String get errorNoSavedCredentials => 'Keine gespeicherten Zugangsdaten';
+
+  @override
+  String get errorSavedPasswordInvalid =>
+      'Gespeichertes Passwort ist nicht mehr gültig';
+
+  @override
+  String get errorUnexpectedResponse => 'Unerwartete Antwort vom Server';
 }

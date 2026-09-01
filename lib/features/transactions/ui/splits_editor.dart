@@ -88,8 +88,12 @@ class SplitsEditor extends StatelessWidget {
                       isDense: true,
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Required';
-                      if (parseAmountInput(v) == null) return 'Invalid number';
+                      if (v == null || v.isEmpty) {
+                        return L.of(context).commonRequired;
+                      }
+                      if (parseAmountInput(v) == null) {
+                        return L.of(context).commonInvalidNumber;
+                      }
                       return null;
                     },
                     onChanged: (_) => onChanged(),

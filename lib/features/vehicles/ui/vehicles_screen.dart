@@ -148,7 +148,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
             avatar: const Icon(Icons.date_range_outlined, size: 18),
             label: Text(
               _isThisYear
-                  ? 'Custom range'
+                  ? L.of(context).vehiclesCustomRange
                   : '${_shortDate(_start)} – ${_shortDate(_end)}',
             ),
             onPressed: () => _pickCustomRange(context),
@@ -251,7 +251,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

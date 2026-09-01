@@ -62,7 +62,9 @@ class CurrenciesScreen extends ConsumerWidget {
                       confirmDismiss: (_) => showConfirmSheet(
                         context,
                         title: L.of(context).currenciesDeleteTitle,
-                        message: 'Delete "${c.code} - ${c.name}"?',
+                        message: L
+                            .of(context)
+                            .commonDeleteConfirm('${c.code} - ${c.name}'),
                       ),
                       onDismissed: (_) => _delete(context, ref, c.id!),
                       child: Card(
@@ -144,7 +146,7 @@ class CurrenciesScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -187,7 +189,9 @@ class CurrenciesScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    currency == null ? 'Add Currency' : 'Edit Currency',
+                    currency == null
+                        ? L.of(context).currenciesAddTitle
+                        : L.of(context).currenciesEditTitle,
                     style: Theme.of(ctx).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16),
@@ -293,7 +297,11 @@ class CurrenciesScreen extends ConsumerWidget {
                                     if (ctx.mounted) {
                                       ScaffoldMessenger.of(ctx).showSnackBar(
                                         SnackBar(
-                                          content: Text('Error: ${e.message}'),
+                                          content: Text(
+                                            L
+                                                .of(context)
+                                                .commonError(e.message),
+                                          ),
                                           backgroundColor: Theme.of(
                                             ctx,
                                           ).colorScheme.error,

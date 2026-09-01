@@ -4,6 +4,7 @@ import 'package:cuentimobile/features/statistics/ui/widgets/cash_flow_line_chart
 import 'package:cuentimobile/features/statistics/ui/widgets/income_expense_donut.dart';
 import 'package:cuentimobile/features/statistics/ui/widgets/monthly_chart.dart';
 import 'package:cuentimobile/features/statistics/ui/widgets/summary_card.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class OverviewTab extends StatelessWidget {
@@ -62,7 +63,9 @@ class OverviewTab extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            '${stats.transactionCount} transactions in period',
+            L
+                .of(context)
+                .statsTransactionsInPeriod('${stats.transactionCount}'),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],

@@ -193,7 +193,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.message),
+          content: Text(e.localizedMessage(L.of(context))),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -207,7 +207,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.message),
+          content: Text(e.localizedMessage(L.of(context))),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -261,7 +261,9 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    account == null ? 'Add Account' : 'Edit Account',
+                    account == null
+                        ? L.of(context).accountsAddTitle
+                        : L.of(context).accountsEditTitle,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16),
@@ -388,7 +390,11 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                                         context,
                                       ).showSnackBar(
                                         SnackBar(
-                                          content: Text('Error: ${e.message}'),
+                                          content: Text(
+                                            L
+                                                .of(context)
+                                                .commonError(e.message),
+                                          ),
                                           backgroundColor: Theme.of(
                                             context,
                                           ).colorScheme.error,

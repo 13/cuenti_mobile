@@ -46,40 +46,41 @@ class ShellScreen extends ConsumerWidget {
   }
 
   String _getTitle(BuildContext context) {
+    final l = L.of(context);
     final location = GoRouterState.of(context).matchedLocation;
     switch (location) {
       case '/dashboard':
-        return 'Dashboard';
+        return l.navDashboard;
       case '/transactions':
-        return 'Transactions';
+        return l.navTransactions;
       case '/budgets':
-        return 'Budgets';
+        return l.navBudgets;
       case '/scheduled':
-        return 'Scheduled';
+        return l.navScheduled;
       case '/statistics':
-        return 'Statistics';
+        return l.navStatistics;
       case '/forecasts':
-        return 'Forecasts';
+        return l.navForecasts;
       case '/accounts':
-        return 'Accounts';
+        return l.navAccounts;
       case '/payees':
-        return 'Payees';
+        return l.navPayees;
       case '/categories':
-        return 'Categories';
+        return l.navCategories;
       case '/tags':
-        return 'Tags';
+        return l.navTags;
       case '/currencies':
-        return 'Currencies';
+        return l.navCurrencies;
       case '/assets':
-        return 'Assets';
+        return l.navAssets;
       case '/vehicles':
-        return 'Vehicles';
+        return l.navVehicles;
       case '/settings':
-        return 'Settings';
+        return l.navSettings;
       case '/about':
-        return 'About';
+        return l.navAbout;
       case '/audit':
-        return 'Audit Log';
+        return l.navAuditLog;
       default:
         return 'Cuenti';
     }
@@ -88,6 +89,7 @@ class ShellScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final offlineCache = ref.watch(apiClientProvider).offlineCache;
+    final l = L.of(context);
     final auth = ref.watch(authControllerProvider);
     final privacyMode = ref.watch(privacyModeProvider);
 
@@ -127,58 +129,73 @@ class ShellScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            _buildSection(context, 'General'),
-            _buildNavItem(context, Icons.dashboard, 'Dashboard', '/dashboard'),
+            _buildSection(context, l.navGeneral),
+            _buildNavItem(
+              context,
+              Icons.dashboard,
+              l.navDashboard,
+              '/dashboard',
+            ),
             _buildNavItem(
               context,
               Icons.receipt_long,
-              'Transactions',
+              l.navTransactions,
               '/transactions',
             ),
-            _buildNavItem(context, Icons.pie_chart, 'Budgets', '/budgets'),
-            _buildNavItem(context, Icons.schedule, 'Scheduled', '/scheduled'),
+            _buildNavItem(context, Icons.pie_chart, l.navBudgets, '/budgets'),
+            _buildNavItem(
+              context,
+              Icons.schedule,
+              l.navScheduled,
+              '/scheduled',
+            ),
             _buildNavItem(
               context,
               Icons.bar_chart,
-              'Statistics',
+              l.navStatistics,
               '/statistics',
             ),
             _buildNavItem(
               context,
               Icons.query_stats,
-              'Forecasts',
+              l.navForecasts,
               '/forecasts',
             ),
             _buildNavItem(
               context,
               Icons.directions_car,
-              'Vehicles',
+              l.navVehicles,
               '/vehicles',
             ),
             const Divider(),
-            _buildSection(context, 'Management'),
+            _buildSection(context, l.navManagement),
             _buildNavItem(
               context,
               Icons.account_balance_wallet,
-              'Accounts',
+              l.navAccounts,
               '/accounts',
             ),
-            _buildNavItem(context, Icons.people, 'Payees', '/payees'),
-            _buildNavItem(context, Icons.category, 'Categories', '/categories'),
-            _buildNavItem(context, Icons.label, 'Tags', '/tags'),
+            _buildNavItem(context, Icons.people, l.navPayees, '/payees'),
+            _buildNavItem(
+              context,
+              Icons.category,
+              l.navCategories,
+              '/categories',
+            ),
+            _buildNavItem(context, Icons.label, l.navTags, '/tags'),
             _buildNavItem(
               context,
               Icons.currency_exchange,
-              'Currencies',
+              l.navCurrencies,
               '/currencies',
             ),
-            _buildNavItem(context, Icons.show_chart, 'Assets', '/assets'),
+            _buildNavItem(context, Icons.show_chart, l.navAssets, '/assets'),
             const Divider(),
-            _buildSection(context, 'Settings'),
+            _buildSection(context, l.navSettingsSection),
             if (auth.user?.isAdmin == true)
-              _buildNavItem(context, Icons.history, 'Audit Log', '/audit'),
-            _buildNavItem(context, Icons.settings, 'Settings', '/settings'),
-            _buildNavItem(context, Icons.info_outline, 'About', '/about'),
+              _buildNavItem(context, Icons.history, l.navAuditLog, '/audit'),
+            _buildNavItem(context, Icons.settings, l.navSettings, '/settings'),
+            _buildNavItem(context, Icons.info_outline, l.navAbout, '/about'),
             ListTile(
               leading: const Icon(Icons.logout),
               title: Text(L.of(context).actionLogout),
@@ -209,7 +226,7 @@ class ShellScreen extends ConsumerWidget {
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
             ),
-            tooltip: privacyMode ? 'Show amounts' : 'Hide amounts',
+            tooltip: privacyMode ? l.privacyShow : l.privacyHide,
             onPressed: () {
               unawaited(ref.read(privacyModeProvider.notifier).toggle());
             },

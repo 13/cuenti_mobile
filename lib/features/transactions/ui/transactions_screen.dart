@@ -65,7 +65,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.message),
+          content: Text(e.localizedMessage(L.of(context))),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -240,8 +240,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final d = DateTime(date.year, date.month, date.day);
-    if (d == today) return 'Today';
-    if (d == today.subtract(const Duration(days: 1))) return 'Yesterday';
+    if (d == today) return L.of(context).commonToday;
+    if (d == today.subtract(const Duration(days: 1))) {
+      return L.of(context).commonYesterday;
+    }
     return DateFormat('EEE, d MMM yyyy').format(d);
   }
 
@@ -293,15 +295,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final active = _filter.type != null;
     return InputChip(
       avatar: const Icon(Icons.category_outlined, size: 18),
-      label: Text(active ? _typeLabel(_filter.type!) : 'Type'),
+      label: Text(
+        active ? _typeLabel(_filter.type!) : L.of(context).commonType,
+      ),
       onPressed: () => _openOptionsSheet<String>(
         context,
         title: L.of(context).txTypeFilter,
-        options: const [
-          _ChipOption('All', null),
-          _ChipOption('Expense', 'EXPENSE'),
-          _ChipOption('Income', 'INCOME'),
-          _ChipOption('Transfer', 'TRANSFER'),
+        options: [
+          _ChipOption(L.of(context).commonAll, null),
+          _ChipOption(L.of(context).commonExpense, 'EXPENSE'),
+          _ChipOption(L.of(context).commonIncome, 'INCOME'),
+          _ChipOption(L.of(context).commonTransfer, 'TRANSFER'),
         ],
         onSelected: (v) => setState(() => _filter = _filter.copyWith(type: v)),
       ),
@@ -316,7 +320,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     return InputChip(
       avatar: const Icon(Icons.label_outline, size: 18),
       label: Text(
-        active != null ? (active.fullName ?? active.name) : 'Category',
+        active != null
+            ? (active.fullName ?? active.name)
+            : L.of(context).categoryLabel,
       ),
       // The searchable sheet rather than the generic option list: the
       // category list is the one filter long enough to need typing.
@@ -347,7 +353,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final active = _filter.start != null || _filter.end != null;
     final label = active
         ? '${_shortDate(_filter.start)} – ${_shortDate(_filter.end)}'
-        : 'Date range';
+        : L.of(context).commonDateRange;
     return InputChip(
       avatar: const Icon(Icons.date_range_outlined, size: 18),
       label: Text(label),
@@ -384,12 +390,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final active = _accountById(accounts, _filter.accountId);
     return InputChip(
       avatar: const Icon(Icons.account_balance_wallet_outlined, size: 18),
-      label: Text(active?.accountName ?? 'Account'),
+      label: Text(active?.accountName ?? L.of(context).commonAccount),
       onPressed: () => _openOptionsSheet<int>(
         context,
         title: L.of(context).commonAccount,
         options: [
-          const _ChipOption('All accounts', null),
+          _ChipOption(L.of(context).txAllAccounts, null),
           for (final a in accounts) _ChipOption(a.accountName, a.id),
         ],
         onSelected: (v) =>
@@ -458,7 +464,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.message),
+          content: Text(e.localizedMessage(L.of(context))),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );

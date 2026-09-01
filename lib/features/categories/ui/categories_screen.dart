@@ -158,7 +158,11 @@ class CategoriesScreen extends ConsumerWidget {
     final confirmed = await showConfirmSheet(
       context,
       title: L.of(context).categoriesDeleteTitle,
-      message: 'Delete "${category.fullName ?? category.name}"?',
+      message: L
+          .of(context)
+          .commonDeleteConfirm(
+            category.fullName ?? category.name,
+          ),
     );
     if (!confirmed) return;
     try {
@@ -169,7 +173,7 @@ class CategoriesScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.message}'),
+            content: Text(e.localizedMessage(L.of(context))),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -210,7 +214,9 @@ class CategoriesScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    category == null ? 'Add Category' : 'Edit Category',
+                    category == null
+                        ? L.of(context).categoriesAddTitle
+                        : L.of(context).categoriesEditTitle,
                     style: Theme.of(ctx).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16),
@@ -284,7 +290,11 @@ class CategoriesScreen extends ConsumerWidget {
                                     if (ctx.mounted) {
                                       ScaffoldMessenger.of(ctx).showSnackBar(
                                         SnackBar(
-                                          content: Text('Error: ${e.message}'),
+                                          content: Text(
+                                            L
+                                                .of(context)
+                                                .commonError(e.message),
+                                          ),
                                           backgroundColor: Theme.of(
                                             ctx,
                                           ).colorScheme.error,

@@ -167,7 +167,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
 
   Widget _rangeChip(BuildContext context, TimeRange r) {
     final label = r == TimeRange.custom
-        ? 'Custom'
+        ? L.of(context).commonCustom
         : r.name[0].toUpperCase() + r.name.substring(1);
     return ChoiceChip(
       label: Text(label),
@@ -186,7 +186,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
     final selected = _accountById(accounts, _selectedAccountId);
     return InputChip(
       avatar: const Icon(Icons.account_balance_wallet_outlined, size: 18),
-      label: Text(selected?.accountName ?? 'All Accounts'),
+      label: Text(selected?.accountName ?? L.of(context).statsAllAccounts),
       onPressed: () => _openAccountSheet(context, accounts),
       onDeleted: selected != null
           ? () => setState(() => _selectedAccountId = null)

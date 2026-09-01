@@ -1424,6 +1424,402 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Look for a new release on GitHub when the app opens'**
   String get settingsAutoUpdateSubtitle;
+
+  /// No description provided for @commonError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {message}'**
+  String commonError(String message);
+
+  /// No description provided for @commonDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"?'**
+  String commonDeleteConfirm(String name);
+
+  /// No description provided for @commonRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get commonRequired;
+
+  /// No description provided for @commonInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid number'**
+  String get commonInvalidNumber;
+
+  /// No description provided for @commonAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get commonAll;
+
+  /// No description provided for @commonToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get commonToday;
+
+  /// No description provided for @commonYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get commonYesterday;
+
+  /// No description provided for @commonCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get commonCustom;
+
+  /// No description provided for @commonDateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Date range'**
+  String get commonDateRange;
+
+  /// No description provided for @navScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled'**
+  String get navScheduled;
+
+  /// No description provided for @navForecasts.
+  ///
+  /// In en, this message translates to:
+  /// **'Forecasts'**
+  String get navForecasts;
+
+  /// No description provided for @navAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get navAccounts;
+
+  /// No description provided for @navPayees.
+  ///
+  /// In en, this message translates to:
+  /// **'Payees'**
+  String get navPayees;
+
+  /// No description provided for @navCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get navCategories;
+
+  /// No description provided for @navTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get navTags;
+
+  /// No description provided for @navCurrencies.
+  ///
+  /// In en, this message translates to:
+  /// **'Currencies'**
+  String get navCurrencies;
+
+  /// No description provided for @navAssets.
+  ///
+  /// In en, this message translates to:
+  /// **'Assets'**
+  String get navAssets;
+
+  /// No description provided for @navVehicles.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicles'**
+  String get navVehicles;
+
+  /// No description provided for @navSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get navSettings;
+
+  /// No description provided for @navAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get navAbout;
+
+  /// No description provided for @navAuditLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit Log'**
+  String get navAuditLog;
+
+  /// No description provided for @navGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get navGeneral;
+
+  /// No description provided for @navManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Management'**
+  String get navManagement;
+
+  /// No description provided for @navSettingsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get navSettingsSection;
+
+  /// No description provided for @privacyShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show amounts'**
+  String get privacyShow;
+
+  /// No description provided for @privacyHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide amounts'**
+  String get privacyHide;
+
+  /// No description provided for @accountsAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Account'**
+  String get accountsAddTitle;
+
+  /// No description provided for @accountsEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Account'**
+  String get accountsEditTitle;
+
+  /// No description provided for @assetsAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Asset'**
+  String get assetsAddTitle;
+
+  /// No description provided for @assetsEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Asset'**
+  String get assetsEditTitle;
+
+  /// No description provided for @budgetsAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Budget'**
+  String get budgetsAddTitle;
+
+  /// No description provided for @budgetsEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Budget'**
+  String get budgetsEditTitle;
+
+  /// No description provided for @categoriesAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Category'**
+  String get categoriesAddTitle;
+
+  /// No description provided for @categoriesEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Category'**
+  String get categoriesEditTitle;
+
+  /// No description provided for @currenciesAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Currency'**
+  String get currenciesAddTitle;
+
+  /// No description provided for @currenciesEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Currency'**
+  String get currenciesEditTitle;
+
+  /// No description provided for @payeesAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Payee'**
+  String get payeesAddTitle;
+
+  /// No description provided for @payeesEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Payee'**
+  String get payeesEditTitle;
+
+  /// No description provided for @tagsAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Tag'**
+  String get tagsAddTitle;
+
+  /// No description provided for @tagsEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Tag'**
+  String get tagsEditTitle;
+
+  /// No description provided for @txAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Transaction'**
+  String get txAddTitle;
+
+  /// No description provided for @txEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Transaction'**
+  String get txEditTitle;
+
+  /// No description provided for @txAllAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'All accounts'**
+  String get txAllAccounts;
+
+  /// No description provided for @authBiometricReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to Cuenti'**
+  String get authBiometricReason;
+
+  /// No description provided for @authUnlockReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to unlock Cuenti'**
+  String get authUnlockReason;
+
+  /// No description provided for @authServerLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Server: {url}'**
+  String authServerLine(String url);
+
+  /// No description provided for @assetsNoPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'No price'**
+  String get assetsNoPrice;
+
+  /// No description provided for @assetsPriceRefreshed.
+  ///
+  /// In en, this message translates to:
+  /// **'Price refreshed for {symbol}'**
+  String assetsPriceRefreshed(String symbol);
+
+  /// No description provided for @statsTransactionsInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} transactions in period'**
+  String statsTransactionsInPeriod(String count);
+
+  /// No description provided for @vehiclesCustomRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom range'**
+  String get vehiclesCustomRange;
+
+  /// No description provided for @scheduledDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\" recurring transaction?'**
+  String scheduledDeleteBody(String name);
+
+  /// No description provided for @budgetsDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete budget for \"{category}\"?'**
+  String budgetsDeleteBody(String category);
+
+  /// No description provided for @settingsUsersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Users ({count})'**
+  String settingsUsersCount(String count);
+
+  /// No description provided for @settingsDeleteUserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {username}?'**
+  String settingsDeleteUserTitle(String username);
+
+  /// No description provided for @aboutCopyright.
+  ///
+  /// In en, this message translates to:
+  /// **'© {year} Cuenti Team'**
+  String aboutCopyright(String year);
+
+  /// No description provided for @txFuelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No km/liters entered — this entry will not appear in the vehicle report'**
+  String get txFuelHint;
+
+  /// No description provided for @errorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot connect to server'**
+  String get errorNetwork;
+
+  /// No description provided for @errorNotAuthenticated.
+  ///
+  /// In en, this message translates to:
+  /// **'Not authenticated'**
+  String get errorNotAuthenticated;
+
+  /// No description provided for @errorApiDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'API access is not enabled'**
+  String get errorApiDisabled;
+
+  /// No description provided for @errorInvalidRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid request'**
+  String get errorInvalidRequest;
+
+  /// No description provided for @errorServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server error ({status})'**
+  String errorServer(String status);
+
+  /// No description provided for @errorCertificate.
+  ///
+  /// In en, this message translates to:
+  /// **'The server certificate is not trusted. Re-run Server Setup to check its fingerprint and trust it.'**
+  String get errorCertificate;
+
+  /// No description provided for @errorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred'**
+  String get errorUnknown;
+
+  /// No description provided for @errorNoSavedCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved credentials'**
+  String get errorNoSavedCredentials;
+
+  /// No description provided for @errorSavedPasswordInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved password no longer valid'**
+  String get errorSavedPasswordInvalid;
+
+  /// No description provided for @errorUnexpectedResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Unexpected response from server'**
+  String get errorUnexpectedResponse;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

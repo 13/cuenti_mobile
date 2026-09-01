@@ -140,8 +140,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
                         tooltip: _obscurePassword
-                            ? 'Show password'
-                            : 'Hide password',
+                            ? L.of(context).authShowPassword
+                            : L.of(context).authHidePassword,
                         icon: Icon(
                           _obscurePassword
                               ? Icons.visibility
@@ -196,12 +196,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   if (auth.registrationEnabled)
                     TextButton(
                       onPressed: () => context.go('/register'),
-                      child: const Text("Don't have an account? Register"),
+                      child: Text(L.of(context).authNoAccountRegister),
                     ),
                   TextButton(
                     onPressed: () => context.go('/server-setup'),
                     child: Text(
-                      'Server: ${ref.read(authControllerProvider.notifier).serverUrl}',
+                      L
+                          .of(context)
+                          .authServerLine(
+                            ref.read(authControllerProvider.notifier).serverUrl,
+                          ),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
@@ -244,7 +248,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     bool didAuth;
     try {
       didAuth = await _localAuth.authenticate(
-        localizedReason: 'Sign in to Cuenti',
+        localizedReason: L.of(context).authBiometricReason,
       );
     } on Exception catch (_) {
       // Biometrics unavailable/cancelled: fall back to password entry.
@@ -270,7 +274,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
     final error = await ref
         .read(authControllerProvider.notifier)
-        .loginWithSavedCredentials();
+        .loginWithSavedCredentials(L.of(context));
     if (!mounted) return;
     if (error == null) {
       context.go('/dashboard');

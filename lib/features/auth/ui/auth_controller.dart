@@ -1,9 +1,11 @@
 import 'dart:async';
+
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -124,12 +126,12 @@ class AuthController extends _$AuthController {
   /// [login]/[register]. Returns null on success, else an error message.
   /// A 401 means the password changed server-side: the saved password is
   /// dropped (username kept) so the UI falls back to manual entry.
-  Future<String?> loginWithSavedCredentials() async {
+  Future<String?> loginWithSavedCredentials(L l) async {
     final username = state.savedUsername;
     final password = await _storage.read(_savedPasswordKey);
     if (username == null || password == null || password.isEmpty) {
       state = state.copyWith(hasSavedPassword: false);
-      return 'No saved credentials';
+      return l.errorNoSavedCredentials;
     }
     try {
       final user = await _repo.login(username, password);
@@ -139,7 +141,7 @@ class AuthController extends _$AuthController {
       if (e.message != 'Invalid username or password') return _extractError(e);
       await _storage.delete(_savedPasswordKey);
       state = state.copyWith(hasSavedPassword: false);
-      return 'Saved password no longer valid';
+      return l.errorSavedPasswordInvalid;
     } on Exception catch (e) {
       return _extractError(e);
     }
