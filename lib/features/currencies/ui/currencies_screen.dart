@@ -4,6 +4,7 @@ import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/currencies/domain/currency.dart';
 import 'package:cuentimobile/features/currencies/ui/currencies_controller.dart';
@@ -291,7 +292,14 @@ class CurrenciesScreen extends ConsumerWidget {
                                             fracDigits: fracDigits,
                                           ),
                                         );
-                                    if (ctx.mounted) Navigator.pop(ctx);
+                                    if (ctx.mounted) {
+                                      final messenger = ScaffoldMessenger.of(
+                                        ctx,
+                                      );
+                                      final saved = L.of(ctx).currenciesSaved;
+                                      Navigator.pop(ctx);
+                                      showSuccessSnack(messenger, saved);
+                                    }
                                   } on ApiException catch (e) {
                                     setModalState(() => saving = false);
                                     if (ctx.mounted) {

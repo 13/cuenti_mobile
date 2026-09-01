@@ -1820,6 +1820,120 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Unexpected response from server'**
   String get errorUnexpectedResponse;
+
+  /// No description provided for @txSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction saved'**
+  String get txSaved;
+
+  /// No description provided for @txDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction deleted'**
+  String get txDeleted;
+
+  /// No description provided for @accountsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Account saved'**
+  String get accountsSaved;
+
+  /// No description provided for @accountsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted'**
+  String get accountsDeleted;
+
+  /// No description provided for @categoriesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Category saved'**
+  String get categoriesSaved;
+
+  /// No description provided for @categoriesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Category deleted'**
+  String get categoriesDeleted;
+
+  /// No description provided for @payeesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Payee saved'**
+  String get payeesSaved;
+
+  /// No description provided for @payeesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Payee deleted'**
+  String get payeesDeleted;
+
+  /// No description provided for @tagsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag saved'**
+  String get tagsSaved;
+
+  /// No description provided for @tagsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag deleted'**
+  String get tagsDeleted;
+
+  /// No description provided for @currenciesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency saved'**
+  String get currenciesSaved;
+
+  /// No description provided for @currenciesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency deleted'**
+  String get currenciesDeleted;
+
+  /// No description provided for @assetsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset saved'**
+  String get assetsSaved;
+
+  /// No description provided for @assetsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset deleted'**
+  String get assetsDeleted;
+
+  /// No description provided for @budgetsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget saved'**
+  String get budgetsSaved;
+
+  /// No description provided for @budgetsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget deleted'**
+  String get budgetsDeleted;
+
+  /// No description provided for @savedViewsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'View saved'**
+  String get savedViewsSaved;
+
+  /// No description provided for @savedViewsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'View deleted'**
+  String get savedViewsDeleted;
+
+  /// No description provided for @settingsProfileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile saved'**
+  String get settingsProfileSaved;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

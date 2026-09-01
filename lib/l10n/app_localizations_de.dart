@@ -925,4 +925,61 @@ class LDe extends L {
 
   @override
   String get errorUnexpectedResponse => 'Unerwartete Antwort vom Server';
+
+  @override
+  String get txSaved => 'Buchung gespeichert';
+
+  @override
+  String get txDeleted => 'Buchung gelöscht';
+
+  @override
+  String get accountsSaved => 'Konto gespeichert';
+
+  @override
+  String get accountsDeleted => 'Konto gelöscht';
+
+  @override
+  String get categoriesSaved => 'Kategorie gespeichert';
+
+  @override
+  String get categoriesDeleted => 'Kategorie gelöscht';
+
+  @override
+  String get payeesSaved => 'Empfänger gespeichert';
+
+  @override
+  String get payeesDeleted => 'Empfänger gelöscht';
+
+  @override
+  String get tagsSaved => 'Tag gespeichert';
+
+  @override
+  String get tagsDeleted => 'Tag gelöscht';
+
+  @override
+  String get currenciesSaved => 'Währung gespeichert';
+
+  @override
+  String get currenciesDeleted => 'Währung gelöscht';
+
+  @override
+  String get assetsSaved => 'Anlage gespeichert';
+
+  @override
+  String get assetsDeleted => 'Anlage gelöscht';
+
+  @override
+  String get budgetsSaved => 'Budget gespeichert';
+
+  @override
+  String get budgetsDeleted => 'Budget gelöscht';
+
+  @override
+  String get savedViewsSaved => 'Ansicht gespeichert';
+
+  @override
+  String get savedViewsDeleted => 'Ansicht gelöscht';
+
+  @override
+  String get settingsProfileSaved => 'Profil gespeichert';
 }

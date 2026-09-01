@@ -6,6 +6,7 @@ import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
@@ -456,18 +457,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 
   Future<void> _delete(int id) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l = L.of(context);
+    final colors = Theme.of(context).colorScheme;
     try {
       await ref
           .read(transactionsControllerProvider(filter: _filter).notifier)
           .delete(id);
+      showSuccessSnack(messenger, l.txDeleted);
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.localizedMessage(L.of(context))),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      showErrorSnack(messenger, colors, e.localizedMessage(l));
     }
   }
 

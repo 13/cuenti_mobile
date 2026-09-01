@@ -1,5 +1,6 @@
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
+import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
 import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
@@ -478,6 +479,11 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
       splits: splits,
     );
 
+    // Captured before the pop: this dialog's context is gone afterwards,
+    // while the messenger belongs to the Scaffold above it.
+    final messenger = ScaffoldMessenger.of(context);
+    final l = L.of(context);
+    final colors = Theme.of(context).colorScheme;
     try {
       await ref
           .read(transactionsControllerProvider(filter: widget.filter).notifier)
@@ -488,15 +494,11 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
         ref.invalidate(fuelMetaProvider(_categoryId!));
       }
       if (mounted) Navigator.pop(context);
+      showSuccessSnack(messenger, l.txSaved);
     } on ApiException catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.localizedMessage(L.of(context))),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        showErrorSnack(messenger, colors, e.localizedMessage(l));
       }
     }
   }

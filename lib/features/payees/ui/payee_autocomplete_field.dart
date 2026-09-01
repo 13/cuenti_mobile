@@ -1,4 +1,5 @@
 import 'package:cuentimobile/features/payees/domain/payee.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/utils/token_search.dart';
 import 'package:flutter/material.dart';
 
@@ -12,12 +13,14 @@ class PayeeAutocompleteField extends StatefulWidget {
     required this.controller,
     required this.payees,
     super.key,
-    this.labelText = 'Payee',
+    this.labelText,
   });
 
   final TextEditingController controller;
   final List<Payee> payees;
-  final String labelText;
+
+  /// Null takes the localised default; a const parameter cannot hold one.
+  final String? labelText;
 
   @override
   State<PayeeAutocompleteField> createState() => _PayeeAutocompleteFieldState();
@@ -52,7 +55,7 @@ class _PayeeAutocompleteFieldState extends State<PayeeAutocompleteField> {
             focusNode: focusNode,
             onFieldSubmitted: (_) => onFieldSubmitted(),
             decoration: InputDecoration(
-              labelText: widget.labelText,
+              labelText: widget.labelText ?? L.of(context).payeeLabel,
               border: const OutlineInputBorder(),
             ),
           ),

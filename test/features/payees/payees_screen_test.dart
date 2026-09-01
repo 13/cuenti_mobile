@@ -11,6 +11,10 @@ import 'package:mocktail/mocktail.dart';
 class MockPayeesRepository extends Mock implements PayeesRepository {}
 
 void main() {
+  setUpAll(
+    () => registerFallbackValue(const Payee(id: 1, name: 'Aral Tankstelle')),
+  );
+
   late MockPayeesRepository repo;
 
   setUp(() {
@@ -20,11 +24,12 @@ void main() {
     ).thenAnswer((_) async => [const Payee(id: 1, name: 'Aral Tankstelle')]);
   });
 
-  Future<void> pumpScreen(WidgetTester tester) async {
+  Future<void> pumpScreen(WidgetTester tester, {Locale? locale}) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [payeesRepositoryProvider.overrideWithValue(repo)],
         child: MaterialApp(
+          locale: locale,
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
@@ -86,5 +91,35 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Save'), findsOneWidget);
+  });
+
+  testWidgets('saving confirms it happened', (tester) async {
+    when(
+      () => repo.save(any()),
+    ).thenAnswer((_) async => const Payee(id: 1, name: 'Aral Tankstelle'));
+
+    await pumpScreen(tester);
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Something');
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Payee saved'), findsOneWidget);
+  });
+
+  testWidgets('the confirmation speaks the chosen language', (tester) async {
+    when(
+      () => repo.save(any()),
+    ).thenAnswer((_) async => const Payee(id: 1, name: 'Aral Tankstelle'));
+
+    await pumpScreen(tester, locale: const Locale('de'));
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Something');
+    await tester.tap(find.widgetWithText(FilledButton, 'Speichern'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Empfänger gespeichert'), findsOneWidget);
   });
 }

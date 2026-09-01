@@ -7,6 +7,7 @@ import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/core/widgets/privacy_blur.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/budgets/domain/budget.dart';
@@ -404,7 +405,12 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
               active: _active,
             ),
           );
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        final messenger = ScaffoldMessenger.of(context);
+        final saved = L.of(context).budgetsSaved;
+        Navigator.pop(context);
+        showSuccessSnack(messenger, saved);
+      }
     } on ApiException catch (e) {
       if (mounted) {
         setState(() => _submitting = false);

@@ -1,3 +1,4 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
@@ -68,6 +69,7 @@ void main() {
 
   Future<void> pumpDialog(
     WidgetTester tester, {
+    Locale? locale,
     TransactionFilter filter = const TransactionFilter(),
     Transaction? transaction,
   }) async {
@@ -80,6 +82,7 @@ void main() {
           payeesRepositoryProvider.overrideWithValue(payeesRepo),
         ],
         child: MaterialApp(
+          locale: locale,
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
@@ -125,13 +128,18 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> fillAndSave(WidgetTester tester) async {
+  Future<void> fillAndSave(
+    WidgetTester tester, {
+    String amountLabel = 'Amount',
+    String payeeLabel = 'Payee',
+    String saveLabel = 'Save',
+  }) async {
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Amount'),
+      find.widgetWithText(TextFormField, amountLabel),
       '12,34',
     );
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Payee'),
+      find.widgetWithText(TextFormField, payeeLabel),
       'Baker',
     );
 
@@ -141,7 +149,7 @@ void main() {
     await tester.tap(find.text('Giro').last);
     await tester.pumpAndSettle();
 
-    final saveButton = find.widgetWithText(FilledButton, 'Save');
+    final saveButton = find.widgetWithText(FilledButton, saveLabel);
     await tester.ensureVisible(saveButton);
     await tester.pumpAndSettle();
     await tester.tap(saveButton);
@@ -510,5 +518,107 @@ void main() {
       find.widgetWithText(TextFormField, 'Aral Tankstelle'),
       findsOneWidget,
     );
+  });
+
+  /// Presents the dialog the way the app does -- in a modal sheet over a
+  /// Scaffold -- so that popping it leaves the messenger's Scaffold standing.
+  /// The flat host above cannot show a snackbar raised as the dialog closes.
+  Future<void> pumpDialogInSheet(
+    WidgetTester tester, {
+    Locale? locale,
+  }) async {
+    tester.view.physicalSize = const Size(1200, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          transactionsRepositoryProvider.overrideWithValue(txRepo),
+          accountsRepositoryProvider.overrideWithValue(accountsRepo),
+          categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
+          payeesRepositoryProvider.overrideWithValue(payeesRepo),
+        ],
+        child: MaterialApp(
+          locale: locale,
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
+          theme: AppTheme.light(),
+          home: Consumer(
+            builder: (context, ref, _) {
+              ref.watch(transactionsControllerProvider());
+              return Scaffold(
+                body: Builder(
+                  builder: (context) => ElevatedButton(
+                    onPressed: () => showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (_) => const TransactionDialog(),
+                    ),
+                    child: const Text('open'),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('saving confirms it happened, rather than closing in silence', (
+    tester,
+  ) async {
+    when(() => txRepo.save(any())).thenAnswer(
+      (invocation) async =>
+          invocation.positionalArguments.single as Transaction,
+    );
+
+    await pumpDialogInSheet(tester);
+    await fillAndSave(tester);
+
+    expect(find.text('Transaction saved'), findsOneWidget);
+  });
+
+  testWidgets('a failed save says so and does not claim success', (
+    tester,
+  ) async {
+    when(() => txRepo.save(any())).thenThrow(
+      const ServerException(
+        'Server error (500)',
+        serverMessage: 'Account is closed',
+        statusCode: 500,
+      ),
+    );
+
+    await pumpDialogInSheet(tester);
+    await fillAndSave(tester);
+
+    expect(
+      find.text('Account is closed'),
+      findsOneWidget,
+      reason: 'a server that explained itself is quoted, not translated over',
+    );
+    expect(find.text('Transaction saved'), findsNothing);
+  });
+
+  testWidgets('the confirmation is in the chosen language', (tester) async {
+    when(() => txRepo.save(any())).thenAnswer(
+      (invocation) async =>
+          invocation.positionalArguments.single as Transaction,
+    );
+
+    await pumpDialogInSheet(tester, locale: const Locale('de'));
+    await fillAndSave(
+      tester,
+      amountLabel: 'Betrag',
+      payeeLabel: 'Empfänger',
+      saveLabel: 'Speichern',
+    );
+
+    expect(find.text('Buchung gespeichert'), findsOneWidget);
   });
 }

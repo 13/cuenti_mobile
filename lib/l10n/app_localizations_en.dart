@@ -921,4 +921,61 @@ class LEn extends L {
 
   @override
   String get errorUnexpectedResponse => 'Unexpected response from server';
+
+  @override
+  String get txSaved => 'Transaction saved';
+
+  @override
+  String get txDeleted => 'Transaction deleted';
+
+  @override
+  String get accountsSaved => 'Account saved';
+
+  @override
+  String get accountsDeleted => 'Account deleted';
+
+  @override
+  String get categoriesSaved => 'Category saved';
+
+  @override
+  String get categoriesDeleted => 'Category deleted';
+
+  @override
+  String get payeesSaved => 'Payee saved';
+
+  @override
+  String get payeesDeleted => 'Payee deleted';
+
+  @override
+  String get tagsSaved => 'Tag saved';
+
+  @override
+  String get tagsDeleted => 'Tag deleted';
+
+  @override
+  String get currenciesSaved => 'Currency saved';
+
+  @override
+  String get currenciesDeleted => 'Currency deleted';
+
+  @override
+  String get assetsSaved => 'Asset saved';
+
+  @override
+  String get assetsDeleted => 'Asset deleted';
+
+  @override
+  String get budgetsSaved => 'Budget saved';
+
+  @override
+  String get budgetsDeleted => 'Budget deleted';
+
+  @override
+  String get savedViewsSaved => 'View saved';
+
+  @override
+  String get savedViewsDeleted => 'View deleted';
+
+  @override
+  String get settingsProfileSaved => 'Profile saved';
 }

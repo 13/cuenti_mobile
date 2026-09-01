@@ -11,6 +11,8 @@ import 'package:mocktail/mocktail.dart';
 class MockTagsRepository extends Mock implements TagsRepository {}
 
 void main() {
+  setUpAll(() => registerFallbackValue(const Tag(id: 1, name: 'Urlaub')));
+
   late MockTagsRepository repo;
 
   setUp(() {
@@ -20,11 +22,12 @@ void main() {
     ).thenAnswer((_) async => [const Tag(id: 1, name: 'Urlaub')]);
   });
 
-  Future<void> pumpScreen(WidgetTester tester) async {
+  Future<void> pumpScreen(WidgetTester tester, {Locale? locale}) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [tagsRepositoryProvider.overrideWithValue(repo)],
         child: MaterialApp(
+          locale: locale,
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
@@ -86,5 +89,35 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Save'), findsOneWidget);
+  });
+
+  testWidgets('saving confirms it happened', (tester) async {
+    when(
+      () => repo.save(any()),
+    ).thenAnswer((_) async => const Tag(id: 1, name: 'Urlaub'));
+
+    await pumpScreen(tester);
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Something');
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tag saved'), findsOneWidget);
+  });
+
+  testWidgets('the confirmation speaks the chosen language', (tester) async {
+    when(
+      () => repo.save(any()),
+    ).thenAnswer((_) async => const Tag(id: 1, name: 'Urlaub'));
+
+    await pumpScreen(tester, locale: const Locale('de'));
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Something');
+    await tester.tap(find.widgetWithText(FilledButton, 'Speichern'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tag gespeichert'), findsOneWidget);
   });
 }

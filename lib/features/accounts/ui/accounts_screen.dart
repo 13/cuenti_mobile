@@ -5,6 +5,7 @@ import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
@@ -382,7 +383,14 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                                             excludeFromReports: excludeReports,
                                           ),
                                         );
-                                    if (context.mounted) Navigator.pop(context);
+                                    if (context.mounted) {
+                                      final messenger = ScaffoldMessenger.of(
+                                        context,
+                                      );
+                                      final saved = L.of(context).accountsSaved;
+                                      Navigator.pop(context);
+                                      showSuccessSnack(messenger, saved);
+                                    }
                                   } on ApiException catch (e) {
                                     setModalState(() => saving = false);
                                     if (context.mounted) {

@@ -924,4 +924,61 @@ class LIt extends L {
 
   @override
   String get errorUnexpectedResponse => 'Risposta del server imprevista';
+
+  @override
+  String get txSaved => 'Movimento salvato';
+
+  @override
+  String get txDeleted => 'Movimento eliminato';
+
+  @override
+  String get accountsSaved => 'Conto salvato';
+
+  @override
+  String get accountsDeleted => 'Conto eliminato';
+
+  @override
+  String get categoriesSaved => 'Categoria salvata';
+
+  @override
+  String get categoriesDeleted => 'Categoria eliminata';
+
+  @override
+  String get payeesSaved => 'Beneficiario salvato';
+
+  @override
+  String get payeesDeleted => 'Beneficiario eliminato';
+
+  @override
+  String get tagsSaved => 'Tag salvato';
+
+  @override
+  String get tagsDeleted => 'Tag eliminato';
+
+  @override
+  String get currenciesSaved => 'Valuta salvata';
+
+  @override
+  String get currenciesDeleted => 'Valuta eliminata';
+
+  @override
+  String get assetsSaved => 'Asset salvato';
+
+  @override
+  String get assetsDeleted => 'Asset eliminato';
+
+  @override
+  String get budgetsSaved => 'Budget salvato';
+
+  @override
+  String get budgetsDeleted => 'Budget eliminato';
+
+  @override
+  String get savedViewsSaved => 'Vista salvata';
+
+  @override
+  String get savedViewsDeleted => 'Vista eliminata';
+
+  @override
+  String get settingsProfileSaved => 'Profilo salvato';
 }
