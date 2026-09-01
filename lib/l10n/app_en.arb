@@ -634,11 +634,12 @@
       }
     }
   },
-  "statsTransactionsInPeriod": "{count} transactions in period",
+  "statsTransactionsInPeriod": "{count, plural, =0{No transactions in period} =1{1 transaction in period} other{{count} transactions in period}}",
   "@statsTransactionsInPeriod": {
     "placeholders": {
       "count": {
-        "type": "String"
+        "type": "num",
+        "format": "compact"
       }
     }
   },

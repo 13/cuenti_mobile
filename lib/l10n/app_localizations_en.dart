@@ -853,8 +853,20 @@ class LEn extends L {
   }
 
   @override
-  String statsTransactionsInPeriod(String count) {
-    return '$count transactions in period';
+  String statsTransactionsInPeriod(num count) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.compact(
+      locale: localeName,
+    );
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString transactions in period',
+      one: '1 transaction in period',
+      zero: 'No transactions in period',
+    );
+    return '$_temp0';
   }
 
   @override

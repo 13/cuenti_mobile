@@ -63,9 +63,7 @@ class OverviewTab extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            L
-                .of(context)
-                .statsTransactionsInPeriod('${stats.transactionCount}'),
+            L.of(context).statsTransactionsInPeriod(stats.transactionCount),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],

@@ -228,4 +228,28 @@ void main() {
       expect(offenders, isEmpty, reason: 'untranslated user-visible strings');
     });
   });
+
+  group('counted strings agree with their number', () {
+    test('English uses the singular for one', () {
+      expect(LEn().statsTransactionsInPeriod(1), '1 transaction in period');
+    });
+
+    test('English uses the plural for many', () {
+      expect(LEn().statsTransactionsInPeriod(7), '7 transactions in period');
+    });
+
+    test('English has a phrase for none, rather than "0 transactions"', () {
+      expect(LEn().statsTransactionsInPeriod(0), 'No transactions in period');
+    });
+
+    test('German agrees too', () {
+      expect(LDe().statsTransactionsInPeriod(1), '1 Buchung im Zeitraum');
+      expect(LDe().statsTransactionsInPeriod(7), '7 Buchungen im Zeitraum');
+    });
+
+    test('Italian agrees too', () {
+      expect(LIt().statsTransactionsInPeriod(1), '1 movimento nel periodo');
+      expect(LIt().statsTransactionsInPeriod(7), '7 movimenti nel periodo');
+    });
+  });
 }

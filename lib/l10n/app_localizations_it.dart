@@ -855,8 +855,20 @@ class LIt extends L {
   }
 
   @override
-  String statsTransactionsInPeriod(String count) {
-    return '$count movimenti nel periodo';
+  String statsTransactionsInPeriod(num count) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.compact(
+      locale: localeName,
+    );
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString movimenti nel periodo',
+      one: '1 movimento nel periodo',
+      zero: 'Nessun movimento nel periodo',
+    );
+    return '$_temp0';
   }
 
   @override

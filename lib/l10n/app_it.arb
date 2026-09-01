@@ -269,7 +269,7 @@
   "authServerLine": "Server: {url}",
   "assetsNoPrice": "Nessuna quotazione",
   "assetsPriceRefreshed": "Quotazione aggiornata per {symbol}",
-  "statsTransactionsInPeriod": "{count} movimenti nel periodo",
+  "statsTransactionsInPeriod": "{count, plural, =0{Nessun movimento nel periodo} =1{1 movimento nel periodo} other{{count} movimenti nel periodo}}",
   "vehiclesCustomRange": "Intervallo personalizzato",
   "scheduledDeleteBody": "Eliminare il movimento ricorrente \"{name}\"?",
   "budgetsDeleteBody": "Eliminare il budget per \"{category}\"?",

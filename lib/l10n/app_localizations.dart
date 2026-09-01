@@ -1716,8 +1716,8 @@ abstract class L {
   /// No description provided for @statsTransactionsInPeriod.
   ///
   /// In en, this message translates to:
-  /// **'{count} transactions in period'**
-  String statsTransactionsInPeriod(String count);
+  /// **'{count, plural, =0{No transactions in period} =1{1 transaction in period} other{{count} transactions in period}}'**
+  String statsTransactionsInPeriod(num count);
 
   /// No description provided for @vehiclesCustomRange.
   ///

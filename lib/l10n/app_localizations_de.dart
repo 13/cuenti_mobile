@@ -856,8 +856,20 @@ class LDe extends L {
   }
 
   @override
-  String statsTransactionsInPeriod(String count) {
-    return '$count Buchungen im Zeitraum';
+  String statsTransactionsInPeriod(num count) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.compact(
+      locale: localeName,
+    );
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Buchungen im Zeitraum',
+      one: '1 Buchung im Zeitraum',
+      zero: 'Keine Buchungen im Zeitraum',
+    );
+    return '$_temp0';
   }
 
   @override
