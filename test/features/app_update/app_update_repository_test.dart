@@ -67,4 +67,86 @@ void main() {
     const empty = AppRelease(tagName: 'v9.9.9');
     expect(repo.pickAsset(empty, ['arm64-v8a']), isNull);
   });
+
+  group('asset naming', () {
+    ReleaseAsset? pick(List<String> names, List<String> abis) => repo.pickAsset(
+      AppRelease(
+        tagName: 'v9.9.9',
+        assets: [
+          for (final n in names)
+            ReleaseAsset(name: n, browserDownloadUrl: 'https://x/$n', size: 1),
+        ],
+      ),
+      abis,
+    );
+
+    test('prefers the cuenti-named split APK', () {
+      expect(
+        pick(
+          [
+            'app-arm64-v8a-release.apk',
+            'cuenti-arm64-v8a-release.apk',
+          ],
+          ['arm64-v8a'],
+        )?.name,
+        'cuenti-arm64-v8a-release.apk',
+      );
+    });
+
+    test('still accepts the old app- name, so a release that only carries '
+        'those is not unreachable', () {
+      expect(
+        pick(['app-arm64-v8a-release.apk'], ['arm64-v8a'])?.name,
+        'app-arm64-v8a-release.apk',
+      );
+    });
+
+    test('falls back to the cuenti universal APK for an unlisted ABI', () {
+      expect(
+        pick(
+          [
+            'cuenti-arm64-v8a-release.apk',
+            'cuenti-release.apk',
+            'app-release.apk',
+          ],
+          ['x86'],
+        )?.name,
+        'cuenti-release.apk',
+      );
+    });
+
+    test('falls back to the old universal APK when that is all there is', () {
+      expect(pick(['app-release.apk'], ['x86'])?.name, 'app-release.apk');
+    });
+
+    test('an ABI match always beats a universal APK', () {
+      expect(
+        pick(
+          [
+            'cuenti-release.apk',
+            'app-armeabi-v7a-release.apk',
+          ],
+          ['armeabi-v7a'],
+        )?.name,
+        'app-armeabi-v7a-release.apk',
+      );
+    });
+
+    test('honours ABI preference order', () {
+      expect(
+        pick(
+          [
+            'cuenti-armeabi-v7a-release.apk',
+            'cuenti-arm64-v8a-release.apk',
+          ],
+          ['arm64-v8a', 'armeabi-v7a'],
+        )?.name,
+        'cuenti-arm64-v8a-release.apk',
+      );
+    });
+
+    test('ignores assets that are not APKs', () {
+      expect(pick(['cuenti-release.apk.sha256', 'notes.txt'], ['x86']), isNull);
+    });
+  });
 }

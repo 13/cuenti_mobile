@@ -77,11 +77,28 @@ jobs:
           BUILD_TIME=$(date +'%H:%M:%S')
           flutter build apk --release --dart-define=BUILD_DATE=$BUILD_DATE --dart-define=BUILD_TIME=$BUILD_TIME
 
+      # Flutter's Gradle plugin fixes the names under flutter-apk/ as
+      # app-*.apk, so the app's own name is applied here rather than fought
+      # for in build.gradle.kts. The app- copies are kept alongside: every
+      # release up to v2.2.0 shipped those names, and the installed clients
+      # out there look for them by name -- dropping them would leave those
+      # users unable to update to anything, ever.
+      - name: Name the APKs for the app
+        run: |
+          cd build/app/outputs/flutter-apk
+          for f in app-release.apk app-*-release.apk; do
+            [ -e "$f" ] || continue
+            cp "$f" "cuenti-${f#app-}"
+          done
+          ls -1 *.apk
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: cuenti-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: |
+            build/app/outputs/flutter-apk/cuenti-release.apk
+            build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
 
       - name: Build split APKs
@@ -90,11 +107,22 @@ jobs:
           BUILD_TIME=$(date +'%H:%M:%S')
           flutter build apk --split-per-abi --dart-define=BUILD_DATE=$BUILD_DATE --dart-define=BUILD_TIME=$BUILD_TIME
 
+      - name: Name the split APKs for the app
+        run: |
+          cd build/app/outputs/flutter-apk
+          for f in app-*-release.apk; do
+            [ -e "$f" ] || continue
+            cp "$f" "cuenti-${f#app-}"
+          done
+          ls -1 *.apk
+
       - name: Upload split APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: cuenti-split-apks
-          path: build/app/outputs/flutter-apk/app-*-release.apk
+          path: |
+            build/app/outputs/flutter-apk/cuenti-*-release.apk
+            build/app/outputs/flutter-apk/app-*-release.apk
           retention-days: 30
 
   release:
@@ -123,5 +151,7 @@ jobs:
         with:
           generate_release_notes: true
           files: |
+            artifacts/cuenti-release.apk
+            artifacts/split/cuenti-*-release.apk
             artifacts/app-release.apk
             artifacts/split/app-*-release.apk

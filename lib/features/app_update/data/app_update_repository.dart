@@ -26,16 +26,37 @@ class AppUpdateRepository {
     return AppRelease.fromJson(res.data!);
   });
 
-  /// First split APK matching a supported ABI (in ABI preference order),
-  /// else the universal APK, else null.
+  /// The APK basenames a release may carry, newest convention first.
+  ///
+  /// Builds are named for the app now, but releases up to v2.2.0 shipped
+  /// Flutter's default `app-` names, and the copies of this client already
+  /// installed out there look for exactly one of these. Accepting both keeps
+  /// old releases reachable and lets the new name become the only one later
+  /// without stranding anybody mid-migration.
+  static const _apkPrefixes = ['cuenti', 'app'];
+
+  /// First split APK matching a supported ABI, in ABI preference order and
+  /// then naming preference, else the universal APK, else null.
+  ///
+  /// ABI beats naming: a correctly-targeted `app-` build is a better install
+  /// than a universal `cuenti-` one.
   ReleaseAsset? pickAsset(AppRelease release, List<String> supportedAbis) {
-    for (final abi in supportedAbis) {
+    ReleaseAsset? named(String name) {
       for (final asset in release.assets) {
-        if (asset.name == 'app-$abi-release.apk') return asset;
+        if (asset.name == name) return asset;
+      }
+      return null;
+    }
+
+    for (final abi in supportedAbis) {
+      for (final prefix in _apkPrefixes) {
+        final asset = named('$prefix-$abi-release.apk');
+        if (asset != null) return asset;
       }
     }
-    for (final asset in release.assets) {
-      if (asset.name == 'app-release.apk') return asset;
+    for (final prefix in _apkPrefixes) {
+      final asset = named('$prefix-release.apk');
+      if (asset != null) return asset;
     }
     return null;
   }
