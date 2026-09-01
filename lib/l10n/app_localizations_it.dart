@@ -981,4 +981,9 @@ class LIt extends L {
 
   @override
   String get settingsProfileSaved => 'Profilo salvato';
+
+  @override
+  String offlineBannerSince(String when) {
+    return 'Offline — dati del $when';
+  }
 }

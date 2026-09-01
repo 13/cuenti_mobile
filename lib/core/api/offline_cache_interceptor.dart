@@ -39,6 +39,10 @@ class OfflineCacheInterceptor extends Interceptor {
   /// UI to say so. A [ValueNotifier] so a widget can listen without polling.
   final ValueNotifier<bool> stale = ValueNotifier(false);
 
+  /// When the replayed figures were originally fetched, for the UI to say
+  /// how old what it is showing is. Null while live.
+  final ValueNotifier<DateTime?> staleSince = ValueNotifier(null);
+
   bool get servingStaleData => stale.value;
 
   static bool _isOffline(DioException e) => switch (e.type) {
@@ -59,6 +63,7 @@ class OfflineCacheInterceptor extends Interceptor {
         (response.statusCode ?? 0) < 300) {
       await _cache.store(cacheKeyFor(response.requestOptions), response.data);
       stale.value = false;
+      staleSince.value = null;
     }
     handler.next(response);
   }
@@ -78,6 +83,7 @@ class OfflineCacheInterceptor extends Interceptor {
       return;
     }
     stale.value = true;
+    staleSince.value = cached.storedAt;
     handler.resolve(
       Response<dynamic>(
         requestOptions: err.requestOptions,

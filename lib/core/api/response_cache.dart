@@ -38,7 +38,20 @@ String cacheKeyFor(RequestOptions options) {
 /// migrated when a response shape changes -- a body that no longer parses is
 /// simply a miss.
 class ResponseCache {
-  ResponseCache(this._directory);
+  ResponseCache(
+    this._directory, {
+    this.maxEntries = defaultMaxEntries,
+    this.maxAge = defaultMaxAge,
+  });
+
+  /// Every distinct query is its own entry, and the transactions list keys
+  /// on the search box -- so each search anyone types would otherwise leave
+  /// a file behind forever. Generous enough that ordinary use never evicts.
+  static const defaultMaxEntries = 200;
+
+  /// Past this, an entry is a miss rather than "the last figures fetched".
+  /// Stale numbers are useful for a train journey, not for a quarter.
+  static const defaultMaxAge = Duration(days: 14);
 
   /// Opens the cache in the app's support directory, which the OS does not
   /// purge behind the app's back the way it may purge temp.
@@ -50,6 +63,8 @@ class ResponseCache {
   }
 
   final Directory _directory;
+  final int maxEntries;
+  final Duration maxAge;
 
   File _fileFor(String key) => File('${_directory.path}/$key.json');
 
@@ -60,11 +75,39 @@ class ResponseCache {
         'body': body,
       }),
     );
+    await _evictExcess();
+  }
+
+  /// Drops the least recently written entries once the store is over its
+  /// cap. Modification time is the ordering: it is what writing an entry
+  /// already updates, so re-fetching an endpoint keeps it alive without any
+  /// bookkeeping of our own.
+  Future<void> _evictExcess() async {
+    if (!_directory.existsSync()) return;
+    final files = _directory
+        .listSync()
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.json'))
+        .toList();
+    if (files.length <= maxEntries) return;
+    files.sort(
+      (a, b) => a.statSync().modified.compareTo(b.statSync().modified),
+    );
+    for (final file in files.take(files.length - maxEntries)) {
+      try {
+        await file.delete();
+        // A file that vanished under us is already evicted.
+        // ignore: avoid_catches_without_on_clauses
+      } catch (_) {}
+    }
   }
 
   Future<CachedResponse?> read(String key) async {
     final file = _fileFor(key);
     if (!file.existsSync()) return null;
+    if (DateTime.now().difference(file.statSync().modified) > maxAge) {
+      return null;
+    }
     try {
       final decoded = jsonDecode(await file.readAsString()) as Map;
       return CachedResponse(

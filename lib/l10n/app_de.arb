@@ -305,5 +305,6 @@
   "budgetsDeleted": "Budget gelöscht",
   "savedViewsSaved": "Ansicht gespeichert",
   "savedViewsDeleted": "Ansicht gelöscht",
-  "settingsProfileSaved": "Profil gespeichert"
+  "settingsProfileSaved": "Profil gespeichert",
+  "offlineBannerSince": "Offline — Zahlen von {when}"
 }

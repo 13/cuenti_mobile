@@ -982,4 +982,9 @@ class LDe extends L {
 
   @override
   String get settingsProfileSaved => 'Profil gespeichert';
+
+  @override
+  String offlineBannerSince(String when) {
+    return 'Offline — Zahlen von $when';
+  }
 }

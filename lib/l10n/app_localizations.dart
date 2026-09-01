@@ -1934,6 +1934,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Profile saved'**
   String get settingsProfileSaved;
+
+  /// No description provided for @offlineBannerSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline — figures from {when}'**
+  String offlineBannerSince(String when);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

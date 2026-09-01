@@ -247,7 +247,11 @@ class ShellScreen extends ConsumerWidget {
         children: [
           // In the shell so every screen inherits it: any of them can be
           // showing replayed figures.
-          if (offlineCache != null) OfflineBanner(stale: offlineCache.stale),
+          if (offlineCache != null)
+            OfflineBanner(
+              stale: offlineCache.stale,
+              since: offlineCache.staleSince,
+            ),
           Expanded(child: child),
         ],
       ),

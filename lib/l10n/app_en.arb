@@ -749,5 +749,13 @@
   "savedViewsDeleted": "View deleted",
   "@savedViewsDeleted": {},
   "settingsProfileSaved": "Profile saved",
-  "@settingsProfileSaved": {}
+  "@settingsProfileSaved": {},
+  "offlineBannerSince": "Offline — figures from {when}",
+  "@offlineBannerSince": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  }
 }

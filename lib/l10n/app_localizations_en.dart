@@ -978,4 +978,9 @@ class LEn extends L {
 
   @override
   String get settingsProfileSaved => 'Profile saved';
+
+  @override
+  String offlineBannerSince(String when) {
+    return 'Offline — figures from $when';
+  }
 }
