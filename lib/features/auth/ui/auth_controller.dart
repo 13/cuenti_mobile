@@ -63,6 +63,8 @@ class AuthController extends _$AuthController {
     if (await _repo.hasToken()) {
       try {
         user = await _repo.getProfile();
+        // Broad by necessity: see the note on this class.
+        // ignore: avoid_catches_without_on_clauses
       } catch (_) {
         await _repo.logout();
       }
@@ -84,6 +86,8 @@ class AuthController extends _$AuthController {
     final UserProfile user;
     try {
       user = await _repo.login(username, password);
+      // Broad by necessity: see the note on this class.
+      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       return _extractError(e);
     }
@@ -107,6 +111,8 @@ class AuthController extends _$AuthController {
         firstName: firstName,
         lastName: lastName,
       );
+      // Broad by necessity: see the note on this class.
+      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       return _extractError(e);
     }
@@ -140,6 +146,8 @@ class AuthController extends _$AuthController {
       await _storage.delete(_savedPasswordKey);
       state = state.copyWith(hasSavedPassword: false);
       return 'Saved password no longer valid';
+      // Broad by necessity: see the note on this class.
+      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       return _extractError(e);
     }
@@ -155,6 +163,8 @@ class AuthController extends _$AuthController {
     try {
       final user = await _repo.getProfile();
       state = state.copyWith(user: user);
+      // Broad by necessity: see the note on this class.
+      // ignore: avoid_catches_without_on_clauses
     } catch (_) {}
   }
 
@@ -172,6 +182,8 @@ class AuthController extends _$AuthController {
       await _storage.write(_savedUsernameKey, username);
       await _storage.write(_savedPasswordKey, password);
       persisted = true;
+      // Broad by necessity: see the note on this class.
+      // ignore: avoid_catches_without_on_clauses
     } catch (_) {}
     state = persisted
         ? state.copyWith(
@@ -182,7 +194,7 @@ class AuthController extends _$AuthController {
         : state.copyWith(user: user);
   }
 
-  Future<void> setBiometricEnabled(bool enabled) async {
+  Future<void> setBiometricEnabled({required bool enabled}) async {
     state = state.copyWith(biometricEnabled: enabled);
     await _storage.write(_biometricKey, enabled.toString());
   }

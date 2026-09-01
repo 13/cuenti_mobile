@@ -1,5 +1,5 @@
 /// Fuel memo token parsing/building, mirroring the server's
-/// VehicleReportService: "d=<km> l=<liters> [full] <free text>".
+/// `VehicleReportService`: `d=<km> l=<liters> [full] <free text>`.
 class FuelTokens {
   const FuelTokens({
     this.odometer,
@@ -51,13 +51,13 @@ FuelTokens parseFuelTokens(String? memo) {
 String formatFuelNumber(double v) =>
     v == v.roundToDouble() ? v.toInt().toString() : v.toString();
 
-/// Inverse of [parseFuelTokens]: canonical "d=… l=… full <text>".
+/// Inverse of [parseFuelTokens]: canonical `d=… l=… full <text>`.
 String buildFuelMemo(
   double? odometer,
   double? liters,
-  bool fullTank,
-  String remainderText,
-) {
+  String remainderText, {
+  required bool fullTank,
+}) {
   final parts = <String>[
     if (odometer != null) 'd=${formatFuelNumber(odometer)}',
     if (liters != null) 'l=${formatFuelNumber(liters)}',

@@ -241,7 +241,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       didAuth = await _localAuth.authenticate(
         localizedReason: 'Sign in to Cuenti',
       );
-    } catch (_) {
+    } on Exception catch (_) {
       // Biometrics unavailable/cancelled: fall back to password entry.
       if (mounted) {
         setState(() {

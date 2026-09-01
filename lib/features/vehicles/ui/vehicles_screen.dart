@@ -262,13 +262,16 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
         'defaultVehicleCategoryId': id,
       });
       await ref.read(authControllerProvider.notifier).refreshProfile();
-      if (!mounted) return true;
+      // `context` is the sheet's, not this State's: the sheet can be
+      // dismissed while the request is in flight, leaving `mounted` true
+      // and this context defunct.
+      if (!context.mounted) return true;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Default saved')),
       );
       return true;
     } on ApiException catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.message),

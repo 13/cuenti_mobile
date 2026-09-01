@@ -129,8 +129,8 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     _memo.text = buildFuelMemo(
       _parseFuelNum(_fuelOdometer.text),
       _parseFuelNum(_fuelLiters.text),
-      _fuelFullTank,
       _fuelRemainder,
+      fullTank: _fuelFullTank,
     );
     _fuelSyncing = false;
   }

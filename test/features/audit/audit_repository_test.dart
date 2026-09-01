@@ -74,12 +74,14 @@ void main() {
 
     await repo.getPage();
 
-    final captured = verify(
-      () => dio.get<Map<String, dynamic>>(
-        '/audit-log',
-        queryParameters: captureAny(named: 'queryParameters'),
-      ),
-    ).captured.single;
+    final captured =
+        verify(
+              () => dio.get<Map<String, dynamic>>(
+                '/audit-log',
+                queryParameters: captureAny(named: 'queryParameters'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured.containsKey('filter'), isFalse);
   });
 
@@ -104,12 +106,14 @@ void main() {
 
     await repo.getPage(filter: '');
 
-    final captured = verify(
-      () => dio.get<Map<String, dynamic>>(
-        '/audit-log',
-        queryParameters: captureAny(named: 'queryParameters'),
-      ),
-    ).captured.single;
+    final captured =
+        verify(
+              () => dio.get<Map<String, dynamic>>(
+                '/audit-log',
+                queryParameters: captureAny(named: 'queryParameters'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured.containsKey('filter'), isFalse);
   });
 

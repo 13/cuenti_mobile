@@ -196,7 +196,7 @@ void main() {
       ),
     ).thenAnswer((_) async => ok(null));
 
-    await repo.setUserEnabled(5, false);
+    await repo.setUserEnabled(5, enabled: false);
 
     verify(
       () => dio.put<void>(

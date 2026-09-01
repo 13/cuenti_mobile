@@ -1,16 +1,17 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
-import 'package:cuentimobile/features/currencies/domain/currency.dart';
-import 'package:cuentimobile/features/currencies/ui/currencies_controller.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
+import 'package:cuentimobile/features/currencies/domain/currency.dart';
+import 'package:cuentimobile/features/currencies/ui/currencies_controller.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AccountsScreen extends ConsumerStatefulWidget {
   const AccountsScreen({super.key});
@@ -53,10 +54,13 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                     vertical: 8,
                   ),
                   itemCount: accounts.length,
-                  onReorder: (old, newIdx) {
+                  // onReorderItem (unlike the deprecated onReorder) hands
+                  // back an index already adjusted for the removed item, so
+                  // no off-by-one correction here.
+                  onReorderItem: (old, newIdx) {
                     final ids = accounts.map((a) => a.id!).toList();
                     final id = ids.removeAt(old);
-                    ids.insert(newIdx > old ? newIdx - 1 : newIdx, id);
+                    ids.insert(newIdx, id);
                     unawaited(_updateSortOrder(ids));
                   },
                   itemBuilder: (context, i) {

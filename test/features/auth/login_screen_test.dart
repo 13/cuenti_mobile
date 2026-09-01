@@ -40,7 +40,7 @@ void main() {
 
   const user = UserProfile(username: 'demo', email: 'd@x');
 
-  MockLocalAuthentication authenticatorReturning(bool result) {
+  MockLocalAuthentication authenticatorReturning({required bool result}) {
     final a = MockLocalAuthentication();
     when(
       () => a.authenticate(
@@ -185,7 +185,7 @@ void main() {
       ..data['biometric_enabled'] = 'true'
       ..data['saved_username'] = 'demo'
       ..data['saved_password'] = 'secret';
-    final authenticator = authenticatorReturning(true);
+    final authenticator = authenticatorReturning(result: true);
     when(() => repo.login('demo', 'secret')).thenAnswer((_) async => user);
 
     await pumpLogin(tester, storage: storage, authenticator: authenticator);
@@ -206,7 +206,7 @@ void main() {
       ..data['biometric_enabled'] = 'true'
       ..data['saved_username'] = 'demo'
       ..data['saved_password'] = 'secret';
-    final authenticator = authenticatorReturning(false);
+    final authenticator = authenticatorReturning(result: false);
 
     await pumpLogin(tester, storage: storage, authenticator: authenticator);
 
@@ -300,7 +300,7 @@ void main() {
       ..data['biometric_enabled'] = 'true'
       ..data['saved_username'] = 'demo'
       ..data['saved_password'] = 'old';
-    final authenticator = authenticatorReturning(true);
+    final authenticator = authenticatorReturning(result: true);
     when(
       () => repo.login('demo', 'old'),
     ).thenThrow(const UnauthorizedException('Invalid username or password'));

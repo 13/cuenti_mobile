@@ -129,7 +129,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     'Require fingerprint/face to reopen or sign in',
                   ),
                   value: authState.biometricEnabled,
-                  onChanged: auth.setBiometricEnabled,
+                  onChanged: (v) =>
+                      unawaited(auth.setBiometricEnabled(enabled: v)),
                 ),
                 const SizedBox(height: 8),
                 FilledButton.tonal(
@@ -344,7 +345,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               );
                           await auth.refreshProfile();
                           if (ctx.mounted) nav.pop();
-                        } catch (e) {
+                        } on Exception catch (e) {
                           if (ctx.mounted) {
                             ScaffoldMessenger.of(
                               ctx,
@@ -449,7 +450,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               const SnackBar(content: Text('Password changed')),
                             );
                           }
-                        } catch (e) {
+                        } on Exception catch (e) {
                           if (ctx.mounted) {
                             ScaffoldMessenger.of(
                               ctx,
@@ -553,7 +554,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -604,7 +605,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -744,9 +745,9 @@ class _AdminPanel extends ConsumerWidget {
     try {
       switch (action) {
         case 'enable':
-          await repo.setUserEnabled(user.id!, true);
+          await repo.setUserEnabled(user.id!, enabled: true);
         case 'disable':
-          await repo.setUserEnabled(user.id!, false);
+          await repo.setUserEnabled(user.id!, enabled: false);
         case 'delete':
           final confirmed = await showConfirmSheet(
             context,

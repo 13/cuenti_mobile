@@ -113,6 +113,10 @@ Future<T> _guard<T>(Future<T> Function() fn) async {
     return await fn();
   } on DioException catch (e) {
     throw ApiException.fromDio(e);
+    // Deliberate: a malformed payload is a server contract problem, not a
+    // bug in this client, and it must surface as an error card rather than
+    // an unhandled Error.
+    // ignore: avoid_catching_errors
   } on TypeError catch (_) {
     // A malformed/unexpected payload (e.g. a legacy server's response shape
     // changing mid-migration) becomes a visible error card instead of an

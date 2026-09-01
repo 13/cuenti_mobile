@@ -95,7 +95,7 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
       if (didAuth) {
         setState(() => _locked = false);
       }
-    } catch (_) {
+    } on Exception catch (_) {
       // If biometric auth is unavailable, just unlock
       setState(() => _locked = false);
     }

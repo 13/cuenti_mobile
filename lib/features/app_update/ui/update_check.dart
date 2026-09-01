@@ -50,7 +50,7 @@ Future<void> checkForUpdates(BuildContext context, WidgetRef ref) async {
       context: context,
       builder: (_) => _UpdateDialog(release: release, asset: asset),
     );
-  } catch (_) {
+  } on Exception catch (_) {
     messenger.showSnackBar(
       const SnackBar(content: Text("Couldn't check for updates")),
     );
@@ -89,7 +89,7 @@ class _UpdateDialogState extends ConsumerState<_UpdateDialog> {
       );
       await ref.read(apkInstallerProvider)(path);
       if (mounted) Navigator.pop(context);
-    } catch (_) {
+    } on Exception catch (_) {
       if (mounted) {
         setState(() {
           _progress = null;

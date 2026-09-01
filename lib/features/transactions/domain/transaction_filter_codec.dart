@@ -37,7 +37,10 @@ abstract final class TransactionFilterCodec {
         search: decoded['search'] as String?,
       );
       // Defensive parser: any failure (bad JSON, wrong-typed fields, bad
-      // dates) means the params weren't written by this codec.
+      // dates) means the params weren't written by this codec. A wrong-typed
+      // field throws TypeError rather than Exception, so this clause has to
+      // stay broad; covered by transaction_filter_codec_test.
+      // ignore: avoid_catches_without_on_clauses
     } catch (_) {
       return null;
     }

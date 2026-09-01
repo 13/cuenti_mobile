@@ -40,27 +40,35 @@ void main() {
   group('buildFuelMemo', () {
     test('builds canonical memo', () {
       expect(
-        buildFuelMemo(45210, 41.3, true, 'Aral'),
+        buildFuelMemo(45210, 41.3, 'Aral', fullTank: true),
         'd=45210 l=41.3 full Aral',
       );
     });
 
     test('skips missing parts and trailing zeros', () {
-      expect(buildFuelMemo(null, 40, false, ''), 'l=40');
-      expect(buildFuelMemo(45210, null, false, ''), 'd=45210');
-      expect(buildFuelMemo(null, null, false, 'just a note'), 'just a note');
-      expect(buildFuelMemo(null, null, false, ''), isEmpty);
+      expect(buildFuelMemo(null, 40, '', fullTank: false), 'l=40');
+      expect(buildFuelMemo(45210, null, '', fullTank: false), 'd=45210');
+      expect(
+        buildFuelMemo(null, null, 'just a note', fullTank: false),
+        'just a note',
+      );
+      expect(buildFuelMemo(null, null, '', fullTank: false), isEmpty);
     });
 
     test('round-trip is stable', () {
-      final built = buildFuelMemo(100500, 38.5, true, 'Shell');
+      final built = buildFuelMemo(100500, 38.5, 'Shell', fullTank: true);
       final t = parseFuelTokens(built);
       expect(t.odometer, 100500);
       expect(t.liters, 38.5);
       expect(t.fullTank, isTrue);
       expect(t.remainderText, 'Shell');
       expect(
-        buildFuelMemo(t.odometer, t.liters, t.fullTank, t.remainderText),
+        buildFuelMemo(
+          t.odometer,
+          t.liters,
+          t.remainderText,
+          fullTank: t.fullTank,
+        ),
         built,
       );
     });

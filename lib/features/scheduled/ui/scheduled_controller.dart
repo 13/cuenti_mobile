@@ -35,10 +35,12 @@ class ScheduledController extends _$ScheduledController {
   /// since posting creates a transaction.
   Future<void> post(int id) async {
     await ref.read(scheduledRepositoryProvider).post(id);
-    ref.invalidateSelf();
-    ref.invalidate(accountsControllerProvider);
-    // Invalidate the family target (all instances) of transactionsControllerProvider
-    ref.invalidate(transactionsControllerProvider);
+    ref
+      ..invalidateSelf()
+      ..invalidate(accountsControllerProvider)
+      // Invalidate the family target (all instances) of
+      // transactionsControllerProvider
+      ..invalidate(transactionsControllerProvider);
     await future;
   }
 

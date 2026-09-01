@@ -72,7 +72,7 @@ class UserRepository {
         .toList();
   });
 
-  Future<void> setUserEnabled(int id, bool enabled) => _guard(
+  Future<void> setUserEnabled(int id, {required bool enabled}) => _guard(
     () => _dio.put<void>(
       '/user/admin/users/$id/enabled',
       data: {'enabled': enabled},

@@ -83,9 +83,10 @@ class TransactionsController extends _$TransactionsController {
     await ref
         .read(transactionsRepositoryProvider)
         .save(t, splitsTouched: splitsTouched);
-    ref.invalidateSelf();
-    // Balances changed server-side:
-    ref.invalidate(accountsControllerProvider);
+    ref
+      ..invalidateSelf()
+      // Balances changed server-side:
+      ..invalidate(accountsControllerProvider);
     await future;
   }
 

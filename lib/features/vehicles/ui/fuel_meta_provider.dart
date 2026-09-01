@@ -1,5 +1,6 @@
 import 'package:cuentimobile/features/vehicles/data/vehicles_repository.dart';
-import 'package:riverpod/src/providers/future_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/misc.dart';
 
 /// Whether a category holds fuel entries, and the known odometer readings —
 /// derived from the existing /vehicles/report endpoint so the transaction
@@ -44,7 +45,7 @@ final FutureProviderFamily<FuelMeta, int> fuelMetaProvider =
             if (e.odometer != null) (date: e.date, odometer: e.odometer!),
         ];
         return FuelMeta(isFuel: isFuel, readings: readings);
-      } catch (_) {
+      } on Exception catch (_) {
         // Offline or server error: fall back to "not fuel" — the dialog still
         // shows the fuel section when the memo itself parses.
         return const FuelMeta(isFuel: false);

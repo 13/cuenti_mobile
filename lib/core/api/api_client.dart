@@ -20,8 +20,8 @@ class ApiClient {
       // Bypass certificate verification for self-signed certs
       dio.httpClientAdapter = IOHttpClientAdapter(
         createHttpClient: () {
-          final client = HttpClient();
-          client.badCertificateCallback = (cert, host, port) => true;
+          final client = HttpClient()
+            ..badCertificateCallback = (cert, host, port) => true;
           return client;
         },
       );
