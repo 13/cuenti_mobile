@@ -36,16 +36,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.didChangeDependencies();
     if (!_initialized) {
       _initialized = true;
-      ref.read(authControllerProvider.notifier).init().then((_) {
-        if (!mounted) return;
-        final auth = ref.read(authControllerProvider);
-        if (auth.isLoggedIn) {
-          context.go('/dashboard');
-          return;
-        }
-        _applySavedCredentials(auth);
-      });
+      unawaited(_restoreSession());
     }
+  }
+
+  /// Best-effort session restore. It reads secure storage and asks the
+  /// server for the profile and the registration flag, any of which can
+  /// fail when the server is unreachable -- and a launch with no network
+  /// must still leave a login form the user can type into, not an
+  /// unhandled async error.
+  Future<void> _restoreSession() async {
+    try {
+      await ref.read(authControllerProvider.notifier).init();
+    } on Exception catch (_) {
+      return;
+    }
+    if (!mounted) return;
+    final auth = ref.read(authControllerProvider);
+    if (auth.isLoggedIn) {
+      context.go('/dashboard');
+      return;
+    }
+    _applySavedCredentials(auth);
   }
 
   void _applySavedCredentials(AuthState auth) {

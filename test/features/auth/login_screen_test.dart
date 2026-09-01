@@ -315,4 +315,23 @@ void main() {
     );
     expect(usernameField.controller!.text, 'demo');
   });
+
+  testWidgets('an unreachable server still leaves a usable login form', (
+    tester,
+  ) async {
+    // AuthController.init() calls this unguarded, so a server that is down
+    // takes the whole session restore with it.
+    when(
+      () => repo.fetchRegistrationEnabled(),
+    ).thenThrow(const ServerException('server unreachable'));
+
+    await pumpLogin(tester);
+
+    expect(
+      tester.takeException(),
+      isNull,
+      reason: 'a failed session restore must not escape as an async error',
+    );
+    expect(find.widgetWithText(FilledButton, 'Sign In'), findsOneWidget);
+  });
 }

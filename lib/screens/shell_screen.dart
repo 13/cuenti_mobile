@@ -161,10 +161,14 @@ class ShellScreen extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
-              onTap: () {
+              onTap: () async {
+                // Capture the router before the gap: popping the drawer
+                // tears this ListTile's context down, so it cannot route
+                // once the sign-out completes.
+                final router = GoRouter.of(context);
                 Navigator.pop(context);
-                ref.read(authControllerProvider.notifier).logout();
-                context.go('/login');
+                await ref.read(authControllerProvider.notifier).logout();
+                router.go('/login');
               },
             ),
           ],

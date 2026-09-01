@@ -243,9 +243,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: () {
-              auth.logout();
-              context.go('/login');
+            onPressed: () async {
+              // Land on the login screen only once the token and the saved
+              // credentials are actually gone, so a fresh sign-in cannot
+              // race the wipe.
+              final router = GoRouter.of(context);
+              await auth.logout();
+              router.go('/login');
             },
             icon: const Icon(Icons.logout),
             label: const Text('Logout'),
