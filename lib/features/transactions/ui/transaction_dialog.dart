@@ -5,33 +5,20 @@ import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/payees/ui/payee_autocomplete_field.dart';
 import 'package:cuentimobile/features/payees/ui/payees_controller.dart';
+import 'package:cuentimobile/features/transactions/domain/split_validation.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_split.dart';
+import 'package:cuentimobile/features/transactions/ui/fuel_entry_section.dart';
+import 'package:cuentimobile/features/transactions/ui/split_draft.dart';
+import 'package:cuentimobile/features/transactions/ui/splits_editor.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
+import 'package:cuentimobile/features/vehicles/domain/fuel_advice.dart';
 import 'package:cuentimobile/features/vehicles/domain/fuel_memo.dart';
 import 'package:cuentimobile/features/vehicles/ui/fuel_meta_provider.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-/// Mutable, in-progress row for the splits editor. Backed by
-/// [TextEditingController]s so field widgets keep their own cursor/selection
-/// state across rebuilds; converted to [TransactionSplit] only on save.
-class _SplitDraft {
-  _SplitDraft({this.categoryId, String amount = '', String memo = ''})
-    : amount = TextEditingController(text: amount),
-      memo = TextEditingController(text: memo);
-
-  int? categoryId;
-  final TextEditingController amount;
-  final TextEditingController memo;
-
-  void dispose() {
-    amount.dispose();
-    memo.dispose();
-  }
-}
 
 class TransactionDialog extends ConsumerStatefulWidget {
   const TransactionDialog({
@@ -63,7 +50,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   String _paymentMethod = 'NONE';
   late DateTime _date;
   bool _submitting = false;
-  final List<_SplitDraft> _splits = [];
+  final List<SplitDraft> _splits = [];
   bool _splitsTouched = false;
   late TextEditingController _fuelOdometer;
   late TextEditingController _fuelLiters;
@@ -103,7 +90,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     _fuelRemainder = fuelTokens.remainderText;
     for (final s in t?.splits ?? const <TransactionSplit>[]) {
       _splits.add(
-        _SplitDraft(
+        SplitDraft(
           categoryId: s.categoryId,
           amount: formatNumber(s.amount),
           memo: s.memo ?? '',
@@ -114,23 +101,12 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
 
   /// Same normalization as the main amount field: '.' thousands separator,
   /// ',' decimal separator (e.g. "1.234,56" -> 1234.56).
-  double? _parseAmount(String text) {
-    if (text.isEmpty) return null;
-    final normalized = text.replaceAll('.', '').replaceAll(',', '.');
-    return double.tryParse(normalized);
-  }
-
-  /// Fuel numbers accept comma or dot decimals ("41,3" -> 41.3), unlike
-  /// _parseAmount which also strips thousands separators.
-  double? _parseFuelNum(String text) =>
-      text.isEmpty ? null : double.tryParse(text.replaceAll(',', '.'));
-
   void _syncMemoFromFuelFields() {
     if (_fuelSyncing) return;
     _fuelSyncing = true;
     _memo.text = buildFuelMemo(
-      _parseFuelNum(_fuelOdometer.text),
-      _parseFuelNum(_fuelLiters.text),
+      parseFuelInput(_fuelOdometer.text),
+      parseFuelInput(_fuelLiters.text),
       _fuelRemainder,
       fullTank: _fuelFullTank,
     );
@@ -154,79 +130,20 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     _fuelSyncing = false;
   }
 
-  /// Odometer comparison baseline: the newest reading strictly before this
-  /// transaction's date (web parity — `VehicleReportService.lastOdometer`).
-  /// Using the newest reading overall would compare a fill-up against
-  /// itself when editing the most recent entry (distance 0, false
-  /// "not increasing" warning). Server dates are date-only, so compare on
-  /// the date part only.
-  double? _fuelBaseline(FuelMeta? meta) {
-    if (meta == null) return null;
-    final txDate = DateTime(_date.year, _date.month, _date.day);
-    for (final r in meta.readings) {
-      if (r.date.isBefore(txDate)) return r.odometer;
-    }
-    return null;
-  }
-
-  String? get _fuelLitersWarning {
-    final liters = _parseFuelNum(_fuelLiters.text);
-    if (liters == null) return null;
-    return (liters <= 0 || liters > 200) ? 'Implausible liters value' : null;
-  }
-
-  /// Message + isWarning for the line under the fuel fields; null when
-  /// nothing to show. First matching rule wins (mirrors the web app).
-  (String, bool)? _fuelInfoLine(double? lastOdometer) {
-    final odometer = _parseFuelNum(_fuelOdometer.text);
-    if (odometer == null || lastOdometer == null) return null;
-    final distance = odometer - lastOdometer;
-    if (distance <= 0) {
-      return (
-        'Odometer is not higher than the last reading '
-            '(${formatFuelNumber(lastOdometer)})',
-        true,
-      );
-    }
-    if (distance > 2000) {
-      return (
-        'Very large jump since the last reading '
-            '(${formatFuelNumber(distance)} km) — typo?',
-        true,
-      );
-    }
-    final liters = _parseFuelNum(_fuelLiters.text);
-    if (_fuelFullTank && liters != null && liters > 0) {
-      final consumption = (liters / distance * 100).toStringAsFixed(1);
-      return (
-        '${formatFuelNumber(distance)} km since last, ~$consumption L/100km',
-        false,
-      );
-    }
-    return ('${formatFuelNumber(distance)} km since last fill-up', false);
-  }
-
   /// Null when valid (or the section hasn't been touched / is empty) so the
   /// caller can use it both to gate the Save button and to show the banner.
   /// Also null for TRANSFER, mirroring the section's visibility: an invalid
   /// draft must not keep Save disabled after the user switches to a type
   /// that hides the section (the save path drops splits for TRANSFER anyway).
-  String? get _splitsValidationMessage {
-    if (_type == 'TRANSFER' || !_splitsTouched || _splits.isEmpty) return null;
-    if (_splits.any((s) => s.categoryId == null)) {
-      return 'Each split needs a category';
-    }
-    final sum = _splits.fold<double>(
-      0,
-      (acc, s) => acc + (_parseAmount(s.amount.text) ?? 0),
-    );
-    final mainAmount = _parseAmount(_amount.text) ?? 0;
-    if ((sum - mainAmount).abs() > 0.005) {
-      return 'Splits must sum to the amount: '
-          '${formatNumber(sum)} of ${formatNumber(mainAmount)}';
-    }
-    return null;
-  }
+  String? get _splitsValidationMessage => splitsValidationMessage(
+    type: _type,
+    touched: _splitsTouched,
+    splits: [
+      for (final s in _splits)
+        (categoryId: s.categoryId, amount: parseAmountInput(s.amount.text)),
+    ],
+    mainAmount: parseAmountInput(_amount.text) ?? 0,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +159,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
         _type == 'EXPENSE' &&
         ((fuelMeta?.isFuel ?? false) ||
             parseFuelTokens(_memo.text).hasFuelData);
-    final fuelBaseline = _fuelBaseline(fuelMeta);
+    final baseline = fuelBaseline(fuelMeta, _date);
 
     return SafeArea(
       child: Padding(
@@ -410,177 +327,37 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                 const SizedBox(height: 12),
 
                 // Fuel entry (structured tanking fields)
-                if (_fuelVisible) ...[
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          key: const Key('fuel-odometer'),
-                          controller: _fuelOdometer,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: 'Odometer (km)',
-                            border: const OutlineInputBorder(),
-                            helperText: fuelBaseline != null
-                                ? 'last: ${formatFuelNumber(fuelBaseline)}'
-                                : null,
-                          ),
-                          onChanged: (_) => setState(_syncMemoFromFuelFields),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextFormField(
-                          key: const Key('fuel-liters'),
-                          controller: _fuelLiters,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: InputDecoration(
-                            labelText: 'Liters',
-                            border: const OutlineInputBorder(),
-                            helperText: _fuelLitersWarning,
-                            helperStyle: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                          onChanged: (_) => setState(_syncMemoFromFuelFields),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_fuelInfoLine(fuelBaseline) case (
-                    final message,
-                    final isWarning,
-                  ))
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        message,
-                        key: const Key('fuel-info'),
-                        style: TextStyle(
-                          color: isWarning
-                              ? Theme.of(context).colorScheme.error
-                              : Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  SwitchListTile(
-                    key: const Key('fuel-full'),
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Full tank'),
-                    value: _fuelFullTank,
-                    onChanged: (v) => setState(() {
+                if (_fuelVisible)
+                  FuelEntrySection(
+                    odometer: _fuelOdometer,
+                    liters: _fuelLiters,
+                    fullTank: _fuelFullTank,
+                    baseline: baseline,
+                    onFieldChanged: () => setState(_syncMemoFromFuelFields),
+                    onFullTankChanged: (v) => setState(() {
                       _fuelFullTank = v;
                       _syncMemoFromFuelFields();
                     }),
                   ),
-                  const SizedBox(height: 12),
-                ],
 
                 // Splits (transfers can't be split across categories)
-                if (_type != 'TRANSFER') ...[
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Splits',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add),
-                        tooltip: 'Add split',
-                        onPressed: () => setState(() {
-                          _splits.add(_SplitDraft());
-                          _splitsTouched = true;
-                        }),
-                      ),
-                    ],
+                if (_type != 'TRANSFER')
+                  SplitsEditor(
+                    splits: _splits,
+                    categories: categories
+                        .where((c) => c.type == _type)
+                        .toList(),
+                    validationMessage: _splitsValidationMessage,
+                    onAdd: () => setState(() {
+                      _splits.add(SplitDraft());
+                      _splitsTouched = true;
+                    }),
+                    onRemove: (i) => setState(() {
+                      _splits.removeAt(i).dispose();
+                      _splitsTouched = true;
+                    }),
+                    onChanged: () => setState(() => _splitsTouched = true),
                   ),
-                  for (var i = 0; i < _splits.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: CategoryPickerField(
-                              categories: categories
-                                  .where((c) => c.type == _type)
-                                  .toList(),
-                              selectedId: _splits[i].categoryId,
-                              allowNone: false,
-                              isDense: true,
-                              onChanged: (v) => setState(() {
-                                _splits[i].categoryId = v;
-                                _splitsTouched = true;
-                              }),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            flex: 2,
-                            child: TextFormField(
-                              controller: _splits[i].amount,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: const InputDecoration(
-                                labelText: 'Amount',
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                              validator: (v) {
-                                if (v == null || v.isEmpty) return 'Required';
-                                if (_parseAmount(v) == null) {
-                                  return 'Invalid number';
-                                }
-                                return null;
-                              },
-                              onChanged: (_) =>
-                                  setState(() => _splitsTouched = true),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            flex: 2,
-                            child: TextFormField(
-                              controller: _splits[i].memo,
-                              decoration: const InputDecoration(
-                                labelText: 'Memo',
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                              onChanged: (_) =>
-                                  setState(() => _splitsTouched = true),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            tooltip: 'Remove split',
-                            onPressed: () => setState(() {
-                              _splits.removeAt(i).dispose();
-                              _splitsTouched = true;
-                            }),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (_splitsValidationMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(
-                        _splitsValidationMessage!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 12),
-                ],
 
                 // Payment method
                 DropdownButtonFormField<String>(
@@ -645,8 +422,8 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     if (_splitsValidationMessage != null) return;
 
     if (_fuelVisible &&
-        _parseFuelNum(_fuelOdometer.text) == null &&
-        _parseFuelNum(_fuelLiters.text) == null) {
+        parseFuelInput(_fuelOdometer.text) == null &&
+        parseFuelInput(_fuelLiters.text) == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -674,7 +451,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
               .map(
                 (s) => TransactionSplit(
                   categoryId: s.categoryId,
-                  amount: _parseAmount(s.amount.text) ?? 0,
+                  amount: parseAmountInput(s.amount.text) ?? 0,
                   memo: s.memo.text.isNotEmpty ? s.memo.text : null,
                 ),
               )
