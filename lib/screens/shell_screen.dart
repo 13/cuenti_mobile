@@ -1,5 +1,8 @@
 import 'dart:async';
+
+import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/privacy/privacy_mode.dart';
+import 'package:cuentimobile/core/widgets/offline_banner.dart';
 import 'package:cuentimobile/core/widgets/refresh_all.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:flutter/material.dart';
@@ -67,6 +70,7 @@ class ShellScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final offlineCache = ref.watch(apiClientProvider).offlineCache;
     final auth = ref.watch(authControllerProvider);
     final privacyMode = ref.watch(privacyModeProvider);
 
@@ -205,7 +209,14 @@ class ShellScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: child,
+      body: Column(
+        children: [
+          // In the shell so every screen inherits it: any of them can be
+          // showing replayed figures.
+          if (offlineCache != null) OfflineBanner(stale: offlineCache.stale),
+          Expanded(child: child),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex(context),
         onDestinationSelected: (index) {

@@ -1,13 +1,21 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cuentimobile/core/api/certificate_pins.dart';
+import 'package:cuentimobile/core/api/offline_cache_interceptor.dart';
+import 'package:cuentimobile/core/api/response_cache.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
 class ApiClient {
-  ApiClient(this._storage, {Dio? dioOverride, CertificatePins? pins})
-    : pins = pins ?? CertificatePins(_storage) {
+  ApiClient(
+    this._storage, {
+    Dio? dioOverride,
+    CertificatePins? pins,
+    OfflineCacheInterceptor? offlineCache,
+  }) : pins = pins ?? CertificatePins(_storage),
+       offlineCache = offlineCache {
     if (dioOverride != null) {
       dio = dioOverride;
     } else {
@@ -35,6 +43,11 @@ class ApiClient {
       );
     }
 
+    // Ahead of the auth interceptor so a replayed response does not need a
+    // token attached to it.
+    final cache = offlineCache;
+    if (cache != null) dio.interceptors.add(cache);
+
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -58,6 +71,10 @@ class ApiClient {
 
   /// Self-signed certificates this install has been told to trust.
   final CertificatePins pins;
+
+  /// Replays the last successful GET per endpoint when the server cannot be
+  /// reached. Null until [init] has opened the on-disk cache.
+  OfflineCacheInterceptor? offlineCache;
   late Dio dio;
   String _baseUrl = defaultServerUrl;
 
@@ -65,11 +82,28 @@ class ApiClient {
     // Before any request: the bad-certificate callback is synchronous and
     // can only consult pins already in memory.
     await pins.load();
+    // Deliberately not awaited: opening the cache needs a platform channel,
+    // and a channel that never answers -- an unusual host, a test binding --
+    // would otherwise hang startup behind a convenience. Requests made
+    // before it attaches simply are not cached.
+    if (offlineCache == null) unawaited(_attachOfflineCache());
     final url = await _storage.read(_serverUrlKey);
     if (url != null && url.isNotEmpty) {
       _baseUrl = url;
     }
     dio.options.baseUrl = '$_baseUrl/api';
+  }
+
+  Future<void> _attachOfflineCache() async {
+    try {
+      final interceptor = OfflineCacheInterceptor(await ResponseCache.open());
+      offlineCache = interceptor;
+      dio.interceptors.insert(0, interceptor);
+    } on Exception catch (_) {
+      // No writable support directory, or no platform channels at all. The
+      // app works without a cache; it just cannot show the last known
+      // figures while the server is unreachable.
+    }
   }
 
   String get baseUrl => _baseUrl;
@@ -90,6 +124,9 @@ class ApiClient {
 
   Future<void> clearToken() async {
     await _storage.delete(_tokenKey);
+    // Signing out must not leave the previous account's figures on disk for
+    // the next one to be shown offline.
+    await offlineCache?.cache.clear();
   }
 
   Future<bool> hasToken() async {
