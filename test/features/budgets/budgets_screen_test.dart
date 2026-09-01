@@ -7,6 +7,7 @@ import 'package:cuentimobile/features/budgets/domain/budget_progress.dart';
 import 'package:cuentimobile/features/budgets/ui/budgets_screen.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
+import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -140,7 +141,7 @@ void main() {
   });
 
   testWidgets(
-    'tapping the FAB opens the add-budget sheet with a category dropdown',
+    'tapping the FAB opens the add-budget sheet with a category picker',
     (
       tester,
     ) async {
@@ -150,7 +151,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Add Budget'), findsOneWidget);
-      expect(find.byType(DropdownButtonFormField<int>), findsOneWidget);
+      expect(find.byType(CategoryPickerField), findsOneWidget);
       expect(find.text('Save'), findsOneWidget);
     },
   );

@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
@@ -7,6 +8,7 @@ import 'package:cuentimobile/core/widgets/empty_state.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
+import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -228,21 +230,12 @@ class CategoriesScreen extends ConsumerWidget {
                         setModalState(() => type = v ?? 'EXPENSE'),
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<int?>(
-                    initialValue: parentId,
-                    decoration: const InputDecoration(
-                      labelText: 'Parent Category',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: [
-                      const DropdownMenuItem(
-                        child: Text('None (Top Level)'),
-                      ),
-                      ...parentOptions.map(
-                        (c) =>
-                            DropdownMenuItem(value: c.id, child: Text(c.name)),
-                      ),
-                    ],
+                  CategoryPickerField(
+                    categories: parentOptions,
+                    selectedId: parentId,
+                    labelText: 'Parent Category',
+                    placeholder: 'None (Top Level)',
+                    noneLabel: 'None (Top Level)',
                     onChanged: (v) => setModalState(() => parentId = v),
                   ),
                   const SizedBox(height: 16),

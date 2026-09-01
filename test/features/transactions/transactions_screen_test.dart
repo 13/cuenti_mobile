@@ -2,6 +2,8 @@ import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
+import 'package:cuentimobile/features/categories/domain/category.dart';
+import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
@@ -21,6 +23,8 @@ class MockAccountsRepository extends Mock implements AccountsRepository {}
 class MockCategoriesRepository extends Mock implements CategoriesRepository {}
 
 void main() {
+  setUpAll(() => registerFallbackValue(const TransactionFilter()));
+
   late MockTransactionsRepository txRepo;
   late MockAccountsRepository accountsRepo;
   late MockCategoriesRepository categoriesRepo;
@@ -271,4 +275,69 @@ void main() {
       );
     },
   );
+
+  testWidgets('the category chip filters by a searched category', (
+    tester,
+  ) async {
+    when(() => categoriesRepo.getAll(type: any(named: 'type'))).thenAnswer(
+      (_) async => const [
+        Category(id: 7, name: 'Groceries', fullName: 'Food:Groceries'),
+        Category(id: 8, name: 'Fuel', fullName: 'Transport:Fuel'),
+      ],
+    );
+    when(
+      () => txRepo.getPage(
+        filter: any(named: 'filter'),
+        page: any(named: 'page'),
+        size: any(named: 'size'),
+      ),
+    ).thenAnswer(
+      (_) async => const TransactionPage(
+        content: [],
+        page: 0,
+        size: 50,
+        totalElements: 0,
+        totalPages: 0,
+      ),
+    );
+
+    await pumpScreen(tester);
+
+    await tester.tap(find.widgetWithText(InputChip, 'Category'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(CategorySearchSheet),
+        matching: find.byType(TextField),
+      ),
+      'transport',
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byType(CategorySearchSheet),
+        matching: find.text('Food:Groceries'),
+      ),
+      findsNothing,
+    );
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(CategorySearchSheet),
+        matching: find.text('Transport:Fuel'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final filters = verify(
+      () => txRepo.getPage(
+        filter: captureAny(named: 'filter'),
+        page: any(named: 'page'),
+        size: any(named: 'size'),
+      ),
+    ).captured.cast<TransactionFilter>();
+    expect(filters.last.categoryId, 8);
+  });
 }

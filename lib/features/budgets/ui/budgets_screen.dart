@@ -12,6 +12,7 @@ import 'package:cuentimobile/features/budgets/domain/budget.dart';
 import 'package:cuentimobile/features/budgets/domain/budget_progress.dart';
 import 'package:cuentimobile/features/budgets/ui/budgets_controller.dart';
 import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
+import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -312,19 +313,11 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<int>(
-                initialValue: categoryOptions.any((c) => c.id == _categoryId)
-                    ? _categoryId
-                    : null,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
-                ),
-                items: categoryOptions
-                    .map(
-                      (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
-                    )
-                    .toList(),
+              CategoryPickerField(
+                categories: categoryOptions,
+                selectedId: _categoryId,
+                allowNone: false,
+                placeholder: 'Select a category',
                 onChanged: (v) => setState(() => _categoryId = v),
                 validator: (v) => v == null ? 'Required' : null,
               ),

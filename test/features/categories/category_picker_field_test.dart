@@ -238,4 +238,132 @@ void main() {
     expect(changes, isEmpty);
     expect(find.text('Food:Groceries'), findsOneWidget);
   });
+
+  testWidgets('surfaces a validator error when the form is validated', (
+    tester,
+  ) async {
+    final formKey = GlobalKey<FormState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Form(
+            key: formKey,
+            child: CategoryPickerField(
+              categories: _categories,
+              selectedId: null,
+              onChanged: (_) {},
+              validator: (v) => v == null ? 'Required' : null,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Required'), findsNothing);
+    expect(formKey.currentState!.validate(), isFalse);
+    await tester.pumpAndSettle();
+    expect(find.text('Required'), findsOneWidget);
+  });
+
+  testWidgets('a picked category clears the validation error', (tester) async {
+    final formKey = GlobalKey<FormState>();
+    int? selected;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: StatefulBuilder(
+            builder: (context, setState) => Form(
+              key: formKey,
+              child: CategoryPickerField(
+                categories: _categories,
+                selectedId: selected,
+                onChanged: (v) => setState(() => selected = v),
+                validator: (v) => v == null ? 'Required' : null,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    formKey.currentState!.validate();
+    await tester.pumpAndSettle();
+    expect(find.text('Required'), findsOneWidget);
+
+    await tester.tap(find.byType(CategoryPickerField));
+    await tester.pumpAndSettle();
+    await tester.tap(inSheet('Transport:Fuel'));
+    await tester.pumpAndSettle();
+
+    expect(formKey.currentState!.validate(), isTrue);
+    await tester.pumpAndSettle();
+    expect(find.text('Required'), findsNothing);
+  });
+
+  testWidgets('the none entry can be relabelled for filter-style pickers', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CategoryPickerField(
+            categories: _categories,
+            selectedId: null,
+            onChanged: (_) {},
+            placeholder: 'All',
+            noneLabel: 'All categories',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(CategoryPickerField));
+    await tester.pumpAndSettle();
+
+    expect(inSheet('All categories'), findsOneWidget);
+    expect(inSheet('None'), findsNothing);
+  });
+
+  testWidgets('the sheet shows its title as a header', (tester) async {
+    await pumpPicker(tester);
+    await openSheet(tester);
+
+    expect(inSheet('Category'), findsOneWidget);
+  });
+
+  testWidgets('a trailing builder adds a per-row action', (tester) async {
+    final starred = <int?>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showCategorySearchSheet(
+                context,
+                categories: _categories,
+                allowNone: false,
+                title: 'Fuel category',
+                trailingBuilder: (context, category) => IconButton(
+                  icon: const Icon(Icons.star_border),
+                  onPressed: () => starred.add(category.id),
+                ),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(inSheet('Fuel category'), findsOneWidget);
+    expect(find.byIcon(Icons.star_border), findsNWidgets(_categories.length));
+
+    await tester.tap(find.byIcon(Icons.star_border).first);
+    await tester.pumpAndSettle();
+
+    expect(starred, [1]);
+  });
 }

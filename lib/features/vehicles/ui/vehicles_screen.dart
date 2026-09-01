@@ -8,6 +8,7 @@ import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
+import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/user/data/user_repository.dart';
 import 'package:cuentimobile/features/vehicles/domain/vehicle_report.dart';
 import 'package:cuentimobile/features/vehicles/ui/vehicles_controller.dart';
@@ -183,75 +184,50 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
   }
 
   Future<void> _openCategorySheet(BuildContext context) async {
-    final selected = await showModalBottomSheet<int>(
-      context: context,
-      builder: (ctx) => Consumer(
+    // Await the provider rather than reading its current value: when the
+    // screen is showing the no-category EmptyState nothing else has loaded
+    // the categories yet, and a plain read would open an empty sheet with
+    // no way to pick a fuel category.
+    final expenseCategories = (await ref.read(
+      categoriesControllerProvider.future,
+    )).where((c) => c.type == 'EXPENSE').toList();
+    if (!context.mounted) return;
+    final choice = await showCategorySearchSheet(
+      context,
+      categories: expenseCategories,
+      selectedId: _categoryId,
+      allowNone: false,
+      title: 'Fuel category',
+      trailingBuilder: (ctx, c) => Consumer(
         builder: (ctx, ref, _) {
-          final defaultId = ref
-              .watch(authControllerProvider)
-              .user
-              ?.defaultVehicleCategoryId;
-          // Watch (not a one-shot read before the sheet opens): when the
-          // screen shows the no-category EmptyState nothing else has loaded
-          // the categories provider yet, so a read would return null and the
-          // sheet would render empty with no way to pick a fuel category.
-          final expenseCategories =
-              (ref.watch(categoriesControllerProvider).value ?? [])
-                  .where((c) => c.type == 'EXPENSE')
-                  .toList();
-          // shrinkWrap so a short list yields a short sheet, while a long
-          // list caps at the sheet's max height and scrolls (a plain Column
-          // would overflow and leave lower categories unreachable).
-          return SafeArea(
-            child: ListView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.only(bottom: 8),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Fuel category',
-                      style: Theme.of(ctx).textTheme.titleMedium,
-                    ),
-                  ),
-                ),
-                for (final c in expenseCategories)
-                  ListTile(
-                    title: Text(c.fullName ?? c.name),
-                    onTap: () => Navigator.pop(ctx, c.id),
-                    trailing: IconButton(
-                      icon: Icon(
-                        defaultId == c.id ? Icons.star : Icons.star_border,
-                        color: defaultId == c.id
-                            ? Theme.of(ctx).colorScheme.primary
-                            : null,
-                      ),
-                      tooltip: 'Set as default',
-                      onPressed: () async {
-                        final success = await _setDefaultCategory(
-                          context,
-                          c.id!,
-                        );
-                        // Also select the starred category for the current
-                        // view: close the sheet returning its id so
-                        // _categoryId updates and the EmptyState doesn't
-                        // linger after setting a default. Skip on failure so
-                        // the sheet stays open and the user can retry.
-                        if (success && ctx.mounted) Navigator.pop(ctx, c.id);
-                      },
-                    ),
-                  ),
-              ],
+          final isDefault =
+              ref
+                  .watch(authControllerProvider)
+                  .user
+                  ?.defaultVehicleCategoryId ==
+              c.id;
+          return IconButton(
+            icon: Icon(
+              isDefault ? Icons.star : Icons.star_border,
+              color: isDefault ? Theme.of(ctx).colorScheme.primary : null,
             ),
+            tooltip: 'Set as default',
+            onPressed: () async {
+              final success = await _setDefaultCategory(ctx, c.id!);
+              // Also select the starred category for the current view: close
+              // the sheet returning its id so _categoryId updates and the
+              // EmptyState doesn't linger after setting a default. Skip on
+              // failure so the sheet stays open and the user can retry.
+              if (success && ctx.mounted) {
+                Navigator.pop(ctx, CategoryChoice(c.id));
+              }
+            },
           );
         },
       ),
     );
-    if (selected != null && mounted) {
-      setState(() => _categoryId = selected);
-    }
+    if (choice == null || !mounted) return;
+    setState(() => _categoryId = choice.categoryId);
   }
 
   /// Returns whether the update succeeded, so the caller can decide whether

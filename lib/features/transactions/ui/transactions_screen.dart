@@ -10,6 +10,7 @@ import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
+import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/saved_views/ui/saved_views_sheet.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
@@ -316,19 +317,28 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       label: Text(
         active != null ? (active.fullName ?? active.name) : 'Category',
       ),
-      onPressed: () => _openOptionsSheet<int>(
-        context,
-        title: 'Category',
-        options: [
-          const _ChipOption('All', null),
-          for (final c in categories) _ChipOption(c.fullName ?? c.name, c.id),
-        ],
-        onSelected: (v) =>
-            setState(() => _filter = _filter.copyWith(categoryId: v)),
-      ),
+      // The searchable sheet rather than the generic option list: the
+      // category list is the one filter long enough to need typing.
+      onPressed: () => unawaited(_pickCategory(context, categories)),
       onDeleted: active != null
           ? () => setState(() => _filter = _filter.copyWith(categoryId: null))
           : null,
+    );
+  }
+
+  Future<void> _pickCategory(
+    BuildContext context,
+    List<Category> categories,
+  ) async {
+    final choice = await showCategorySearchSheet(
+      context,
+      categories: categories,
+      selectedId: _filter.categoryId,
+      noneLabel: 'All',
+    );
+    if (choice == null || !mounted) return;
+    setState(
+      () => _filter = _filter.copyWith(categoryId: choice.categoryId),
     );
   }
 

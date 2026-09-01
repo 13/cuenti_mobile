@@ -22,6 +22,13 @@ List<Category> filterCategories(List<Category> categories, String query) {
   }).toList();
 }
 
+/// Builds the trailing widget for one row, letting a caller hang a per-row
+/// action (a "set as default" star, say) off the shared sheet. When given, it
+/// replaces the selected-row check mark, so include one if selection still
+/// needs to read.
+typedef CategoryTrailingBuilder =
+    Widget? Function(BuildContext context, Category category);
+
 /// What the user picked in the sheet. Wrapping the id keeps "picked None"
 /// (`categoryId == null`) distinct from "dismissed the sheet" (no choice).
 class CategoryChoice {
@@ -38,6 +45,8 @@ Future<CategoryChoice?> showCategorySearchSheet(
   int? selectedId,
   bool allowNone = true,
   String title = 'Category',
+  String noneLabel = 'None',
+  CategoryTrailingBuilder? trailingBuilder,
 }) {
   return showModalBottomSheet<CategoryChoice>(
     context: context,
@@ -48,6 +57,8 @@ Future<CategoryChoice?> showCategorySearchSheet(
       selectedId: selectedId,
       allowNone: allowNone,
       title: title,
+      noneLabel: noneLabel,
+      trailingBuilder: trailingBuilder,
     ),
   );
 }
@@ -61,12 +72,16 @@ class CategorySearchSheet extends StatefulWidget {
     required this.allowNone,
     required this.title,
     super.key,
+    this.noneLabel = 'None',
+    this.trailingBuilder,
   });
 
   final List<Category> categories;
   final int? selectedId;
   final bool allowNone;
   final String title;
+  final String noneLabel;
+  final CategoryTrailingBuilder? trailingBuilder;
 
   @override
   State<CategorySearchSheet> createState() => _CategorySearchSheetState();
@@ -97,7 +112,17 @@ class _CategorySearchSheetState extends State<CategorySearchSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  widget.title,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: TextField(
                 controller: _query,
                 autofocus: true,
@@ -126,7 +151,7 @@ class _CategorySearchSheetState extends State<CategorySearchSheet> {
                   // the category stays one tap away mid-search.
                   if (widget.allowNone)
                     ListTile(
-                      title: const Text('None'),
+                      title: Text(widget.noneLabel),
                       trailing: widget.selectedId == null
                           ? const Icon(Icons.check)
                           : null,
@@ -140,9 +165,11 @@ class _CategorySearchSheetState extends State<CategorySearchSheet> {
                   for (final category in matches)
                     ListTile(
                       title: Text(categoryLabel(category)),
-                      trailing: category.id == widget.selectedId
-                          ? const Icon(Icons.check)
-                          : null,
+                      trailing:
+                          widget.trailingBuilder?.call(context, category) ??
+                          (category.id == widget.selectedId
+                              ? const Icon(Icons.check)
+                              : null),
                       onTap: () => _pick(category.id),
                     ),
                 ],
@@ -168,6 +195,8 @@ class CategoryPickerField extends StatelessWidget {
     this.isDense = false,
     this.labelText = 'Category',
     this.placeholder = 'None',
+    this.noneLabel = 'None',
+    this.validator,
   });
 
   final List<Category> categories;
@@ -179,7 +208,17 @@ class CategoryPickerField extends StatelessWidget {
   final bool allowNone;
   final bool isDense;
   final String labelText;
+
+  /// Shown on the field itself when nothing is selected.
   final String placeholder;
+
+  /// Label of the clear-the-selection entry inside the sheet. Filter-style
+  /// pickers want "All", form-style pickers want "None".
+  final String noneLabel;
+
+  /// Optional [FormField] validator, so the picker takes part in an
+  /// enclosing [Form] the way the dropdown it replaces did.
+  final String? Function(int?)? validator;
 
   Category? get _selected {
     for (final category in categories) {
@@ -188,7 +227,10 @@ class CategoryPickerField extends StatelessWidget {
     return null;
   }
 
-  Future<void> _open(BuildContext context) async {
+  Future<void> _open(
+    BuildContext context,
+    FormFieldState<int?> field,
+  ) async {
     final selected = _selected;
     final choice = await showCategorySearchSheet(
       context,
@@ -196,21 +238,35 @@ class CategoryPickerField extends StatelessWidget {
       selectedId: selected?.id,
       allowNone: allowNone,
       title: labelText,
+      noneLabel: noneLabel,
     );
-    if (choice != null) onChanged(choice.categoryId);
+    if (choice == null) return;
+    // Tell the FormField as well as the parent, so an enclosing Form
+    // revalidates against what the user just picked.
+    field.didChange(choice.categoryId);
+    onChanged(choice.categoryId);
   }
 
   @override
   Widget build(BuildContext context) {
+    return FormField<int?>(
+      initialValue: selectedId,
+      validator: validator,
+      builder: (field) => _build(context, field),
+    );
+  }
+
+  Widget _build(BuildContext context, FormFieldState<int?> field) {
     final selected = _selected;
     final theme = Theme.of(context);
     return InkWell(
-      onTap: () => _open(context),
+      onTap: () => _open(context, field),
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: labelText,
           border: const OutlineInputBorder(),
           isDense: isDense,
+          errorText: field.errorText,
         ),
         child: Row(
           children: [
