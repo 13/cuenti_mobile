@@ -1,7 +1,7 @@
+import 'package:cuentimobile/core/api/api_client.dart';
+import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'api_client.dart';
-import '../storage/secure_storage.dart';
 
 final secureStorageProvider = Provider<SecureStorage>((ref) {
   return const SecureStorage();

@@ -1,8 +1,8 @@
+import 'package:cuentimobile/features/saved_views/data/saved_views_repository.dart';
+import 'package:cuentimobile/features/saved_views/domain/saved_view.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_filter_codec.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../transactions/domain/transaction_filter.dart';
-import '../../transactions/domain/transaction_filter_codec.dart';
-import '../data/saved_views_repository.dart';
-import '../domain/saved_view.dart';
 
 part 'saved_views_controller.g.dart';
 

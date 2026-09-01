@@ -1,6 +1,6 @@
+import 'package:cuentimobile/features/payees/data/payees_repository.dart';
+import 'package:cuentimobile/features/payees/domain/payee.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/payees_repository.dart';
-import '../domain/payee.dart';
 
 part 'payees_controller.g.dart';
 

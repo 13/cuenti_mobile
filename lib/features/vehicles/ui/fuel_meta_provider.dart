@@ -1,5 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/vehicles_repository.dart';
+import 'package:cuentimobile/features/vehicles/data/vehicles_repository.dart';
+import 'package:riverpod/src/providers/future_provider.dart';
 
 /// Whether a category holds fuel entries, and the known odometer readings —
 /// derived from the existing /vehicles/report endpoint so the transaction
@@ -19,7 +19,7 @@ class FuelMeta {
   double? get lastOdometer => readings.isEmpty ? null : readings.first.odometer;
 }
 
-final fuelMetaProvider = FutureProvider.family<FuelMeta, int>((
+final FutureProviderFamily<FuelMeta, int> fuelMetaProvider = FutureProvider.family<FuelMeta, int>((
   ref,
   categoryId,
 ) async {
@@ -27,7 +27,7 @@ final fuelMetaProvider = FutureProvider.family<FuelMeta, int>((
   try {
     final report = await repo.getReport(
       categoryId: categoryId,
-      start: DateTime(2000, 1, 1),
+      start: DateTime(2000),
       end: DateTime.now(),
     );
     // The server returns a FuelEntry for every expense in the category,

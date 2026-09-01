@@ -1,13 +1,13 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/widgets/amount_text.dart';
+import 'package:cuentimobile/core/widgets/async_value_widget.dart';
+import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
+import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
+import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/widgets/amount_text.dart';
-import '../../../core/widgets/async_value_widget.dart';
-import '../../../core/widgets/confirm_sheet.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/skeleton_loader.dart';
-import '../domain/scheduled_transaction.dart';
-import 'scheduled_controller.dart';
 
 class ScheduledScreen extends ConsumerWidget {
   const ScheduledScreen({super.key});

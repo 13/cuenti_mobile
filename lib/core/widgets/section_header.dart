@@ -18,7 +18,7 @@ class SectionHeader extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
-        if (trailing != null) trailing!,
+        ?trailing,
       ],
     );
   }

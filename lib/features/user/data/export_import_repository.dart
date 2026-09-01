@@ -1,7 +1,7 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/api/dio_provider.dart';
 
 final exportImportRepositoryProvider = Provider<ExportImportRepository>(
   (ref) => ExportImportRepository(ref.watch(dioProvider)),

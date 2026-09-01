@@ -1,7 +1,7 @@
+import 'package:cuentimobile/features/budgets/data/budgets_repository.dart';
+import 'package:cuentimobile/features/budgets/domain/budget.dart';
+import 'package:cuentimobile/features/budgets/domain/budget_progress.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/budgets_repository.dart';
-import '../domain/budget.dart';
-import '../domain/budget_progress.dart';
 
 part 'budgets_controller.g.dart';
 

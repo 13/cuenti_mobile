@@ -48,9 +48,8 @@ void main() {
 
   test('save posts new scheduled transaction when id is null', () async {
     final scheduled = ScheduledTransaction(
-      type: 'EXPENSE',
       fromAccountId: 1,
-      amount: 50.0,
+      amount: 50,
       payee: 'Test',
       nextOccurrence: DateTime.parse('2026-07-19T00:00:00Z'),
     );
@@ -89,9 +88,8 @@ void main() {
   test('save puts existing scheduled transaction when id is set', () async {
     final scheduled = ScheduledTransaction(
       id: 1,
-      type: 'EXPENSE',
       fromAccountId: 1,
-      amount: 50.0,
+      amount: 50,
       nextOccurrence: DateTime.parse('2026-07-19T00:00:00Z'),
     );
     when(() => dio.put<Map<String, dynamic>>('/scheduled-transactions/1',

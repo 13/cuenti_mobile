@@ -6,8 +6,7 @@ part 'saved_view.g.dart';
 @freezed
 abstract class SavedView with _$SavedView {
   const factory SavedView({
-    int? id,
-    required String name,
+    required String name, int? id,
     String? params,
     DateTime? createdAt,
   }) = _SavedView;

@@ -1,9 +1,9 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/features/vehicles/domain/vehicle_report.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/api/dio_provider.dart';
-import '../domain/vehicle_report.dart';
 
 final vehiclesRepositoryProvider = Provider<VehiclesRepository>(
     (ref) => VehiclesRepository(ref.watch(dioProvider)));

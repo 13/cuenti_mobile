@@ -1,9 +1,8 @@
 import 'package:cuentimobile/core/storage/secure_storage.dart';
+import 'package:cuentimobile/main.dart' as app;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-
-import 'package:cuentimobile/main.dart' as app;
 
 /// On-device E2E: real app, real network (expects `adb reverse tcp:8081`
 /// tunneling to a host backend in the `test` profile with demo/demo123,

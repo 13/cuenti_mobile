@@ -1,6 +1,6 @@
+import 'package:cuentimobile/features/statistics/data/statistics_repository.dart';
+import 'package:cuentimobile/features/statistics/domain/statistics_data.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/statistics_repository.dart';
-import '../domain/statistics_data.dart';
 
 part 'statistics_controller.g.dart';
 

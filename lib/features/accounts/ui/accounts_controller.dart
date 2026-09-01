@@ -1,6 +1,6 @@
+import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
+import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/accounts_repository.dart';
-import '../domain/account.dart';
 
 part 'accounts_controller.g.dart';
 

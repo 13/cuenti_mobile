@@ -1,17 +1,17 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/theme/cuenti_colors.dart';
+import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
+import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
+import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_split.dart';
+import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
+import 'package:cuentimobile/features/vehicles/domain/fuel_memo.dart';
+import 'package:cuentimobile/features/vehicles/ui/fuel_meta_provider.dart';
+import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/theme/cuenti_colors.dart';
-import '../../../utils/number_format.dart';
-import '../../accounts/ui/accounts_controller.dart';
-import '../../categories/ui/categories_controller.dart';
-import '../../categories/ui/category_picker_field.dart';
-import '../../vehicles/domain/fuel_memo.dart';
-import '../../vehicles/ui/fuel_meta_provider.dart';
-import '../domain/transaction.dart';
-import '../domain/transaction_filter.dart';
-import '../domain/transaction_split.dart';
-import 'transactions_controller.dart';
 
 /// Mutable, in-progress row for the splits editor. Backed by
 /// [TextEditingController]s so field widgets keep their own cursor/selection
@@ -32,17 +32,17 @@ class _SplitDraft {
 }
 
 class TransactionDialog extends ConsumerStatefulWidget {
+  const TransactionDialog({
+    super.key,
+    this.transaction,
+    this.filter = const TransactionFilter(),
+  });
   final Transaction? transaction;
 
   /// Filter of the transactions list this dialog was opened from. Saving
   /// goes through the controller instance keyed by this exact filter so
   /// the visible (possibly filtered) list refreshes after save.
   final TransactionFilter filter;
-  const TransactionDialog({
-    super.key,
-    this.transaction,
-    this.filter = const TransactionFilter(),
-  });
 
   @override
   ConsumerState<TransactionDialog> createState() => _TransactionDialogState();

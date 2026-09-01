@@ -1,8 +1,7 @@
 import 'dart:convert';
 
+import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:intl/intl.dart';
-
-import 'transaction_filter.dart';
 
 /// Serializes TransactionFilter into the opaque `params` string stored by
 /// the saved-views API. Versioned envelope: {"v":1,"accountId":…,…}.

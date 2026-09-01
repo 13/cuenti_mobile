@@ -1,7 +1,7 @@
+import 'package:cuentimobile/core/privacy/privacy_mode.dart';
+import 'package:cuentimobile/core/widgets/privacy_blur.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../privacy/privacy_mode.dart';
-import 'privacy_blur.dart';
 
 /// Small icon + label + value chip used for compact stats within cards.
 /// When [maskable] is true, the value is blurred via [PrivacyBlur] (and

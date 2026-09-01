@@ -7,9 +7,8 @@ part 'audit_entry.g.dart';
 abstract class AuditEntry with _$AuditEntry {
   const factory AuditEntry({
     required int id,
-    int? userId,
+    required DateTime timestamp, int? userId,
     String? username,
-    required DateTime timestamp,
     String? entityType,
     int? entityId,
     String? action, // CREATE | UPDATE | DELETE

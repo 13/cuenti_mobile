@@ -1,6 +1,6 @@
+import 'package:cuentimobile/features/vehicles/data/vehicles_repository.dart';
+import 'package:cuentimobile/features/vehicles/domain/vehicle_report.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/vehicles_repository.dart';
-import '../domain/vehicle_report.dart';
 
 part 'vehicles_controller.g.dart';
 

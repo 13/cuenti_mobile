@@ -1,10 +1,10 @@
+import 'package:cuentimobile/core/theme/app_theme.dart';
+import 'package:cuentimobile/features/auth/ui/app_lock_observer.dart';
+import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'core/theme/app_theme.dart';
-import 'features/auth/ui/app_lock_observer.dart';
-import 'features/auth/ui/auth_controller.dart';
-import 'router.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,7 +46,7 @@ class _CuentiAppState extends ConsumerState<CuentiApp> {
   Widget build(BuildContext context) {
     // Any auth state change (login/logout/session restore) must re-trigger
     // GoRouter's redirect logic.
-    ref.listen(authControllerProvider, (_, __) => _refreshNotifier.refresh());
+    ref.listen(authControllerProvider, (_, _) => _refreshNotifier.refresh());
     final auth = ref.watch(authControllerProvider);
 
     return MaterialApp.router(

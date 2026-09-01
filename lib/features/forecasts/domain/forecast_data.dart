@@ -1,5 +1,5 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:cuentimobile/features/json_converters.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'forecast_data.freezed.dart';
 part 'forecast_data.g.dart';

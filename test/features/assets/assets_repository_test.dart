@@ -65,7 +65,7 @@ void main() {
   });
 
   test('save posts new asset when id is null', () async {
-    const asset = Asset(symbol: 'AAPL', name: 'Apple Inc', type: 'STOCK', currency: 'USD');
+    const asset = Asset(symbol: 'AAPL', name: 'Apple Inc', currency: 'USD');
     when(() => dio.post<Map<String, dynamic>>('/assets', data: any(named: 'data')))
         .thenAnswer((_) async => ok({
           'id': 5,
@@ -92,7 +92,7 @@ void main() {
   });
 
   test('save puts existing asset when id is set', () async {
-    const asset = Asset(id: 1, symbol: 'AAPL', name: 'Apple Inc', type: 'STOCK');
+    const asset = Asset(id: 1, symbol: 'AAPL', name: 'Apple Inc');
     when(() => dio.put<Map<String, dynamic>>('/assets/1', data: any(named: 'data')))
         .thenAnswer((_) async =>
             ok({'id': 1, 'symbol': 'AAPL', 'name': 'Apple Inc', 'type': 'STOCK'}));

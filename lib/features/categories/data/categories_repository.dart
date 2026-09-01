@@ -1,8 +1,8 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/api/dio_provider.dart';
-import '../domain/category.dart';
 
 final categoriesRepositoryProvider = Provider<CategoriesRepository>(
     (ref) => CategoriesRepository(ref.watch(dioProvider)));

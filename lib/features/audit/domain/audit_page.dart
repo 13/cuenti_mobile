@@ -1,5 +1,5 @@
+import 'package:cuentimobile/features/audit/domain/audit_entry.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'audit_entry.dart';
 
 part 'audit_page.freezed.dart';
 part 'audit_page.g.dart';

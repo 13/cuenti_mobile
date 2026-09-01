@@ -1,12 +1,12 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/widgets/async_value_widget.dart';
+import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
+import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/features/payees/domain/payee.dart';
+import 'package:cuentimobile/features/payees/ui/payees_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/widgets/async_value_widget.dart';
-import '../../../core/widgets/confirm_sheet.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/skeleton_loader.dart';
-import '../domain/payee.dart';
-import 'payees_controller.dart';
 
 // Constants for payment methods
 const kPaymentMethods = ['CASH', 'CARD', 'BANK_TRANSFER', 'CHECK', 'NONE'];
@@ -172,9 +172,9 @@ class PayeesScreen extends ConsumerWidget {
   void _showEditDialog(BuildContext context, WidgetRef ref, Payee? payee) {
     final name = TextEditingController(text: payee?.name ?? '');
     final notes = TextEditingController(text: payee?.notes ?? '');
-    int? categoryId = payee?.defaultCategoryId;
-    String paymentMethod = payee?.defaultPaymentMethod ?? 'NONE';
-    bool saving = false;
+    var categoryId = payee?.defaultCategoryId;
+    var paymentMethod = payee?.defaultPaymentMethod ?? 'NONE';
+    var saving = false;
 
     showModalBottomSheet<void>(
       context: context,
@@ -221,7 +221,7 @@ class PayeesScreen extends ConsumerWidget {
                     border: OutlineInputBorder(),
                   ),
                   items: const [
-                    DropdownMenuItem(value: null, child: Text('None')),
+                    DropdownMenuItem(child: Text('None')),
                   ],
                   onChanged: (v) => setModalState(() => categoryId = v),
                 ),

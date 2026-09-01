@@ -35,7 +35,7 @@ void main() {
             }));
 
     final page = await repo.getPage(
-        filter: const TransactionFilter(accountId: 3), page: 0, size: 50);
+        filter: const TransactionFilter(accountId: 3));
 
     expect(page.content, hasLength(1));
     expect(page.content[0].id, 1);
@@ -63,7 +63,7 @@ void main() {
               },
             ]));
 
-    final page = await repo.getPage(page: 0, size: 50);
+    final page = await repo.getPage();
 
     expect(page.content, hasLength(2));
     expect(page.content[0].id, 1);
@@ -81,7 +81,7 @@ void main() {
         .thenAnswer((_) async => ok<dynamic>('not json'));
 
     expect(
-      () => repo.getPage(page: 0, size: 50),
+      () => repo.getPage(),
       throwsA(isA<ServerException>()),
     );
   });
@@ -96,7 +96,7 @@ void main() {
           'totalPages': 0,
         }));
 
-    final page = await repo.getPage(page: 0, size: 50);
+    final page = await repo.getPage();
 
     expect(page.content, isEmpty);
     verify(() => dio.get<dynamic>('/transactions',
@@ -126,12 +126,10 @@ void main() {
           accountId: 3,
           type: 'EXPENSE',
           categoryId: 7,
-          start: DateTime(2026, 2, 1),
+          start: DateTime(2026, 2),
           end: DateTime(2026, 2, 28),
           search: 'coffee',
-        ),
-        page: 0,
-        size: 50);
+        ));
 
     expect(page.content, isEmpty);
     verify(() => dio.get<dynamic>('/transactions', queryParameters: {
@@ -157,7 +155,7 @@ void main() {
         }));
 
     await repo.getPage(
-        filter: const TransactionFilter(search: ''), page: 0, size: 50);
+        filter: const TransactionFilter(search: ''));
 
     verify(() => dio.get<dynamic>('/transactions',
         queryParameters: {'page': 0, 'size': 50})).called(1);
@@ -172,7 +170,7 @@ void main() {
       assetName: 'BTC',
       status: 'CLEARED',
       amount: 10,
-      transactionDate: DateTime(2026, 1, 1),
+      transactionDate: DateTime(2026),
     );
 
     when(() => dio.post<Map<String, dynamic>>('/transactions',
@@ -207,7 +205,7 @@ void main() {
       fromAccountId: 1,
       amount: 10,
       paymentMethod: 'CASH',
-      transactionDate: DateTime(2026, 1, 1),
+      transactionDate: DateTime(2026),
     );
 
     when(() => dio.put<Map<String, dynamic>>('/transactions/7',

@@ -1,6 +1,6 @@
+import 'package:cuentimobile/features/categories/data/categories_repository.dart';
+import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/categories_repository.dart';
-import '../domain/category.dart';
 
 part 'categories_controller.g.dart';
 

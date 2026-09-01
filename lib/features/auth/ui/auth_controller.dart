@@ -1,10 +1,10 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/core/storage/secure_storage.dart';
+import 'package:cuentimobile/features/auth/data/auth_repository.dart';
+import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/api/dio_provider.dart';
-import '../../../core/storage/secure_storage.dart';
-import '../../user/domain/user_profile.dart';
-import '../data/auth_repository.dart';
 
 part 'auth_controller.freezed.dart';
 part 'auth_controller.g.dart';

@@ -1,9 +1,9 @@
+import 'package:cuentimobile/core/privacy/privacy_mode.dart';
+import 'package:cuentimobile/core/theme/cuenti_colors.dart';
+import 'package:cuentimobile/core/widgets/privacy_blur.dart';
+import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../theme/cuenti_colors.dart';
-import '../../utils/number_format.dart';
-import '../privacy/privacy_mode.dart';
-import 'privacy_blur.dart';
 
 /// Renders a monetary amount with tabular figures and, optionally, a
 /// semantic color + sign based on the transaction [type]

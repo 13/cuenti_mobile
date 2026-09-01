@@ -38,7 +38,7 @@ void main() {
           'totalPages': 1,
         }));
 
-    final page = await repo.getPage(page: 0, size: 50, filter: 'admin');
+    final page = await repo.getPage(filter: 'admin');
 
     expect(page.content, hasLength(1));
     expect(page.content[0].id, 1);
@@ -59,7 +59,7 @@ void main() {
       'totalPages': 0,
     }));
 
-    await repo.getPage(page: 0, size: 50, filter: null);
+    await repo.getPage();
 
     final captured = verify(() => dio.get<Map<String, dynamic>>('/audit-log',
         queryParameters:
@@ -80,7 +80,7 @@ void main() {
       'totalPages': 0,
     }));
 
-    await repo.getPage(page: 0, size: 50, filter: '');
+    await repo.getPage(filter: '');
 
     final captured = verify(() => dio.get<Map<String, dynamic>>('/audit-log',
         queryParameters:

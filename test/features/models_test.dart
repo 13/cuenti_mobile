@@ -1,7 +1,7 @@
 import 'package:cuentimobile/features/accounts/domain/account.dart';
+import 'package:cuentimobile/features/statistics/domain/statistics_data.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
-import 'package:cuentimobile/features/statistics/domain/statistics_data.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:flutter_test/flutter_test.dart';
 

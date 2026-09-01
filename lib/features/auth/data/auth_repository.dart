@@ -1,9 +1,9 @@
+import 'package:cuentimobile/core/api/api_client.dart';
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_client.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/api/dio_provider.dart';
-import '../../user/domain/user_profile.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => AuthRepository(ref.watch(apiClientProvider)),
@@ -23,7 +23,7 @@ class AuthRepository {
         'password': password,
       });
       return await _saveTokenAndBuildProfile(
-          response.data as Map<String, dynamic>);
+          response.data!);
     } on DioException catch (e) {
       final mapped = ApiException.fromDio(e);
       // Parity with the old AuthProvider: a 401 on the login endpoint means
@@ -54,7 +54,7 @@ class AuthRepository {
         'lastName': lastName,
       });
       return await _saveTokenAndBuildProfile(
-          response.data as Map<String, dynamic>);
+          response.data!);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
@@ -64,7 +64,7 @@ class AuthRepository {
     try {
       final response =
           await _client.dio.get<Map<String, dynamic>>('/user/profile');
-      return UserProfile.fromJson(response.data as Map<String, dynamic>);
+      return UserProfile.fromJson(response.data!);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }

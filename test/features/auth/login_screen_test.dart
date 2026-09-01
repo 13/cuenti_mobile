@@ -67,11 +67,11 @@ void main() {
       routes: [
         GoRoute(
           path: '/login',
-          builder: (_, __) => LoginScreen(authenticator: authenticator),
+          builder: (_, _) => LoginScreen(authenticator: authenticator),
         ),
         GoRoute(
           path: '/dashboard',
-          builder: (_, __) => const Scaffold(body: Text('Dashboard')),
+          builder: (_, _) => const Scaffold(body: Text('Dashboard')),
         ),
       ],
     );

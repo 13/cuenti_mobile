@@ -52,7 +52,7 @@ void main() {
   });
 
   test('save posts new budget when id is null with explicit payload', () async {
-    const budget = Budget(categoryId: 2, monthlyLimit: 300, active: true);
+    const budget = Budget(categoryId: 2, monthlyLimit: 300);
     when(() => dio.post<Map<String, dynamic>>('/budgets',
             data: any(named: 'data')))
         .thenAnswer((_) async => ok({
@@ -79,7 +79,7 @@ void main() {
 
   test('save puts existing budget when id is set', () async {
     const budget =
-        Budget(id: 4, categoryId: 2, monthlyLimit: 300, active: true);
+        Budget(id: 4, categoryId: 2, monthlyLimit: 300);
     when(() => dio.put<Map<String, dynamic>>('/budgets/4',
             data: any(named: 'data')))
         .thenAnswer((_) async => ok({
@@ -116,7 +116,7 @@ void main() {
   });
 
   test('save maps 400 duplicate category to ValidationException', () async {
-    const budget = Budget(categoryId: 2, monthlyLimit: 300, active: true);
+    const budget = Budget(categoryId: 2, monthlyLimit: 300);
     when(() => dio.post<Map<String, dynamic>>('/budgets',
         data: any(named: 'data'))).thenThrow(
       DioException(

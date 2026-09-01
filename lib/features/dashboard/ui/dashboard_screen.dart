@@ -1,18 +1,18 @@
+import 'package:cuentimobile/core/theme/cuenti_colors.dart';
+import 'package:cuentimobile/core/widgets/amount_text.dart';
+import 'package:cuentimobile/core/widgets/async_value_widget.dart';
+import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/hero_card.dart';
+import 'package:cuentimobile/core/widgets/section_header.dart';
+import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/core/widgets/stat_chip.dart';
+import 'package:cuentimobile/features/accounts/domain/account.dart';
+import 'package:cuentimobile/features/dashboard/domain/asset_performance.dart';
+import 'package:cuentimobile/features/dashboard/domain/dashboard_data.dart';
+import 'package:cuentimobile/features/dashboard/ui/dashboard_controller.dart';
+import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/theme/cuenti_colors.dart';
-import '../../../core/widgets/amount_text.dart';
-import '../../../core/widgets/async_value_widget.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/hero_card.dart';
-import '../../../core/widgets/section_header.dart';
-import '../../../core/widgets/skeleton_loader.dart';
-import '../../../core/widgets/stat_chip.dart';
-import '../../../utils/number_format.dart';
-import '../../accounts/domain/account.dart';
-import '../domain/asset_performance.dart';
-import '../domain/dashboard_data.dart';
-import 'dashboard_controller.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -31,11 +31,11 @@ class DashboardScreen extends ConsumerWidget {
         skeleton: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            SkeletonLoader.card(height: 160),
+            SkeletonLoader.card(),
             const SizedBox(height: 24),
-            SkeletonLoader.tiles(items: 3, height: 120),
+            SkeletonLoader.tiles(height: 120),
             const SizedBox(height: 24),
-            SkeletonLoader.tiles(items: 2, height: 72),
+            SkeletonLoader.tiles(items: 2),
           ],
         ),
         data: (dashboard) {
@@ -134,7 +134,7 @@ class DashboardScreen extends ConsumerWidget {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: accounts.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
                     itemBuilder: (_, idx) =>
                         _AccountCard(account: accounts[idx]),
                   ),
@@ -174,9 +174,9 @@ class DashboardScreen extends ConsumerWidget {
 }
 
 class _AccountCard extends StatelessWidget {
-  final Account account;
 
   const _AccountCard({required this.account});
+  final Account account;
 
   @override
   Widget build(BuildContext context) {
@@ -219,10 +219,10 @@ class _AccountCard extends StatelessWidget {
 }
 
 class _AssetTile extends StatelessWidget {
-  final AssetPerformance asset;
-  final String currency;
 
   const _AssetTile({required this.asset, required this.currency});
+  final AssetPerformance asset;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {

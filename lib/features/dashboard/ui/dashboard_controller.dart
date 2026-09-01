@@ -1,6 +1,6 @@
+import 'package:cuentimobile/features/dashboard/data/dashboard_repository.dart';
+import 'package:cuentimobile/features/dashboard/domain/dashboard_data.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/dashboard_repository.dart';
-import '../domain/dashboard_data.dart';
 
 part 'dashboard_controller.g.dart';
 

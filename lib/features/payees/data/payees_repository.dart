@@ -1,8 +1,8 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/features/payees/domain/payee.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/api/dio_provider.dart';
-import '../domain/payee.dart';
 
 final payeesRepositoryProvider = Provider<PayeesRepository>(
     (ref) => PayeesRepository(ref.watch(dioProvider)));

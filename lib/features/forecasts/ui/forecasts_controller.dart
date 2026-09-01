@@ -1,6 +1,6 @@
+import 'package:cuentimobile/features/forecasts/data/forecasts_repository.dart';
+import 'package:cuentimobile/features/forecasts/domain/forecast_data.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/forecasts_repository.dart';
-import '../domain/forecast_data.dart';
 
 part 'forecasts_controller.g.dart';
 

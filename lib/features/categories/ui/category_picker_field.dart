@@ -1,5 +1,5 @@
+import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:flutter/material.dart';
-import '../domain/category.dart';
 
 /// The path a category is shown and searched by: the full `Parent:Child`
 /// path when the backend supplied one, the bare name otherwise.
@@ -56,11 +56,7 @@ Future<CategoryChoice?> showCategorySearchSheet(
 /// [CategoryChoice] as soon as the user taps an entry.
 class CategorySearchSheet extends StatefulWidget {
   const CategorySearchSheet({
-    super.key,
-    required this.categories,
-    required this.selectedId,
-    required this.allowNone,
-    required this.title,
+    required this.categories, required this.selectedId, required this.allowNone, required this.title, super.key,
   });
 
   final List<Category> categories;
@@ -160,10 +156,7 @@ class _CategorySearchSheetState extends State<CategorySearchSheet> {
 /// a dismissed sheet reports nothing.
 class CategoryPickerField extends StatelessWidget {
   const CategoryPickerField({
-    super.key,
-    required this.categories,
-    required this.selectedId,
-    required this.onChanged,
+    required this.categories, required this.selectedId, required this.onChanged, super.key,
     this.allowNone = true,
     this.isDense = false,
     this.labelText = 'Category',

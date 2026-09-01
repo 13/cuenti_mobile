@@ -1,7 +1,7 @@
+import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
-import 'auth_controller.dart';
 
 /// Wraps [child] with the biometric app-lock behaviour that used to live in
 /// `_CuentiAppState` (main.dart): when the app is paused/hidden while a
@@ -11,7 +11,7 @@ import 'auth_controller.dart';
 /// never went through a pause/resume cycle, so without this it would start
 /// unlocked.
 class AppLockObserver extends ConsumerStatefulWidget {
-  const AppLockObserver({super.key, required this.child, this.authenticator});
+  const AppLockObserver({required this.child, super.key, this.authenticator});
 
   final Widget child;
 
@@ -117,8 +117,8 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
 }
 
 class _LockScreen extends StatelessWidget {
-  final VoidCallback onUnlock;
   const _LockScreen({required this.onUnlock});
+  final VoidCallback onUnlock;
 
   @override
   Widget build(BuildContext context) {

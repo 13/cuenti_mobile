@@ -1,15 +1,14 @@
 import 'dart:io';
 
+import 'package:cuentimobile/features/app_update/data/app_update_repository.dart';
+import 'package:cuentimobile/features/app_update/domain/app_release.dart';
+import 'package:cuentimobile/features/app_update/domain/version_compare.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
-
-import '../data/app_update_repository.dart';
-import '../domain/app_release.dart';
-import '../domain/version_compare.dart';
 
 /// Injectable seams so widget tests can avoid platform channels.
 final supportedAbisProvider = FutureProvider<List<String>>((ref) async {

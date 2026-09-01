@@ -1,5 +1,5 @@
+import 'package:cuentimobile/features/json_converters.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../json_converters.dart';
 
 part 'budget_progress.freezed.dart';
 part 'budget_progress.g.dart';

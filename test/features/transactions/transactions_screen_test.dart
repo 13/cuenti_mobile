@@ -67,7 +67,7 @@ void main() {
   ) async {
     when(
       () =>
-          txRepo.getPage(filter: const TransactionFilter(), page: 0, size: 50),
+          txRepo.getPage(),
     ).thenAnswer(
       (_) async => TransactionPage(
         content: List.generate(50, (i) => tx(i + 1)),
@@ -79,7 +79,7 @@ void main() {
     );
     when(
       () =>
-          txRepo.getPage(filter: const TransactionFilter(), page: 1, size: 50),
+          txRepo.getPage(page: 1),
     ).thenAnswer(
       (_) async => TransactionPage(
         content: List.generate(10, (i) => tx(51 + i)),
@@ -99,7 +99,7 @@ void main() {
 
     verify(
       () =>
-          txRepo.getPage(filter: const TransactionFilter(), page: 1, size: 50),
+          txRepo.getPage(page: 1),
     ).called(1);
   });
 
@@ -108,7 +108,7 @@ void main() {
     final dayTwo = DateTime(2020, 3, 6);
     when(
       () =>
-          txRepo.getPage(filter: const TransactionFilter(), page: 0, size: 50),
+          txRepo.getPage(),
     ).thenAnswer(
       (_) async => TransactionPage(
         content: [
@@ -135,7 +135,7 @@ void main() {
       'search filter', (tester) async {
     when(
       () =>
-          txRepo.getPage(filter: const TransactionFilter(), page: 0, size: 50),
+          txRepo.getPage(),
     ).thenAnswer(
       (_) async => TransactionPage(
         content: [tx(1)],
@@ -148,8 +148,6 @@ void main() {
     when(
       () => txRepo.getPage(
         filter: const TransactionFilter(search: 'coffee'),
-        page: 0,
-        size: 50,
       ),
     ).thenAnswer(
       (_) async => TransactionPage(
@@ -168,8 +166,6 @@ void main() {
     verifyNever(
       () => txRepo.getPage(
         filter: const TransactionFilter(search: 'coffee'),
-        page: 0,
-        size: 50,
       ),
     );
 
@@ -179,8 +175,6 @@ void main() {
     verify(
       () => txRepo.getPage(
         filter: const TransactionFilter(search: 'coffee'),
-        page: 0,
-        size: 50,
       ),
     ).called(1);
   });
@@ -190,7 +184,7 @@ void main() {
     var content = [tx(1)];
     when(
       () =>
-          txRepo.getPage(filter: const TransactionFilter(), page: 0, size: 50),
+          txRepo.getPage(),
     ).thenAnswer(
       (_) async => TransactionPage(
         content: content,
@@ -221,9 +215,7 @@ void main() {
     (tester) async {
       when(
         () => txRepo.getPage(
-          filter: const TransactionFilter(),
-          page: 0,
-          size: 50,
+          
         ),
       ).thenAnswer(
         (_) async => const TransactionPage(
@@ -251,9 +243,7 @@ void main() {
     (tester) async {
       when(
         () => txRepo.getPage(
-          filter: const TransactionFilter(),
-          page: 0,
-          size: 50,
+          
         ),
       ).thenAnswer(
         (_) async => TransactionPage(
@@ -267,8 +257,6 @@ void main() {
       when(
         () => txRepo.getPage(
           filter: const TransactionFilter(search: 'coffee'),
-          page: 0,
-          size: 50,
         ),
       ).thenAnswer(
         (_) async => const TransactionPage(

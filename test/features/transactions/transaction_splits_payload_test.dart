@@ -22,7 +22,7 @@ void main() {
       () async {
     final tx = Transaction(
       amount: 30,
-      transactionDate: DateTime(2026, 1, 1),
+      transactionDate: DateTime(2026),
       splits: const [
         TransactionSplit(categoryId: 1, amount: 10),
         TransactionSplit(categoryId: 2, amount: 20),
@@ -52,7 +52,7 @@ void main() {
       () async {
     final tx = Transaction(
       amount: 30,
-      transactionDate: DateTime(2026, 1, 1),
+      transactionDate: DateTime(2026),
       splits: const [
         TransactionSplit(categoryId: 1, amount: 10, memo: 'coffee'),
         TransactionSplit(categoryId: 2, amount: 20),
@@ -85,7 +85,7 @@ void main() {
       () async {
     final tx = Transaction(
       amount: 30,
-      transactionDate: DateTime(2026, 1, 1),
+      transactionDate: DateTime(2026),
     );
 
     when(() => dio.post<Map<String, dynamic>>('/transactions',

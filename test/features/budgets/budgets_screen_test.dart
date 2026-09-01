@@ -42,7 +42,6 @@ void main() {
     categoryId: 12,
     categoryName: 'Travel',
     monthlyLimit: 500,
-    spent: 0,
     remaining: 500,
     active: false,
   );
@@ -56,10 +55,10 @@ void main() {
     );
     when(() => categoriesRepo.getAll()).thenAnswer(
       (_) async => const [
-        Category(id: 10, name: 'Groceries', type: 'EXPENSE'),
-        Category(id: 11, name: 'Fun', type: 'EXPENSE'),
-        Category(id: 12, name: 'Travel', type: 'EXPENSE'),
-        Category(id: 13, name: 'Health', type: 'EXPENSE'),
+        Category(id: 10, name: 'Groceries'),
+        Category(id: 11, name: 'Fun'),
+        Category(id: 12, name: 'Travel'),
+        Category(id: 13, name: 'Health'),
       ],
     );
   });

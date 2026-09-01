@@ -1,22 +1,22 @@
 import 'dart:io';
 
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
+import 'package:cuentimobile/core/widgets/refresh_all.dart';
+import 'package:cuentimobile/core/widgets/section_header.dart';
+import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/currencies/domain/currency.dart';
+import 'package:cuentimobile/features/currencies/ui/currencies_controller.dart';
+import 'package:cuentimobile/features/user/data/export_import_repository.dart';
+import 'package:cuentimobile/features/user/data/user_repository.dart';
+import 'package:cuentimobile/features/user/domain/user_profile.dart';
+import 'package:cuentimobile/features/user/ui/user_controller.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/widgets/confirm_sheet.dart';
-import '../../../core/widgets/refresh_all.dart';
-import '../../../core/widgets/section_header.dart';
-import '../../auth/ui/auth_controller.dart';
-import '../../currencies/domain/currency.dart';
-import '../../currencies/ui/currencies_controller.dart';
-import '../data/export_import_repository.dart';
-import '../data/user_repository.dart';
-import '../domain/user_profile.dart';
-import 'user_controller.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -128,7 +128,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     'Require fingerprint/face to reopen or sign in',
                   ),
                   value: authState.biometricEnabled,
-                  onChanged: (v) => auth.setBiometricEnabled(v),
+                  onChanged: auth.setBiometricEnabled,
                 ),
                 const SizedBox(height: 8),
                 FilledButton.tonal(
@@ -546,7 +546,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _importData(BuildContext context) async {
     final file = await openFile(
       acceptedTypeGroups: [
-        XTypeGroup(label: 'JSON', extensions: ['json']),
+        const XTypeGroup(label: 'JSON', extensions: ['json']),
       ],
     );
     if (file == null) return;

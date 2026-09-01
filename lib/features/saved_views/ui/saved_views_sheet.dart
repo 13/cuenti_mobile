@@ -1,14 +1,14 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/widgets/async_value_widget.dart';
+import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
+import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/features/saved_views/domain/saved_view.dart';
+import 'package:cuentimobile/features/saved_views/ui/saved_views_controller.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_filter_codec.dart';
+import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/widgets/async_value_widget.dart';
-import '../../../core/widgets/confirm_sheet.dart';
-import '../../../core/widgets/skeleton_loader.dart';
-import '../../transactions/domain/transaction_filter.dart';
-import '../../transactions/domain/transaction_filter_codec.dart';
-import '../../transactions/ui/transactions_controller.dart';
-import '../domain/saved_view.dart';
-import 'saved_views_controller.dart';
 
 /// Shows a bottom sheet listing saved transaction filters. Views whose
 /// `params` were written by this app decode cleanly and can be applied or
@@ -60,7 +60,7 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
               ),
               child: AsyncValueWidget<List<SavedView>>(
                 value: viewsAsync,
-                skeleton: SkeletonLoader.tiles(items: 3, height: 56),
+                skeleton: SkeletonLoader.tiles(height: 56),
                 data: (views) {
                   if (views.isEmpty) {
                     return const Padding(
@@ -129,7 +129,7 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
 
   Future<void> _promptSave(BuildContext context) async {
     final nameController = TextEditingController();
-    bool saving = false;
+    var saving = false;
 
     await showModalBottomSheet<void>(
       context: context,

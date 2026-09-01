@@ -1,21 +1,21 @@
-import 'package:flutter/material.dart';
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/theme/cuenti_colors.dart';
+import 'package:cuentimobile/core/widgets/amount_text.dart';
+import 'package:cuentimobile/core/widgets/async_value_widget.dart';
+import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/section_header.dart';
+import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/categories/domain/category.dart';
+import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
+import 'package:cuentimobile/features/user/data/user_repository.dart';
+import 'package:cuentimobile/features/vehicles/domain/vehicle_report.dart';
+import 'package:cuentimobile/features/vehicles/ui/vehicles_controller.dart';
+import 'package:cuentimobile/utils/number_format.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/theme/cuenti_colors.dart';
-import '../../../core/widgets/amount_text.dart';
-import '../../../core/widgets/async_value_widget.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/section_header.dart';
-import '../../../core/widgets/skeleton_loader.dart';
-import '../../../utils/number_format.dart';
-import '../../auth/ui/auth_controller.dart';
-import '../../categories/domain/category.dart';
-import '../../categories/ui/categories_controller.dart';
-import '../../user/data/user_repository.dart';
-import '../domain/vehicle_report.dart';
-import 'vehicles_controller.dart';
 
 class VehiclesScreen extends ConsumerStatefulWidget {
   const VehiclesScreen({super.key});
@@ -37,13 +37,13 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
         .user
         ?.defaultVehicleCategoryId;
     final now = DateTime.now();
-    _start = DateTime(now.year, 1, 1);
+    _start = DateTime(now.year);
     _end = DateTime(now.year, 12, 31);
   }
 
   bool get _isThisYear {
     final now = DateTime.now();
-    return _start == DateTime(now.year, 1, 1) &&
+    return _start == DateTime(now.year) &&
         _end == DateTime(now.year, 12, 31);
   }
 
@@ -137,7 +137,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
               if (!v) return;
               final now = DateTime.now();
               setState(() {
-                _start = DateTime(now.year, 1, 1);
+                _start = DateTime(now.year);
                 _end = DateTime(now.year, 12, 31);
               });
             },
@@ -283,8 +283,8 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
 }
 
 class _StatCardsRow extends StatelessWidget {
-  final VehicleReport report;
   const _StatCardsRow({required this.report});
+  final VehicleReport report;
 
   @override
   Widget build(BuildContext context) {
@@ -346,9 +346,9 @@ class _StatCardsRow extends StatelessWidget {
 }
 
 class _StatCard extends StatelessWidget {
+  const _StatCard({required this.label, required this.valueWidget});
   final String label;
   final Widget valueWidget;
-  const _StatCard({required this.label, required this.valueWidget});
 
   @override
   Widget build(BuildContext context) {
@@ -372,8 +372,8 @@ class _StatCard extends StatelessWidget {
 }
 
 class _ConsumptionChart extends StatelessWidget {
-  final List<FuelEntry> entries;
   const _ConsumptionChart({required this.entries});
+  final List<FuelEntry> entries;
 
   @override
   Widget build(BuildContext context) {
@@ -406,7 +406,6 @@ class _ConsumptionChart extends StatelessWidget {
       child: LineChart(
         LineChartData(
           gridData: FlGridData(
-            show: true,
             drawVerticalLine: false,
             getDrawingHorizontalLine: (_) =>
                 FlLine(color: gridColor, strokeWidth: 1),
@@ -431,20 +430,20 @@ class _ConsumptionChart extends StatelessWidget {
               ),
             ),
             leftTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
+              
             ),
             topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
+              
             ),
             rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
+              
             ),
           ),
           borderData: FlBorderData(show: false),
           lineTouchData: LineTouchData(
             getTouchedSpotIndicator: (barData, indexes) => indexes.map((i) {
               return TouchedSpotIndicatorData(
-                FlLine(color: lineColor, strokeWidth: 2),
+                FlLine(color: lineColor),
                 FlDotData(
                   getDotPainter: (spot, percent, bar, idx) =>
                       FlDotCirclePainter(
@@ -472,7 +471,6 @@ class _ConsumptionChart extends StatelessWidget {
             LineChartBarData(
               spots: spots,
               isCurved: true,
-              curveSmoothness: 0.35,
               color: lineColor,
               barWidth: 3,
               isStrokeCapRound: true,
@@ -497,9 +495,9 @@ class _ConsumptionChart extends StatelessWidget {
 }
 
 class _EntriesList extends StatelessWidget {
+  const _EntriesList({required this.entries, required this.currency});
   final List<FuelEntry> entries;
   final String currency;
-  const _EntriesList({required this.entries, required this.currency});
 
   @override
   Widget build(BuildContext context) {

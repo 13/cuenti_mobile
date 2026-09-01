@@ -1,9 +1,9 @@
+import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
+import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../accounts/ui/accounts_controller.dart';
-import '../data/transactions_repository.dart';
-import '../domain/transaction.dart';
-import '../domain/transaction_filter.dart';
 
 part 'transactions_controller.freezed.dart';
 part 'transactions_controller.g.dart';
@@ -47,7 +47,7 @@ class TransactionsController extends _$TransactionsController {
       {TransactionFilter filter = defaultFilter}) async {
     final page = await ref
         .read(transactionsRepositoryProvider)
-        .getPage(filter: filter, page: 0, size: pageSize);
+        .getPage(filter: filter);
     return TransactionsState(
       items: _dedupeById(page.content),
       nextPage: 1,
@@ -63,8 +63,7 @@ class TransactionsController extends _$TransactionsController {
     try {
       final page = await ref.read(transactionsRepositoryProvider).getPage(
           filter: current.filter,
-          page: current.nextPage,
-          size: pageSize);
+          page: current.nextPage);
       state = AsyncData(current.copyWith(
         items: _dedupeById([...current.items, ...page.content]),
         nextPage: current.nextPage + 1,

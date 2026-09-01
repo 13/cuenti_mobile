@@ -1,5 +1,5 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'transaction_page.freezed.dart';
 part 'transaction_page.g.dart';

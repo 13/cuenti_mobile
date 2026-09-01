@@ -1,11 +1,11 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/api/dio_provider.dart';
-import '../domain/transaction.dart';
-import '../domain/transaction_filter.dart';
-import '../domain/transaction_page.dart';
 
 final transactionsRepositoryProvider = Provider<TransactionsRepository>(
     (ref) => TransactionsRepository(ref.watch(dioProvider)));

@@ -5,8 +5,6 @@ import 'package:dio/dio.dart';
 sealed class ApiException implements Exception {
   const ApiException(this.message);
 
-  final String message;
-
   factory ApiException.fromDio(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionError:
@@ -42,6 +40,8 @@ sealed class ApiException implements Exception {
         return UnknownApiException(e.message ?? 'An error occurred');
     }
   }
+
+  final String message;
 
   @override
   String toString() => message;

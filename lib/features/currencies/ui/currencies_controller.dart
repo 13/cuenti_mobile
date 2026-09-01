@@ -1,6 +1,6 @@
+import 'package:cuentimobile/features/currencies/data/currencies_repository.dart';
+import 'package:cuentimobile/features/currencies/domain/currency.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/currencies_repository.dart';
-import '../domain/currency.dart';
 
 part 'currencies_controller.g.dart';
 

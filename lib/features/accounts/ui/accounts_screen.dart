@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/widgets/amount_text.dart';
-import '../../../core/widgets/async_value_widget.dart';
-import '../../../core/widgets/confirm_sheet.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/skeleton_loader.dart';
-import '../../currencies/domain/currency.dart';
-import '../../currencies/ui/currencies_controller.dart';
-import '../domain/account.dart';
-import 'accounts_controller.dart';
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/widgets/amount_text.dart';
+import 'package:cuentimobile/core/widgets/async_value_widget.dart';
+import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
+import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/features/currencies/domain/currency.dart';
+import 'package:cuentimobile/features/currencies/ui/currencies_controller.dart';
+import 'package:cuentimobile/features/accounts/domain/account.dart';
+import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
 
 class AccountsScreen extends ConsumerStatefulWidget {
   const AccountsScreen({super.key});
@@ -222,11 +222,11 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
     final institution = TextEditingController(text: account?.institution ?? '');
     final group = TextEditingController(text: account?.accountGroup ?? '');
     final startBalance = TextEditingController(text: account?.startBalance.toStringAsFixed(2) ?? '0.00');
-    String type = account?.accountType ?? 'BANK';
-    String currency = account?.currency ?? 'EUR';
-    bool excludeSummary = account?.excludeFromSummary ?? false;
-    bool excludeReports = account?.excludeFromReports ?? false;
-    bool saving = false;
+    var type = account?.accountType ?? 'BANK';
+    var currency = account?.currency ?? 'EUR';
+    var excludeSummary = account?.excludeFromSummary ?? false;
+    var excludeReports = account?.excludeFromReports ?? false;
+    var saving = false;
 
     showModalBottomSheet<void>(
       context: context,

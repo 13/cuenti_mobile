@@ -24,7 +24,7 @@ void main() {
       (tester) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [privacyModeProvider.overrideWith(() => _FalsePrivacyMode())],
+        overrides: [privacyModeProvider.overrideWith(_FalsePrivacyMode.new)],
         child: MaterialApp(
           theme: AppTheme.light(),
           home: const Scaffold(body: AmountText(1234.5, currency: 'EUR')),
@@ -40,7 +40,7 @@ void main() {
       (tester) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [privacyModeProvider.overrideWith(() => _TruePrivacyMode())],
+        overrides: [privacyModeProvider.overrideWith(_TruePrivacyMode.new)],
         child: MaterialApp(
           theme: AppTheme.light(),
           home: const Scaffold(body: AmountText(1234.5, currency: 'EUR')),

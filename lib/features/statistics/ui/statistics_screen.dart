@@ -1,20 +1,20 @@
-import 'package:flutter/material.dart';
+import 'package:cuentimobile/core/privacy/privacy_mode.dart';
+import 'package:cuentimobile/core/theme/cuenti_colors.dart';
+import 'package:cuentimobile/core/widgets/amount_text.dart';
+import 'package:cuentimobile/core/widgets/async_value_widget.dart';
+import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/privacy_blur.dart';
+import 'package:cuentimobile/core/widgets/section_header.dart';
+import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/features/accounts/domain/account.dart';
+import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
+import 'package:cuentimobile/features/statistics/domain/statistics_data.dart';
+import 'package:cuentimobile/features/statistics/ui/statistics_controller.dart';
+import 'package:cuentimobile/utils/number_format.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../core/privacy/privacy_mode.dart';
-import '../../../core/theme/cuenti_colors.dart';
-import '../../../core/widgets/amount_text.dart';
-import '../../../core/widgets/async_value_widget.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/privacy_blur.dart';
-import '../../../core/widgets/section_header.dart';
-import '../../../core/widgets/skeleton_loader.dart';
-import '../../../utils/number_format.dart';
-import '../../accounts/domain/account.dart';
-import '../../accounts/ui/accounts_controller.dart';
-import '../domain/statistics_data.dart';
-import 'statistics_controller.dart';
 
 enum TimeRange { daily, weekly, monthly, yearly, custom }
 
@@ -46,11 +46,11 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> with Single
         final start = now.subtract(Duration(days: now.weekday - 1));
         return DateTimeRange(start: DateTime(start.year, start.month, start.day), end: now);
       case TimeRange.monthly:
-        return DateTimeRange(start: DateTime(now.year, now.month, 1), end: now);
+        return DateTimeRange(start: DateTime(now.year, now.month), end: now);
       case TimeRange.yearly:
-        return DateTimeRange(start: DateTime(now.year, 1, 1), end: now);
+        return DateTimeRange(start: DateTime(now.year), end: now);
       case TimeRange.custom:
-        return _customRange ?? DateTimeRange(start: DateTime(now.year, now.month, 1), end: now);
+        return _customRange ?? DateTimeRange(start: DateTime(now.year, now.month), end: now);
     }
   }
 
@@ -199,7 +199,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> with Single
             ),
             ListTile(
               title: const Text('All Accounts'),
-              onTap: () => Navigator.pop(ctx, null),
+              onTap: () => Navigator.pop(ctx),
             ),
             for (final a in accounts)
               ListTile(
@@ -223,9 +223,9 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> with Single
 }
 
 class _OverviewTab extends StatelessWidget {
+  const _OverviewTab({required this.stats, required this.onRefresh});
   final StatisticsData stats;
   final Future<void> Function() onRefresh;
-  const _OverviewTab({required this.stats, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -279,8 +279,9 @@ class _OverviewTab extends StatelessWidget {
 }
 
 class _IncomeExpenseDonut extends ConsumerWidget {
-  final double income, expense;
   const _IncomeExpenseDonut({required this.income, required this.expense});
+  final double income;
+  final double expense;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -348,9 +349,9 @@ class _IncomeExpenseDonut extends ConsumerWidget {
 }
 
 class _CashFlowLineChart extends ConsumerWidget {
+  const _CashFlowLineChart({required this.monthlyIncome, required this.monthlyExpense});
   final Map<String, double> monthlyIncome;
   final Map<String, double> monthlyExpense;
-  const _CashFlowLineChart({required this.monthlyIncome, required this.monthlyExpense});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -361,7 +362,7 @@ class _CashFlowLineChart extends ConsumerWidget {
     }
 
     final netSpots = <FlSpot>[];
-    for (int i = 0; i < allMonths.length; i++) {
+    for (var i = 0; i < allMonths.length; i++) {
       final m = allMonths[i];
       final net = (monthlyIncome[m] ?? 0) - (monthlyExpense[m] ?? 0);
       netSpots.add(FlSpot(i.toDouble(), net));
@@ -375,7 +376,6 @@ class _CashFlowLineChart extends ConsumerWidget {
     return LineChart(
       LineChartData(
         gridData: FlGridData(
-          show: true,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (_) => FlLine(
             color: gridColor,
@@ -398,16 +398,16 @@ class _CashFlowLineChart extends ConsumerWidget {
               },
             ),
           ),
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: const AxisTitles(),
+          topTitles: const AxisTitles(),
+          rightTitles: const AxisTitles(),
         ),
         borderData: FlBorderData(show: false),
         lineTouchData: LineTouchData(
           getTouchedSpotIndicator: (barData, indexes) => indexes.map((i) {
             final dotColor = barData.spots[i].y >= 0 ? cuenti.income : cuenti.expense;
             return TouchedSpotIndicatorData(
-              FlLine(color: dotColor, strokeWidth: 2),
+              FlLine(color: dotColor),
               FlDotData(
                 getDotPainter: (spot, percent, bar, idx) => FlDotCirclePainter(
                   radius: 4,
@@ -433,7 +433,6 @@ class _CashFlowLineChart extends ConsumerWidget {
           LineChartBarData(
             spots: netSpots,
             isCurved: true,
-            curveSmoothness: 0.35,
             color: lineColor,
             barWidth: 3,
             isStrokeCapRound: true,
@@ -457,8 +456,6 @@ class _CashFlowLineChart extends ConsumerWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
-  final double income, expense, balance;
-  final String currency;
 
   const _SummaryCard({
     required this.income,
@@ -466,6 +463,10 @@ class _SummaryCard extends StatelessWidget {
     required this.balance,
     required this.currency,
   });
+  final double income;
+  final double expense;
+  final double balance;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
@@ -501,10 +502,10 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _MonthlyChart extends ConsumerWidget {
-  final Map<String, double> monthlyIncome;
-  final Map<String, double> monthlyExpense;
 
   const _MonthlyChart({required this.monthlyIncome, required this.monthlyExpense});
+  final Map<String, double> monthlyIncome;
+  final Map<String, double> monthlyExpense;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -568,13 +569,12 @@ class _MonthlyChart extends ConsumerWidget {
               },
             ),
           ),
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: const AxisTitles(),
+          topTitles: const AxisTitles(),
+          rightTitles: const AxisTitles(),
         ),
         borderData: FlBorderData(show: false),
         gridData: FlGridData(
-          show: true,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (_) => FlLine(color: gridColor, strokeWidth: 1),
         ),
@@ -584,10 +584,6 @@ class _MonthlyChart extends ConsumerWidget {
 }
 
 class _CategoryTab extends ConsumerWidget {
-  final Map<String, double> data;
-  final String title;
-  final String currency;
-  final String type;
 
   const _CategoryTab({
     required this.data,
@@ -595,6 +591,10 @@ class _CategoryTab extends ConsumerWidget {
     required this.currency,
     required this.type,
   });
+  final Map<String, double> data;
+  final String title;
+  final String currency;
+  final String type;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

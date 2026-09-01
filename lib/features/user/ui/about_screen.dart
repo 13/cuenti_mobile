@@ -1,7 +1,7 @@
+import 'package:cuentimobile/features/app_update/ui/update_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import '../../app_update/ui/update_check.dart';
 
 class AboutScreen extends ConsumerStatefulWidget {
   const AboutScreen({super.key});
@@ -33,7 +33,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
     final appName = _packageInfo?.appName ?? 'Cuenti';
 
     const buildDate = String.fromEnvironment('BUILD_DATE', defaultValue: 'Development');
-    const buildTime = String.fromEnvironment('BUILD_TIME', defaultValue: '');
+    const buildTime = String.fromEnvironment('BUILD_TIME');
 
     return ListView(
       padding: const EdgeInsets.all(16),

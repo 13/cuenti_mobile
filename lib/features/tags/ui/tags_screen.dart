@@ -1,12 +1,12 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/widgets/async_value_widget.dart';
+import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
+import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/features/tags/domain/tag.dart';
+import 'package:cuentimobile/features/tags/ui/tags_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/widgets/async_value_widget.dart';
-import '../../../core/widgets/confirm_sheet.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/skeleton_loader.dart';
-import '../domain/tag.dart';
-import 'tags_controller.dart';
 
 class TagsScreen extends ConsumerWidget {
   const TagsScreen({super.key});
@@ -139,7 +139,7 @@ class TagsScreen extends ConsumerWidget {
 
   void _showEditDialog(BuildContext context, WidgetRef ref, Tag? tag) {
     final name = TextEditingController(text: tag?.name ?? '');
-    bool saving = false;
+    var saving = false;
 
     showModalBottomSheet<void>(
       context: context,

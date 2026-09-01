@@ -66,7 +66,7 @@ void main() {
   testWidgets('shows one enabled tile and one disabled tile for web view', (
     tester,
   ) async {
-    await pumpAndOpenSheet(tester, current: TransactionFilter());
+    await pumpAndOpenSheet(tester, current: const TransactionFilter());
 
     expect(find.text('My groceries'), findsOneWidget);
     expect(find.text('Web view'), findsOneWidget);
@@ -131,7 +131,7 @@ void main() {
     "'Save current view' is disabled for the default filter and enabled "
     'once the filter has a search term',
     (tester) async {
-      await pumpAndOpenSheet(tester, current: TransactionFilter());
+      await pumpAndOpenSheet(tester, current: const TransactionFilter());
       final defaultButton = tester.widget<FilledButton>(
         find.widgetWithText(FilledButton, 'Save current view'),
       );

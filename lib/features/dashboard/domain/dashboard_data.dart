@@ -1,7 +1,7 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:cuentimobile/features/json_converters.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/dashboard/domain/asset_performance.dart';
+import 'package:cuentimobile/features/json_converters.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'dashboard_data.freezed.dart';
 part 'dashboard_data.g.dart';

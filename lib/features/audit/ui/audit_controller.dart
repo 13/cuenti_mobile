@@ -1,7 +1,7 @@
+import 'package:cuentimobile/features/audit/data/audit_repository.dart';
+import 'package:cuentimobile/features/audit/domain/audit_entry.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/audit_repository.dart';
-import '../domain/audit_entry.dart';
 
 part 'audit_controller.freezed.dart';
 part 'audit_controller.g.dart';
@@ -37,7 +37,7 @@ class AuditController extends _$AuditController {
   Future<AuditState> build({String? filter}) async {
     final page = await ref
         .read(auditRepositoryProvider)
-        .getPage(filter: filter, page: 0, size: pageSize);
+        .getPage(filter: filter);
     return AuditState(
       items: _dedupeById(page.content),
       nextPage: 1,
@@ -53,8 +53,7 @@ class AuditController extends _$AuditController {
     try {
       final page = await ref.read(auditRepositoryProvider).getPage(
           filter: current.filter,
-          page: current.nextPage,
-          size: pageSize);
+          page: current.nextPage);
       state = AsyncData(current.copyWith(
         items: _dedupeById([...current.items, ...page.content]),
         nextPage: current.nextPage + 1,

@@ -44,7 +44,7 @@ void main() {
 
     test('skips missing parts and trailing zeros', () {
       expect(buildFuelMemo(null, 40, false, ''), 'l=40');
-      expect(buildFuelMemo(45210.0, null, false, ''), 'd=45210');
+      expect(buildFuelMemo(45210, null, false, ''), 'd=45210');
       expect(buildFuelMemo(null, null, false, 'just a note'), 'just a note');
       expect(buildFuelMemo(null, null, false, ''), isEmpty);
     });

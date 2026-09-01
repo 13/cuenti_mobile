@@ -1,19 +1,19 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/privacy/privacy_mode.dart';
+import 'package:cuentimobile/core/theme/cuenti_colors.dart';
+import 'package:cuentimobile/core/widgets/amount_text.dart';
+import 'package:cuentimobile/core/widgets/async_value_widget.dart';
+import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
+import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/privacy_blur.dart';
+import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/features/budgets/domain/budget.dart';
+import 'package:cuentimobile/features/budgets/domain/budget_progress.dart';
+import 'package:cuentimobile/features/budgets/ui/budgets_controller.dart';
+import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
+import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/privacy/privacy_mode.dart';
-import '../../../core/theme/cuenti_colors.dart';
-import '../../../core/widgets/amount_text.dart';
-import '../../../core/widgets/async_value_widget.dart';
-import '../../../core/widgets/confirm_sheet.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/privacy_blur.dart';
-import '../../../core/widgets/skeleton_loader.dart';
-import '../../../utils/number_format.dart';
-import '../../categories/ui/categories_controller.dart';
-import '../domain/budget.dart';
-import '../domain/budget_progress.dart';
-import 'budgets_controller.dart';
 
 /// Unlike most other feature screens (accounts/categories/payees), this
 /// screen has no Scaffold of its own — it's mounted directly inside

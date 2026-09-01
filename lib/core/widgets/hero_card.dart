@@ -1,5 +1,5 @@
+import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:flutter/material.dart';
-import '../theme/cuenti_colors.dart';
 
 /// Brand gradient card used for headline metrics (dashboard hero, etc.).
 /// Forces white-ish foreground for its [child] via [DefaultTextStyle] /

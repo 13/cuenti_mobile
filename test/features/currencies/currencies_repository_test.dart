@@ -21,7 +21,7 @@ void main() {
             'id': 1,
             'code': 'USD',
             'name': 'US Dollar',
-            'symbol': '\$',
+            'symbol': r'$',
             'decimalChar': '.',
             'fracDigits': 2,
             'groupingChar': ',',
@@ -51,7 +51,6 @@ void main() {
         name: 'British Pound',
         symbol: '£',
         decimalChar: '.',
-        fracDigits: 2,
         groupingChar: ',');
     when(() => dio.post<Map<String, dynamic>>('/currencies', data: any(named: 'data')))
         .thenAnswer((_) async => ok({
@@ -82,10 +81,10 @@ void main() {
   });
 
   test('save puts existing currency when id is set', () async {
-    const currency = Currency(id: 1, code: 'USD', name: 'US Dollar', symbol: '\$');
+    const currency = Currency(id: 1, code: 'USD', name: 'US Dollar', symbol: r'$');
     when(() => dio.put<Map<String, dynamic>>('/currencies/1', data: any(named: 'data')))
         .thenAnswer((_) async =>
-            ok({'id': 1, 'code': 'USD', 'name': 'US Dollar', 'symbol': '\$'}));
+            ok({'id': 1, 'code': 'USD', 'name': 'US Dollar', 'symbol': r'$'}));
 
     final saved = await repo.save(currency);
 

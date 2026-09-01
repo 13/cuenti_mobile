@@ -77,7 +77,6 @@ void main() {
         _host(
           authState: const AuthState(
             user: _user,
-            biometricEnabled: false,
             initialized: true,
           ),
         ),

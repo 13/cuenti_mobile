@@ -1,8 +1,8 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/features/audit/domain/audit_page.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/api/dio_provider.dart';
-import '../domain/audit_page.dart';
 
 final auditRepositoryProvider = Provider<AuditRepository>(
     (ref) => AuditRepository(ref.watch(dioProvider)));

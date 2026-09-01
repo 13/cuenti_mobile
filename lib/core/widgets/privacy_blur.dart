@@ -1,9 +1,8 @@
 import 'dart:ui';
 
+import 'package:cuentimobile/core/privacy/privacy_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../privacy/privacy_mode.dart';
 
 /// Blurs its child when privacy mode is on. Layout keeps the child's size,
 /// so callers can wrap the real (unmasked) content instead of substituting

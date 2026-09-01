@@ -1,6 +1,6 @@
+import 'package:cuentimobile/features/assets/data/assets_repository.dart';
+import 'package:cuentimobile/features/assets/domain/asset.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/assets_repository.dart';
-import '../domain/asset.dart';
 
 part 'assets_controller.g.dart';
 

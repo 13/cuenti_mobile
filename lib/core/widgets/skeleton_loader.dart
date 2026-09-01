@@ -12,8 +12,8 @@ class SkeletonLoader extends StatefulWidget {
     this._kind, {
     this.items = 1,
     this.height = 160,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   factory SkeletonLoader.list({int items = 6, Key? key}) =>
       SkeletonLoader._(_SkeletonKind.list, items: items, key: key);

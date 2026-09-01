@@ -1,17 +1,17 @@
-import 'package:flutter/material.dart';
+import 'package:cuentimobile/core/privacy/privacy_mode.dart';
+import 'package:cuentimobile/core/theme/cuenti_colors.dart';
+import 'package:cuentimobile/core/widgets/amount_text.dart';
+import 'package:cuentimobile/core/widgets/async_value_widget.dart';
+import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/section_header.dart';
+import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/features/forecasts/domain/forecast_data.dart';
+import 'package:cuentimobile/features/forecasts/ui/forecasts_controller.dart';
+import 'package:cuentimobile/utils/number_format.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../core/privacy/privacy_mode.dart';
-import '../../../core/theme/cuenti_colors.dart';
-import '../../../core/widgets/amount_text.dart';
-import '../../../core/widgets/async_value_widget.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/section_header.dart';
-import '../../../core/widgets/skeleton_loader.dart';
-import '../../../utils/number_format.dart';
-import '../domain/forecast_data.dart';
-import 'forecasts_controller.dart';
 
 class ForecastsScreen extends ConsumerStatefulWidget {
   const ForecastsScreen({super.key});
@@ -124,8 +124,6 @@ class _ForecastsScreenState extends ConsumerState<ForecastsScreen> {
 }
 
 class _SummaryCard extends StatelessWidget {
-  final double income, expense, net;
-  final String currency;
 
   const _SummaryCard({
     required this.income,
@@ -133,6 +131,10 @@ class _SummaryCard extends StatelessWidget {
     required this.net,
     required this.currency,
   });
+  final double income;
+  final double expense;
+  final double net;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
@@ -168,9 +170,9 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _MonthlyForecastChart extends ConsumerWidget {
-  final List<MonthForecast> months;
 
   const _MonthlyForecastChart({required this.months});
+  final List<MonthForecast> months;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -232,13 +234,12 @@ class _MonthlyForecastChart extends ConsumerWidget {
               },
             ),
           ),
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: const AxisTitles(),
+          topTitles: const AxisTitles(),
+          rightTitles: const AxisTitles(),
         ),
         borderData: FlBorderData(show: false),
         gridData: FlGridData(
-          show: true,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (_) => FlLine(color: gridColor, strokeWidth: 1),
         ),
@@ -248,10 +249,10 @@ class _MonthlyForecastChart extends ConsumerWidget {
 }
 
 class _BreakdownList extends StatelessWidget {
-  final List<MonthForecast> months;
-  final String currency;
 
   const _BreakdownList({required this.months, required this.currency});
+  final List<MonthForecast> months;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {

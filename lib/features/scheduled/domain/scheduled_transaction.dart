@@ -1,5 +1,5 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:cuentimobile/features/json_converters.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'scheduled_transaction.freezed.dart';
 part 'scheduled_transaction.g.dart';
@@ -12,13 +12,12 @@ const kRecurrencePatterns = [
 @freezed
 abstract class ScheduledTransaction with _$ScheduledTransaction {
   const factory ScheduledTransaction({
-    int? id,
+    @JsonKey(fromJson: jsonToDouble) required double amount, required DateTime nextOccurrence, int? id,
     @Default('EXPENSE') String type,
     int? fromAccountId,
     String? fromAccountName,
     int? toAccountId,
     String? toAccountName,
-    @JsonKey(fromJson: jsonToDouble) required double amount,
     String? payee,
     int? categoryId,
     String? categoryName,
@@ -30,7 +29,6 @@ abstract class ScheduledTransaction with _$ScheduledTransaction {
     @JsonKey(fromJson: jsonToDoubleN) double? units,
     @Default('MONTHLY') String recurrencePattern,
     int? recurrenceValue,
-    required DateTime nextOccurrence,
     @Default(true) bool enabled,
   }) = _ScheduledTransaction;
 

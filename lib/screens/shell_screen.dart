@@ -1,15 +1,15 @@
+import 'package:cuentimobile/core/privacy/privacy_mode.dart';
+import 'package:cuentimobile/core/widgets/refresh_all.dart';
+import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../core/privacy/privacy_mode.dart';
-import '../core/widgets/refresh_all.dart';
-import '../features/auth/ui/auth_controller.dart';
 
 class ShellScreen extends ConsumerWidget {
+  const ShellScreen({required this.child, super.key});
   final Widget child;
-  const ShellScreen({super.key, required this.child});
 
-  static const _navItems = [
+  static const List<({IconData icon, String label, String path})> _navItems = [
     (icon: Icons.dashboard, label: 'Dashboard', path: '/dashboard'),
     (icon: Icons.receipt_long, label: 'Transactions', path: '/transactions'),
     (icon: Icons.pie_chart, label: 'Budgets', path: '/budgets'),
@@ -18,7 +18,7 @@ class ShellScreen extends ConsumerWidget {
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
-    for (int i = 0; i < _navItems.length; i++) {
+    for (var i = 0; i < _navItems.length; i++) {
       if (location == _navItems[i].path) return i;
     }
     return 0;

@@ -23,7 +23,7 @@ void main() {
 
     when(() => accountsRepo.getAll()).thenAnswer(
       (_) async => [
-        const Account(id: 1, accountName: 'Giro', currency: 'EUR'),
+        const Account(id: 1, accountName: 'Giro'),
       ],
     );
     when(() => currenciesRepo.getAll()).thenAnswer(

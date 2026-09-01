@@ -1,5 +1,5 @@
+import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:flutter/material.dart';
-import 'cuenti_colors.dart';
 
 class AppTheme {
   // NOTE: adjusted from the brief's 0xFF0E8A6B — that raw seed paired with

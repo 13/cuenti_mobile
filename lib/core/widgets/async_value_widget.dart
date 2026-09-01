@@ -1,6 +1,6 @@
+import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'skeleton_loader.dart';
 
 /// Standard loading/error/data switcher for AsyncValue-backed screens.
 ///

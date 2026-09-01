@@ -1,18 +1,18 @@
+import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
+import 'package:cuentimobile/features/assets/ui/assets_controller.dart';
+import 'package:cuentimobile/features/audit/ui/audit_controller.dart';
+import 'package:cuentimobile/features/budgets/ui/budgets_controller.dart';
+import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
+import 'package:cuentimobile/features/currencies/ui/currencies_controller.dart';
+import 'package:cuentimobile/features/dashboard/ui/dashboard_controller.dart';
+import 'package:cuentimobile/features/forecasts/ui/forecasts_controller.dart';
+import 'package:cuentimobile/features/payees/ui/payees_controller.dart';
+import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
+import 'package:cuentimobile/features/statistics/ui/statistics_controller.dart';
+import 'package:cuentimobile/features/tags/ui/tags_controller.dart';
+import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
+import 'package:cuentimobile/features/vehicles/ui/vehicles_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/accounts/ui/accounts_controller.dart';
-import '../../features/assets/ui/assets_controller.dart';
-import '../../features/audit/ui/audit_controller.dart';
-import '../../features/budgets/ui/budgets_controller.dart';
-import '../../features/categories/ui/categories_controller.dart';
-import '../../features/currencies/ui/currencies_controller.dart';
-import '../../features/dashboard/ui/dashboard_controller.dart';
-import '../../features/forecasts/ui/forecasts_controller.dart';
-import '../../features/payees/ui/payees_controller.dart';
-import '../../features/scheduled/ui/scheduled_controller.dart';
-import '../../features/statistics/ui/statistics_controller.dart';
-import '../../features/tags/ui/tags_controller.dart';
-import '../../features/transactions/ui/transactions_controller.dart';
-import '../../features/vehicles/ui/vehicles_controller.dart';
 
 /// Refresh-all parity with the old DataProvider.loadAll(): every data
 /// provider is invalidated so the next watch re-fetches. These are

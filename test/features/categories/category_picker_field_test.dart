@@ -8,21 +8,18 @@ const _categories = [
     id: 1,
     name: 'Groceries',
     fullName: 'Food:Groceries',
-    type: 'EXPENSE',
   ),
   Category(
     id: 2,
     name: 'Organic',
     fullName: 'Food:Groceries:Organic',
-    type: 'EXPENSE',
   ),
   Category(
     id: 3,
     name: 'Grocery delivery',
     fullName: 'Home:Grocery delivery',
-    type: 'EXPENSE',
   ),
-  Category(id: 4, name: 'Fuel', fullName: 'Transport:Fuel', type: 'EXPENSE'),
+  Category(id: 4, name: 'Fuel', fullName: 'Transport:Fuel'),
 ];
 
 /// Finds text inside the open picker sheet only, ignoring the field
@@ -84,7 +81,7 @@ void main() {
     });
 
     test('falls back to name when fullName is missing', () {
-      const flat = [Category(id: 9, name: 'Tanken', type: 'EXPENSE')];
+      const flat = [Category(id: 9, name: 'Tanken')];
       expect(filterCategories(flat, 'tank').map((c) => c.id), [9]);
     });
 
@@ -211,7 +208,7 @@ void main() {
       tester,
       categories: [
         for (var i = 0; i < 60; i++)
-          Category(id: i + 1, name: 'Category $i', type: 'EXPENSE'),
+          Category(id: i + 1, name: 'Category $i'),
       ],
     );
     await openSheet(tester);

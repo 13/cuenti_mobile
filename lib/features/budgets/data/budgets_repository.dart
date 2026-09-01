@@ -1,9 +1,9 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/features/budgets/domain/budget.dart';
+import 'package:cuentimobile/features/budgets/domain/budget_progress.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/api/dio_provider.dart';
-import '../domain/budget.dart';
-import '../domain/budget_progress.dart';
 
 final budgetsRepositoryProvider = Provider<BudgetsRepository>(
     (ref) => BudgetsRepository(ref.watch(dioProvider)));

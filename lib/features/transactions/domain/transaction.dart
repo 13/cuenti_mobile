@@ -1,6 +1,6 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:cuentimobile/features/json_converters.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_split.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'transaction.freezed.dart';
 part 'transaction.g.dart';
@@ -16,14 +16,12 @@ const kPaymentMethods = [
 @freezed
 abstract class Transaction with _$Transaction {
   const factory Transaction({
-    int? id,
+    @JsonKey(fromJson: jsonToDouble) required double amount, required DateTime transactionDate, int? id,
     @Default('EXPENSE') String type,
     int? fromAccountId,
     String? fromAccountName,
     int? toAccountId,
     String? toAccountName,
-    @JsonKey(fromJson: jsonToDouble) required double amount,
-    required DateTime transactionDate,
     String? status,
     String? payee,
     int? categoryId,

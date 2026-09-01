@@ -6,7 +6,6 @@ import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
-import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
 import 'package:cuentimobile/features/transactions/ui/transaction_dialog.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
@@ -29,7 +28,7 @@ class MockVehiclesRepository extends Mock implements VehiclesRepository {}
 void main() {
   setUpAll(() {
     registerFallbackValue(
-      Transaction(amount: 0, transactionDate: DateTime(2026, 1, 1)),
+      Transaction(amount: 0, transactionDate: DateTime(2026)),
     );
   });
 
@@ -49,13 +48,13 @@ void main() {
     ).thenAnswer((_) async => [const Account(id: 1, accountName: 'Giro')]);
     when(() => categoriesRepo.getAll(type: any(named: 'type'))).thenAnswer(
       (_) async => const [
-        Category(id: 9, name: 'Tanken', type: 'EXPENSE'),
-        Category(id: 2, name: 'Food', type: 'EXPENSE'),
+        Category(id: 9, name: 'Tanken'),
+        Category(id: 2, name: 'Food'),
       ],
     );
     when(
       () =>
-          txRepo.getPage(filter: const TransactionFilter(), page: 0, size: 50),
+          txRepo.getPage(),
     ).thenAnswer(
       (_) async => const TransactionPage(
         content: [],
@@ -75,7 +74,7 @@ void main() {
     ).thenAnswer(
       (_) async => VehicleReport(
         entries: [
-          FuelEntry(date: DateTime(2026, 7, 1), odometer: 100000, liters: 40),
+          FuelEntry(date: DateTime(2026, 7), odometer: 100000, liters: 40),
         ],
       ),
     );
@@ -108,7 +107,7 @@ void main() {
               builder: (context, ref, _) {
                 ref.watch(
                   transactionsControllerProvider(
-                    filter: const TransactionFilter(),
+                    
                   ),
                 );
                 return TransactionDialog(transaction: transaction);
@@ -178,11 +177,10 @@ void main() {
   ) async {
     final existing = Transaction(
       id: 5,
-      type: 'EXPENSE',
       amount: 70,
       fromAccountId: 1,
       categoryId: 9,
-      transactionDate: DateTime(2026, 8, 1),
+      transactionDate: DateTime(2026, 8),
       memo: 'd=100650 l=41.3 full Aral',
     );
     await pumpDialog(tester, transaction: existing);
@@ -281,19 +279,18 @@ void main() {
       ).thenAnswer(
         (_) async => VehicleReport(
           entries: [
-            FuelEntry(date: DateTime(2026, 8, 1), odometer: 100650, liters: 40),
-            FuelEntry(date: DateTime(2026, 7, 1), odometer: 100000, liters: 38),
+            FuelEntry(date: DateTime(2026, 8), odometer: 100650, liters: 40),
+            FuelEntry(date: DateTime(2026, 7), odometer: 100000, liters: 38),
           ],
         ),
       );
 
       final existing = Transaction(
         id: 5,
-        type: 'EXPENSE',
         amount: 70,
         fromAccountId: 1,
         categoryId: 9,
-        transactionDate: DateTime(2026, 8, 1),
+        transactionDate: DateTime(2026, 8),
         memo: 'd=100650 l=40',
       );
       await pumpDialog(tester, transaction: existing);

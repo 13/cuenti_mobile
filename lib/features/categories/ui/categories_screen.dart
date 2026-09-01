@@ -1,13 +1,13 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/theme/cuenti_colors.dart';
+import 'package:cuentimobile/core/widgets/async_value_widget.dart';
+import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
+import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/features/categories/domain/category.dart';
+import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/theme/cuenti_colors.dart';
-import '../../../core/widgets/async_value_widget.dart';
-import '../../../core/widgets/confirm_sheet.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/skeleton_loader.dart';
-import '../domain/category.dart';
-import 'categories_controller.dart';
 
 class CategoriesScreen extends ConsumerWidget {
   const CategoriesScreen({super.key});
@@ -171,9 +171,9 @@ class CategoriesScreen extends ConsumerWidget {
     Category? category,
   ) {
     final name = TextEditingController(text: category?.name ?? '');
-    String type = category?.type ?? 'EXPENSE';
-    int? parentId = category?.parentId;
-    bool saving = false;
+    var type = category?.type ?? 'EXPENSE';
+    var parentId = category?.parentId;
+    var saving = false;
 
     final categories = ref.read(categoriesControllerProvider).value ?? [];
     final parentOptions = categories
@@ -230,7 +230,6 @@ class CategoriesScreen extends ConsumerWidget {
                   ),
                   items: [
                     const DropdownMenuItem(
-                      value: null,
                       child: Text('None (Top Level)'),
                     ),
                     ...parentOptions.map(

@@ -26,7 +26,7 @@ class MockCategoriesRepository extends Mock implements CategoriesRepository {}
 void main() {
   setUpAll(() {
     registerFallbackValue(
-      Transaction(amount: 0, transactionDate: DateTime(2026, 1, 1)),
+      Transaction(amount: 0, transactionDate: DateTime(2026)),
     );
   });
 
@@ -47,7 +47,7 @@ void main() {
     ).thenAnswer((_) async => []);
     when(
       () =>
-          txRepo.getPage(filter: const TransactionFilter(), page: 0, size: 50),
+          txRepo.getPage(),
     ).thenAnswer(
       (_) async => const TransactionPage(
         content: [],
@@ -159,7 +159,7 @@ void main() {
     '(regression: filtered list went stale after save)',
     (tester) async {
       const filter = TransactionFilter(search: 'coffee');
-      when(() => txRepo.getPage(filter: filter, page: 0, size: 50)).thenAnswer(
+      when(() => txRepo.getPage(filter: filter)).thenAnswer(
         (_) async => const TransactionPage(
           content: [],
           page: 0,
@@ -179,7 +179,7 @@ void main() {
       // Initial build + post-save invalidateSelf refetch, both for the
       // exact filter instance the screen is watching.
       verify(
-        () => txRepo.getPage(filter: filter, page: 0, size: 50),
+        () => txRepo.getPage(filter: filter),
       ).called(greaterThanOrEqualTo(2));
     },
   );
@@ -191,16 +191,15 @@ void main() {
     (tester) async {
       when(() => categoriesRepo.getAll(type: any(named: 'type'))).thenAnswer(
         (_) async => const [
-          Category(id: 1, name: 'Food', type: 'EXPENSE'),
-          Category(id: 2, name: 'Transport', type: 'EXPENSE'),
+          Category(id: 1, name: 'Food'),
+          Category(id: 2, name: 'Transport'),
         ],
       );
       final existing = Transaction(
         id: 5,
-        type: 'EXPENSE',
         amount: 40,
         fromAccountId: 1,
-        transactionDate: DateTime(2026, 1, 1),
+        transactionDate: DateTime(2026),
         splits: const [
           TransactionSplit(id: 10, categoryId: 1, amount: 10),
           TransactionSplit(id: 11, categoryId: 2, amount: 20),
@@ -237,17 +236,16 @@ void main() {
     (tester) async {
       when(() => categoriesRepo.getAll(type: any(named: 'type'))).thenAnswer(
         (_) async => const [
-          Category(id: 1, name: 'Food', type: 'EXPENSE'),
-          Category(id: 2, name: 'Transport', type: 'EXPENSE'),
-          Category(id: 3, name: 'Misc', type: 'EXPENSE'),
+          Category(id: 1, name: 'Food'),
+          Category(id: 2, name: 'Transport'),
+          Category(id: 3, name: 'Misc'),
         ],
       );
       final existing = Transaction(
         id: 5,
-        type: 'EXPENSE',
         amount: 40,
         fromAccountId: 1,
-        transactionDate: DateTime(2026, 1, 1),
+        transactionDate: DateTime(2026),
         splits: const [
           TransactionSplit(id: 10, categoryId: 1, amount: 10),
           TransactionSplit(id: 11, categoryId: 2, amount: 20),
@@ -280,17 +278,16 @@ void main() {
     (tester) async {
       when(() => categoriesRepo.getAll(type: any(named: 'type'))).thenAnswer(
         (_) async => const [
-          Category(id: 1, name: 'Food', type: 'EXPENSE'),
-          Category(id: 2, name: 'Transport', type: 'EXPENSE'),
-          Category(id: 3, name: 'Misc', type: 'EXPENSE'),
+          Category(id: 1, name: 'Food'),
+          Category(id: 2, name: 'Transport'),
+          Category(id: 3, name: 'Misc'),
         ],
       );
       final existing = Transaction(
         id: 5,
-        type: 'EXPENSE',
         amount: 40,
         fromAccountId: 1,
-        transactionDate: DateTime(2026, 1, 1),
+        transactionDate: DateTime(2026),
         splits: const [
           TransactionSplit(id: 10, categoryId: 1, amount: 10),
           TransactionSplit(id: 11, categoryId: 2, amount: 20),
@@ -344,16 +341,15 @@ void main() {
     (tester) async {
       when(() => categoriesRepo.getAll(type: any(named: 'type'))).thenAnswer(
         (_) async => const [
-          Category(id: 1, name: 'Food', type: 'EXPENSE'),
-          Category(id: 2, name: 'Transport', type: 'EXPENSE'),
+          Category(id: 1, name: 'Food'),
+          Category(id: 2, name: 'Transport'),
         ],
       );
       final existing = Transaction(
         id: 5,
-        type: 'EXPENSE',
         amount: 40,
         fromAccountId: 1,
-        transactionDate: DateTime(2026, 1, 1),
+        transactionDate: DateTime(2026),
       );
       when(
         () => txRepo.save(any(), splitsTouched: any(named: 'splitsTouched')),
@@ -423,16 +419,15 @@ void main() {
     (tester) async {
       when(() => categoriesRepo.getAll(type: any(named: 'type'))).thenAnswer(
         (_) async => const [
-          Category(id: 1, name: 'Food', type: 'EXPENSE'),
-          Category(id: 2, name: 'Transport', type: 'EXPENSE'),
+          Category(id: 1, name: 'Food'),
+          Category(id: 2, name: 'Transport'),
         ],
       );
       final existing = Transaction(
         id: 5,
-        type: 'EXPENSE',
         amount: 40,
         fromAccountId: 1,
-        transactionDate: DateTime(2026, 1, 1),
+        transactionDate: DateTime(2026),
         splits: const [
           TransactionSplit(id: 10, categoryId: 1, amount: 10),
           TransactionSplit(id: 11, categoryId: 2, amount: 20),

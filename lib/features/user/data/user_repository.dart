@@ -1,8 +1,8 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/api/dio_provider.dart';
-import '../domain/user_profile.dart';
 
 final userRepositoryProvider = Provider<UserRepository>(
     (ref) => UserRepository(ref.watch(dioProvider)));
@@ -82,9 +82,8 @@ class UserRepository {
           {bool? registrationEnabled, bool? apiEnabled}) =>
       _guard(() {
         final data = <String, bool>{
-          if (registrationEnabled != null)
-            'registrationEnabled': registrationEnabled,
-          if (apiEnabled != null) 'apiEnabled': apiEnabled,
+          'registrationEnabled': ?registrationEnabled,
+          'apiEnabled': ?apiEnabled,
         };
         return _dio.put<void>('/user/admin/settings', data: data);
       });

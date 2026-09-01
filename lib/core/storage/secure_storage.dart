@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// AndroidOptions live in exactly one place.
 class SecureStorage {
   const SecureStorage([this._storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(resetOnError: true),
+    
   )]);
 
   final FlutterSecureStorage _storage;

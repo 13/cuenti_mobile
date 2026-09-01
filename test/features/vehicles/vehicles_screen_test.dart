@@ -32,8 +32,8 @@ void main() {
   // 'Fuel' is last so it is only reachable by scrolling.
   final categories = [
     for (var i = 1; i <= 25; i++)
-      Category(id: i, name: 'Category $i', type: 'EXPENSE'),
-    const Category(id: 99, name: 'Fuel', type: 'EXPENSE'),
+      Category(id: i, name: 'Category $i'),
+    const Category(id: 99, name: 'Fuel'),
   ];
 
   setUpAll(() {

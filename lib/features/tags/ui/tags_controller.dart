@@ -1,6 +1,6 @@
+import 'package:cuentimobile/features/tags/data/tags_repository.dart';
+import 'package:cuentimobile/features/tags/domain/tag.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/tags_repository.dart';
-import '../domain/tag.dart';
 
 part 'tags_controller.g.dart';
 

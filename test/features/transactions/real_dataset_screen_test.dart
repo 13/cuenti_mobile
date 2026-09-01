@@ -47,7 +47,7 @@ void main() {
       ),
     ).thenAnswer((_) async => page);
     when(
-      () => accountsRepo.getAll(),
+      accountsRepo.getAll,
     ).thenAnswer((_) async => [const Account(id: 1, accountName: 'Giro')]);
     when(
       () => categoriesRepo.getAll(type: any(named: 'type')),

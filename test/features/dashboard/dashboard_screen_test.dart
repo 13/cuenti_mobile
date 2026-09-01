@@ -45,20 +45,19 @@ void main() {
     when(
       () => dashboardRepo.load(),
     ).thenAnswer(
-      (_) async => DashboardData(
+      (_) async => const DashboardData(
         availableCash: 500,
         portfolioValue: 1000,
         netWorth: 1500,
         accounts: [
-          const Account(
+          Account(
             id: 1,
             accountName: 'Main Bank',
-            accountType: 'BANK',
             balance: 1500,
           ),
         ],
         assetPerformance: [
-          const AssetPerformance(
+          AssetPerformance(
             assetName: 'Apple Stock',
             assetSymbol: 'AAPL',
             totalUnits: 10,
@@ -101,7 +100,6 @@ void main() {
             Account(
               id: 1,
               accountName: 'Main Bank',
-              accountType: 'BANK',
               balance: 123456789012.34,
             ),
           ],
@@ -134,14 +132,12 @@ void main() {
             Account(
               id: 1,
               accountName: 'Reports-excluded Account',
-              accountType: 'BANK',
               balance: 100,
               excludeFromReports: true,
             ),
             Account(
               id: 2,
               accountName: 'Summary-excluded Account',
-              accountType: 'BANK',
               balance: 200,
               excludeFromSummary: true,
             ),

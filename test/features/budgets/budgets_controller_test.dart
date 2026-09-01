@@ -29,7 +29,7 @@ void main() {
     addTearDown(container.dispose);
 
     registerFallbackValue(
-      const Budget(categoryId: 0, monthlyLimit: 0),
+      const Budget(categoryId: 0),
     );
   });
 
@@ -47,7 +47,6 @@ void main() {
           id: 1,
           categoryId: 2,
           monthlyLimit: 300,
-          active: true,
         ));
 
     await container.read(budgetsControllerProvider.notifier).save(

@@ -1,8 +1,8 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
-import '../data/scheduled_repository.dart';
-import '../domain/scheduled_transaction.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
+import 'package:cuentimobile/features/scheduled/data/scheduled_repository.dart';
+import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
+import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'scheduled_controller.g.dart';
 

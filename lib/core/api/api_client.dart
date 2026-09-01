@@ -1,16 +1,10 @@
 import 'dart:io';
+
+import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
-import '../storage/secure_storage.dart';
 
 class ApiClient {
-  static const String _tokenKey = 'jwt_token';
-  static const String _serverUrlKey = 'server_url';
-  static const String defaultServerUrl = 'https://cuenti.muh';
-
-  final SecureStorage _storage;
-  late Dio dio;
-  String _baseUrl = defaultServerUrl;
 
   ApiClient(this._storage, {Dio? dioOverride}) {
     if (dioOverride != null) {
@@ -27,7 +21,7 @@ class ApiClient {
         createHttpClient: () {
           final client = HttpClient();
           client.badCertificateCallback =
-              (X509Certificate cert, String host, int port) => true;
+              (cert, host, port) => true;
           return client;
         },
       );
@@ -46,6 +40,13 @@ class ApiClient {
       },
     ));
   }
+  static const String _tokenKey = 'jwt_token';
+  static const String _serverUrlKey = 'server_url';
+  static const String defaultServerUrl = 'https://cuenti.muh';
+
+  final SecureStorage _storage;
+  late Dio dio;
+  String _baseUrl = defaultServerUrl;
 
   Future<void> init() async {
     final url = await _storage.read(_serverUrlKey);
@@ -68,7 +69,7 @@ class ApiClient {
   }
 
   Future<String?> getToken() async {
-    return await _storage.read(_tokenKey);
+    return _storage.read(_tokenKey);
   }
 
   Future<void> clearToken() async {

@@ -1,7 +1,7 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/features/app_update/domain/app_release.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_exception.dart';
-import '../domain/app_release.dart';
 
 /// Deliberately its own Dio: requests go to GitHub, so the backend client
 /// with its auth interceptor must not be reused here.

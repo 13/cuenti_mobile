@@ -1,14 +1,14 @@
 import 'dart:async';
 
+import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/theme/cuenti_colors.dart';
+import 'package:cuentimobile/core/widgets/async_value_widget.dart';
+import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/features/audit/domain/audit_entry.dart';
+import 'package:cuentimobile/features/audit/ui/audit_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../core/api/api_exception.dart';
-import '../../../core/theme/cuenti_colors.dart';
-import '../../../core/widgets/async_value_widget.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../domain/audit_entry.dart';
-import 'audit_controller.dart';
 
 class AuditScreen extends ConsumerStatefulWidget {
   const AuditScreen({super.key});
