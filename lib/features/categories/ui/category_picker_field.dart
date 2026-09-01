@@ -1,4 +1,5 @@
 import 'package:cuentimobile/features/categories/domain/category.dart';
+import 'package:cuentimobile/utils/token_search.dart';
 import 'package:flutter/material.dart';
 
 /// The path a category is shown and searched by: the full `Parent:Child`
@@ -9,18 +10,8 @@ String categoryLabel(Category category) => category.fullName ?? category.name;
 /// token of [query] must occur somewhere in the label, so `food groc` finds
 /// `Food:Groceries` without the user typing the separator. A blank query
 /// matches everything.
-List<Category> filterCategories(List<Category> categories, String query) {
-  final tokens = query
-      .toLowerCase()
-      .split(RegExp(r'\s+'))
-      .where((token) => token.isNotEmpty)
-      .toList();
-  if (tokens.isEmpty) return categories;
-  return categories.where((category) {
-    final label = categoryLabel(category).toLowerCase();
-    return tokens.every(label.contains);
-  }).toList();
-}
+List<Category> filterCategories(List<Category> categories, String query) =>
+    categories.where((c) => matchesAllTokens(categoryLabel(c), query)).toList();
 
 /// Builds the trailing widget for one row, letting a caller hang a per-row
 /// action (a "set as default" star, say) off the shared sheet. When given, it

@@ -4,6 +4,8 @@ import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
+import 'package:cuentimobile/features/payees/data/payees_repository.dart';
+import 'package:cuentimobile/features/payees/domain/payee.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
@@ -23,6 +25,8 @@ class MockAccountsRepository extends Mock implements AccountsRepository {}
 
 class MockCategoriesRepository extends Mock implements CategoriesRepository {}
 
+class MockPayeesRepository extends Mock implements PayeesRepository {}
+
 void main() {
   setUpAll(() {
     registerFallbackValue(
@@ -33,11 +37,14 @@ void main() {
   late MockTransactionsRepository txRepo;
   late MockAccountsRepository accountsRepo;
   late MockCategoriesRepository categoriesRepo;
+  late MockPayeesRepository payeesRepo;
 
   setUp(() {
     txRepo = MockTransactionsRepository();
     accountsRepo = MockAccountsRepository();
     categoriesRepo = MockCategoriesRepository();
+    payeesRepo = MockPayeesRepository();
+    when(() => payeesRepo.getAll()).thenAnswer((_) async => []);
 
     when(
       () => accountsRepo.getAll(),
@@ -69,6 +76,7 @@ void main() {
           transactionsRepositoryProvider.overrideWithValue(txRepo),
           accountsRepositoryProvider.overrideWithValue(accountsRepo),
           categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
+          payeesRepositoryProvider.overrideWithValue(payeesRepo),
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
@@ -470,4 +478,34 @@ void main() {
       expect(captured[1], isTrue);
     },
   );
+
+  testWidgets('the payee field suggests known payees and fills on tap', (
+    tester,
+  ) async {
+    when(() => payeesRepo.getAll()).thenAnswer(
+      (_) async => const [
+        Payee(id: 1, name: 'Aral Tankstelle'),
+        Payee(id: 2, name: 'Rewe Markt'),
+      ],
+    );
+
+    await pumpDialog(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Payee'),
+      'tank',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Aral Tankstelle'), findsOneWidget);
+    expect(find.text('Rewe Markt'), findsNothing);
+
+    await tester.tap(find.text('Aral Tankstelle'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.widgetWithText(TextFormField, 'Aral Tankstelle'),
+      findsOneWidget,
+    );
+  });
 }

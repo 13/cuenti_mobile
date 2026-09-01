@@ -3,6 +3,8 @@ import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
 import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
+import 'package:cuentimobile/features/payees/ui/payee_autocomplete_field.dart';
+import 'package:cuentimobile/features/payees/ui/payees_controller.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_split.dart';
@@ -230,6 +232,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   Widget build(BuildContext context) {
     final accounts = ref.watch(accountsControllerProvider).value ?? [];
     final categories = ref.watch(categoriesControllerProvider).value ?? [];
+    final payees = ref.watch(payeesControllerProvider).value ?? [];
     final amountColor = amountColorFor(context, _type);
 
     final fuelMeta = _type == 'EXPENSE' && _categoryId != null
@@ -390,12 +393,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                   const SizedBox(height: 12),
 
                 // Payee
-                TextFormField(
+                PayeeAutocompleteField(
                   controller: _payee,
-                  decoration: const InputDecoration(
-                    labelText: 'Payee',
-                    border: OutlineInputBorder(),
-                  ),
+                  payees: payees,
                 ),
                 const SizedBox(height: 12),
 
