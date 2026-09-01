@@ -13,7 +13,6 @@ Future<StatisticsData> statistics(
   String? start,
   String? end,
   int? accountId,
-}) =>
-    ref
-        .watch(statisticsRepositoryProvider)
-        .load(start: start, end: end, accountId: accountId);
+}) => ref
+    .watch(statisticsRepositoryProvider)
+    .load(start: start, end: end, accountId: accountId);

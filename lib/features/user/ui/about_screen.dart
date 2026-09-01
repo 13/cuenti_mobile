@@ -32,7 +32,10 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
     final buildNumber = _packageInfo?.buildNumber ?? '...';
     final appName = _packageInfo?.appName ?? 'Cuenti';
 
-    const buildDate = String.fromEnvironment('BUILD_DATE', defaultValue: 'Development');
+    const buildDate = String.fromEnvironment(
+      'BUILD_DATE',
+      defaultValue: 'Development',
+    );
     const buildTime = String.fromEnvironment('BUILD_TIME');
 
     return ListView(
@@ -49,15 +52,15 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
                 Text(
                   appName,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'A mobile cuenti app',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
               ],
             ),
@@ -72,7 +75,10 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Software Info', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Software Info',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 12),
                 _infoRow('Version', version),
                 _infoRow('Build Number', buildNumber),
@@ -100,7 +106,10 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('About Cuenti', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'About Cuenti',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 12),
                 const Text(
                   'Cuenti is a personal finance management application that helps you track your transactions, manage accounts, and monitor your assets across different currencies.',
@@ -123,8 +132,8 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
           child: Text(
             '© ${DateTime.now().year} Cuenti Team',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
         ),
         const SizedBox(height: 16),

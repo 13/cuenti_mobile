@@ -49,7 +49,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.person),
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 12),
@@ -60,7 +61,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.person),
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 12),
@@ -133,7 +135,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2))
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : const Text('Register'),
                     ),
                   ),
@@ -157,7 +160,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _submitting = true;
       _error = null;
     });
-    final error = await ref.read(authControllerProvider.notifier).register(
+    final error = await ref
+        .read(authControllerProvider.notifier)
+        .register(
           username: _username.text.trim(),
           email: _email.text.trim(),
           password: _password.text,

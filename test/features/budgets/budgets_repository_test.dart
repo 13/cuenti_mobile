@@ -16,27 +16,28 @@ void main() {
   });
 
   test('getProgress parses list with doubles from ints', () async {
-    when(() => dio.get<List<dynamic>>('/budgets/progress'))
-        .thenAnswer((_) async => ok([
-              {
-                'budgetId': 1,
-                'categoryId': 2,
-                'categoryName': 'Groceries',
-                'monthlyLimit': 300,
-                'spent': 150,
-                'remaining': 150,
-                'active': true,
-              },
-              {
-                'budgetId': 2,
-                'categoryId': 3,
-                'categoryName': 'Fun',
-                'monthlyLimit': 100.5,
-                'spent': 120.25,
-                'remaining': -19.75,
-                'active': false,
-              },
-            ]));
+    when(() => dio.get<List<dynamic>>('/budgets/progress')).thenAnswer(
+      (_) async => ok([
+        {
+          'budgetId': 1,
+          'categoryId': 2,
+          'categoryName': 'Groceries',
+          'monthlyLimit': 300,
+          'spent': 150,
+          'remaining': 150,
+          'active': true,
+        },
+        {
+          'budgetId': 2,
+          'categoryId': 3,
+          'categoryName': 'Fun',
+          'monthlyLimit': 100.5,
+          'spent': 120.25,
+          'remaining': -19.75,
+          'active': false,
+        },
+      ]),
+    );
 
     final progress = await repo.getProgress();
 
@@ -53,22 +54,29 @@ void main() {
 
   test('save posts new budget when id is null with explicit payload', () async {
     const budget = Budget(categoryId: 2, monthlyLimit: 300);
-    when(() => dio.post<Map<String, dynamic>>('/budgets',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({
-              'id': 9,
-              'categoryId': 2,
-              'monthlyLimit': 300,
-              'active': true,
-            }));
+    when(
+      () =>
+          dio.post<Map<String, dynamic>>('/budgets', data: any(named: 'data')),
+    ).thenAnswer(
+      (_) async => ok({
+        'id': 9,
+        'categoryId': 2,
+        'monthlyLimit': 300,
+        'active': true,
+      }),
+    );
 
     final saved = await repo.save(budget);
 
     expect(saved.id, 9);
-    final captured = verify(() => dio.post<Map<String, dynamic>>('/budgets',
-            data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, dynamic>;
+    final captured =
+        verify(
+              () => dio.post<Map<String, dynamic>>(
+                '/budgets',
+                data: captureAny(named: 'data'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured, {
       'categoryId': 2,
       'monthlyLimit': 300.0,
@@ -78,26 +86,32 @@ void main() {
   });
 
   test('save puts existing budget when id is set', () async {
-    const budget =
-        Budget(id: 4, categoryId: 2, monthlyLimit: 300);
-    when(() => dio.put<Map<String, dynamic>>('/budgets/4',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({
-              'id': 4,
-              'categoryId': 2,
-              'monthlyLimit': 300,
-              'active': true,
-            }));
+    const budget = Budget(id: 4, categoryId: 2, monthlyLimit: 300);
+    when(
+      () =>
+          dio.put<Map<String, dynamic>>('/budgets/4', data: any(named: 'data')),
+    ).thenAnswer(
+      (_) async => ok({
+        'id': 4,
+        'categoryId': 2,
+        'monthlyLimit': 300,
+        'active': true,
+      }),
+    );
 
     final saved = await repo.save(budget);
 
     expect(saved.id, 4);
-    verify(() => dio.put<Map<String, dynamic>>('/budgets/4',
-        data: any(named: 'data'))).called(1);
+    verify(
+      () =>
+          dio.put<Map<String, dynamic>>('/budgets/4', data: any(named: 'data')),
+    ).called(1);
   });
 
   test('delete calls DELETE /budgets/{id}', () async {
-    when(() => dio.delete<void>('/budgets/5')).thenAnswer((_) async => ok(null));
+    when(
+      () => dio.delete<void>('/budgets/5'),
+    ).thenAnswer((_) async => ok(null));
 
     await repo.delete(5);
 
@@ -117,8 +131,10 @@ void main() {
 
   test('save maps 400 duplicate category to ValidationException', () async {
     const budget = Budget(categoryId: 2, monthlyLimit: 300);
-    when(() => dio.post<Map<String, dynamic>>('/budgets',
-        data: any(named: 'data'))).thenThrow(
+    when(
+      () =>
+          dio.post<Map<String, dynamic>>('/budgets', data: any(named: 'data')),
+    ).thenThrow(
       DioException(
         requestOptions: RequestOptions(path: '/budgets'),
         type: DioExceptionType.badResponse,

@@ -17,9 +17,11 @@ void main() {
 
   setUp(() {
     repo = MockCategoriesRepository();
-    container = ProviderContainer(overrides: [
-      categoriesRepositoryProvider.overrideWithValue(repo),
-    ]);
+    container = ProviderContainer(
+      overrides: [
+        categoriesRepositoryProvider.overrideWithValue(repo),
+      ],
+    );
     addTearDown(container.dispose);
   });
 

@@ -7,8 +7,7 @@ part 'tags_controller.g.dart';
 @riverpod
 class TagsController extends _$TagsController {
   @override
-  Future<List<Tag>> build() =>
-      ref.watch(tagsRepositoryProvider).getAll();
+  Future<List<Tag>> build() => ref.watch(tagsRepositoryProvider).getAll();
 
   Future<void> save(Tag tag) async {
     await ref.read(tagsRepositoryProvider).save(tag);

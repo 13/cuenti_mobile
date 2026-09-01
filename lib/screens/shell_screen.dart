@@ -27,23 +27,40 @@ class ShellScreen extends ConsumerWidget {
   String _getTitle(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     switch (location) {
-      case '/dashboard': return 'Dashboard';
-      case '/transactions': return 'Transactions';
-      case '/budgets': return 'Budgets';
-      case '/scheduled': return 'Scheduled';
-      case '/statistics': return 'Statistics';
-      case '/forecasts': return 'Forecasts';
-      case '/accounts': return 'Accounts';
-      case '/payees': return 'Payees';
-      case '/categories': return 'Categories';
-      case '/tags': return 'Tags';
-      case '/currencies': return 'Currencies';
-      case '/assets': return 'Assets';
-      case '/vehicles': return 'Vehicles';
-      case '/settings': return 'Settings';
-      case '/about': return 'About';
-      case '/audit': return 'Audit Log';
-      default: return 'Cuenti';
+      case '/dashboard':
+        return 'Dashboard';
+      case '/transactions':
+        return 'Transactions';
+      case '/budgets':
+        return 'Budgets';
+      case '/scheduled':
+        return 'Scheduled';
+      case '/statistics':
+        return 'Statistics';
+      case '/forecasts':
+        return 'Forecasts';
+      case '/accounts':
+        return 'Accounts';
+      case '/payees':
+        return 'Payees';
+      case '/categories':
+        return 'Categories';
+      case '/tags':
+        return 'Tags';
+      case '/currencies':
+        return 'Currencies';
+      case '/assets':
+        return 'Assets';
+      case '/vehicles':
+        return 'Vehicles';
+      case '/settings':
+        return 'Settings';
+      case '/about':
+        return 'About';
+      case '/audit':
+        return 'Audit Log';
+      default:
+        return 'Cuenti';
     }
   }
 
@@ -90,19 +107,49 @@ class ShellScreen extends ConsumerWidget {
             ),
             _buildSection(context, 'General'),
             _buildNavItem(context, Icons.dashboard, 'Dashboard', '/dashboard'),
-            _buildNavItem(context, Icons.receipt_long, 'Transactions', '/transactions'),
+            _buildNavItem(
+              context,
+              Icons.receipt_long,
+              'Transactions',
+              '/transactions',
+            ),
             _buildNavItem(context, Icons.pie_chart, 'Budgets', '/budgets'),
             _buildNavItem(context, Icons.schedule, 'Scheduled', '/scheduled'),
-            _buildNavItem(context, Icons.bar_chart, 'Statistics', '/statistics'),
-            _buildNavItem(context, Icons.query_stats, 'Forecasts', '/forecasts'),
-            _buildNavItem(context, Icons.directions_car, 'Vehicles', '/vehicles'),
+            _buildNavItem(
+              context,
+              Icons.bar_chart,
+              'Statistics',
+              '/statistics',
+            ),
+            _buildNavItem(
+              context,
+              Icons.query_stats,
+              'Forecasts',
+              '/forecasts',
+            ),
+            _buildNavItem(
+              context,
+              Icons.directions_car,
+              'Vehicles',
+              '/vehicles',
+            ),
             const Divider(),
             _buildSection(context, 'Management'),
-            _buildNavItem(context, Icons.account_balance_wallet, 'Accounts', '/accounts'),
+            _buildNavItem(
+              context,
+              Icons.account_balance_wallet,
+              'Accounts',
+              '/accounts',
+            ),
             _buildNavItem(context, Icons.people, 'Payees', '/payees'),
             _buildNavItem(context, Icons.category, 'Categories', '/categories'),
             _buildNavItem(context, Icons.label, 'Tags', '/tags'),
-            _buildNavItem(context, Icons.currency_exchange, 'Currencies', '/currencies'),
+            _buildNavItem(
+              context,
+              Icons.currency_exchange,
+              'Currencies',
+              '/currencies',
+            ),
             _buildNavItem(context, Icons.show_chart, 'Assets', '/assets'),
             const Divider(),
             _buildSection(context, 'Settings'),
@@ -157,10 +204,12 @@ class ShellScreen extends ConsumerWidget {
           context.go(_navItems[index].path);
         },
         destinations: _navItems
-            .map((item) => NavigationDestination(
-                  icon: Icon(item.icon),
-                  label: item.label,
-                ))
+            .map(
+              (item) => NavigationDestination(
+                icon: Icon(item.icon),
+                label: item.label,
+              ),
+            )
             .toList(),
       ),
     );
@@ -172,19 +221,34 @@ class ShellScreen extends ConsumerWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
-  Widget _buildNavItem(BuildContext context, IconData icon, String label, String path) {
+  Widget _buildNavItem(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String path,
+  ) {
     final current = GoRouterState.of(context).matchedLocation == path;
     return ListTile(
-      leading: Icon(icon, color: current ? Theme.of(context).colorScheme.primary : null),
-      title: Text(label,
-          style: current ? TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold) : null),
+      leading: Icon(
+        icon,
+        color: current ? Theme.of(context).colorScheme.primary : null,
+      ),
+      title: Text(
+        label,
+        style: current
+            ? TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              )
+            : null,
+      ),
       selected: current,
       onTap: () {
         Navigator.pop(context);

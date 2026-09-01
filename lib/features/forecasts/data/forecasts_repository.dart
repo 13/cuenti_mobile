@@ -5,17 +5,20 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final forecastsRepositoryProvider = Provider<ForecastsRepository>(
-    (ref) => ForecastsRepository(ref.watch(dioProvider)));
+  (ref) => ForecastsRepository(ref.watch(dioProvider)),
+);
 
 class ForecastsRepository {
   ForecastsRepository(this._dio);
   final Dio _dio;
 
   Future<ForecastData> getForecast(int year) => _guard(() async {
-        final res = await _dio.get<Map<String, dynamic>>('/forecasts',
-            queryParameters: {'year': year});
-        return ForecastData.fromJson(res.data ?? {});
-      });
+    final res = await _dio.get<Map<String, dynamic>>(
+      '/forecasts',
+      queryParameters: {'year': year},
+    );
+    return ForecastData.fromJson(res.data ?? {});
+  });
 }
 
 /// Shared guard: rethrows DioException as ApiException. Copy this exact

@@ -13,9 +13,10 @@ Future<VehicleReport> vehicleReport(
   required int categoryId,
   DateTime? start,
   DateTime? end,
-}) =>
-    ref.watch(vehiclesRepositoryProvider).getReport(
-          categoryId: categoryId,
-          start: start,
-          end: end,
-        );
+}) => ref
+    .watch(vehiclesRepositoryProvider)
+    .getReport(
+      categoryId: categoryId,
+      start: start,
+      end: end,
+    );

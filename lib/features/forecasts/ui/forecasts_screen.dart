@@ -124,7 +124,6 @@ class _ForecastsScreenState extends ConsumerState<ForecastsScreen> {
 }
 
 class _SummaryCard extends StatelessWidget {
-
   const _SummaryCard({
     required this.income,
     required this.expense,
@@ -153,7 +152,12 @@ class _SummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _metric(BuildContext context, String label, double value, String type) {
+  Widget _metric(
+    BuildContext context,
+    String label,
+    double value,
+    String type,
+  ) {
     return Column(
       children: [
         Text(label, style: Theme.of(context).textTheme.bodySmall),
@@ -170,7 +174,6 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _MonthlyForecastChart extends ConsumerWidget {
-
   const _MonthlyForecastChart({required this.months});
   final List<MonthForecast> months;
 
@@ -197,26 +200,33 @@ class _MonthlyForecastChart extends ConsumerWidget {
               final label = rodIndex == 0 ? 'Income' : 'Expense';
               return BarTooltipItem(
                 '$label\n${hidden ? '•••••' : formatNumber(rod.toY)}',
-                TextStyle(color: rod.color, fontWeight: FontWeight.bold, fontSize: 12),
+                TextStyle(
+                  color: rod.color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
               );
             },
           ),
         ),
         barGroups: List.generate(months.length, (i) {
-          return BarChartGroupData(x: i, barRods: [
-            BarChartRodData(
-              toY: months[i].income,
-              color: cuenti.income,
-              width: 14,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            BarChartRodData(
-              toY: months[i].expense,
-              color: cuenti.expense,
-              width: 14,
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ]);
+          return BarChartGroupData(
+            x: i,
+            barRods: [
+              BarChartRodData(
+                toY: months[i].income,
+                color: cuenti.income,
+                width: 14,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              BarChartRodData(
+                toY: months[i].expense,
+                color: cuenti.expense,
+                width: 14,
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ],
+          );
         }),
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(
@@ -227,7 +237,10 @@ class _MonthlyForecastChart extends ConsumerWidget {
                 if (idx >= 0 && idx < months.length) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(months[idx].month.substring(5), style: const TextStyle(fontSize: 10)),
+                    child: Text(
+                      months[idx].month.substring(5),
+                      style: const TextStyle(fontSize: 10),
+                    ),
                   );
                 }
                 return const SizedBox.shrink();
@@ -241,7 +254,8 @@ class _MonthlyForecastChart extends ConsumerWidget {
         borderData: FlBorderData(show: false),
         gridData: FlGridData(
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(color: gridColor, strokeWidth: 1),
+          getDrawingHorizontalLine: (_) =>
+              FlLine(color: gridColor, strokeWidth: 1),
         ),
       ),
     );
@@ -249,14 +263,15 @@ class _MonthlyForecastChart extends ConsumerWidget {
 }
 
 class _BreakdownList extends StatelessWidget {
-
   const _BreakdownList({required this.months, required this.currency});
   final List<MonthForecast> months;
   final String currency;
 
   @override
   Widget build(BuildContext context) {
-    final filtered = months.where((m) => m.income != 0 || m.expense != 0 || m.net != 0).toList();
+    final filtered = months
+        .where((m) => m.income != 0 || m.expense != 0 || m.net != 0)
+        .toList();
     final fmt = DateFormat('MMM yyyy');
 
     if (filtered.isEmpty) {
@@ -283,7 +298,10 @@ class _BreakdownList extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('Income', style: Theme.of(context).textTheme.bodySmall),
+                          Text(
+                            'Income',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                           AmountText(
                             month.income,
                             type: 'INCOME',
@@ -296,7 +314,10 @@ class _BreakdownList extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('Expense', style: Theme.of(context).textTheme.bodySmall),
+                          Text(
+                            'Expense',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                           AmountText(
                             month.expense,
                             type: 'EXPENSE',
@@ -309,7 +330,10 @@ class _BreakdownList extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('Net', style: Theme.of(context).textTheme.bodySmall),
+                          Text(
+                            'Net',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                           AmountText(
                             month.net,
                             type: month.net >= 0 ? 'INCOME' : 'EXPENSE',

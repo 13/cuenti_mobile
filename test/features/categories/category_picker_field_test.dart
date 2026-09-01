@@ -24,8 +24,10 @@ const _categories = [
 
 /// Finds text inside the open picker sheet only, ignoring the field
 /// underneath that shows the same label for the current selection.
-Finder inSheet(String text) =>
-    find.descendant(of: find.byType(CategorySearchSheet), matching: find.text(text));
+Finder inSheet(String text) => find.descendant(
+  of: find.byType(CategorySearchSheet),
+  matching: find.text(text),
+);
 
 void main() {
   /// Pumps a [CategoryPickerField] wired to local state and returns the
@@ -207,8 +209,7 @@ void main() {
     await pumpPicker(
       tester,
       categories: [
-        for (var i = 0; i < 60; i++)
-          Category(id: i + 1, name: 'Category $i'),
+        for (var i = 0; i < 60; i++) Category(id: i + 1, name: 'Category $i'),
       ],
     );
     await openSheet(tester);

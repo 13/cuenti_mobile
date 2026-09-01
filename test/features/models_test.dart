@@ -8,8 +8,12 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('Account parses ints as doubles and defaults', () {
     final a = Account.fromJson(const {
-      'id': 1, 'accountName': 'Giro', 'accountType': 'BANK',
-      'currency': 'EUR', 'startBalance': 100, 'balance': 250,
+      'id': 1,
+      'accountName': 'Giro',
+      'accountType': 'BANK',
+      'currency': 'EUR',
+      'startBalance': 100,
+      'balance': 250,
     });
     expect(a.balance, 250.0);
     expect(a.excludeFromReports, false);
@@ -18,7 +22,9 @@ void main() {
 
   test('Transaction parses splits and date', () {
     final t = Transaction.fromJson(const {
-      'id': 5, 'type': 'EXPENSE', 'amount': 50,
+      'id': 5,
+      'type': 'EXPENSE',
+      'amount': 50,
       'transactionDate': '2026-05-01T12:00:00',
       'splits': [
         {'id': 1, 'categoryId': 2, 'categoryName': 'Food', 'amount': 30},
@@ -32,7 +38,9 @@ void main() {
 
   test('Transaction without splits key defaults to empty list', () {
     final t = Transaction.fromJson(const {
-      'type': 'EXPENSE', 'amount': 10, 'transactionDate': '2026-01-01T00:00:00',
+      'type': 'EXPENSE',
+      'amount': 10,
+      'transactionDate': '2026-01-01T00:00:00',
     });
     expect(t.splits, isEmpty);
   });
@@ -40,9 +48,16 @@ void main() {
   test('TransactionPage parses envelope', () {
     final p = TransactionPage.fromJson(const {
       'content': [
-        {'type': 'EXPENSE', 'amount': 10, 'transactionDate': '2026-01-01T00:00:00'},
+        {
+          'type': 'EXPENSE',
+          'amount': 10,
+          'transactionDate': '2026-01-01T00:00:00',
+        },
       ],
-      'page': 0, 'size': 50, 'totalElements': 1, 'totalPages': 1,
+      'page': 0,
+      'size': 50,
+      'totalElements': 1,
+      'totalPages': 1,
     });
     expect(p.content.single.amount, 10.0);
     expect(p.totalPages, 1);
@@ -50,8 +65,11 @@ void main() {
 
   test('StatisticsData parses category maps', () {
     final s = StatisticsData.fromJson(const {
-      'totalIncome': 100, 'totalExpense': 40, 'balance': 60,
-      'currency': 'EUR', 'transactionCount': 3,
+      'totalIncome': 100,
+      'totalExpense': 40,
+      'balance': 60,
+      'currency': 'EUR',
+      'transactionCount': 3,
       'expenseByCategory': {'Food': 25, 'Fuel': 15},
     });
     expect(s.expenseByCategory['Food'], 25.0);
@@ -60,8 +78,12 @@ void main() {
 
   test('UserProfile isAdmin and vehicle category', () {
     final u = UserProfile.fromJson(const {
-      'username': 'demo', 'email': 'd@x', 'firstName': 'D', 'lastName': 'M',
-      'roles': ['ROLE_ADMIN'], 'defaultVehicleCategoryId': 7,
+      'username': 'demo',
+      'email': 'd@x',
+      'firstName': 'D',
+      'lastName': 'M',
+      'roles': ['ROLE_ADMIN'],
+      'defaultVehicleCategoryId': 7,
     });
     expect(u.isAdmin, true);
     expect(u.defaultVehicleCategoryId, 7);

@@ -32,10 +32,12 @@ void main() {
   });
 
   test('getLatestRelease parses GitHub JSON', () async {
-    when(() => dio.get<Map<String, dynamic>>(
-          any(),
-          options: any(named: 'options'),
-        )).thenAnswer((_) async => ok(releaseJson));
+    when(
+      () => dio.get<Map<String, dynamic>>(
+        any(),
+        options: any(named: 'options'),
+      ),
+    ).thenAnswer((_) async => ok(releaseJson));
 
     final release = await repo.getLatestRelease();
 

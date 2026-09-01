@@ -25,7 +25,8 @@ class StatisticsScreen extends ConsumerStatefulWidget {
   ConsumerState<StatisticsScreen> createState() => _StatisticsScreenState();
 }
 
-class _StatisticsScreenState extends ConsumerState<StatisticsScreen> with SingleTickerProviderStateMixin {
+class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   TimeRange _timeRange = TimeRange.yearly;
   int? _selectedAccountId;
@@ -41,16 +42,23 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> with Single
     final now = DateTime.now();
     switch (_timeRange) {
       case TimeRange.daily:
-        return DateTimeRange(start: DateTime(now.year, now.month, now.day), end: now);
+        return DateTimeRange(
+          start: DateTime(now.year, now.month, now.day),
+          end: now,
+        );
       case TimeRange.weekly:
         final start = now.subtract(Duration(days: now.weekday - 1));
-        return DateTimeRange(start: DateTime(start.year, start.month, start.day), end: now);
+        return DateTimeRange(
+          start: DateTime(start.year, start.month, start.day),
+          end: now,
+        );
       case TimeRange.monthly:
         return DateTimeRange(start: DateTime(now.year, now.month), end: now);
       case TimeRange.yearly:
         return DateTimeRange(start: DateTime(now.year), end: now);
       case TimeRange.custom:
-        return _customRange ?? DateTimeRange(start: DateTime(now.year, now.month), end: now);
+        return _customRange ??
+            DateTimeRange(start: DateTime(now.year, now.month), end: now);
     }
   }
 
@@ -59,10 +67,12 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> with Single
       context: context,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
-      initialDateRange: _customRange ?? DateTimeRange(
-        start: DateTime.now().subtract(const Duration(days: 30)),
-        end: DateTime.now(),
-      ),
+      initialDateRange:
+          _customRange ??
+          DateTimeRange(
+            start: DateTime.now().subtract(const Duration(days: 30)),
+            end: DateTime.now(),
+          ),
     );
     if (picked != null) {
       setState(() {
@@ -80,7 +90,10 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> with Single
     final start = fmt.format(range.start);
     final end = fmt.format(range.end);
     final statsProvider = statisticsProvider(
-        start: start, end: end, accountId: _selectedAccountId);
+      start: start,
+      end: end,
+      accountId: _selectedAccountId,
+    );
     final statsAsync = ref.watch(statsProvider);
 
     return Column(
@@ -113,13 +126,24 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> with Single
               controller: _tabController,
               children: [
                 _OverviewTab(
-                    stats: stats,
-                    onRefresh: () {
-                      ref.invalidate(statsProvider);
-                      return ref.read(statsProvider.future);
-                    }),
-                _CategoryTab(data: stats.incomeByCategory, title: 'Income by Category', currency: stats.currency, type: 'INCOME'),
-                _CategoryTab(data: stats.expenseByCategory, title: 'Expense by Category', currency: stats.currency, type: 'EXPENSE'),
+                  stats: stats,
+                  onRefresh: () {
+                    ref.invalidate(statsProvider);
+                    return ref.read(statsProvider.future);
+                  },
+                ),
+                _CategoryTab(
+                  data: stats.incomeByCategory,
+                  title: 'Income by Category',
+                  currency: stats.currency,
+                  type: 'INCOME',
+                ),
+                _CategoryTab(
+                  data: stats.expenseByCategory,
+                  title: 'Expense by Category',
+                  currency: stats.currency,
+                  type: 'EXPENSE',
+                ),
               ],
             ),
           ),
@@ -183,7 +207,9 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> with Single
   }
 
   Future<void> _openAccountSheet(
-      BuildContext context, List<Account> accounts) async {
+    BuildContext context,
+    List<Account> accounts,
+  ) async {
     final selected = await showModalBottomSheet<int?>(
       context: context,
       builder: (ctx) => SafeArea(
@@ -194,7 +220,10 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> with Single
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Account', style: Theme.of(ctx).textTheme.titleMedium),
+                child: Text(
+                  'Account',
+                  style: Theme.of(ctx).textTheme.titleMedium,
+                ),
               ),
             ),
             ListTile(
@@ -245,7 +274,10 @@ class _OverviewTab extends StatelessWidget {
           // Income vs Expense Donut
           const SectionHeader('Income vs Expense'),
           const SizedBox(height: 8),
-          _IncomeExpenseDonut(income: stats.totalIncome, expense: stats.totalExpense),
+          _IncomeExpenseDonut(
+            income: stats.totalIncome,
+            expense: stats.totalExpense,
+          ),
           const SizedBox(height: 24),
 
           // Net Cash Flow Line Chart
@@ -270,8 +302,10 @@ class _OverviewTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text('${stats.transactionCount} transactions in period',
-              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            '${stats.transactionCount} transactions in period',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );
@@ -311,14 +345,22 @@ class _IncomeExpenseDonut extends ConsumerWidget {
                   title: hidden ? '•••••' : formatNumber(income),
                   color: colors.income,
                   radius: 40,
-                  titleStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                  titleStyle: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
                 PieChartSectionData(
                   value: expense,
                   title: hidden ? '•••••' : formatNumber(expense),
                   color: colors.expense,
                   radius: 40,
-                  titleStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                  titleStyle: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),
@@ -349,14 +391,18 @@ class _IncomeExpenseDonut extends ConsumerWidget {
 }
 
 class _CashFlowLineChart extends ConsumerWidget {
-  const _CashFlowLineChart({required this.monthlyIncome, required this.monthlyExpense});
+  const _CashFlowLineChart({
+    required this.monthlyIncome,
+    required this.monthlyExpense,
+  });
   final Map<String, double> monthlyIncome;
   final Map<String, double> monthlyExpense;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hidden = ref.watch(privacyModeProvider);
-    final allMonths = {...monthlyIncome.keys, ...monthlyExpense.keys}.toList()..sort();
+    final allMonths = {...monthlyIncome.keys, ...monthlyExpense.keys}.toList()
+      ..sort();
     if (allMonths.isEmpty) {
       return const EmptyState(icon: Icons.show_chart, message: 'No data');
     }
@@ -391,7 +437,10 @@ class _CashFlowLineChart extends ConsumerWidget {
                 if (idx >= 0 && idx < allMonths.length) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(allMonths[idx].substring(5), style: const TextStyle(fontSize: 10)),
+                    child: Text(
+                      allMonths[idx].substring(5),
+                      style: const TextStyle(fontSize: 10),
+                    ),
                   );
                 }
                 return const SizedBox.shrink();
@@ -405,7 +454,9 @@ class _CashFlowLineChart extends ConsumerWidget {
         borderData: FlBorderData(show: false),
         lineTouchData: LineTouchData(
           getTouchedSpotIndicator: (barData, indexes) => indexes.map((i) {
-            final dotColor = barData.spots[i].y >= 0 ? cuenti.income : cuenti.expense;
+            final dotColor = barData.spots[i].y >= 0
+                ? cuenti.income
+                : cuenti.expense;
             return TouchedSpotIndicatorData(
               FlLine(color: dotColor),
               FlDotData(
@@ -423,10 +474,17 @@ class _CashFlowLineChart extends ConsumerWidget {
             // Tooltip text is painted inside the fl_chart canvas, not a
             // real widget — PrivacyBlur can't wrap it, so keep the
             // '•••••' string substitution here.
-            getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
-              hidden ? '•••••' : formatNumber(s.y),
-              TextStyle(color: s.y >= 0 ? cuenti.income : cuenti.expense, fontWeight: FontWeight.bold),
-            )).toList(),
+            getTooltipItems: (spots) => spots
+                .map(
+                  (s) => LineTooltipItem(
+                    hidden ? '•••••' : formatNumber(s.y),
+                    TextStyle(
+                      color: s.y >= 0 ? cuenti.income : cuenti.expense,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+                .toList(),
           ),
         ),
         lineBarsData: [
@@ -456,7 +514,6 @@ class _CashFlowLineChart extends ConsumerWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
-
   const _SummaryCard({
     required this.income,
     required this.expense,
@@ -478,14 +535,24 @@ class _SummaryCard extends StatelessWidget {
           children: [
             _metric(context, 'Income', income, 'INCOME'),
             _metric(context, 'Expense', expense, 'EXPENSE'),
-            _metric(context, 'Balance', balance, balance >= 0 ? 'INCOME' : 'EXPENSE'),
+            _metric(
+              context,
+              'Balance',
+              balance,
+              balance >= 0 ? 'INCOME' : 'EXPENSE',
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _metric(BuildContext context, String label, double value, String type) {
+  Widget _metric(
+    BuildContext context,
+    String label,
+    double value,
+    String type,
+  ) {
     return Column(
       children: [
         Text(label, style: Theme.of(context).textTheme.bodySmall),
@@ -502,15 +569,18 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _MonthlyChart extends ConsumerWidget {
-
-  const _MonthlyChart({required this.monthlyIncome, required this.monthlyExpense});
+  const _MonthlyChart({
+    required this.monthlyIncome,
+    required this.monthlyExpense,
+  });
   final Map<String, double> monthlyIncome;
   final Map<String, double> monthlyExpense;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hidden = ref.watch(privacyModeProvider);
-    final allMonths = {...monthlyIncome.keys, ...monthlyExpense.keys}.toList()..sort();
+    final allMonths = {...monthlyIncome.keys, ...monthlyExpense.keys}.toList()
+      ..sort();
     if (allMonths.isEmpty) {
       return const EmptyState(icon: Icons.bar_chart, message: 'No data');
     }
@@ -531,27 +601,34 @@ class _MonthlyChart extends ConsumerWidget {
               final label = rodIndex == 0 ? 'Income' : 'Expense';
               return BarTooltipItem(
                 '$label\n${hidden ? '•••••' : formatNumber(rod.toY)}',
-                TextStyle(color: rod.color, fontWeight: FontWeight.bold, fontSize: 12),
+                TextStyle(
+                  color: rod.color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
               );
             },
           ),
         ),
         barGroups: List.generate(allMonths.length, (i) {
           final month = allMonths[i];
-          return BarChartGroupData(x: i, barRods: [
-            BarChartRodData(
-              toY: monthlyIncome[month] ?? 0,
-              color: cuenti.income,
-              width: 14,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            BarChartRodData(
-              toY: monthlyExpense[month] ?? 0,
-              color: cuenti.expense,
-              width: 14,
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ]);
+          return BarChartGroupData(
+            x: i,
+            barRods: [
+              BarChartRodData(
+                toY: monthlyIncome[month] ?? 0,
+                color: cuenti.income,
+                width: 14,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              BarChartRodData(
+                toY: monthlyExpense[month] ?? 0,
+                color: cuenti.expense,
+                width: 14,
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ],
+          );
         }),
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(
@@ -562,7 +639,10 @@ class _MonthlyChart extends ConsumerWidget {
                 if (idx >= 0 && idx < allMonths.length) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(allMonths[idx].substring(5), style: const TextStyle(fontSize: 10)),
+                    child: Text(
+                      allMonths[idx].substring(5),
+                      style: const TextStyle(fontSize: 10),
+                    ),
                   );
                 }
                 return const SizedBox.shrink();
@@ -576,7 +656,8 @@ class _MonthlyChart extends ConsumerWidget {
         borderData: FlBorderData(show: false),
         gridData: FlGridData(
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(color: gridColor, strokeWidth: 1),
+          getDrawingHorizontalLine: (_) =>
+              FlLine(color: gridColor, strokeWidth: 1),
         ),
       ),
     );
@@ -584,7 +665,6 @@ class _MonthlyChart extends ConsumerWidget {
 }
 
 class _CategoryTab extends ConsumerWidget {
-
   const _CategoryTab({
     required this.data,
     required this.title,
@@ -599,10 +679,14 @@ class _CategoryTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hidden = ref.watch(privacyModeProvider);
-    final sorted = data.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sorted = data.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     final total = sorted.fold<double>(0, (sum, e) => sum + e.value);
     final palette = context.cuentiColors.chartPalette;
-    final colors = List.generate(sorted.length, (i) => palette[i % palette.length]);
+    final colors = List.generate(
+      sorted.length,
+      (i) => palette[i % palette.length],
+    );
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -636,7 +720,11 @@ class _CategoryTab extends ConsumerWidget {
                     title: pct >= 5 ? '${pct.toStringAsFixed(0)}%' : '',
                     color: colors[i],
                     radius: 50,
-                    titleStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                    titleStyle: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   );
                 }),
               ),
@@ -651,7 +739,10 @@ class _CategoryTab extends ConsumerWidget {
             children: List.generate(sorted.length, (i) {
               return Chip(
                 avatar: CircleAvatar(backgroundColor: colors[i], radius: 6),
-                label: Text(sorted[i].key, style: const TextStyle(fontSize: 12)),
+                label: Text(
+                  sorted[i].key,
+                  style: const TextStyle(fontSize: 12),
+                ),
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               );
@@ -676,7 +767,14 @@ class _CategoryTab extends ConsumerWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(width: 12, height: 12, decoration: BoxDecoration(color: colors[i], borderRadius: BorderRadius.circular(2))),
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: colors[i],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
                         const SizedBox(width: 8),
                         Text(e.key, overflow: TextOverflow.ellipsis),
                       ],

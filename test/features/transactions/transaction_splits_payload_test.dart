@@ -18,38 +18,47 @@ void main() {
     repo = TransactionsRepository(dio);
   });
 
-  test('splitsTouched: false (default) omits splits key even when non-empty',
-      () async {
-    final tx = Transaction(
-      amount: 30,
-      transactionDate: DateTime(2026),
-      splits: const [
-        TransactionSplit(categoryId: 1, amount: 10),
-        TransactionSplit(categoryId: 2, amount: 20),
-      ],
-    );
+  test(
+    'splitsTouched: false (default) omits splits key even when non-empty',
+    () async {
+      final tx = Transaction(
+        amount: 30,
+        transactionDate: DateTime(2026),
+        splits: const [
+          TransactionSplit(categoryId: 1, amount: 10),
+          TransactionSplit(categoryId: 2, amount: 20),
+        ],
+      );
 
-    when(() => dio.post<Map<String, dynamic>>('/transactions',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({
-              'id': 1,
-              'type': 'EXPENSE',
-              'amount': 30,
-              'transactionDate': '2026-01-01T00:00:00.000',
-            }));
+      when(
+        () => dio.post<Map<String, dynamic>>(
+          '/transactions',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => ok({
+          'id': 1,
+          'type': 'EXPENSE',
+          'amount': 30,
+          'transactionDate': '2026-01-01T00:00:00.000',
+        }),
+      );
 
-    await repo.save(tx);
+      await repo.save(tx);
 
-    final captured = verify(() => dio.post<Map<String, dynamic>>(
-            '/transactions',
-            data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, dynamic>;
-    expect(captured.containsKey('splits'), isFalse);
-  });
+      final captured =
+          verify(
+                () => dio.post<Map<String, dynamic>>(
+                  '/transactions',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured.containsKey('splits'), isFalse);
+    },
+  );
 
-  test('splitsTouched: true with 2 splits sends exact list of maps',
-      () async {
+  test('splitsTouched: true with 2 splits sends exact list of maps', () async {
     final tx = Transaction(
       amount: 30,
       transactionDate: DateTime(2026),
@@ -59,52 +68,70 @@ void main() {
       ],
     );
 
-    when(() => dio.post<Map<String, dynamic>>('/transactions',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({
-              'id': 1,
-              'type': 'EXPENSE',
-              'amount': 30,
-              'transactionDate': '2026-01-01T00:00:00.000',
-            }));
+    when(
+      () => dio.post<Map<String, dynamic>>(
+        '/transactions',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'id': 1,
+        'type': 'EXPENSE',
+        'amount': 30,
+        'transactionDate': '2026-01-01T00:00:00.000',
+      }),
+    );
 
     await repo.save(tx, splitsTouched: true);
 
-    final captured = verify(() => dio.post<Map<String, dynamic>>(
-            '/transactions',
-            data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, dynamic>;
+    final captured =
+        verify(
+              () => dio.post<Map<String, dynamic>>(
+                '/transactions',
+                data: captureAny(named: 'data'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured['splits'], [
       {'categoryId': 1, 'amount': 10.0, 'memo': 'coffee'},
       {'categoryId': 2, 'amount': 20.0},
     ]);
   });
 
-  test('splitsTouched: true with empty list sends splits: [] (remove-all)',
-      () async {
-    final tx = Transaction(
-      amount: 30,
-      transactionDate: DateTime(2026),
-    );
+  test(
+    'splitsTouched: true with empty list sends splits: [] (remove-all)',
+    () async {
+      final tx = Transaction(
+        amount: 30,
+        transactionDate: DateTime(2026),
+      );
 
-    when(() => dio.post<Map<String, dynamic>>('/transactions',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({
-              'id': 1,
-              'type': 'EXPENSE',
-              'amount': 30,
-              'transactionDate': '2026-01-01T00:00:00.000',
-            }));
+      when(
+        () => dio.post<Map<String, dynamic>>(
+          '/transactions',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => ok({
+          'id': 1,
+          'type': 'EXPENSE',
+          'amount': 30,
+          'transactionDate': '2026-01-01T00:00:00.000',
+        }),
+      );
 
-    await repo.save(tx, splitsTouched: true);
+      await repo.save(tx, splitsTouched: true);
 
-    final captured = verify(() => dio.post<Map<String, dynamic>>(
-            '/transactions',
-            data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, dynamic>;
-    expect(captured.containsKey('splits'), isTrue);
-    expect(captured['splits'], isEmpty);
-  });
+      final captured =
+          verify(
+                () => dio.post<Map<String, dynamic>>(
+                  '/transactions',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured.containsKey('splits'), isTrue);
+      expect(captured['splits'], isEmpty);
+    },
+  );
 }

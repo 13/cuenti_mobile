@@ -139,18 +139,21 @@ void main() {
     expect(find.text(formatNumber(60)), findsOneWidget);
   });
 
-  testWidgets('tapping the FAB opens the add-budget sheet with a category dropdown', (
-    tester,
-  ) async {
-    await pumpScreen(tester);
+  testWidgets(
+    'tapping the FAB opens the add-budget sheet with a category dropdown',
+    (
+      tester,
+    ) async {
+      await pumpScreen(tester);
 
-    await tester.tap(find.byType(FloatingActionButton));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Add Budget'), findsOneWidget);
-    expect(find.byType(DropdownButtonFormField<int>), findsOneWidget);
-    expect(find.text('Save'), findsOneWidget);
-  });
+      expect(find.text('Add Budget'), findsOneWidget);
+      expect(find.byType(DropdownButtonFormField<int>), findsOneWidget);
+      expect(find.text('Save'), findsOneWidget);
+    },
+  );
 
   testWidgets('tapping a card opens the edit sheet with Delete button', (
     tester,

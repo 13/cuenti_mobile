@@ -39,7 +39,10 @@ void main() {
 
   group('buildFuelMemo', () {
     test('builds canonical memo', () {
-      expect(buildFuelMemo(45210, 41.3, true, 'Aral'), 'd=45210 l=41.3 full Aral');
+      expect(
+        buildFuelMemo(45210, 41.3, true, 'Aral'),
+        'd=45210 l=41.3 full Aral',
+      );
     });
 
     test('skips missing parts and trailing zeros', () {
@@ -56,7 +59,10 @@ void main() {
       expect(t.liters, 38.5);
       expect(t.fullTank, isTrue);
       expect(t.remainderText, 'Shell');
-      expect(buildFuelMemo(t.odometer, t.liters, t.fullTank, t.remainderText), built);
+      expect(
+        buildFuelMemo(t.odometer, t.liters, t.fullTank, t.remainderText),
+        built,
+      );
     });
   });
 }

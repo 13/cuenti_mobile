@@ -36,17 +36,23 @@ void main() {
   });
 
   test('save posts name and params, upserting by name', () async {
-    when(() => dio.post<Map<String, dynamic>>('/saved-views',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({'id': 5, 'name': 'Groceries'}));
+    when(
+      () => dio.post<Map<String, dynamic>>(
+        '/saved-views',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer((_) async => ok({'id': 5, 'name': 'Groceries'}));
 
     await repo.save('Groceries', '{"v":1,"categoryId":2}');
 
-    final captured = verify(() => dio.post<Map<String, dynamic>>(
-            '/saved-views',
-            data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, dynamic>;
+    final captured =
+        verify(
+              () => dio.post<Map<String, dynamic>>(
+                '/saved-views',
+                data: captureAny(named: 'data'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured, {
       'name': 'Groceries',
       'params': '{"v":1,"categoryId":2}',
@@ -54,8 +60,9 @@ void main() {
   });
 
   test('delete calls DELETE /saved-views/{id}', () async {
-    when(() => dio.delete<void>('/saved-views/3'))
-        .thenAnswer((_) async => ok(null));
+    when(
+      () => dio.delete<void>('/saved-views/3'),
+    ).thenAnswer((_) async => ok(null));
 
     await repo.delete(3);
 

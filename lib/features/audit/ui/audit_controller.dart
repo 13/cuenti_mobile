@@ -51,15 +51,17 @@ class AuditController extends _$AuditController {
     if (current == null || !current.hasMore || current.loadingMore) return;
     state = AsyncData(current.copyWith(loadingMore: true));
     try {
-      final page = await ref.read(auditRepositoryProvider).getPage(
-          filter: current.filter,
-          page: current.nextPage);
-      state = AsyncData(current.copyWith(
-        items: _dedupeById([...current.items, ...page.content]),
-        nextPage: current.nextPage + 1,
-        hasMore: current.nextPage + 1 < page.totalPages,
-        loadingMore: false,
-      ));
+      final page = await ref
+          .read(auditRepositoryProvider)
+          .getPage(filter: current.filter, page: current.nextPage);
+      state = AsyncData(
+        current.copyWith(
+          items: _dedupeById([...current.items, ...page.content]),
+          nextPage: current.nextPage + 1,
+          hasMore: current.nextPage + 1 < page.totalPages,
+          loadingMore: false,
+        ),
+      );
     } catch (_) {
       state = AsyncData(current.copyWith(loadingMore: false));
       rethrow;

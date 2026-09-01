@@ -8,7 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 final transactionsRepositoryProvider = Provider<TransactionsRepository>(
-    (ref) => TransactionsRepository(ref.watch(dioProvider)));
+  (ref) => TransactionsRepository(ref.watch(dioProvider)),
+);
 
 class TransactionsRepository {
   TransactionsRepository(this._dio);
@@ -23,42 +24,43 @@ class TransactionsRepository {
     TransactionFilter filter = const TransactionFilter(),
     int page = 0,
     int size = 50,
-  }) =>
-      _guard(() async {
-        final df = DateFormat('yyyy-MM-dd');
-        final res = await _dio.get<dynamic>('/transactions',
-            queryParameters: {
-              if (filter.accountId != null) 'accountId': filter.accountId,
-              if (filter.type != null) 'type': filter.type,
-              if (filter.categoryId != null) 'categoryId': filter.categoryId,
-              if (filter.start != null) 'start': df.format(filter.start!),
-              if (filter.end != null) 'end': df.format(filter.end!),
-              if (filter.search != null && filter.search!.isNotEmpty)
-                'search': filter.search,
-              'page': page,
-              'size': size,
-            });
-        final data = res.data;
-        if (data is List) {
-          // Legacy server predating the pagination API: a single,
-          // already-exhausted page. Filters/search are still sent above but
-          // silently ignored by old servers.
-          final content = data
-              .map((e) => Transaction.fromJson(e as Map<String, dynamic>))
-              .toList();
-          return TransactionPage(
-            content: content,
-            page: page,
-            size: size,
-            totalElements: content.length,
-            totalPages: 1,
-          );
-        }
-        if (data is Map<String, dynamic>) {
-          return TransactionPage.fromJson(data);
-        }
-        throw const ServerException('Unexpected response from server');
-      });
+  }) => _guard(() async {
+    final df = DateFormat('yyyy-MM-dd');
+    final res = await _dio.get<dynamic>(
+      '/transactions',
+      queryParameters: {
+        if (filter.accountId != null) 'accountId': filter.accountId,
+        if (filter.type != null) 'type': filter.type,
+        if (filter.categoryId != null) 'categoryId': filter.categoryId,
+        if (filter.start != null) 'start': df.format(filter.start!),
+        if (filter.end != null) 'end': df.format(filter.end!),
+        if (filter.search != null && filter.search!.isNotEmpty)
+          'search': filter.search,
+        'page': page,
+        'size': size,
+      },
+    );
+    final data = res.data;
+    if (data is List) {
+      // Legacy server predating the pagination API: a single,
+      // already-exhausted page. Filters/search are still sent above but
+      // silently ignored by old servers.
+      final content = data
+          .map((e) => Transaction.fromJson(e as Map<String, dynamic>))
+          .toList();
+      return TransactionPage(
+        content: content,
+        page: page,
+        size: size,
+        totalElements: content.length,
+        totalPages: 1,
+      );
+    }
+    if (data is Map<String, dynamic>) {
+      return TransactionPage.fromJson(data);
+    }
+    throw const ServerException('Unexpected response from server');
+  });
 
   /// [splitsTouched]: the caller explicitly manages splits. When false
   /// (default) the splits key is stripped for backend back-compat (omitted =
@@ -78,18 +80,24 @@ class TransactionsRepository {
           json.remove('splits');
         } else {
           json['splits'] = t.splits
-              .map((s) => {
-                    'categoryId': s.categoryId,
-                    'amount': s.amount,
-                    if (s.memo != null) 'memo': s.memo,
-                  })
+              .map(
+                (s) => {
+                  'categoryId': s.categoryId,
+                  'amount': s.amount,
+                  if (s.memo != null) 'memo': s.memo,
+                },
+              )
               .toList();
         }
         final res = t.id != null
             ? await _dio.put<Map<String, dynamic>>(
-                '/transactions/${t.id}', data: json)
-            : await _dio.post<Map<String, dynamic>>('/transactions',
-                data: json);
+                '/transactions/${t.id}',
+                data: json,
+              )
+            : await _dio.post<Map<String, dynamic>>(
+                '/transactions',
+                data: json,
+              );
         return Transaction.fromJson(res.data!);
       });
 

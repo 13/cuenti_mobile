@@ -7,7 +7,13 @@ part 'asset_performance.g.dart';
 @freezed
 abstract class AssetPerformance with _$AssetPerformance {
   const factory AssetPerformance({
-    @JsonKey(fromJson: jsonToDouble) required double totalUnits, @JsonKey(fromJson: jsonToDouble) required double totalCost, @JsonKey(fromJson: jsonToDouble) required double currentValue, @JsonKey(fromJson: jsonToDouble) required double currentPrice, @JsonKey(fromJson: jsonToDouble) required double gainLoss, @JsonKey(fromJson: jsonToDouble) required double gainLossPercent, @Default('') String assetName,
+    @JsonKey(fromJson: jsonToDouble) required double totalUnits,
+    @JsonKey(fromJson: jsonToDouble) required double totalCost,
+    @JsonKey(fromJson: jsonToDouble) required double currentValue,
+    @JsonKey(fromJson: jsonToDouble) required double currentPrice,
+    @JsonKey(fromJson: jsonToDouble) required double gainLoss,
+    @JsonKey(fromJson: jsonToDouble) required double gainLossPercent,
+    @Default('') String assetName,
     @Default('') String assetSymbol,
   }) = _AssetPerformance;
 

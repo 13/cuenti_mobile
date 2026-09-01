@@ -17,10 +17,13 @@ final supportedAbisProvider = FutureProvider<List<String>>((ref) async {
 });
 
 final downloadDirProvider = Provider<Future<Directory> Function()>(
-    (ref) => getTemporaryDirectory);
+  (ref) => getTemporaryDirectory,
+);
 
 final apkInstallerProvider = Provider<Future<void> Function(String path)>(
-    (ref) => (path) async => OpenFilex.open(path));
+  (ref) =>
+      (path) async => OpenFilex.open(path),
+);
 
 Future<void> checkForUpdates(BuildContext context, WidgetRef ref) async {
   final messenger = ScaffoldMessenger.of(context);
@@ -76,14 +79,14 @@ class _UpdateDialogState extends ConsumerState<_UpdateDialog> {
     try {
       final dir = await ref.read(downloadDirProvider)();
       final path = await ref.read(appUpdateRepositoryProvider).downloadApk(
-            widget.asset,
-            '${dir.path}/${widget.asset.name}',
-            (received, total) {
-              if (total > 0 && mounted) {
-                setState(() => _progress = received / total);
-              }
-            },
-          );
+        widget.asset,
+        '${dir.path}/${widget.asset.name}',
+        (received, total) {
+          if (total > 0 && mounted) {
+            setState(() => _progress = received / total);
+          }
+        },
+      );
       await ref.read(apkInstallerProvider)(path);
       if (mounted) Navigator.pop(context);
     } catch (_) {

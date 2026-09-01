@@ -31,8 +31,7 @@ void main() {
   // Enough expense categories that the sheet cannot show them all at once;
   // 'Fuel' is last so it is only reachable by scrolling.
   final categories = [
-    for (var i = 1; i <= 25; i++)
-      Category(id: i, name: 'Category $i'),
+    for (var i = 1; i <= 25; i++) Category(id: i, name: 'Category $i'),
     const Category(id: 99, name: 'Fuel'),
   ];
 

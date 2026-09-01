@@ -53,8 +53,7 @@ void main() {
       ],
     );
     when(
-      () =>
-          txRepo.getPage(),
+      () => txRepo.getPage(),
     ).thenAnswer(
       (_) async => const TransactionPage(
         content: [],
@@ -106,9 +105,7 @@ void main() {
             body: Consumer(
               builder: (context, ref, _) {
                 ref.watch(
-                  transactionsControllerProvider(
-                    
-                  ),
+                  transactionsControllerProvider(),
                 );
                 return TransactionDialog(transaction: transaction);
               },

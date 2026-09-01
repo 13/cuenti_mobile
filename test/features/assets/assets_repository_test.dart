@@ -16,26 +16,28 @@ void main() {
   });
 
   test('getAll parses list of assets', () async {
-    when(() => dio.get<List<dynamic>>('/assets')).thenAnswer((_) async => ok([
-          {
-            'id': 1,
-            'symbol': 'AAPL',
-            'name': 'Apple Inc',
-            'type': 'STOCK',
-            'currentPrice': null,
-            'currency': 'USD',
-            'lastUpdate': null,
-          },
-          {
-            'id': 2,
-            'symbol': 'BTC',
-            'name': 'Bitcoin',
-            'type': 'CRYPTO',
-            'currentPrice': null,
-            'currency': 'USD',
-            'lastUpdate': null,
-          },
-        ]));
+    when(() => dio.get<List<dynamic>>('/assets')).thenAnswer(
+      (_) async => ok([
+        {
+          'id': 1,
+          'symbol': 'AAPL',
+          'name': 'Apple Inc',
+          'type': 'STOCK',
+          'currentPrice': null,
+          'currency': 'USD',
+          'lastUpdate': null,
+        },
+        {
+          'id': 2,
+          'symbol': 'BTC',
+          'name': 'Bitcoin',
+          'type': 'CRYPTO',
+          'currentPrice': null,
+          'currency': 'USD',
+          'lastUpdate': null,
+        },
+      ]),
+    );
 
     final assets = await repo.getAll();
 
@@ -46,42 +48,58 @@ void main() {
   });
 
   test('getAll passes search query param when non-null', () async {
-    when(() => dio.get<List<dynamic>>('/assets',
-            queryParameters: any(named: 'queryParameters')))
-        .thenAnswer((_) async => ok([
-          {
-            'id': 1,
-            'symbol': 'AAPL',
-            'name': 'Apple Inc',
-            'type': 'STOCK',
-            'currency': 'USD',
-          }
-        ]));
-
-    await repo.getAll(search: 'AAPL');
-
-    verify(() => dio.get<List<dynamic>>('/assets',
-        queryParameters: {'search': 'AAPL'})).called(1);
-  });
-
-  test('save posts new asset when id is null', () async {
-    const asset = Asset(symbol: 'AAPL', name: 'Apple Inc', currency: 'USD');
-    when(() => dio.post<Map<String, dynamic>>('/assets', data: any(named: 'data')))
-        .thenAnswer((_) async => ok({
-          'id': 5,
+    when(
+      () => dio.get<List<dynamic>>(
+        '/assets',
+        queryParameters: any(named: 'queryParameters'),
+      ),
+    ).thenAnswer(
+      (_) async => ok([
+        {
+          'id': 1,
           'symbol': 'AAPL',
           'name': 'Apple Inc',
           'type': 'STOCK',
           'currency': 'USD',
-        }));
+        },
+      ]),
+    );
+
+    await repo.getAll(search: 'AAPL');
+
+    verify(
+      () => dio.get<List<dynamic>>(
+        '/assets',
+        queryParameters: {'search': 'AAPL'},
+      ),
+    ).called(1);
+  });
+
+  test('save posts new asset when id is null', () async {
+    const asset = Asset(symbol: 'AAPL', name: 'Apple Inc', currency: 'USD');
+    when(
+      () => dio.post<Map<String, dynamic>>('/assets', data: any(named: 'data')),
+    ).thenAnswer(
+      (_) async => ok({
+        'id': 5,
+        'symbol': 'AAPL',
+        'name': 'Apple Inc',
+        'type': 'STOCK',
+        'currency': 'USD',
+      }),
+    );
 
     final saved = await repo.save(asset);
 
     expect(saved.id, 5);
-    final captured = verify(
-            () => dio.post<Map<String, dynamic>>('/assets', data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, dynamic>;
+    final captured =
+        verify(
+              () => dio.post<Map<String, dynamic>>(
+                '/assets',
+                data: captureAny(named: 'data'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured, containsPair('symbol', 'AAPL'));
     expect(captured, containsPair('name', 'Apple Inc'));
     expect(captured, containsPair('type', 'STOCK'));
@@ -93,15 +111,21 @@ void main() {
 
   test('save puts existing asset when id is set', () async {
     const asset = Asset(id: 1, symbol: 'AAPL', name: 'Apple Inc');
-    when(() => dio.put<Map<String, dynamic>>('/assets/1', data: any(named: 'data')))
-        .thenAnswer((_) async =>
-            ok({'id': 1, 'symbol': 'AAPL', 'name': 'Apple Inc', 'type': 'STOCK'}));
+    when(
+      () =>
+          dio.put<Map<String, dynamic>>('/assets/1', data: any(named: 'data')),
+    ).thenAnswer(
+      (_) async =>
+          ok({'id': 1, 'symbol': 'AAPL', 'name': 'Apple Inc', 'type': 'STOCK'}),
+    );
 
     final saved = await repo.save(asset);
 
     expect(saved.id, 1);
-    verify(() => dio.put<Map<String, dynamic>>('/assets/1', data: any(named: 'data')))
-        .called(1);
+    verify(
+      () =>
+          dio.put<Map<String, dynamic>>('/assets/1', data: any(named: 'data')),
+    ).called(1);
   });
 
   test('delete calls DELETE /assets/{id}', () async {
@@ -112,9 +136,13 @@ void main() {
     verify(() => dio.delete<void>('/assets/1')).called(1);
   });
 
-  test('refreshPrice calls POST /assets/{id}/refresh-price and returns asset', () async {
-    when(() => dio.post<Map<String, dynamic>>('/assets/1/refresh-price'))
-        .thenAnswer((_) async => ok({
+  test(
+    'refreshPrice calls POST /assets/{id}/refresh-price and returns asset',
+    () async {
+      when(
+        () => dio.post<Map<String, dynamic>>('/assets/1/refresh-price'),
+      ).thenAnswer(
+        (_) async => ok({
           'id': 1,
           'symbol': 'AAPL',
           'name': 'Apple Inc',
@@ -122,14 +150,18 @@ void main() {
           'currentPrice': 150.25,
           'currency': 'USD',
           'lastUpdate': '2026-07-12T10:30:00Z',
-        }));
+        }),
+      );
 
-    final asset = await repo.refreshPrice(1);
+      final asset = await repo.refreshPrice(1);
 
-    expect(asset.id, 1);
-    expect(asset.currentPrice, 150.25);
-    verify(() => dio.post<Map<String, dynamic>>('/assets/1/refresh-price')).called(1);
-  });
+      expect(asset.id, 1);
+      expect(asset.currentPrice, 150.25);
+      verify(
+        () => dio.post<Map<String, dynamic>>('/assets/1/refresh-price'),
+      ).called(1);
+    },
+  );
 
   test('getAll maps DioException to ApiException', () async {
     when(() => dio.get<List<dynamic>>('/assets')).thenThrow(

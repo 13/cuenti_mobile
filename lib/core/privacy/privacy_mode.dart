@@ -24,6 +24,8 @@ class PrivacyMode extends _$PrivacyMode {
 
   Future<void> toggle() async {
     state = !state;
-    await ref.read(secureStorageProvider).write(_privacyModeKey, state.toString());
+    await ref
+        .read(secureStorageProvider)
+        .write(_privacyModeKey, state.toString());
   }
 }

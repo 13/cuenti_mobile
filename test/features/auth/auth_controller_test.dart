@@ -59,25 +59,29 @@ void main() {
     when(() => repo.fetchRegistrationEnabled()).thenAnswer((_) async => true);
     when(() => repo.logout()).thenAnswer((_) async {});
 
-    container = ProviderContainer(overrides: [
-      authRepositoryProvider.overrideWithValue(repo),
-      apiClientProvider.overrideWithValue(apiClient),
-      secureStorageProvider.overrideWithValue(storage),
-    ]);
+    container = ProviderContainer(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(repo),
+        apiClientProvider.overrideWithValue(apiClient),
+        secureStorageProvider.overrideWithValue(storage),
+      ],
+    );
     addTearDown(container.dispose);
   });
 
-  test('concurrent init() calls are single-flight: getProfile called once',
-      () async {
-    final notifier = container.read(authControllerProvider.notifier);
+  test(
+    'concurrent init() calls are single-flight: getProfile called once',
+    () async {
+      final notifier = container.read(authControllerProvider.notifier);
 
-    // Two explicit concurrent calls, plus the microtask `build()` already
-    // scheduled internally, all race for the same in-flight init.
-    await Future.wait([notifier.init(), notifier.init()]);
+      // Two explicit concurrent calls, plus the microtask `build()` already
+      // scheduled internally, all race for the same in-flight init.
+      await Future.wait([notifier.init(), notifier.init()]);
 
-    verify(() => repo.getProfile()).called(1);
-    expect(container.read(authControllerProvider).user, user);
-  });
+      verify(() => repo.getProfile()).called(1);
+      expect(container.read(authControllerProvider).user, user);
+    },
+  );
 
   group('saved credentials', () {
     test('login success persists username and password', () async {
@@ -96,8 +100,9 @@ void main() {
     });
 
     test('login failure does not persist credentials', () async {
-      when(() => repo.login(any(), any()))
-          .thenThrow(Exception('Invalid username or password'));
+      when(
+        () => repo.login(any(), any()),
+      ).thenThrow(Exception('Invalid username or password'));
       final notifier = container.read(authControllerProvider.notifier);
       await notifier.init();
 
@@ -109,35 +114,42 @@ void main() {
     });
 
     test(
-        'login success with storage write failure still signs in, drops saved-password state',
-        () async {
-      final throwingStorage = ThrowingWriteStorage('saved_password');
-      final throwingContainer = ProviderContainer(overrides: [
-        authRepositoryProvider.overrideWithValue(repo),
-        apiClientProvider.overrideWithValue(apiClient),
-        secureStorageProvider.overrideWithValue(throwingStorage),
-      ]);
-      addTearDown(throwingContainer.dispose);
-      when(() => repo.login('demo', 'secret')).thenAnswer((_) async => user);
-      final notifier = throwingContainer.read(authControllerProvider.notifier);
-      await notifier.init();
+      'login success with storage write failure still signs in, drops saved-password state',
+      () async {
+        final throwingStorage = ThrowingWriteStorage('saved_password');
+        final throwingContainer = ProviderContainer(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(repo),
+            apiClientProvider.overrideWithValue(apiClient),
+            secureStorageProvider.overrideWithValue(throwingStorage),
+          ],
+        );
+        addTearDown(throwingContainer.dispose);
+        when(() => repo.login('demo', 'secret')).thenAnswer((_) async => user);
+        final notifier = throwingContainer.read(
+          authControllerProvider.notifier,
+        );
+        await notifier.init();
 
-      final error = await notifier.login('demo', 'secret');
+        final error = await notifier.login('demo', 'secret');
 
-      expect(error, isNull);
-      final state = throwingContainer.read(authControllerProvider);
-      expect(state.user, user);
-      expect(state.hasSavedPassword, isFalse);
-    });
+        expect(error, isNull);
+        final state = throwingContainer.read(authControllerProvider);
+        expect(state.user, user);
+        expect(state.hasSavedPassword, isFalse);
+      },
+    );
 
     test('register success persists username and password', () async {
-      when(() => repo.register(
-            username: 'new',
-            email: 'n@x',
-            password: 'pw',
-            firstName: 'N',
-            lastName: 'U',
-          )).thenAnswer((_) async => user);
+      when(
+        () => repo.register(
+          username: 'new',
+          email: 'n@x',
+          password: 'pw',
+          firstName: 'N',
+          lastName: 'U',
+        ),
+      ).thenAnswer((_) async => user);
       final notifier = container.read(authControllerProvider.notifier);
       await notifier.init();
 
@@ -154,30 +166,34 @@ void main() {
       expect(container.read(authControllerProvider).savedUsername, 'new');
     });
 
-    test('init restores savedUsername and hasSavedPassword from storage',
-        () async {
-      storage.data['saved_username'] = 'demo';
-      storage.data['saved_password'] = 'secret';
-      final notifier = container.read(authControllerProvider.notifier);
+    test(
+      'init restores savedUsername and hasSavedPassword from storage',
+      () async {
+        storage.data['saved_username'] = 'demo';
+        storage.data['saved_password'] = 'secret';
+        final notifier = container.read(authControllerProvider.notifier);
 
-      await notifier.init();
+        await notifier.init();
 
-      final state = container.read(authControllerProvider);
-      expect(state.savedUsername, 'demo');
-      expect(state.hasSavedPassword, isTrue);
-    });
+        final state = container.read(authControllerProvider);
+        expect(state.savedUsername, 'demo');
+        expect(state.hasSavedPassword, isTrue);
+      },
+    );
 
-    test('init with username but no password: hasSavedPassword false',
-        () async {
-      storage.data['saved_username'] = 'demo';
-      final notifier = container.read(authControllerProvider.notifier);
+    test(
+      'init with username but no password: hasSavedPassword false',
+      () async {
+        storage.data['saved_username'] = 'demo';
+        final notifier = container.read(authControllerProvider.notifier);
 
-      await notifier.init();
+        await notifier.init();
 
-      final state = container.read(authControllerProvider);
-      expect(state.savedUsername, 'demo');
-      expect(state.hasSavedPassword, isFalse);
-    });
+        final state = container.read(authControllerProvider);
+        expect(state.savedUsername, 'demo');
+        expect(state.hasSavedPassword, isFalse);
+      },
+    );
 
     test('session expiry on init keeps saved credentials', () async {
       storage.data['saved_username'] = 'demo';
@@ -225,73 +241,86 @@ void main() {
       expect(container.read(authControllerProvider).user, user);
     });
 
-    test('loginWithSavedCredentials without stored password returns error',
-        () async {
-      storage.data['saved_username'] = 'demo';
-      final notifier = container.read(authControllerProvider.notifier);
-      await notifier.init();
+    test(
+      'loginWithSavedCredentials without stored password returns error',
+      () async {
+        storage.data['saved_username'] = 'demo';
+        final notifier = container.read(authControllerProvider.notifier);
+        await notifier.init();
 
-      final error = await notifier.loginWithSavedCredentials();
+        final error = await notifier.loginWithSavedCredentials();
 
-      expect(error, 'No saved credentials');
-      verifyNever(() => repo.login(any(), any()));
-      expect(container.read(authControllerProvider).hasSavedPassword, isFalse);
-    });
+        expect(error, 'No saved credentials');
+        verifyNever(() => repo.login(any(), any()));
+        expect(
+          container.read(authControllerProvider).hasSavedPassword,
+          isFalse,
+        );
+      },
+    );
 
-    test('loginWithSavedCredentials on 401 drops password, keeps username',
-        () async {
-      storage.data['saved_username'] = 'demo';
-      storage.data['saved_password'] = 'old';
-      when(() => repo.login('demo', 'old')).thenThrow(
-          const UnauthorizedException('Invalid username or password'));
-      final notifier = container.read(authControllerProvider.notifier);
-      await notifier.init();
+    test(
+      'loginWithSavedCredentials on 401 drops password, keeps username',
+      () async {
+        storage.data['saved_username'] = 'demo';
+        storage.data['saved_password'] = 'old';
+        when(() => repo.login('demo', 'old')).thenThrow(
+          const UnauthorizedException('Invalid username or password'),
+        );
+        final notifier = container.read(authControllerProvider.notifier);
+        await notifier.init();
 
-      final error = await notifier.loginWithSavedCredentials();
+        final error = await notifier.loginWithSavedCredentials();
 
-      expect(error, 'Saved password no longer valid');
-      expect(storage.data['saved_username'], 'demo');
-      expect(storage.data.containsKey('saved_password'), isFalse);
-      final state = container.read(authControllerProvider);
-      expect(state.savedUsername, 'demo');
-      expect(state.hasSavedPassword, isFalse);
-    });
+        expect(error, 'Saved password no longer valid');
+        expect(storage.data['saved_username'], 'demo');
+        expect(storage.data.containsKey('saved_password'), isFalse);
+        final state = container.read(authControllerProvider);
+        expect(state.savedUsername, 'demo');
+        expect(state.hasSavedPassword, isFalse);
+      },
+    );
 
-    test('loginWithSavedCredentials on 403 keeps password, surfaces error',
-        () async {
-      storage.data['saved_username'] = 'demo';
-      storage.data['saved_password'] = 'secret';
-      when(() => repo.login('demo', 'secret')).thenThrow(
-          const UnauthorizedException('API access is not enabled'));
-      final notifier = container.read(authControllerProvider.notifier);
-      await notifier.init();
+    test(
+      'loginWithSavedCredentials on 403 keeps password, surfaces error',
+      () async {
+        storage.data['saved_username'] = 'demo';
+        storage.data['saved_password'] = 'secret';
+        when(
+          () => repo.login('demo', 'secret'),
+        ).thenThrow(const UnauthorizedException('API access is not enabled'));
+        final notifier = container.read(authControllerProvider.notifier);
+        await notifier.init();
 
-      final error = await notifier.loginWithSavedCredentials();
+        final error = await notifier.loginWithSavedCredentials();
 
-      expect(error, isNotNull);
-      expect(error, isNot('Saved password no longer valid'));
-      expect(storage.data['saved_password'], 'secret');
-      expect(container.read(authControllerProvider).hasSavedPassword, isTrue);
-    });
+        expect(error, isNotNull);
+        expect(error, isNot('Saved password no longer valid'));
+        expect(storage.data['saved_password'], 'secret');
+        expect(container.read(authControllerProvider).hasSavedPassword, isTrue);
+      },
+    );
 
-    test('loginWithSavedCredentials on network error keeps credentials',
-        () async {
-      storage.data['saved_username'] = 'demo';
-      storage.data['saved_password'] = 'secret';
-      when(() => repo.login('demo', 'secret'))
-          .thenThrow(const NetworkException('No connection'));
-      final notifier = container.read(authControllerProvider.notifier);
-      await notifier.init();
+    test(
+      'loginWithSavedCredentials on network error keeps credentials',
+      () async {
+        storage.data['saved_username'] = 'demo';
+        storage.data['saved_password'] = 'secret';
+        when(
+          () => repo.login('demo', 'secret'),
+        ).thenThrow(const NetworkException('No connection'));
+        final notifier = container.read(authControllerProvider.notifier);
+        await notifier.init();
 
-      final error = await notifier.loginWithSavedCredentials();
+        final error = await notifier.loginWithSavedCredentials();
 
-      expect(error, isNotNull);
-      expect(storage.data['saved_password'], 'secret');
-      expect(container.read(authControllerProvider).hasSavedPassword, isTrue);
-    });
+        expect(error, isNotNull);
+        expect(storage.data['saved_password'], 'secret');
+        expect(container.read(authControllerProvider).hasSavedPassword, isTrue);
+      },
+    );
 
-    test('forgetSavedCredentials deletes both keys and clears state',
-        () async {
+    test('forgetSavedCredentials deletes both keys and clears state', () async {
       storage.data['saved_username'] = 'demo';
       storage.data['saved_password'] = 'secret';
       final notifier = container.read(authControllerProvider.notifier);

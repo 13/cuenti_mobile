@@ -17,25 +17,31 @@ void main() {
   });
 
   test('getPage parses envelope with query params', () async {
-    when(() => dio.get<dynamic>('/transactions',
-            queryParameters: {'accountId': 3, 'page': 0, 'size': 50}))
-        .thenAnswer((_) async => ok({
-              'content': [
-                {
-                  'id': 1,
-                  'type': 'EXPENSE',
-                  'amount': 12.5,
-                  'transactionDate': '2026-01-01T00:00:00.000',
-                },
-              ],
-              'page': 0,
-              'size': 50,
-              'totalElements': 1,
-              'totalPages': 1,
-            }));
+    when(
+      () => dio.get<dynamic>(
+        '/transactions',
+        queryParameters: {'accountId': 3, 'page': 0, 'size': 50},
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'content': [
+          {
+            'id': 1,
+            'type': 'EXPENSE',
+            'amount': 12.5,
+            'transactionDate': '2026-01-01T00:00:00.000',
+          },
+        ],
+        'page': 0,
+        'size': 50,
+        'totalElements': 1,
+        'totalPages': 1,
+      }),
+    );
 
     final page = await repo.getPage(
-        filter: const TransactionFilter(accountId: 3));
+      filter: const TransactionFilter(accountId: 3),
+    );
 
     expect(page.content, hasLength(1));
     expect(page.content[0].id, 1);
@@ -44,67 +50,91 @@ void main() {
   });
 
   test(
-      'getPage tolerates a legacy plain-array response (pre-pagination server)',
-      () async {
-    when(() => dio.get<dynamic>('/transactions',
-            queryParameters: {'page': 0, 'size': 50}))
-        .thenAnswer((_) async => ok<dynamic>([
-              {
-                'id': 1,
-                'type': 'EXPENSE',
-                'amount': 12.5,
-                'transactionDate': '2026-01-01T00:00:00.000',
-              },
-              {
-                'id': 2,
-                'type': 'INCOME',
-                'amount': 5.0,
-                'transactionDate': '2026-01-02T00:00:00.000',
-              },
-            ]));
+    'getPage tolerates a legacy plain-array response (pre-pagination server)',
+    () async {
+      when(
+        () => dio.get<dynamic>(
+          '/transactions',
+          queryParameters: {'page': 0, 'size': 50},
+        ),
+      ).thenAnswer(
+        (_) async => ok<dynamic>([
+          {
+            'id': 1,
+            'type': 'EXPENSE',
+            'amount': 12.5,
+            'transactionDate': '2026-01-01T00:00:00.000',
+          },
+          {
+            'id': 2,
+            'type': 'INCOME',
+            'amount': 5.0,
+            'transactionDate': '2026-01-02T00:00:00.000',
+          },
+        ]),
+      );
 
-    final page = await repo.getPage();
+      final page = await repo.getPage();
 
-    expect(page.content, hasLength(2));
-    expect(page.content[0].id, 1);
-    expect(page.content[1].id, 2);
-    expect(page.page, 0);
-    expect(page.size, 50);
-    expect(page.totalElements, 2);
-    expect(page.totalPages, 1);
-  });
+      expect(page.content, hasLength(2));
+      expect(page.content[0].id, 1);
+      expect(page.content[1].id, 2);
+      expect(page.page, 0);
+      expect(page.size, 50);
+      expect(page.totalElements, 2);
+      expect(page.totalPages, 1);
+    },
+  );
 
-  test('getPage throws ServerException for a garbage (non-list, non-map) response',
-      () async {
-    when(() => dio.get<dynamic>('/transactions',
-            queryParameters: {'page': 0, 'size': 50}))
-        .thenAnswer((_) async => ok<dynamic>('not json'));
+  test(
+    'getPage throws ServerException for a garbage (non-list, non-map) response',
+    () async {
+      when(
+        () => dio.get<dynamic>(
+          '/transactions',
+          queryParameters: {'page': 0, 'size': 50},
+        ),
+      ).thenAnswer((_) async => ok<dynamic>('not json'));
 
-    expect(
-      () => repo.getPage(),
-      throwsA(isA<ServerException>()),
-    );
-  });
+      expect(
+        () => repo.getPage(),
+        throwsA(isA<ServerException>()),
+      );
+    },
+  );
 
   test('getPage omits all filter query params when null', () async {
-    when(() => dio.get<dynamic>('/transactions',
-            queryParameters: {'page': 0, 'size': 50})).thenAnswer((_) async => ok({
-          'content': <Map<String, dynamic>>[],
-          'page': 0,
-          'size': 50,
-          'totalElements': 0,
-          'totalPages': 0,
-        }));
+    when(
+      () => dio.get<dynamic>(
+        '/transactions',
+        queryParameters: {'page': 0, 'size': 50},
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'content': <Map<String, dynamic>>[],
+        'page': 0,
+        'size': 50,
+        'totalElements': 0,
+        'totalPages': 0,
+      }),
+    );
 
     final page = await repo.getPage();
 
     expect(page.content, isEmpty);
-    verify(() => dio.get<dynamic>('/transactions',
-        queryParameters: {'page': 0, 'size': 50})).called(1);
+    verify(
+      () => dio.get<dynamic>(
+        '/transactions',
+        queryParameters: {'page': 0, 'size': 50},
+      ),
+    ).called(1);
   });
 
   test('getPage serializes every filter field when set', () async {
-    when(() => dio.get<dynamic>('/transactions', queryParameters: {
+    when(
+      () => dio.get<dynamic>(
+        '/transactions',
+        queryParameters: {
           'accountId': 3,
           'type': 'EXPENSE',
           'categoryId': 7,
@@ -113,26 +143,34 @@ void main() {
           'search': 'coffee',
           'page': 0,
           'size': 50,
-        })).thenAnswer((_) async => ok({
-          'content': <Map<String, dynamic>>[],
-          'page': 0,
-          'size': 50,
-          'totalElements': 0,
-          'totalPages': 0,
-        }));
+        },
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'content': <Map<String, dynamic>>[],
+        'page': 0,
+        'size': 50,
+        'totalElements': 0,
+        'totalPages': 0,
+      }),
+    );
 
     final page = await repo.getPage(
-        filter: TransactionFilter(
-          accountId: 3,
-          type: 'EXPENSE',
-          categoryId: 7,
-          start: DateTime(2026, 2),
-          end: DateTime(2026, 2, 28),
-          search: 'coffee',
-        ));
+      filter: TransactionFilter(
+        accountId: 3,
+        type: 'EXPENSE',
+        categoryId: 7,
+        start: DateTime(2026, 2),
+        end: DateTime(2026, 2, 28),
+        search: 'coffee',
+      ),
+    );
 
     expect(page.content, isEmpty);
-    verify(() => dio.get<dynamic>('/transactions', queryParameters: {
+    verify(
+      () => dio.get<dynamic>(
+        '/transactions',
+        queryParameters: {
           'accountId': 3,
           'type': 'EXPENSE',
           'categoryId': 7,
@@ -141,63 +179,85 @@ void main() {
           'search': 'coffee',
           'page': 0,
           'size': 50,
-        })).called(1);
+        },
+      ),
+    ).called(1);
   });
 
   test('getPage omits search when empty string', () async {
-    when(() => dio.get<dynamic>('/transactions',
-            queryParameters: {'page': 0, 'size': 50})).thenAnswer((_) async => ok({
-          'content': <Map<String, dynamic>>[],
-          'page': 0,
-          'size': 50,
-          'totalElements': 0,
-          'totalPages': 0,
-        }));
-
-    await repo.getPage(
-        filter: const TransactionFilter(search: ''));
-
-    verify(() => dio.get<dynamic>('/transactions',
-        queryParameters: {'page': 0, 'size': 50})).called(1);
-  });
-
-  test('save strips id/derived fields, defaults paymentMethod, drops empty splits',
-      () async {
-    final tx = Transaction(
-      fromAccountId: 1,
-      fromAccountName: 'Giro',
-      categoryName: 'Food',
-      assetName: 'BTC',
-      status: 'CLEARED',
-      amount: 10,
-      transactionDate: DateTime(2026),
+    when(
+      () => dio.get<dynamic>(
+        '/transactions',
+        queryParameters: {'page': 0, 'size': 50},
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'content': <Map<String, dynamic>>[],
+        'page': 0,
+        'size': 50,
+        'totalElements': 0,
+        'totalPages': 0,
+      }),
     );
 
-    when(() => dio.post<Map<String, dynamic>>('/transactions',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({
-              'id': 9,
-              'type': 'EXPENSE',
-              'amount': 10,
-              'transactionDate': '2026-01-01T00:00:00.000',
-            }));
+    await repo.getPage(filter: const TransactionFilter(search: ''));
 
-    final saved = await repo.save(tx);
-
-    expect(saved.id, 9);
-    final captured = verify(() => dio.post<Map<String, dynamic>>('/transactions',
-            data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, dynamic>;
-    expect(captured.containsKey('id'), isFalse);
-    expect(captured.containsKey('fromAccountName'), isFalse);
-    expect(captured.containsKey('toAccountName'), isFalse);
-    expect(captured.containsKey('categoryName'), isFalse);
-    expect(captured.containsKey('assetName'), isFalse);
-    expect(captured.containsKey('status'), isFalse);
-    expect(captured.containsKey('splits'), isFalse);
-    expect(captured['paymentMethod'], 'NONE');
+    verify(
+      () => dio.get<dynamic>(
+        '/transactions',
+        queryParameters: {'page': 0, 'size': 50},
+      ),
+    ).called(1);
   });
+
+  test(
+    'save strips id/derived fields, defaults paymentMethod, drops empty splits',
+    () async {
+      final tx = Transaction(
+        fromAccountId: 1,
+        fromAccountName: 'Giro',
+        categoryName: 'Food',
+        assetName: 'BTC',
+        status: 'CLEARED',
+        amount: 10,
+        transactionDate: DateTime(2026),
+      );
+
+      when(
+        () => dio.post<Map<String, dynamic>>(
+          '/transactions',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => ok({
+          'id': 9,
+          'type': 'EXPENSE',
+          'amount': 10,
+          'transactionDate': '2026-01-01T00:00:00.000',
+        }),
+      );
+
+      final saved = await repo.save(tx);
+
+      expect(saved.id, 9);
+      final captured =
+          verify(
+                () => dio.post<Map<String, dynamic>>(
+                  '/transactions',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured.containsKey('id'), isFalse);
+      expect(captured.containsKey('fromAccountName'), isFalse);
+      expect(captured.containsKey('toAccountName'), isFalse);
+      expect(captured.containsKey('categoryName'), isFalse);
+      expect(captured.containsKey('assetName'), isFalse);
+      expect(captured.containsKey('status'), isFalse);
+      expect(captured.containsKey('splits'), isFalse);
+      expect(captured['paymentMethod'], 'NONE');
+    },
+  );
 
   test('save PUTs when id set and preserves explicit paymentMethod', () async {
     final tx = Transaction(
@@ -208,28 +268,39 @@ void main() {
       transactionDate: DateTime(2026),
     );
 
-    when(() => dio.put<Map<String, dynamic>>('/transactions/7',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({
-              'id': 7,
-              'type': 'EXPENSE',
-              'amount': 10,
-              'transactionDate': '2026-01-01T00:00:00.000',
-            }));
+    when(
+      () => dio.put<Map<String, dynamic>>(
+        '/transactions/7',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'id': 7,
+        'type': 'EXPENSE',
+        'amount': 10,
+        'transactionDate': '2026-01-01T00:00:00.000',
+      }),
+    );
 
     final saved = await repo.save(tx);
 
     expect(saved.id, 7);
-    final captured = verify(() => dio.put<Map<String, dynamic>>('/transactions/7',
-            data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, dynamic>;
+    final captured =
+        verify(
+              () => dio.put<Map<String, dynamic>>(
+                '/transactions/7',
+                data: captureAny(named: 'data'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured['paymentMethod'], 'CASH');
     expect(captured.containsKey('id'), isFalse);
   });
 
   test('delete calls DELETE /transactions/{id}', () async {
-    when(() => dio.delete<void>('/transactions/5')).thenAnswer((_) async => ok(null));
+    when(
+      () => dio.delete<void>('/transactions/5'),
+    ).thenAnswer((_) async => ok(null));
 
     await repo.delete(5);
 
@@ -237,8 +308,12 @@ void main() {
   });
 
   test('getPage maps DioException to ApiException', () async {
-    when(() => dio.get<dynamic>('/transactions',
-            queryParameters: any(named: 'queryParameters'))).thenThrow(
+    when(
+      () => dio.get<dynamic>(
+        '/transactions',
+        queryParameters: any(named: 'queryParameters'),
+      ),
+    ).thenThrow(
       DioException(
         requestOptions: RequestOptions(path: '/transactions'),
         type: DioExceptionType.connectionError,

@@ -52,7 +52,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (saved == null || saved.isEmpty) return;
     _usernameController.text = saved;
     _passwordFocus.requestFocus();
-    if (auth.biometricEnabled && auth.hasSavedPassword && !_biometricAttempted) {
+    if (auth.biometricEnabled &&
+        auth.hasSavedPassword &&
+        !_biometricAttempted) {
       _biometricAttempted = true;
       _biometricLogin();
     }
@@ -100,7 +102,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.person),
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
                     textInputAction: TextInputAction.next,
                   ),
                   if (auth.savedUsername != null)
@@ -121,14 +124,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off),
-                        onPressed: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                     ),
-                    validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
                     onFieldSubmitted: (_) => _login(),
                   ),
                   if (_error != null) ...[
@@ -151,7 +158,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2))
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : const Text('Sign In'),
                     ),
                   ),
@@ -174,8 +182,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   TextButton(
                     onPressed: () => context.go('/server-setup'),
-                    child: Text('Server: ${ref.read(authControllerProvider.notifier).serverUrl}',
-                        style: Theme.of(context).textTheme.bodySmall),
+                    child: Text(
+                      'Server: ${ref.read(authControllerProvider.notifier).serverUrl}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   ),
                 ],
               ),
@@ -192,7 +202,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _submitting = true;
       _error = null;
     });
-    final error = await ref.read(authControllerProvider.notifier).login(
+    final error = await ref
+        .read(authControllerProvider.notifier)
+        .login(
           _usernameController.text.trim(),
           _passwordController.text,
         );

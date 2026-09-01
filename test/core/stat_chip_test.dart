@@ -39,8 +39,9 @@ void main() {
     expect(fittedBox.alignment, Alignment.center);
   });
 
-  testWidgets('vertical stacks label over a left-aligned full-width value',
-      (tester) async {
+  testWidgets('vertical stacks label over a left-aligned full-width value', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       host(
         const StatChip(

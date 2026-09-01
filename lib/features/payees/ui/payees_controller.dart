@@ -7,8 +7,7 @@ part 'payees_controller.g.dart';
 @riverpod
 class PayeesController extends _$PayeesController {
   @override
-  Future<List<Payee>> build() =>
-      ref.watch(payeesRepositoryProvider).getAll();
+  Future<List<Payee>> build() => ref.watch(payeesRepositoryProvider).getAll();
 
   Future<void> save(Payee payee) async {
     await ref.read(payeesRepositoryProvider).save(payee);

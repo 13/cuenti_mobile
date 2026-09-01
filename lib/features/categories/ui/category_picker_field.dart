@@ -56,7 +56,11 @@ Future<CategoryChoice?> showCategorySearchSheet(
 /// [CategoryChoice] as soon as the user taps an entry.
 class CategorySearchSheet extends StatefulWidget {
   const CategorySearchSheet({
-    required this.categories, required this.selectedId, required this.allowNone, required this.title, super.key,
+    required this.categories,
+    required this.selectedId,
+    required this.allowNone,
+    required this.title,
+    super.key,
   });
 
   final List<Category> categories;
@@ -156,7 +160,10 @@ class _CategorySearchSheetState extends State<CategorySearchSheet> {
 /// a dismissed sheet reports nothing.
 class CategoryPickerField extends StatelessWidget {
   const CategoryPickerField({
-    required this.categories, required this.selectedId, required this.onChanged, super.key,
+    required this.categories,
+    required this.selectedId,
+    required this.onChanged,
+    super.key,
     this.allowNone = true,
     this.isDense = false,
     this.labelText = 'Category',

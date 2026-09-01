@@ -5,7 +5,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final statisticsRepositoryProvider = Provider<StatisticsRepository>(
-    (ref) => StatisticsRepository(ref.watch(dioProvider)));
+  (ref) => StatisticsRepository(ref.watch(dioProvider)),
+);
 
 class StatisticsRepository {
   StatisticsRepository(this._dio);
@@ -18,8 +19,10 @@ class StatisticsRepository {
           'end': ?end,
           'accountId': ?accountId,
         };
-        final res = await _dio.get<Map<String, dynamic>>('/statistics',
-            queryParameters: params);
+        final res = await _dio.get<Map<String, dynamic>>(
+          '/statistics',
+          queryParameters: params,
+        );
         return StatisticsData.fromJson(res.data!);
       });
 }

@@ -16,6 +16,5 @@ abstract class Payee with _$Payee {
 
   const Payee._();
 
-  factory Payee.fromJson(Map<String, dynamic> json) =>
-      _$PayeeFromJson(json);
+  factory Payee.fromJson(Map<String, dynamic> json) => _$PayeeFromJson(json);
 }

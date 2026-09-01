@@ -17,29 +17,34 @@ class AppTheme {
       outlineVariant: const Color(0xFFDCE5E1),
       surfaceContainerHighest: const Color(0xFFEEF3F1),
     );
-    return _base(scheme, CuentiColors.light)
-        .copyWith(scaffoldBackgroundColor: const Color(0xFFF7F9F8));
+    return _base(
+      scheme,
+      CuentiColors.light,
+    ).copyWith(scaffoldBackgroundColor: const Color(0xFFF7F9F8));
   }
 
   static ThemeData dark() {
     final scheme =
-        ColorScheme.fromSeed(seedColor: _seed, brightness: Brightness.dark)
-            .copyWith(
-      primary: const Color(0xFF3FB392),
-      onPrimary: const Color(0xFF072A21),
-      surface: const Color(0xFF16201C),
-      onSurface: const Color(0xFFE5EDE9),
-      onSurfaceVariant: const Color(0xFFA9BBB3),
-      outlineVariant: const Color(0xFF2C3A34),
-      surfaceContainerHighest: const Color(0xFF1D2925),
-    );
-    return _base(scheme, CuentiColors.dark)
-        .copyWith(scaffoldBackgroundColor: const Color(0xFF0E1513));
+        ColorScheme.fromSeed(
+          seedColor: _seed,
+          brightness: Brightness.dark,
+        ).copyWith(
+          primary: const Color(0xFF3FB392),
+          onPrimary: const Color(0xFF072A21),
+          surface: const Color(0xFF16201C),
+          onSurface: const Color(0xFFE5EDE9),
+          onSurfaceVariant: const Color(0xFFA9BBB3),
+          outlineVariant: const Color(0xFF2C3A34),
+          surfaceContainerHighest: const Color(0xFF1D2925),
+        );
+    return _base(
+      scheme,
+      CuentiColors.dark,
+    ).copyWith(scaffoldBackgroundColor: const Color(0xFF0E1513));
   }
 
   static ThemeData _base(ColorScheme scheme, CuentiColors cuenti) {
-    final textTheme = Typography.material2021(colorScheme: scheme)
-        .englishLike
+    final textTheme = Typography.material2021(colorScheme: scheme).englishLike
         .apply(
           fontFamily: 'Manrope',
           bodyColor: scheme.onSurface,

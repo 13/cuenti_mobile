@@ -22,7 +22,9 @@ void main() {
       expect(contrast(cs.onSurface, cs.surface), greaterThanOrEqualTo(4.5));
       expect(contrast(cs.onPrimary, cs.primary), greaterThanOrEqualTo(4.5));
       expect(
-          contrast(cs.onSurfaceVariant, cs.surface), greaterThanOrEqualTo(4.5));
+        contrast(cs.onSurfaceVariant, cs.surface),
+        greaterThanOrEqualTo(4.5),
+      );
     }
   });
 

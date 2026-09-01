@@ -162,7 +162,10 @@ class AuthController extends _$AuthController {
   /// failed sign-in, so it is swallowed here and `savedUsername`/
   /// `hasSavedPassword` are simply left unchanged.
   Future<void> _persistSuccessfulLogin(
-      UserProfile user, String username, String password) async {
+    UserProfile user,
+    String username,
+    String password,
+  ) async {
     var persisted = false;
     try {
       await _storage.write(_savedUsernameKey, username);
@@ -171,7 +174,10 @@ class AuthController extends _$AuthController {
     } catch (_) {}
     state = persisted
         ? state.copyWith(
-            user: user, savedUsername: username, hasSavedPassword: true)
+            user: user,
+            savedUsername: username,
+            hasSavedPassword: true,
+          )
         : state.copyWith(user: user);
   }
 

@@ -42,9 +42,11 @@ void main() {
 
   MockLocalAuthentication authenticatorReturning(bool result) {
     final a = MockLocalAuthentication();
-    when(() => a.authenticate(
-          localizedReason: any(named: 'localizedReason'),
-        )).thenAnswer((_) async => result);
+    when(
+      () => a.authenticate(
+        localizedReason: any(named: 'localizedReason'),
+      ),
+    ).thenAnswer((_) async => result);
     return a;
   }
 
@@ -88,30 +90,38 @@ void main() {
     return s;
   }
 
-  testWidgets('calls repository with entered credentials and shows error on failure',
-      (tester) async {
-    when(() => repo.login(any(), any()))
-        .thenThrow(Exception('Invalid username or password'));
+  testWidgets(
+    'calls repository with entered credentials and shows error on failure',
+    (tester) async {
+      when(
+        () => repo.login(any(), any()),
+      ).thenThrow(Exception('Invalid username or password'));
 
-    await pumpLogin(tester);
+      await pumpLogin(tester);
 
-    await tester.enterText(find.byType(TextFormField).at(0), 'demo');
-    await tester.enterText(find.byType(TextFormField).at(1), 'wrong-password');
-    await tester.tap(find.widgetWithText(FilledButton, 'Sign In'));
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextFormField).at(0), 'demo');
+      await tester.enterText(
+        find.byType(TextFormField).at(1),
+        'wrong-password',
+      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Sign In'));
+      await tester.pumpAndSettle();
 
-    verify(() => repo.login('demo', 'wrong-password')).called(1);
-    expect(find.text('Invalid username or password'), findsOneWidget);
-  });
+      verify(() => repo.login('demo', 'wrong-password')).called(1);
+      expect(find.text('Invalid username or password'), findsOneWidget);
+    },
+  );
 
-  testWidgets('prefills username from storage and shows Not you?',
-      (tester) async {
+  testWidgets('prefills username from storage and shows Not you?', (
+    tester,
+  ) async {
     final storage = _MemoryStorage()..data['saved_username'] = 'demo';
 
     await pumpLogin(tester, storage: storage);
 
-    final usernameField =
-        tester.widget<TextFormField>(find.byType(TextFormField).at(0));
+    final usernameField = tester.widget<TextFormField>(
+      find.byType(TextFormField).at(0),
+    );
     expect(usernameField.controller!.text, 'demo');
     expect(find.text('Not you?'), findsOneWidget);
   });
@@ -130,8 +140,9 @@ void main() {
     await tester.tap(find.text('Not you?'));
     await tester.pumpAndSettle();
 
-    final usernameField =
-        tester.widget<TextFormField>(find.byType(TextFormField).at(0));
+    final usernameField = tester.widget<TextFormField>(
+      find.byType(TextFormField).at(0),
+    );
     expect(usernameField.controller!.text, isEmpty);
     expect(storage.data.containsKey('saved_username'), isFalse);
     expect(storage.data.containsKey('saved_password'), isFalse);
@@ -155,8 +166,9 @@ void main() {
     expect(find.text('Sign in with biometrics'), findsNothing);
   });
 
-  testWidgets('no biometric button when enabled but no saved password',
-      (tester) async {
+  testWidgets('no biometric button when enabled but no saved password', (
+    tester,
+  ) async {
     final storage = _MemoryStorage()
       ..data['biometric_enabled'] = 'true'
       ..data['saved_username'] = 'demo';
@@ -166,8 +178,9 @@ void main() {
     expect(find.text('Sign in with biometrics'), findsNothing);
   });
 
-  testWidgets('auto-prompts biometric once and signs in on success',
-      (tester) async {
+  testWidgets('auto-prompts biometric once and signs in on success', (
+    tester,
+  ) async {
     final storage = _MemoryStorage()
       ..data['biometric_enabled'] = 'true'
       ..data['saved_username'] = 'demo'
@@ -177,15 +190,18 @@ void main() {
 
     await pumpLogin(tester, storage: storage, authenticator: authenticator);
 
-    verify(() => authenticator.authenticate(
-          localizedReason: 'Sign in to Cuenti',
-        )).called(1);
+    verify(
+      () => authenticator.authenticate(
+        localizedReason: 'Sign in to Cuenti',
+      ),
+    ).called(1);
     verify(() => repo.login('demo', 'secret')).called(1);
     expect(find.text('Dashboard'), findsOneWidget);
   });
 
-  testWidgets('biometric cancel: button stays, no login, no error',
-      (tester) async {
+  testWidgets('biometric cancel: button stays, no login, no error', (
+    tester,
+  ) async {
     final storage = _MemoryStorage()
       ..data['biometric_enabled'] = 'true'
       ..data['saved_username'] = 'demo'
@@ -200,9 +216,11 @@ void main() {
     // Tapping the button retries the prompt.
     await tester.tap(find.text('Sign in with biometrics'));
     await tester.pumpAndSettle();
-    verify(() => authenticator.authenticate(
-          localizedReason: any(named: 'localizedReason'),
-        )).called(2);
+    verify(
+      () => authenticator.authenticate(
+        localizedReason: any(named: 'localizedReason'),
+      ),
+    ).called(2);
   });
 
   testWidgets('biometric exception falls back silently', (tester) async {
@@ -211,9 +229,11 @@ void main() {
       ..data['saved_username'] = 'demo'
       ..data['saved_password'] = 'secret';
     final authenticator = MockLocalAuthentication();
-    when(() => authenticator.authenticate(
-          localizedReason: any(named: 'localizedReason'),
-        )).thenThrow(Exception('NotAvailable'));
+    when(
+      () => authenticator.authenticate(
+        localizedReason: any(named: 'localizedReason'),
+      ),
+    ).thenThrow(Exception('NotAvailable'));
 
     await pumpLogin(tester, storage: storage, authenticator: authenticator);
 
@@ -222,67 +242,77 @@ void main() {
   });
 
   testWidgets(
-      'biometric prompt disables both buttons until it resolves, then re-enables',
-      (tester) async {
-    final storage = _MemoryStorage()
-      ..data['biometric_enabled'] = 'true'
-      ..data['saved_username'] = 'demo'
-      ..data['saved_password'] = 'secret';
-    // First call is the auto-prompt fired from init(); it must resolve
-    // promptly so `pumpLogin`'s settle doesn't spin forever on the
-    // indeterminate progress indicator. The second call (the manual tap
-    // below) stays pending until the test completes it.
-    var callCount = 0;
-    final completer = Completer<bool>();
-    final authenticator = MockLocalAuthentication();
-    when(() => authenticator.authenticate(
+    'biometric prompt disables both buttons until it resolves, then re-enables',
+    (tester) async {
+      final storage = _MemoryStorage()
+        ..data['biometric_enabled'] = 'true'
+        ..data['saved_username'] = 'demo'
+        ..data['saved_password'] = 'secret';
+      // First call is the auto-prompt fired from init(); it must resolve
+      // promptly so `pumpLogin`'s settle doesn't spin forever on the
+      // indeterminate progress indicator. The second call (the manual tap
+      // below) stays pending until the test completes it.
+      var callCount = 0;
+      final completer = Completer<bool>();
+      final authenticator = MockLocalAuthentication();
+      when(
+        () => authenticator.authenticate(
           localizedReason: any(named: 'localizedReason'),
-        )).thenAnswer((_) {
-      callCount++;
-      return callCount == 1 ? Future.value(false) : completer.future;
-    });
+        ),
+      ).thenAnswer((_) {
+        callCount++;
+        return callCount == 1 ? Future.value(false) : completer.future;
+      });
 
-    await pumpLogin(tester, storage: storage, authenticator: authenticator);
+      await pumpLogin(tester, storage: storage, authenticator: authenticator);
 
-    await tester.tap(find.text('Sign in with biometrics'));
-    await tester.pump();
+      await tester.tap(find.text('Sign in with biometrics'));
+      await tester.pump();
 
-    final signInButton =
-        tester.widget<FilledButton>(find.byType(FilledButton));
-    final biometricButton =
-        tester.widget<OutlinedButton>(find.byType(OutlinedButton));
-    expect(signInButton.onPressed, isNull);
-    expect(biometricButton.onPressed, isNull);
+      final signInButton = tester.widget<FilledButton>(
+        find.byType(FilledButton),
+      );
+      final biometricButton = tester.widget<OutlinedButton>(
+        find.byType(OutlinedButton),
+      );
+      expect(signInButton.onPressed, isNull);
+      expect(biometricButton.onPressed, isNull);
 
-    completer.complete(false);
-    await tester.pumpAndSettle();
+      completer.complete(false);
+      await tester.pumpAndSettle();
 
-    final signInButtonAfter =
-        tester.widget<FilledButton>(find.byType(FilledButton));
-    final biometricButtonAfter =
-        tester.widget<OutlinedButton>(find.byType(OutlinedButton));
-    expect(signInButtonAfter.onPressed, isNotNull);
-    expect(biometricButtonAfter.onPressed, isNotNull);
-    verifyNever(() => repo.login(any(), any()));
-  });
+      final signInButtonAfter = tester.widget<FilledButton>(
+        find.byType(FilledButton),
+      );
+      final biometricButtonAfter = tester.widget<OutlinedButton>(
+        find.byType(OutlinedButton),
+      );
+      expect(signInButtonAfter.onPressed, isNotNull);
+      expect(biometricButtonAfter.onPressed, isNotNull);
+      verifyNever(() => repo.login(any(), any()));
+    },
+  );
 
-  testWidgets('rejected saved password shows error and hides button',
-      (tester) async {
+  testWidgets('rejected saved password shows error and hides button', (
+    tester,
+  ) async {
     final storage = _MemoryStorage()
       ..data['biometric_enabled'] = 'true'
       ..data['saved_username'] = 'demo'
       ..data['saved_password'] = 'old';
     final authenticator = authenticatorReturning(true);
-    when(() => repo.login('demo', 'old')).thenThrow(
-        const UnauthorizedException('Invalid username or password'));
+    when(
+      () => repo.login('demo', 'old'),
+    ).thenThrow(const UnauthorizedException('Invalid username or password'));
 
     await pumpLogin(tester, storage: storage, authenticator: authenticator);
 
     expect(find.text('Saved password no longer valid'), findsOneWidget);
     expect(find.text('Sign in with biometrics'), findsNothing);
     expect(storage.data.containsKey('saved_password'), isFalse);
-    final usernameField =
-        tester.widget<TextFormField>(find.byType(TextFormField).at(0));
+    final usernameField = tester.widget<TextFormField>(
+      find.byType(TextFormField).at(0),
+    );
     expect(usernameField.controller!.text, 'demo');
   });
 }

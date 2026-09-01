@@ -5,40 +5,42 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
 class ApiClient {
-
   ApiClient(this._storage, {Dio? dioOverride}) {
     if (dioOverride != null) {
       dio = dioOverride;
     } else {
-      dio = Dio(BaseOptions(
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: {'Content-Type': 'application/json'},
-      ));
+      dio = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 30),
+          headers: {'Content-Type': 'application/json'},
+        ),
+      );
 
       // Bypass certificate verification for self-signed certs
       dio.httpClientAdapter = IOHttpClientAdapter(
         createHttpClient: () {
           final client = HttpClient();
-          client.badCertificateCallback =
-              (cert, host, port) => true;
+          client.badCertificateCallback = (cert, host, port) => true;
           return client;
         },
       );
     }
 
-    dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await getToken();
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-        handler.next(options);
-      },
-      onError: (error, handler) {
-        handler.next(error);
-      },
-    ));
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await getToken();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          handler.next(options);
+        },
+        onError: (error, handler) {
+          handler.next(error);
+        },
+      ),
+    );
   }
   static const String _tokenKey = 'jwt_token';
   static const String _serverUrlKey = 'server_url';

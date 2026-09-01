@@ -5,7 +5,13 @@ part 'account.freezed.dart';
 part 'account.g.dart';
 
 const kAccountTypes = [
-  'BANK', 'CASH', 'ASSET', 'CREDIT_CARD', 'LIABILITY', 'CURRENT', 'SAVINGS',
+  'BANK',
+  'CASH',
+  'ASSET',
+  'CREDIT_CARD',
+  'LIABILITY',
+  'CURRENT',
+  'SAVINGS',
 ];
 
 @freezed
@@ -31,13 +37,13 @@ abstract class Account with _$Account {
       _$AccountFromJson(json);
 
   String get displayType => switch (accountType) {
-        'BANK' => 'Bank',
-        'CASH' => 'Cash',
-        'ASSET' => 'Asset',
-        'CREDIT_CARD' => 'Credit Card',
-        'LIABILITY' => 'Liability',
-        'CURRENT' => 'Current Account',
-        'SAVINGS' => 'Savings Account',
-        _ => accountType,
-      };
+    'BANK' => 'Bank',
+    'CASH' => 'Cash',
+    'ASSET' => 'Asset',
+    'CREDIT_CARD' => 'Credit Card',
+    'LIABILITY' => 'Liability',
+    'CURRENT' => 'Current Account',
+    'SAVINGS' => 'Savings Account',
+    _ => accountType,
+  };
 }

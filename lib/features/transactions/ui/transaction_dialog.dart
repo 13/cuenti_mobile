@@ -235,7 +235,8 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     final fuelMeta = _type == 'EXPENSE' && _categoryId != null
         ? ref.watch(fuelMetaProvider(_categoryId!)).value
         : null;
-    _fuelVisible = _type == 'EXPENSE' &&
+    _fuelVisible =
+        _type == 'EXPENSE' &&
         ((fuelMeta?.isFuel ?? false) ||
             parseFuelTokens(_memo.text).hasFuelData);
     final fuelBaseline = _fuelBaseline(fuelMeta);
@@ -424,8 +425,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                                 ? 'last: ${formatFuelNumber(fuelBaseline)}'
                                 : null,
                           ),
-                          onChanged: (_) =>
-                              setState(_syncMemoFromFuelFields),
+                          onChanged: (_) => setState(_syncMemoFromFuelFields),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -444,8 +444,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                               color: Theme.of(context).colorScheme.error,
                             ),
                           ),
-                          onChanged: (_) =>
-                              setState(_syncMemoFromFuelFields),
+                          onChanged: (_) => setState(_syncMemoFromFuelFields),
                         ),
                       ),
                     ],

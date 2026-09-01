@@ -41,12 +41,16 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                       icon: Icons.account_balance_wallet,
                       message: 'No accounts yet',
                       actionLabel: 'Add account',
-                      onAction: () => _showEditDialog(context, null, currencies),
+                      onAction: () =>
+                          _showEditDialog(context, null, currencies),
                     ),
                   ],
                 )
               : ReorderableListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   itemCount: accounts.length,
                   onReorder: (old, newIdx) {
                     final ids = accounts.map((a) => a.id!).toList();
@@ -71,7 +75,8 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                       confirmDismiss: (_) => showConfirmSheet(
                         context,
                         title: 'Delete Account?',
-                        message: 'All associated transactions will be affected.',
+                        message:
+                            'All associated transactions will be affected.',
                       ),
                       onDismissed: (_) => _delete(a.id!),
                       child: Card(
@@ -98,9 +103,9 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                                       child: Center(
                                         child: Icon(
                                           _iconForAccountType(a.accountType),
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
                                         ),
                                       ),
                                     ),
@@ -112,18 +117,18 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                                         children: [
                                           Text(
                                             a.accountName,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleSmall,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.titleSmall,
                                           ),
                                           const SizedBox(height: 4),
                                           if (a.institution != null &&
                                               a.institution!.isNotEmpty)
                                             Text(
                                               a.institution!,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .labelSmall,
+                                              style: Theme.of(
+                                                context,
+                                              ).textTheme.labelSmall,
                                             ),
                                         ],
                                       ),
@@ -217,11 +222,16 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
   }
 
   void _showEditDialog(
-      BuildContext context, Account? account, List<Currency> currencies) {
+    BuildContext context,
+    Account? account,
+    List<Currency> currencies,
+  ) {
     final name = TextEditingController(text: account?.accountName ?? '');
     final institution = TextEditingController(text: account?.institution ?? '');
     final group = TextEditingController(text: account?.accountGroup ?? '');
-    final startBalance = TextEditingController(text: account?.startBalance.toStringAsFixed(2) ?? '0.00');
+    final startBalance = TextEditingController(
+      text: account?.startBalance.toStringAsFixed(2) ?? '0.00',
+    );
     var type = account?.accountType ?? 'BANK';
     var currency = account?.currency ?? 'EUR';
     var excludeSummary = account?.excludeFromSummary ?? false;
@@ -233,84 +243,160 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
       isScrollControlled: true,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 16, right: 16, top: 16),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(account == null ? 'Add Account' : 'Edit Account',
-                    style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  account == null ? 'Add Account' : 'Edit Account',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 16),
-                TextField(controller: name, decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder())),
+                TextField(
+                  controller: name,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: type,
-                  decoration: const InputDecoration(labelText: 'Type', border: OutlineInputBorder()),
-                  items: kAccountTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                  decoration: const InputDecoration(
+                    labelText: 'Type',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: kAccountTypes
+                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                      .toList(),
                   onChanged: (v) => setModalState(() => type = v ?? 'BANK'),
                 ),
                 const SizedBox(height: 12),
-                TextField(controller: institution, decoration: const InputDecoration(labelText: 'Institution', border: OutlineInputBorder())),
+                TextField(
+                  controller: institution,
+                  decoration: const InputDecoration(
+                    labelText: 'Institution',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
                 const SizedBox(height: 12),
-                TextField(controller: group, decoration: const InputDecoration(labelText: 'Group', border: OutlineInputBorder())),
+                TextField(
+                  controller: group,
+                  decoration: const InputDecoration(
+                    labelText: 'Group',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
                 const SizedBox(height: 12),
-                TextField(controller: startBalance, decoration: const InputDecoration(labelText: 'Start Balance', border: OutlineInputBorder()),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+                TextField(
+                  controller: startBalance,
+                  decoration: const InputDecoration(
+                    labelText: 'Start Balance',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: currency,
-                  decoration: const InputDecoration(labelText: 'Currency', border: OutlineInputBorder()),
-                  items: currencies.map((c) => DropdownMenuItem(value: c.code, child: Text('${c.code} - ${c.name}'))).toList(),
+                  decoration: const InputDecoration(
+                    labelText: 'Currency',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: currencies
+                      .map(
+                        (c) => DropdownMenuItem(
+                          value: c.code,
+                          child: Text('${c.code} - ${c.name}'),
+                        ),
+                      )
+                      .toList(),
                   onChanged: (v) => setModalState(() => currency = v ?? 'EUR'),
                 ),
                 const SizedBox(height: 12),
-                SwitchListTile(title: const Text('Exclude from Summary'), value: excludeSummary,
-                    onChanged: (v) => setModalState(() => excludeSummary = v)),
-                SwitchListTile(title: const Text('Exclude from Reports'), value: excludeReports,
-                    onChanged: (v) => setModalState(() => excludeReports = v)),
+                SwitchListTile(
+                  title: const Text('Exclude from Summary'),
+                  value: excludeSummary,
+                  onChanged: (v) => setModalState(() => excludeSummary = v),
+                ),
+                SwitchListTile(
+                  title: const Text('Exclude from Reports'),
+                  value: excludeReports,
+                  onChanged: (v) => setModalState(() => excludeReports = v),
+                ),
                 const SizedBox(height: 16),
-                Row(children: [
-                  Expanded(child: OutlinedButton(
-                    onPressed: saving ? null : () => Navigator.pop(context),
-                    child: const Text('Cancel'),
-                  )),
-                  const SizedBox(width: 12),
-                  Expanded(child: FilledButton(
-                    onPressed: saving ? null : () async {
-                      setModalState(() => saving = true);
-                      try {
-                        await ref.read(accountsControllerProvider.notifier).save(
-                          Account(
-                            id: account?.id,
-                            accountName: name.text,
-                            accountType: type,
-                            institution: institution.text,
-                            accountGroup: group.text,
-                            currency: currency,
-                            startBalance: double.tryParse(startBalance.text) ?? 0,
-                            excludeFromSummary: excludeSummary,
-                            excludeFromReports: excludeReports,
-                          ),
-                        );
-                        if (context.mounted) Navigator.pop(context);
-                      } on ApiException catch (e) {
-                        setModalState(() => saving = false);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error: ${e.message}'),
-                              backgroundColor: Theme.of(context).colorScheme.error,
-                            ),
-                          );
-                        }
-                      }
-                    },
-                    child: saving
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Text('Save'),
-                  )),
-                ]),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: saving ? null : () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: saving
+                            ? null
+                            : () async {
+                                setModalState(() => saving = true);
+                                try {
+                                  await ref
+                                      .read(accountsControllerProvider.notifier)
+                                      .save(
+                                        Account(
+                                          id: account?.id,
+                                          accountName: name.text,
+                                          accountType: type,
+                                          institution: institution.text,
+                                          accountGroup: group.text,
+                                          currency: currency,
+                                          startBalance:
+                                              double.tryParse(
+                                                startBalance.text,
+                                              ) ??
+                                              0,
+                                          excludeFromSummary: excludeSummary,
+                                          excludeFromReports: excludeReports,
+                                        ),
+                                      );
+                                  if (context.mounted) Navigator.pop(context);
+                                } on ApiException catch (e) {
+                                  setModalState(() => saving = false);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Error: ${e.message}'),
+                                        backgroundColor: Theme.of(
+                                          context,
+                                        ).colorScheme.error,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                        child: saving
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Save'),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 16),
               ],
             ),

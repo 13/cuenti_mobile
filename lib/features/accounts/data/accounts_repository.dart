@@ -5,27 +5,30 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final accountsRepositoryProvider = Provider<AccountsRepository>(
-    (ref) => AccountsRepository(ref.watch(dioProvider)));
+  (ref) => AccountsRepository(ref.watch(dioProvider)),
+);
 
 class AccountsRepository {
   AccountsRepository(this._dio);
   final Dio _dio;
 
   Future<List<Account>> getAll() => _guard(() async {
-        final res = await _dio.get<List<dynamic>>('/accounts');
-        return (res.data ?? [])
-            .map((e) => Account.fromJson(e as Map<String, dynamic>))
-            .toList();
-      });
+    final res = await _dio.get<List<dynamic>>('/accounts');
+    return (res.data ?? [])
+        .map((e) => Account.fromJson(e as Map<String, dynamic>))
+        .toList();
+  });
 
   Future<Account> save(Account account) => _guard(() async {
-        final json = account.toJson()..remove('id');
-        final res = account.id != null
-            ? await _dio.put<Map<String, dynamic>>(
-                '/accounts/${account.id}', data: json)
-            : await _dio.post<Map<String, dynamic>>('/accounts', data: json);
-        return Account.fromJson(res.data!);
-      });
+    final json = account.toJson()..remove('id');
+    final res = account.id != null
+        ? await _dio.put<Map<String, dynamic>>(
+            '/accounts/${account.id}',
+            data: json,
+          )
+        : await _dio.post<Map<String, dynamic>>('/accounts', data: json);
+    return Account.fromJson(res.data!);
+  });
 
   Future<void> delete(int id) =>
       _guard(() => _dio.delete<void>('/accounts/$id'));

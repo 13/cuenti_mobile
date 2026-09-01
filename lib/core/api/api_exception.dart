@@ -26,7 +26,8 @@ sealed class ApiException implements Exception {
         }
         if (status == 403) {
           return UnauthorizedException(
-              serverMessage ?? 'API access is not enabled');
+            serverMessage ?? 'API access is not enabled',
+          );
         }
         if (status >= 400 && status < 500) {
           return ValidationException(serverMessage ?? 'Invalid request');
@@ -34,7 +35,8 @@ sealed class ApiException implements Exception {
         return ServerException(serverMessage ?? 'Server error ($status)');
       case DioExceptionType.badCertificate:
         return const NetworkException(
-            'SSL certificate error. Install the server certificate on your device.');
+          'SSL certificate error. Install the server certificate on your device.',
+        );
       case DioExceptionType.cancel:
       case DioExceptionType.unknown:
         return UnknownApiException(e.message ?? 'An error occurred');

@@ -66,8 +66,7 @@ void main() {
     tester,
   ) async {
     when(
-      () =>
-          txRepo.getPage(),
+      () => txRepo.getPage(),
     ).thenAnswer(
       (_) async => TransactionPage(
         content: List.generate(50, (i) => tx(i + 1)),
@@ -78,8 +77,7 @@ void main() {
       ),
     );
     when(
-      () =>
-          txRepo.getPage(page: 1),
+      () => txRepo.getPage(page: 1),
     ).thenAnswer(
       (_) async => TransactionPage(
         content: List.generate(10, (i) => tx(51 + i)),
@@ -98,8 +96,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(
-      () =>
-          txRepo.getPage(page: 1),
+      () => txRepo.getPage(page: 1),
     ).called(1);
   });
 
@@ -107,8 +104,7 @@ void main() {
     final dayOne = DateTime(2020, 3, 5);
     final dayTwo = DateTime(2020, 3, 6);
     when(
-      () =>
-          txRepo.getPage(),
+      () => txRepo.getPage(),
     ).thenAnswer(
       (_) async => TransactionPage(
         content: [
@@ -134,8 +130,7 @@ void main() {
   testWidgets('debounces search input and requeries the repository with the '
       'search filter', (tester) async {
     when(
-      () =>
-          txRepo.getPage(),
+      () => txRepo.getPage(),
     ).thenAnswer(
       (_) async => TransactionPage(
         content: [tx(1)],
@@ -183,8 +178,7 @@ void main() {
       'removes the row', (tester) async {
     var content = [tx(1)];
     when(
-      () =>
-          txRepo.getPage(),
+      () => txRepo.getPage(),
     ).thenAnswer(
       (_) async => TransactionPage(
         content: content,
@@ -214,9 +208,7 @@ void main() {
     'shows the no-transactions-yet empty state when no filters are active',
     (tester) async {
       when(
-        () => txRepo.getPage(
-          
-        ),
+        () => txRepo.getPage(),
       ).thenAnswer(
         (_) async => const TransactionPage(
           content: [],
@@ -242,9 +234,7 @@ void main() {
     'results',
     (tester) async {
       when(
-        () => txRepo.getPage(
-          
-        ),
+        () => txRepo.getPage(),
       ).thenAnswer(
         (_) async => TransactionPage(
           content: [tx(1)],

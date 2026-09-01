@@ -43,8 +43,9 @@ class TransactionsController extends _$TransactionsController {
   }
 
   @override
-  Future<TransactionsState> build(
-      {TransactionFilter filter = defaultFilter}) async {
+  Future<TransactionsState> build({
+    TransactionFilter filter = defaultFilter,
+  }) async {
     final page = await ref
         .read(transactionsRepositoryProvider)
         .getPage(filter: filter);
@@ -61,15 +62,17 @@ class TransactionsController extends _$TransactionsController {
     if (current == null || !current.hasMore || current.loadingMore) return;
     state = AsyncData(current.copyWith(loadingMore: true));
     try {
-      final page = await ref.read(transactionsRepositoryProvider).getPage(
-          filter: current.filter,
-          page: current.nextPage);
-      state = AsyncData(current.copyWith(
-        items: _dedupeById([...current.items, ...page.content]),
-        nextPage: current.nextPage + 1,
-        hasMore: current.nextPage + 1 < page.totalPages,
-        loadingMore: false,
-      ));
+      final page = await ref
+          .read(transactionsRepositoryProvider)
+          .getPage(filter: current.filter, page: current.nextPage);
+      state = AsyncData(
+        current.copyWith(
+          items: _dedupeById([...current.items, ...page.content]),
+          nextPage: current.nextPage + 1,
+          hasMore: current.nextPage + 1 < page.totalPages,
+          loadingMore: false,
+        ),
+      );
     } catch (_) {
       state = AsyncData(current.copyWith(loadingMore: false));
       rethrow;
@@ -89,8 +92,9 @@ class TransactionsController extends _$TransactionsController {
   Future<void> delete(int id) async {
     final current = state.value;
     if (current == null) return;
-    state = AsyncData(current.copyWith(
-        items: current.items.where((t) => t.id != id).toList()));
+    state = AsyncData(
+      current.copyWith(items: current.items.where((t) => t.id != id).toList()),
+    );
     try {
       await ref.read(transactionsRepositoryProvider).delete(id);
       ref

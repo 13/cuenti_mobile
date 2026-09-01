@@ -15,28 +15,35 @@ void main() {
   });
 
   test('getPage parses audit entries with filter', () async {
-    when(() => dio.get<Map<String, dynamic>>('/audit-log', queryParameters: {
+    when(
+      () => dio.get<Map<String, dynamic>>(
+        '/audit-log',
+        queryParameters: {
           'filter': 'admin',
           'page': 0,
           'size': 50,
-        })).thenAnswer((_) async => ok({
-          'content': [
-            {
-              'id': 1,
-              'userId': 1,
-              'username': 'admin',
-              'timestamp': '2026-01-01T10:00:00Z',
-              'entityType': 'Transaction',
-              'entityId': 10,
-              'action': 'CREATE',
-              'details': 'Created transaction',
-            },
-          ],
-          'page': 0,
-          'size': 50,
-          'totalElements': 1,
-          'totalPages': 1,
-        }));
+        },
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'content': [
+          {
+            'id': 1,
+            'userId': 1,
+            'username': 'admin',
+            'timestamp': '2026-01-01T10:00:00Z',
+            'entityType': 'Transaction',
+            'entityId': 10,
+            'action': 'CREATE',
+            'details': 'Created transaction',
+          },
+        ],
+        'page': 0,
+        'size': 50,
+        'totalElements': 1,
+        'totalPages': 1,
+      }),
+    );
 
     final page = await repo.getPage(filter: 'admin');
 
@@ -47,51 +54,72 @@ void main() {
   });
 
   test('getPage omits filter when null', () async {
-    when(() => dio.get<Map<String, dynamic>>('/audit-log',
+    when(
+      () => dio.get<Map<String, dynamic>>(
+        '/audit-log',
         queryParameters: {
           'page': 0,
           'size': 50,
-        })).thenAnswer((_) async => ok({
-      'content': <dynamic>[],
-      'page': 0,
-      'size': 50,
-      'totalElements': 0,
-      'totalPages': 0,
-    }));
+        },
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'content': <dynamic>[],
+        'page': 0,
+        'size': 50,
+        'totalElements': 0,
+        'totalPages': 0,
+      }),
+    );
 
     await repo.getPage();
 
-    final captured = verify(() => dio.get<Map<String, dynamic>>('/audit-log',
-        queryParameters:
-            captureAny(named: 'queryParameters'))).captured.single;
+    final captured = verify(
+      () => dio.get<Map<String, dynamic>>(
+        '/audit-log',
+        queryParameters: captureAny(named: 'queryParameters'),
+      ),
+    ).captured.single;
     expect(captured.containsKey('filter'), isFalse);
   });
 
   test('getPage omits filter when empty string', () async {
-    when(() => dio.get<Map<String, dynamic>>('/audit-log',
+    when(
+      () => dio.get<Map<String, dynamic>>(
+        '/audit-log',
         queryParameters: {
           'page': 0,
           'size': 50,
-        })).thenAnswer((_) async => ok({
-      'content': <dynamic>[],
-      'page': 0,
-      'size': 50,
-      'totalElements': 0,
-      'totalPages': 0,
-    }));
+        },
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'content': <dynamic>[],
+        'page': 0,
+        'size': 50,
+        'totalElements': 0,
+        'totalPages': 0,
+      }),
+    );
 
     await repo.getPage(filter: '');
 
-    final captured = verify(() => dio.get<Map<String, dynamic>>('/audit-log',
-        queryParameters:
-            captureAny(named: 'queryParameters'))).captured.single;
+    final captured = verify(
+      () => dio.get<Map<String, dynamic>>(
+        '/audit-log',
+        queryParameters: captureAny(named: 'queryParameters'),
+      ),
+    ).captured.single;
     expect(captured.containsKey('filter'), isFalse);
   });
 
   test('getPage maps DioException to ApiException', () async {
-    when(() => dio.get<Map<String, dynamic>>('/audit-log',
-            queryParameters: any(named: 'queryParameters')))
-        .thenThrow(
+    when(
+      () => dio.get<Map<String, dynamic>>(
+        '/audit-log',
+        queryParameters: any(named: 'queryParameters'),
+      ),
+    ).thenThrow(
       DioException(
         requestOptions: RequestOptions(path: '/audit-log'),
         type: DioExceptionType.connectionError,

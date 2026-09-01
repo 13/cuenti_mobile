@@ -6,7 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Deliberately its own Dio: requests go to GitHub, so the backend client
 /// with its auth interceptor must not be reused here.
 final appUpdateRepositoryProvider = Provider<AppUpdateRepository>(
-    (ref) => AppUpdateRepository(Dio()));
+  (ref) => AppUpdateRepository(Dio()),
+);
 
 class AppUpdateRepository {
   AppUpdateRepository(this._dio);
@@ -16,14 +17,14 @@ class AppUpdateRepository {
       'https://api.github.com/repos/13/cuenti_mobile/releases/latest';
 
   Future<AppRelease> getLatestRelease() => _guard(() async {
-        final res = await _dio.get<Map<String, dynamic>>(
-          _latestUrl,
-          options: Options(
-            headers: {'Accept': 'application/vnd.github+json'},
-          ),
-        );
-        return AppRelease.fromJson(res.data!);
-      });
+    final res = await _dio.get<Map<String, dynamic>>(
+      _latestUrl,
+      options: Options(
+        headers: {'Accept': 'application/vnd.github+json'},
+      ),
+    );
+    return AppRelease.fromJson(res.data!);
+  });
 
   /// First split APK matching a supported ABI (in ABI preference order),
   /// else the universal APK, else null.
@@ -43,15 +44,14 @@ class AppUpdateRepository {
     ReleaseAsset asset,
     String savePath,
     void Function(int received, int total) onProgress,
-  ) =>
-      _guard(() async {
-        await _dio.download(
-          asset.browserDownloadUrl,
-          savePath,
-          onReceiveProgress: onProgress,
-        );
-        return savePath;
-      });
+  ) => _guard(() async {
+    await _dio.download(
+      asset.browserDownloadUrl,
+      savePath,
+      onReceiveProgress: onProgress,
+    );
+    return savePath;
+  });
 }
 
 /// Shared guard: rethrows DioException as ApiException. Copy this exact

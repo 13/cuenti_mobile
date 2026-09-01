@@ -43,8 +43,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
 
   bool get _isThisYear {
     final now = DateTime.now();
-    return _start == DateTime(now.year) &&
-        _end == DateTime(now.year, 12, 31);
+    return _start == DateTime(now.year) && _end == DateTime(now.year, 12, 31);
   }
 
   @override
@@ -429,15 +428,9 @@ class _ConsumptionChart extends StatelessWidget {
                 },
               ),
             ),
-            leftTitles: const AxisTitles(
-              
-            ),
-            topTitles: const AxisTitles(
-              
-            ),
-            rightTitles: const AxisTitles(
-              
-            ),
+            leftTitles: const AxisTitles(),
+            topTitles: const AxisTitles(),
+            rightTitles: const AxisTitles(),
           ),
           borderData: FlBorderData(show: false),
           lineTouchData: LineTouchData(

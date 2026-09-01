@@ -11,5 +11,4 @@ part 'forecasts_controller.g.dart';
 Future<ForecastData> forecast(
   Ref ref, {
   required int year,
-}) =>
-    ref.watch(forecastsRepositoryProvider).getForecast(year);
+}) => ref.watch(forecastsRepositoryProvider).getForecast(year);

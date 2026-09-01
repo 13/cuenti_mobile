@@ -43,7 +43,8 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
   @override
   Widget build(BuildContext context) {
     final viewsAsync = ref.watch(savedViewsControllerProvider);
-    final canSaveCurrent = widget.current != TransactionsController.defaultFilter;
+    final canSaveCurrent =
+        widget.current != TransactionsController.defaultFilter;
 
     return SafeArea(
       child: Padding(
@@ -146,7 +147,10 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Save current view', style: Theme.of(ctx).textTheme.titleLarge),
+              Text(
+                'Save current view',
+                style: Theme.of(ctx).textTheme.titleLarge,
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: nameController,
@@ -187,8 +191,9 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
                                   ScaffoldMessenger.of(ctx).showSnackBar(
                                     SnackBar(
                                       content: Text('Error: ${e.message}'),
-                                      backgroundColor:
-                                          Theme.of(ctx).colorScheme.error,
+                                      backgroundColor: Theme.of(
+                                        ctx,
+                                      ).colorScheme.error,
                                     ),
                                   );
                                 }

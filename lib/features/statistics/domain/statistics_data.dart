@@ -11,10 +11,18 @@ abstract class StatisticsData with _$StatisticsData {
     @JsonKey(fromJson: jsonToDouble) required double totalExpense,
     @JsonKey(fromJson: jsonToDouble) required double balance,
     @Default('EUR') String currency,
-    @JsonKey(fromJson: jsonToDoubleMap) @Default({}) Map<String, double> incomeByCategory,
-    @JsonKey(fromJson: jsonToDoubleMap) @Default({}) Map<String, double> expenseByCategory,
-    @JsonKey(fromJson: jsonToDoubleMap) @Default({}) Map<String, double> monthlyIncome,
-    @JsonKey(fromJson: jsonToDoubleMap) @Default({}) Map<String, double> monthlyExpense,
+    @JsonKey(fromJson: jsonToDoubleMap)
+    @Default({})
+    Map<String, double> incomeByCategory,
+    @JsonKey(fromJson: jsonToDoubleMap)
+    @Default({})
+    Map<String, double> expenseByCategory,
+    @JsonKey(fromJson: jsonToDoubleMap)
+    @Default({})
+    Map<String, double> monthlyIncome,
+    @JsonKey(fromJson: jsonToDoubleMap)
+    @Default({})
+    Map<String, double> monthlyExpense,
     @Default(0) int transactionCount,
   }) = _StatisticsData;
 

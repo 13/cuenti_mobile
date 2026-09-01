@@ -30,17 +30,21 @@ void main() {
   });
 
   test('login saves token and returns profile', () async {
-    when(() => dio.post<Map<String, dynamic>>(
-          '/auth/login',
-          data: any(named: 'data'),
-        )).thenAnswer((_) async => ok({
-              'token': 'jwt-abc',
-              'username': 'demo',
-              'email': 'd@x',
-              'firstName': 'D',
-              'lastName': 'M',
-              'roles': ['ROLE_USER'],
-            }));
+    when(
+      () => dio.post<Map<String, dynamic>>(
+        '/auth/login',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'token': 'jwt-abc',
+        'username': 'demo',
+        'email': 'd@x',
+        'firstName': 'D',
+        'lastName': 'M',
+        'roles': ['ROLE_USER'],
+      }),
+    );
 
     final user = await repo.login('demo', 'pw');
 
@@ -49,26 +53,31 @@ void main() {
   });
 
   test('login maps 401 to UnauthorizedException', () async {
-    when(() => dio.post<Map<String, dynamic>>(
-          '/auth/login',
-          data: any(named: 'data'),
-        )).thenThrow(
+    when(
+      () => dio.post<Map<String, dynamic>>(
+        '/auth/login',
+        data: any(named: 'data'),
+      ),
+    ).thenThrow(
       DioException(
         requestOptions: RequestOptions(path: '/auth/login'),
         type: DioExceptionType.badResponse,
         response: Response(
-            requestOptions: RequestOptions(path: '/auth/login'),
-            statusCode: 401),
+          requestOptions: RequestOptions(path: '/auth/login'),
+          statusCode: 401,
+        ),
       ),
     );
 
     expect(
       () => repo.login('demo', 'bad'),
-      throwsA(isA<UnauthorizedException>().having(
-        (e) => e.message,
-        'message',
-        'Invalid username or password',
-      )),
+      throwsA(
+        isA<UnauthorizedException>().having(
+          (e) => e.message,
+          'message',
+          'Invalid username or password',
+        ),
+      ),
     );
   });
 

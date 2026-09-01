@@ -16,10 +16,12 @@ void main() {
   });
 
   test('getAll parses list of payees', () async {
-    when(() => dio.get<List<dynamic>>('/payees')).thenAnswer((_) async => ok([
-          {'id': 1, 'name': 'Supermarket', 'notes': 'Local shop'},
-          {'id': 2, 'name': 'Gas Station', 'notes': null},
-        ]));
+    when(() => dio.get<List<dynamic>>('/payees')).thenAnswer(
+      (_) async => ok([
+        {'id': 1, 'name': 'Supermarket', 'notes': 'Local shop'},
+        {'id': 2, 'name': 'Gas Station', 'notes': null},
+      ]),
+    );
 
     final payees = await repo.getAll();
 
@@ -30,35 +32,49 @@ void main() {
   });
 
   test('getAll passes search query param when non-null', () async {
-    when(() => dio.get<List<dynamic>>('/payees',
-            queryParameters: any(named: 'queryParameters')))
-        .thenAnswer((_) async => ok([
-          {'id': 1, 'name': 'Supermarket'}
-        ]));
+    when(
+      () => dio.get<List<dynamic>>(
+        '/payees',
+        queryParameters: any(named: 'queryParameters'),
+      ),
+    ).thenAnswer(
+      (_) async => ok([
+        {'id': 1, 'name': 'Supermarket'},
+      ]),
+    );
 
     await repo.getAll(search: 'super');
 
-    verify(() => dio.get<List<dynamic>>('/payees',
-        queryParameters: {'search': 'super'})).called(1);
+    verify(
+      () => dio.get<List<dynamic>>(
+        '/payees',
+        queryParameters: {'search': 'super'},
+      ),
+    ).called(1);
   });
 
   test('save posts new payee when id is null', () async {
     const payee = Payee(
-        name: 'New Payee',
-        notes: 'a note',
-        defaultCategoryId: 4,
-        defaultCategoryName: 'Groceries');
-    when(() => dio.post<Map<String, dynamic>>('/payees',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({'id': 5, 'name': 'New Payee'}));
+      name: 'New Payee',
+      notes: 'a note',
+      defaultCategoryId: 4,
+      defaultCategoryName: 'Groceries',
+    );
+    when(
+      () => dio.post<Map<String, dynamic>>('/payees', data: any(named: 'data')),
+    ).thenAnswer((_) async => ok({'id': 5, 'name': 'New Payee'}));
 
     final saved = await repo.save(payee);
 
     expect(saved.id, 5);
-    final captured = verify(() => dio.post<Map<String, dynamic>>('/payees',
-            data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, dynamic>;
+    final captured =
+        verify(
+              () => dio.post<Map<String, dynamic>>(
+                '/payees',
+                data: captureAny(named: 'data'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured, containsPair('name', 'New Payee'));
     expect(captured, containsPair('notes', 'a note'));
     expect(captured, containsPair('defaultCategoryId', 4));
@@ -69,15 +85,18 @@ void main() {
 
   test('save puts existing payee when id is set', () async {
     const payee = Payee(id: 7, name: 'Existing');
-    when(() => dio.put<Map<String, dynamic>>('/payees/7',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({'id': 7, 'name': 'Existing'}));
+    when(
+      () =>
+          dio.put<Map<String, dynamic>>('/payees/7', data: any(named: 'data')),
+    ).thenAnswer((_) async => ok({'id': 7, 'name': 'Existing'}));
 
     final saved = await repo.save(payee);
 
     expect(saved.id, 7);
-    verify(() => dio.put<Map<String, dynamic>>('/payees/7',
-        data: any(named: 'data'))).called(1);
+    verify(
+      () =>
+          dio.put<Map<String, dynamic>>('/payees/7', data: any(named: 'data')),
+    ).called(1);
   });
 
   test('delete calls DELETE /payees/{id}', () async {

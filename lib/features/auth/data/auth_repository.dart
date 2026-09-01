@@ -17,13 +17,14 @@ class AuthRepository {
 
   Future<UserProfile> login(String username, String password) async {
     try {
-      final response =
-          await _client.dio.post<Map<String, dynamic>>('/auth/login', data: {
-        'username': username,
-        'password': password,
-      });
-      return await _saveTokenAndBuildProfile(
-          response.data!);
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/auth/login',
+        data: {
+          'username': username,
+          'password': password,
+        },
+      );
+      return await _saveTokenAndBuildProfile(response.data!);
     } on DioException catch (e) {
       final mapped = ApiException.fromDio(e);
       // Parity with the old AuthProvider: a 401 on the login endpoint means
@@ -45,16 +46,17 @@ class AuthRepository {
     required String lastName,
   }) async {
     try {
-      final response = await _client.dio
-          .post<Map<String, dynamic>>('/auth/register', data: {
-        'username': username,
-        'email': email,
-        'password': password,
-        'firstName': firstName,
-        'lastName': lastName,
-      });
-      return await _saveTokenAndBuildProfile(
-          response.data!);
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/auth/register',
+        data: {
+          'username': username,
+          'email': email,
+          'password': password,
+          'firstName': firstName,
+          'lastName': lastName,
+        },
+      );
+      return await _saveTokenAndBuildProfile(response.data!);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
     }
@@ -62,8 +64,9 @@ class AuthRepository {
 
   Future<UserProfile> getProfile() async {
     try {
-      final response =
-          await _client.dio.get<Map<String, dynamic>>('/user/profile');
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/user/profile',
+      );
       return UserProfile.fromJson(response.data!);
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
@@ -72,8 +75,9 @@ class AuthRepository {
 
   Future<bool> fetchRegistrationEnabled() async {
     try {
-      final response =
-          await _client.dio.get<Map<String, dynamic>>('/auth/settings');
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/auth/settings',
+      );
       final data = response.data;
       return (data?['registrationEnabled'] as bool?) ?? true;
     } on DioException {
@@ -92,7 +96,8 @@ class AuthRepository {
   Future<void> setServerUrl(String url) => _client.setServerUrl(url);
 
   Future<UserProfile> _saveTokenAndBuildProfile(
-      Map<String, dynamic> data) async {
+    Map<String, dynamic> data,
+  ) async {
     await _client.saveToken(data['token'] as String);
     return UserProfile(
       username: data['username'] as String? ?? '',

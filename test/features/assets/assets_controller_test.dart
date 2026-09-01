@@ -12,13 +12,21 @@ void main() {
   late ProviderContainer container;
 
   const a1 = Asset(id: 1, symbol: 'AAPL', name: 'Apple Inc', currency: 'USD');
-  const a2 = Asset(id: 2, symbol: 'BTC', name: 'Bitcoin', type: 'CRYPTO', currency: 'USD');
+  const a2 = Asset(
+    id: 2,
+    symbol: 'BTC',
+    name: 'Bitcoin',
+    type: 'CRYPTO',
+    currency: 'USD',
+  );
 
   setUp(() {
     repo = MockAssetsRepository();
-    container = ProviderContainer(overrides: [
-      assetsRepositoryProvider.overrideWithValue(repo),
-    ]);
+    container = ProviderContainer(
+      overrides: [
+        assetsRepositoryProvider.overrideWithValue(repo),
+      ],
+    );
     addTearDown(container.dispose);
   });
 
@@ -32,7 +40,13 @@ void main() {
     when(() => repo.getAll()).thenAnswer((_) async => [a1, a2]);
     await container.read(assetsControllerProvider.future);
     when(() => repo.refreshPrice(1)).thenAnswer(
-        (_) async => const Asset(id: 1, symbol: 'AAPL', name: 'Apple Inc', currentPrice: 150.25));
+      (_) async => const Asset(
+        id: 1,
+        symbol: 'AAPL',
+        name: 'Apple Inc',
+        currentPrice: 150.25,
+      ),
+    );
 
     await container.read(assetsControllerProvider.notifier).refreshPrice(1);
 

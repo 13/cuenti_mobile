@@ -17,9 +17,11 @@ void main() {
 
   setUp(() {
     repo = MockAccountsRepository();
-    container = ProviderContainer(overrides: [
-      accountsRepositoryProvider.overrideWithValue(repo),
-    ]);
+    container = ProviderContainer(
+      overrides: [
+        accountsRepositoryProvider.overrideWithValue(repo),
+      ],
+    );
     addTearDown(container.dispose);
   });
 

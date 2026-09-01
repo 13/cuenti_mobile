@@ -46,8 +46,7 @@ void main() {
       () => categoriesRepo.getAll(type: any(named: 'type')),
     ).thenAnswer((_) async => []);
     when(
-      () =>
-          txRepo.getPage(),
+      () => txRepo.getPage(),
     ).thenAnswer(
       (_) async => const TransactionPage(
         content: [],

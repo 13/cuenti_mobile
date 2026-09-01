@@ -44,10 +44,10 @@ void main() {
       buildSignature: '',
     );
     when(() => repo.getLatestRelease()).thenAnswer((_) async => _release);
-    when(() => repo.pickAsset(any(), any()))
-        .thenReturn(_release.assets.first);
-    when(() => repo.downloadApk(any(), any(), any()))
-        .thenAnswer((invocation) async {
+    when(() => repo.pickAsset(any(), any())).thenReturn(_release.assets.first);
+    when(() => repo.downloadApk(any(), any(), any())).thenAnswer((
+      invocation,
+    ) async {
       final onProgress =
           invocation.positionalArguments[2] as void Function(int, int);
       onProgress(50, 100);
@@ -85,8 +85,9 @@ void main() {
     );
   }
 
-  testWidgets('newer release: dialog with notes, download, installer',
-      (tester) async {
+  testWidgets('newer release: dialog with notes, download, installer', (
+    tester,
+  ) async {
     await pumpHost(tester);
     await tester.tap(find.text('check'));
     await tester.pumpAndSettle();
@@ -103,8 +104,9 @@ void main() {
   });
 
   testWidgets('up to date: snackbar, no dialog', (tester) async {
-    when(() => repo.getLatestRelease())
-        .thenAnswer((_) async => const AppRelease(tagName: 'v2.0.4'));
+    when(
+      () => repo.getLatestRelease(),
+    ).thenAnswer((_) async => const AppRelease(tagName: 'v2.0.4'));
     await pumpHost(tester);
     await tester.tap(find.text('check'));
     await tester.pumpAndSettle();

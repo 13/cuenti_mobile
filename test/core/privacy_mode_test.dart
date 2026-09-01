@@ -20,8 +20,9 @@ class MemoryStorage extends SecureStorage {
 }
 
 void main() {
-  testWidgets('AmountText shows the amount normally when privacy mode is off',
-      (tester) async {
+  testWidgets('AmountText shows the amount normally when privacy mode is off', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [privacyModeProvider.overrideWith(_FalsePrivacyMode.new)],
@@ -36,8 +37,9 @@ void main() {
     expect(find.text('•••••'), findsNothing);
   });
 
-  testWidgets('AmountText masks the amount when privacy mode is on',
-      (tester) async {
+  testWidgets('AmountText masks the amount when privacy mode is on', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [privacyModeProvider.overrideWith(_TruePrivacyMode.new)],
@@ -67,9 +69,11 @@ void main() {
 
   test('toggle flips state and persists to secure storage', () async {
     final storage = MemoryStorage();
-    final container = ProviderContainer(overrides: [
-      secureStorageProvider.overrideWithValue(storage),
-    ]);
+    final container = ProviderContainer(
+      overrides: [
+        secureStorageProvider.overrideWithValue(storage),
+      ],
+    );
     addTearDown(container.dispose);
 
     // Reading builds the notifier and schedules its async initial load

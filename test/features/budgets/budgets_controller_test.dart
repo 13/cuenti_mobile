@@ -23,9 +23,11 @@ void main() {
 
   setUp(() {
     repo = MockBudgetsRepository();
-    container = ProviderContainer(overrides: [
-      budgetsRepositoryProvider.overrideWithValue(repo),
-    ]);
+    container = ProviderContainer(
+      overrides: [
+        budgetsRepositoryProvider.overrideWithValue(repo),
+      ],
+    );
     addTearDown(container.dispose);
 
     registerFallbackValue(
@@ -43,13 +45,17 @@ void main() {
     when(() => repo.getProgress()).thenAnswer((_) async => [p1]);
     await container.read(budgetsControllerProvider.future);
 
-    when(() => repo.save(any())).thenAnswer((_) async => const Budget(
-          id: 1,
-          categoryId: 2,
-          monthlyLimit: 300,
-        ));
+    when(() => repo.save(any())).thenAnswer(
+      (_) async => const Budget(
+        id: 1,
+        categoryId: 2,
+        monthlyLimit: 300,
+      ),
+    );
 
-    await container.read(budgetsControllerProvider.notifier).save(
+    await container
+        .read(budgetsControllerProvider.notifier)
+        .save(
           const Budget(id: 1, categoryId: 2, monthlyLimit: 300),
         );
 

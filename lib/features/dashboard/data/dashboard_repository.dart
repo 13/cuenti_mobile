@@ -5,16 +5,17 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final dashboardRepositoryProvider = Provider<DashboardRepository>(
-    (ref) => DashboardRepository(ref.watch(dioProvider)));
+  (ref) => DashboardRepository(ref.watch(dioProvider)),
+);
 
 class DashboardRepository {
   DashboardRepository(this._dio);
   final Dio _dio;
 
   Future<DashboardData> load() => _guard(() async {
-        final res = await _dio.get<Map<String, dynamic>>('/dashboard');
-        return DashboardData.fromJson(res.data!);
-      });
+    final res = await _dio.get<Map<String, dynamic>>('/dashboard');
+    return DashboardData.fromJson(res.data!);
+  });
 }
 
 /// Shared guard: rethrows DioException as ApiException. Copy this exact

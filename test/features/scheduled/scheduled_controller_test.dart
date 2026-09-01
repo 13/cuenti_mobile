@@ -16,7 +16,8 @@ class MockScheduledRepository extends Mock implements ScheduledRepository {}
 
 class MockAccountsRepository extends Mock implements AccountsRepository {}
 
-class MockTransactionsRepository extends Mock implements TransactionsRepository {}
+class MockTransactionsRepository extends Mock
+    implements TransactionsRepository {}
 
 void main() {
   late MockScheduledRepository repo;
@@ -41,11 +42,13 @@ void main() {
     repo = MockScheduledRepository();
     accountsRepo = MockAccountsRepository();
     transactionsRepo = MockTransactionsRepository();
-    container = ProviderContainer(overrides: [
-      scheduledRepositoryProvider.overrideWithValue(repo),
-      accountsRepositoryProvider.overrideWithValue(accountsRepo),
-      transactionsRepositoryProvider.overrideWithValue(transactionsRepo),
-    ]);
+    container = ProviderContainer(
+      overrides: [
+        scheduledRepositoryProvider.overrideWithValue(repo),
+        accountsRepositoryProvider.overrideWithValue(accountsRepo),
+        transactionsRepositoryProvider.overrideWithValue(transactionsRepo),
+      ],
+    );
     addTearDown(container.dispose);
   });
 
@@ -67,43 +70,47 @@ void main() {
     expect(container.read(scheduledControllerProvider).value, [st1, st2]);
   });
 
-  test('post invalidates self, accounts, and transactions controllers', () async {
-    when(() => repo.getAll()).thenAnswer((_) async => [st1, st2]);
-    when(() => accountsRepo.getAll())
-        .thenAnswer((_) async => const [Account(id: 1, accountName: 'Checking')]);
-    when(() => transactionsRepo.getPage(
-            ))
-        .thenAnswer((_) async => const TransactionPage(
-            content: [], page: 0, size: 50, totalElements: 0, totalPages: 1));
+  test(
+    'post invalidates self, accounts, and transactions controllers',
+    () async {
+      when(() => repo.getAll()).thenAnswer((_) async => [st1, st2]);
+      when(() => accountsRepo.getAll()).thenAnswer(
+        (_) async => const [Account(id: 1, accountName: 'Checking')],
+      );
+      when(() => transactionsRepo.getPage()).thenAnswer(
+        (_) async => const TransactionPage(
+          content: [],
+          page: 0,
+          size: 50,
+          totalElements: 0,
+          totalPages: 1,
+        ),
+      );
 
-    // Keep the dependent controllers alive with listeners so invalidation
-    // triggers eager rebuilds instead of lazy/auto-dispose behavior.
-    container
-      ..listen(scheduledControllerProvider, (_, _) {})
-      ..listen(accountsControllerProvider, (_, _) {})
-      ..listen(transactionsControllerProvider(),
-          (_, _) {});
-    await container.read(scheduledControllerProvider.future);
-    await container.read(accountsControllerProvider.future);
-    await container.read(
-        transactionsControllerProvider().future);
-    verify(() => accountsRepo.getAll()).called(1);
+      // Keep the dependent controllers alive with listeners so invalidation
+      // triggers eager rebuilds instead of lazy/auto-dispose behavior.
+      container
+        ..listen(scheduledControllerProvider, (_, _) {})
+        ..listen(accountsControllerProvider, (_, _) {})
+        ..listen(transactionsControllerProvider(), (_, _) {});
+      await container.read(scheduledControllerProvider.future);
+      await container.read(accountsControllerProvider.future);
+      await container.read(transactionsControllerProvider().future);
+      verify(() => accountsRepo.getAll()).called(1);
 
-    when(() => repo.post(1)).thenAnswer((_) async {});
+      when(() => repo.post(1)).thenAnswer((_) async {});
 
-    await container.read(scheduledControllerProvider.notifier).post(1);
-    // Settle rebuilds of the invalidated dependents.
-    await container.read(accountsControllerProvider.future);
-    await container.read(
-        transactionsControllerProvider().future);
+      await container.read(scheduledControllerProvider.notifier).post(1);
+      // Settle rebuilds of the invalidated dependents.
+      await container.read(accountsControllerProvider.future);
+      await container.read(transactionsControllerProvider().future);
 
-    verify(() => repo.post(1)).called(1);
-    // Self reloaded: build's getAll fetched again.
-    verify(() => repo.getAll()).called(2);
-    // Cross-invalidation: accounts and transactions refetched.
-    verify(() => accountsRepo.getAll()).called(1);
-    verify(() => transactionsRepo.getPage(
-            ))
-        .called(2);
-  });
+      verify(() => repo.post(1)).called(1);
+      // Self reloaded: build's getAll fetched again.
+      verify(() => repo.getAll()).called(2);
+      // Cross-invalidation: accounts and transactions refetched.
+      verify(() => accountsRepo.getAll()).called(1);
+      verify(() => transactionsRepo.getPage()).called(2);
+    },
+  );
 }

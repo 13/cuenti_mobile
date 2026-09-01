@@ -8,15 +8,26 @@ part 'transaction.g.dart';
 const kTransactionTypes = ['EXPENSE', 'INCOME', 'TRANSFER'];
 
 const kPaymentMethods = [
-  'NONE', 'DEBIT_CARD', 'CASH', 'BANK_TRANSFER', 'STANDING_ORDER',
-  'ELECTRONIC_PAYMENT', 'FI_FEE', 'CARD_TRANSACTION', 'TRADE',
-  'TRANSFER', 'REWARD', 'INTEREST',
+  'NONE',
+  'DEBIT_CARD',
+  'CASH',
+  'BANK_TRANSFER',
+  'STANDING_ORDER',
+  'ELECTRONIC_PAYMENT',
+  'FI_FEE',
+  'CARD_TRANSACTION',
+  'TRADE',
+  'TRANSFER',
+  'REWARD',
+  'INTEREST',
 ];
 
 @freezed
 abstract class Transaction with _$Transaction {
   const factory Transaction({
-    @JsonKey(fromJson: jsonToDouble) required double amount, required DateTime transactionDate, int? id,
+    @JsonKey(fromJson: jsonToDouble) required double amount,
+    required DateTime transactionDate,
+    int? id,
     @Default('EXPENSE') String type,
     int? fromAccountId,
     String? fromAccountName,

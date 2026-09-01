@@ -16,26 +16,28 @@ void main() {
   });
 
   test('getAll parses list of currencies', () async {
-    when(() => dio.get<List<dynamic>>('/currencies')).thenAnswer((_) async => ok([
-          {
-            'id': 1,
-            'code': 'USD',
-            'name': 'US Dollar',
-            'symbol': r'$',
-            'decimalChar': '.',
-            'fracDigits': 2,
-            'groupingChar': ',',
-          },
-          {
-            'id': 2,
-            'code': 'EUR',
-            'name': 'Euro',
-            'symbol': '€',
-            'decimalChar': ',',
-            'fracDigits': 2,
-            'groupingChar': '.',
-          },
-        ]));
+    when(() => dio.get<List<dynamic>>('/currencies')).thenAnswer(
+      (_) async => ok([
+        {
+          'id': 1,
+          'code': 'USD',
+          'name': 'US Dollar',
+          'symbol': r'$',
+          'decimalChar': '.',
+          'fracDigits': 2,
+          'groupingChar': ',',
+        },
+        {
+          'id': 2,
+          'code': 'EUR',
+          'name': 'Euro',
+          'symbol': '€',
+          'decimalChar': ',',
+          'fracDigits': 2,
+          'groupingChar': '.',
+        },
+      ]),
+    );
 
     final currencies = await repo.getAll();
 
@@ -47,30 +49,41 @@ void main() {
 
   test('save posts new currency when id is null', () async {
     const currency = Currency(
-        code: 'GBP',
-        name: 'British Pound',
-        symbol: '£',
-        decimalChar: '.',
-        groupingChar: ',');
-    when(() => dio.post<Map<String, dynamic>>('/currencies', data: any(named: 'data')))
-        .thenAnswer((_) async => ok({
-          'id': 3,
-          'code': 'GBP',
-          'name': 'British Pound',
-          'symbol': '£',
-          'decimalChar': '.',
-          'fracDigits': 2,
-          'groupingChar': ',',
-        }));
+      code: 'GBP',
+      name: 'British Pound',
+      symbol: '£',
+      decimalChar: '.',
+      groupingChar: ',',
+    );
+    when(
+      () => dio.post<Map<String, dynamic>>(
+        '/currencies',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'id': 3,
+        'code': 'GBP',
+        'name': 'British Pound',
+        'symbol': '£',
+        'decimalChar': '.',
+        'fracDigits': 2,
+        'groupingChar': ',',
+      }),
+    );
 
     final saved = await repo.save(currency);
 
     expect(saved.id, 3);
     expect(saved.code, 'GBP');
-    final captured = verify(() =>
-            dio.post<Map<String, dynamic>>('/currencies', data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, dynamic>;
+    final captured =
+        verify(
+              () => dio.post<Map<String, dynamic>>(
+                '/currencies',
+                data: captureAny(named: 'data'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured, containsPair('code', 'GBP'));
     expect(captured, containsPair('name', 'British Pound'));
     expect(captured, containsPair('symbol', '£'));
@@ -81,20 +94,37 @@ void main() {
   });
 
   test('save puts existing currency when id is set', () async {
-    const currency = Currency(id: 1, code: 'USD', name: 'US Dollar', symbol: r'$');
-    when(() => dio.put<Map<String, dynamic>>('/currencies/1', data: any(named: 'data')))
-        .thenAnswer((_) async =>
-            ok({'id': 1, 'code': 'USD', 'name': 'US Dollar', 'symbol': r'$'}));
+    const currency = Currency(
+      id: 1,
+      code: 'USD',
+      name: 'US Dollar',
+      symbol: r'$',
+    );
+    when(
+      () => dio.put<Map<String, dynamic>>(
+        '/currencies/1',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer(
+      (_) async =>
+          ok({'id': 1, 'code': 'USD', 'name': 'US Dollar', 'symbol': r'$'}),
+    );
 
     final saved = await repo.save(currency);
 
     expect(saved.id, 1);
-    verify(() => dio.put<Map<String, dynamic>>('/currencies/1', data: any(named: 'data')))
-        .called(1);
+    verify(
+      () => dio.put<Map<String, dynamic>>(
+        '/currencies/1',
+        data: any(named: 'data'),
+      ),
+    ).called(1);
   });
 
   test('delete calls DELETE /currencies/{id}', () async {
-    when(() => dio.delete<void>('/currencies/1')).thenAnswer((_) async => ok(null));
+    when(
+      () => dio.delete<void>('/currencies/1'),
+    ).thenAnswer((_) async => ok(null));
 
     await repo.delete(1);
 

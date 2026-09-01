@@ -20,6 +20,5 @@ abstract class Asset with _$Asset {
 
   const Asset._();
 
-  factory Asset.fromJson(Map<String, dynamic> json) =>
-      _$AssetFromJson(json);
+  factory Asset.fromJson(Map<String, dynamic> json) => _$AssetFromJson(json);
 }

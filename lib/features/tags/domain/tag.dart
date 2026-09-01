@@ -12,6 +12,5 @@ abstract class Tag with _$Tag {
 
   const Tag._();
 
-  factory Tag.fromJson(Map<String, dynamic> json) =>
-      _$TagFromJson(json);
+  factory Tag.fromJson(Map<String, dynamic> json) => _$TagFromJson(json);
 }

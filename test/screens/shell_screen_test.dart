@@ -71,7 +71,8 @@ void main() {
     expect(
       vehiclesY,
       lessThan(managementY),
-      reason: 'Vehicles must appear in the General section, '
+      reason:
+          'Vehicles must appear in the General section, '
           'above the Management header',
     );
   });

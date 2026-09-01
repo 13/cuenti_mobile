@@ -5,7 +5,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final auditRepositoryProvider = Provider<AuditRepository>(
-    (ref) => AuditRepository(ref.watch(dioProvider)));
+  (ref) => AuditRepository(ref.watch(dioProvider)),
+);
 
 class AuditRepository {
   AuditRepository(this._dio);
@@ -16,16 +17,17 @@ class AuditRepository {
     int page = 0,
     int size = 50,
     String? filter,
-  }) =>
-      _guard(() async {
-        final res = await _dio.get<Map<String, dynamic>>('/audit-log',
-            queryParameters: {
-              if (filter != null && filter.isNotEmpty) 'filter': filter,
-              'page': page,
-              'size': size,
-            });
-        return AuditPage.fromJson(res.data!);
-      });
+  }) => _guard(() async {
+    final res = await _dio.get<Map<String, dynamic>>(
+      '/audit-log',
+      queryParameters: {
+        if (filter != null && filter.isNotEmpty) 'filter': filter,
+        'page': page,
+        'size': size,
+      },
+    );
+    return AuditPage.fromJson(res.data!);
+  });
 }
 
 /// Shared guard: rethrows DioException as ApiException. Copy this exact

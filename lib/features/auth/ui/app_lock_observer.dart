@@ -129,8 +129,10 @@ class _LockScreen extends StatelessWidget {
           children: [
             Image.asset('assets/Cuenti.png', width: 100, height: 100),
             const SizedBox(height: 24),
-            Text('Cuenti is Locked',
-                style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              'Cuenti is Locked',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: onUnlock,

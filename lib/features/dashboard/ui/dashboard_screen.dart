@@ -67,10 +67,11 @@ class DashboardScreen extends ConsumerWidget {
                       alignment: Alignment.centerLeft,
                       child: AmountText(
                         dashboard.netWorth,
-                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -174,7 +175,6 @@ class DashboardScreen extends ConsumerWidget {
 }
 
 class _AccountCard extends StatelessWidget {
-
   const _AccountCard({required this.account});
   final Account account;
 
@@ -219,7 +219,6 @@ class _AccountCard extends StatelessWidget {
 }
 
 class _AssetTile extends StatelessWidget {
-
   const _AssetTile({required this.asset, required this.currency});
   final AssetPerformance asset;
   final String currency;

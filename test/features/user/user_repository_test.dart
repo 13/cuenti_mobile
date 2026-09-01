@@ -15,19 +15,20 @@ void main() {
   });
 
   test('getProfile parses profile JSON', () async {
-    when(() => dio.get<Map<String, dynamic>>('/user/profile'))
-        .thenAnswer((_) async => ok({
-              'id': 1,
-              'username': 'ben',
-              'email': 'ben@example.com',
-              'firstName': 'Ben',
-              'lastName': 'Egger',
-              'defaultCurrency': 'EUR',
-              'darkMode': true,
-              'locale': 'de-DE',
-              'apiEnabled': false,
-              'roles': ['ROLE_USER'],
-            }));
+    when(() => dio.get<Map<String, dynamic>>('/user/profile')).thenAnswer(
+      (_) async => ok({
+        'id': 1,
+        'username': 'ben',
+        'email': 'ben@example.com',
+        'firstName': 'Ben',
+        'lastName': 'Egger',
+        'defaultCurrency': 'EUR',
+        'darkMode': true,
+        'locale': 'de-DE',
+        'apiEnabled': false,
+        'roles': ['ROLE_USER'],
+      }),
+    );
 
     final profile = await repo.getProfile();
 
@@ -56,15 +57,20 @@ void main() {
   });
 
   test('updateProfile PUTs exactly email/firstName/lastName', () async {
-    when(() => dio.put<Map<String, dynamic>>('/user/profile',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({
-              'id': 1,
-              'username': 'ben',
-              'email': 'new@example.com',
-              'firstName': 'New',
-              'lastName': 'Name',
-            }));
+    when(
+      () => dio.put<Map<String, dynamic>>(
+        '/user/profile',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'id': 1,
+        'username': 'ben',
+        'email': 'new@example.com',
+        'firstName': 'New',
+        'lastName': 'Name',
+      }),
+    );
 
     final profile = await repo.updateProfile(
       email: 'new@example.com',
@@ -73,10 +79,14 @@ void main() {
     );
 
     expect(profile.email, 'new@example.com');
-    final captured = verify(() => dio.put<Map<String, dynamic>>('/user/profile',
-            data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, dynamic>;
+    final captured =
+        verify(
+              () => dio.put<Map<String, dynamic>>(
+                '/user/profile',
+                data: captureAny(named: 'data'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured, {
       'email': 'new@example.com',
       'firstName': 'New',
@@ -85,60 +95,89 @@ void main() {
   });
 
   test('updatePassword PUTs old and new password', () async {
-    when(() => dio.put<void>('/user/password', data: any(named: 'data')))
-        .thenAnswer((_) async => ok(null));
+    when(
+      () => dio.put<void>('/user/password', data: any(named: 'data')),
+    ).thenAnswer((_) async => ok(null));
 
     await repo.updatePassword('old', 'newPw');
 
-    final captured = verify(() =>
-            dio.put<void>('/user/password', data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, dynamic>;
+    final captured =
+        verify(
+              () => dio.put<void>(
+                '/user/password',
+                data: captureAny(named: 'data'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured, {'oldPassword': 'old', 'newPassword': 'newPw'});
   });
 
   test('updatePreferences sends only the provided sparse keys', () async {
-    when(() => dio.put<Map<String, dynamic>>('/user/preferences',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({
-              'id': 1,
-              'username': 'ben',
-              'darkMode': false,
-            }));
+    when(
+      () => dio.put<Map<String, dynamic>>(
+        '/user/preferences',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer(
+      (_) async => ok({
+        'id': 1,
+        'username': 'ben',
+        'darkMode': false,
+      }),
+    );
 
     final profile = await repo.updatePreferences({'darkMode': false});
 
     expect(profile.darkMode, false);
-    final captured = verify(() => dio.put<Map<String, dynamic>>(
-            '/user/preferences',
-            data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, Object?>;
+    final captured =
+        verify(
+              () => dio.put<Map<String, dynamic>>(
+                '/user/preferences',
+                data: captureAny(named: 'data'),
+              ),
+            ).captured.single
+            as Map<String, Object?>;
     expect(captured, {'darkMode': false});
   });
 
-  test('updatePreferences passes through a different subset unmodified',
-      () async {
-    when(() => dio.put<Map<String, dynamic>>('/user/preferences',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok({'id': 1, 'username': 'ben'}));
+  test(
+    'updatePreferences passes through a different subset unmodified',
+    () async {
+      when(
+        () => dio.put<Map<String, dynamic>>(
+          '/user/preferences',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async => ok({'id': 1, 'username': 'ben'}));
 
-    await repo.updatePreferences({'defaultCurrency': 'USD', 'locale': 'en-US'});
+      await repo.updatePreferences({
+        'defaultCurrency': 'USD',
+        'locale': 'en-US',
+      });
 
-    final captured = verify(() => dio.put<Map<String, dynamic>>(
-            '/user/preferences',
-            data: captureAny(named: 'data')))
-        .captured
-        .single as Map<String, Object?>;
-    expect(captured, {'defaultCurrency': 'USD', 'locale': 'en-US'});
-  });
+      final captured =
+          verify(
+                () => dio.put<Map<String, dynamic>>(
+                  '/user/preferences',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, Object?>;
+      expect(captured, {'defaultCurrency': 'USD', 'locale': 'en-US'});
+    },
+  );
 
   test('getAllUsers parses list of profiles', () async {
     when(() => dio.get<List<dynamic>>('/user/admin/users')).thenAnswer(
-        (_) async => ok([
-              {'id': 1, 'username': 'ben', 'roles': ['ROLE_ADMIN']},
-              {'id': 2, 'username': 'jane', 'roles': <String>[]},
-            ]));
+      (_) async => ok([
+        {
+          'id': 1,
+          'username': 'ben',
+          'roles': ['ROLE_ADMIN'],
+        },
+        {'id': 2, 'username': 'jane', 'roles': <String>[]},
+      ]),
+    );
 
     final users = await repo.getAllUsers();
 
@@ -150,19 +189,27 @@ void main() {
   });
 
   test('setUserEnabled PUTs enabled flag to the user endpoint', () async {
-    when(() => dio.put<void>('/user/admin/users/5/enabled',
-            data: any(named: 'data')))
-        .thenAnswer((_) async => ok(null));
+    when(
+      () => dio.put<void>(
+        '/user/admin/users/5/enabled',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer((_) async => ok(null));
 
     await repo.setUserEnabled(5, false);
 
-    verify(() => dio.put<void>('/user/admin/users/5/enabled',
-        data: {'enabled': false})).called(1);
+    verify(
+      () => dio.put<void>(
+        '/user/admin/users/5/enabled',
+        data: {'enabled': false},
+      ),
+    ).called(1);
   });
 
   test('deleteUser calls DELETE on the user endpoint', () async {
-    when(() => dio.delete<void>('/user/admin/users/7'))
-        .thenAnswer((_) async => ok(null));
+    when(
+      () => dio.delete<void>('/user/admin/users/7'),
+    ).thenAnswer((_) async => ok(null));
 
     await repo.deleteUser(7);
 
@@ -170,11 +217,14 @@ void main() {
   });
 
   test('getAdminSettings maps JSON to an admin settings record', () async {
-    when(() => dio.get<Map<String, dynamic>>('/user/admin/settings'))
-        .thenAnswer((_) async => ok({
-              'registrationEnabled': false,
-              'apiEnabled': true,
-            }));
+    when(
+      () => dio.get<Map<String, dynamic>>('/user/admin/settings'),
+    ).thenAnswer(
+      (_) async => ok({
+        'registrationEnabled': false,
+        'apiEnabled': true,
+      }),
+    );
 
     final settings = await repo.getAdminSettings();
 
@@ -183,8 +233,9 @@ void main() {
   });
 
   test('getAdminSettings defaults missing fields', () async {
-    when(() => dio.get<Map<String, dynamic>>('/user/admin/settings'))
-        .thenAnswer((_) async => ok(<String, dynamic>{}));
+    when(
+      () => dio.get<Map<String, dynamic>>('/user/admin/settings'),
+    ).thenAnswer((_) async => ok(<String, dynamic>{}));
 
     final settings = await repo.getAdminSettings();
 
@@ -193,12 +244,14 @@ void main() {
   });
 
   test('updateAdminSettings sends only the provided sparse fields', () async {
-    when(() => dio.put<void>('/user/admin/settings', data: any(named: 'data')))
-        .thenAnswer((_) async => ok(null));
+    when(
+      () => dio.put<void>('/user/admin/settings', data: any(named: 'data')),
+    ).thenAnswer((_) async => ok(null));
 
     await repo.updateAdminSettings(apiEnabled: true);
 
-    verify(() => dio.put<void>('/user/admin/settings',
-        data: {'apiEnabled': true})).called(1);
+    verify(
+      () => dio.put<void>('/user/admin/settings', data: {'apiEnabled': true}),
+    ).called(1);
   });
 }

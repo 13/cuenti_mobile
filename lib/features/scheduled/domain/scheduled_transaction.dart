@@ -5,14 +5,23 @@ part 'scheduled_transaction.freezed.dart';
 part 'scheduled_transaction.g.dart';
 
 const kRecurrencePatterns = [
-  'DAILY', 'WEEKLY', 'BI_WEEKLY', 'MONTHLY', 'MONTHLY_LAST_DAY',
-  'YEARLY', 'EVERY_FRIDAY', 'EVERY_SATURDAY', 'EVERY_WEEKDAY',
+  'DAILY',
+  'WEEKLY',
+  'BI_WEEKLY',
+  'MONTHLY',
+  'MONTHLY_LAST_DAY',
+  'YEARLY',
+  'EVERY_FRIDAY',
+  'EVERY_SATURDAY',
+  'EVERY_WEEKDAY',
 ];
 
 @freezed
 abstract class ScheduledTransaction with _$ScheduledTransaction {
   const factory ScheduledTransaction({
-    @JsonKey(fromJson: jsonToDouble) required double amount, required DateTime nextOccurrence, int? id,
+    @JsonKey(fromJson: jsonToDouble) required double amount,
+    required DateTime nextOccurrence,
+    int? id,
     @Default('EXPENSE') String type,
     int? fromAccountId,
     String? fromAccountName,
