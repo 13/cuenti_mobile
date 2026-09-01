@@ -1,4 +1,4 @@
-import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/api_guard.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
 import 'package:dio/dio.dart';
@@ -12,7 +12,7 @@ class ScheduledRepository {
   ScheduledRepository(this._dio);
   final Dio _dio;
 
-  Future<List<ScheduledTransaction>> getAll() => _guard(() async {
+  Future<List<ScheduledTransaction>> getAll() => guardApi(() async {
     final res = await _dio.get<List<dynamic>>('/scheduled-transactions');
     return (res.data ?? [])
         .map((e) => ScheduledTransaction.fromJson(e as Map<String, dynamic>))
@@ -20,7 +20,7 @@ class ScheduledRepository {
   });
 
   Future<ScheduledTransaction> save(ScheduledTransaction transaction) =>
-      _guard(() async {
+      guardApi(() async {
         // Explicit writable fields only; derived fields like fromAccountName,
         // toAccountName, categoryName, assetName must not be sent.
         final json = {
@@ -53,24 +53,13 @@ class ScheduledRepository {
       });
 
   Future<void> delete(int id) =>
-      _guard(() => _dio.delete<void>('/scheduled-transactions/$id'));
+      guardApi(() => _dio.delete<void>('/scheduled-transactions/$id'));
 
-  Future<void> post(int id) => _guard(
+  Future<void> post(int id) => guardApi(
     () => _dio.post<Map<String, dynamic>>('/scheduled-transactions/$id/post'),
   );
 
-  Future<void> skip(int id) => _guard(
+  Future<void> skip(int id) => guardApi(
     () => _dio.post<Map<String, dynamic>>('/scheduled-transactions/$id/skip'),
   );
-}
-
-/// Shared guard: rethrows DioException as ApiException. Copy this exact
-/// helper into each repository file (3 lines; a shared base class would
-/// couple repositories for no gain).
-Future<T> _guard<T>(Future<T> Function() fn) async {
-  try {
-    return await fn();
-  } on DioException catch (e) {
-    throw ApiException.fromDio(e);
-  }
 }

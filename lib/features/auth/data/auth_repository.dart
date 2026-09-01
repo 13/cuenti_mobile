@@ -1,5 +1,6 @@
 import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/api_guard.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:dio/dio.dart';
@@ -15,28 +16,33 @@ class AuthRepository {
 
   final ApiClient _client;
 
-  Future<UserProfile> login(String username, String password) async {
-    try {
-      final response = await _client.dio.post<Map<String, dynamic>>(
-        '/auth/login',
-        data: {
-          'username': username,
-          'password': password,
-        },
-      );
-      return await _saveTokenAndBuildProfile(response.data!);
-    } on DioException catch (e) {
-      final mapped = ApiException.fromDio(e);
-      // Parity with the old AuthProvider: a 401 on the login endpoint means
-      // bad credentials, not an expired session. Surface the specific message
-      // here (NOT in ApiException.fromDio, where a generic 401 elsewhere
-      // means the session expired). 403 keeps its own fromDio message.
-      if (mapped is UnauthorizedException && e.response?.statusCode == 401) {
-        throw const UnauthorizedException('Invalid username or password');
-      }
-      throw mapped;
-    }
-  }
+  Future<UserProfile> login(String username, String password) =>
+      guardApi(() async {
+        try {
+          final response = await _client.dio.post<Map<String, dynamic>>(
+            '/auth/login',
+            data: {
+              'username': username,
+              'password': password,
+            },
+          );
+          return await _saveTokenAndBuildProfile(response.data!);
+        } on DioException catch (e) {
+          // Inside the guard, not around it: guardApi maps DioException to
+          // ApiException, so this has to run first to keep the specific
+          // message.
+          //
+          // Parity with the old AuthProvider: a 401 on the login endpoint
+          // means bad credentials, not an expired session. Surface the
+          // specific message here (NOT in ApiException.fromDio, where a
+          // generic 401 elsewhere means the session expired). 403 keeps its
+          // own fromDio message.
+          if (e.response?.statusCode == 401) {
+            throw const UnauthorizedException('Invalid username or password');
+          }
+          rethrow;
+        }
+      });
 
   Future<UserProfile> register({
     required String username,
@@ -45,7 +51,7 @@ class AuthRepository {
     required String firstName,
     required String lastName,
   }) async {
-    try {
+    return guardApi(() async {
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/auth/register',
         data: {
@@ -56,22 +62,16 @@ class AuthRepository {
           'lastName': lastName,
         },
       );
-      return await _saveTokenAndBuildProfile(response.data!);
-    } on DioException catch (e) {
-      throw ApiException.fromDio(e);
-    }
+      return _saveTokenAndBuildProfile(response.data!);
+    });
   }
 
-  Future<UserProfile> getProfile() async {
-    try {
-      final response = await _client.dio.get<Map<String, dynamic>>(
-        '/user/profile',
-      );
-      return UserProfile.fromJson(response.data!);
-    } on DioException catch (e) {
-      throw ApiException.fromDio(e);
-    }
-  }
+  Future<UserProfile> getProfile() => guardApi(() async {
+    final response = await _client.dio.get<Map<String, dynamic>>(
+      '/user/profile',
+    );
+    return UserProfile.fromJson(response.data!);
+  });
 
   Future<bool> fetchRegistrationEnabled() async {
     try {

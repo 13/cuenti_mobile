@@ -1,4 +1,4 @@
-import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/api_guard.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/audit/domain/audit_page.dart';
 import 'package:dio/dio.dart';
@@ -17,7 +17,7 @@ class AuditRepository {
     int page = 0,
     int size = 50,
     String? filter,
-  }) => _guard(() async {
+  }) => guardApi(() async {
     final res = await _dio.get<Map<String, dynamic>>(
       '/audit-log',
       queryParameters: {
@@ -28,15 +28,4 @@ class AuditRepository {
     );
     return AuditPage.fromJson(res.data!);
   });
-}
-
-/// Shared guard: rethrows DioException as ApiException. Copy this exact
-/// helper into each repository file (3 lines; a shared base class would
-/// couple repositories for no gain).
-Future<T> _guard<T>(Future<T> Function() fn) async {
-  try {
-    return await fn();
-  } on DioException catch (e) {
-    throw ApiException.fromDio(e);
-  }
 }

@@ -1,4 +1,5 @@
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/api_guard.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
@@ -24,7 +25,7 @@ class TransactionsRepository {
     TransactionFilter filter = const TransactionFilter(),
     int page = 0,
     int size = 50,
-  }) => _guard(() async {
+  }) => guardApi(() async {
     final df = DateFormat('yyyy-MM-dd');
     final res = await _dio.get<dynamic>(
       '/transactions',
@@ -67,7 +68,7 @@ class TransactionsRepository {
   /// unchanged server-side). When true, t.splits is sent verbatim — an empty
   /// list means deliberate remove-all.
   Future<Transaction> save(Transaction t, {bool splitsTouched = false}) =>
-      _guard(() async {
+      guardApi(() async {
         final json = t.toJson()
           ..remove('id')
           ..remove('fromAccountName')
@@ -102,25 +103,5 @@ class TransactionsRepository {
       });
 
   Future<void> delete(int id) =>
-      _guard(() => _dio.delete<void>('/transactions/$id'));
-}
-
-/// Shared guard: rethrows DioException as ApiException. Copy this exact
-/// helper into each repository file (3 lines; a shared base class would
-/// couple repositories for no gain).
-Future<T> _guard<T>(Future<T> Function() fn) async {
-  try {
-    return await fn();
-  } on DioException catch (e) {
-    throw ApiException.fromDio(e);
-    // Deliberate: a malformed payload is a server contract problem, not a
-    // bug in this client, and it must surface as an error card rather than
-    // an unhandled Error.
-    // ignore: avoid_catching_errors
-  } on TypeError catch (_) {
-    // A malformed/unexpected payload (e.g. a legacy server's response shape
-    // changing mid-migration) becomes a visible error card instead of an
-    // unhandled error escaping to the UI.
-    throw const ServerException('Unexpected response from server');
-  }
+      guardApi(() => _dio.delete<void>('/transactions/$id'));
 }

@@ -1,4 +1,4 @@
-import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/api_guard.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/currencies/domain/currency.dart';
 import 'package:dio/dio.dart';
@@ -12,14 +12,14 @@ class CurrenciesRepository {
   CurrenciesRepository(this._dio);
   final Dio _dio;
 
-  Future<List<Currency>> getAll() => _guard(() async {
+  Future<List<Currency>> getAll() => guardApi(() async {
     final res = await _dio.get<List<dynamic>>('/currencies');
     return (res.data ?? [])
         .map((e) => Currency.fromJson(e as Map<String, dynamic>))
         .toList();
   });
 
-  Future<Currency> save(Currency currency) => _guard(() async {
+  Future<Currency> save(Currency currency) => guardApi(() async {
     // Explicit writable fields only (matches old Currency.toJson body);
     // id must not be sent.
     final json = {
@@ -40,16 +40,5 @@ class CurrenciesRepository {
   });
 
   Future<void> delete(int id) =>
-      _guard(() => _dio.delete<void>('/currencies/$id'));
-}
-
-/// Shared guard: rethrows DioException as ApiException. Copy this exact
-/// helper into each repository file (3 lines; a shared base class would
-/// couple repositories for no gain).
-Future<T> _guard<T>(Future<T> Function() fn) async {
-  try {
-    return await fn();
-  } on DioException catch (e) {
-    throw ApiException.fromDio(e);
-  }
+      guardApi(() => _dio.delete<void>('/currencies/$id'));
 }

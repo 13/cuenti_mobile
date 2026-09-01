@@ -1,4 +1,4 @@
-import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/api_guard.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/statistics/domain/statistics_data.dart';
 import 'package:dio/dio.dart';
@@ -13,7 +13,7 @@ class StatisticsRepository {
   final Dio _dio;
 
   Future<StatisticsData> load({String? start, String? end, int? accountId}) =>
-      _guard(() async {
+      guardApi(() async {
         final params = <String, dynamic>{
           'start': ?start,
           'end': ?end,
@@ -25,15 +25,4 @@ class StatisticsRepository {
         );
         return StatisticsData.fromJson(res.data!);
       });
-}
-
-/// Shared guard: rethrows DioException as ApiException. Copy this exact
-/// helper into each repository file (3 lines; a shared base class would
-/// couple repositories for no gain).
-Future<T> _guard<T>(Future<T> Function() fn) async {
-  try {
-    return await fn();
-  } on DioException catch (e) {
-    throw ApiException.fromDio(e);
-  }
 }

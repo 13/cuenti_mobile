@@ -35,7 +35,8 @@ sealed class ApiException implements Exception {
         return ServerException(serverMessage ?? 'Server error ($status)');
       case DioExceptionType.badCertificate:
         return const NetworkException(
-          'SSL certificate error. Install the server certificate on your device.',
+          'The server certificate is not trusted. Re-run Server Setup to '
+          'check its fingerprint and trust it.',
         );
       case DioExceptionType.cancel:
       case DioExceptionType.unknown:
