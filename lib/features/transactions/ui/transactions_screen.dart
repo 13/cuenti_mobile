@@ -16,6 +16,7 @@ import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/ui/transaction_dialog.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -102,10 +103,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Search transactions...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: L.of(context).txSearchHint,
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onChanged: _onSearchChanged,
@@ -132,15 +133,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         if (_filter == TransactionsController.defaultFilter)
                           EmptyState(
                             icon: Icons.receipt_long,
-                            message: 'No transactions yet',
-                            actionLabel: 'Add transaction',
+                            message: L.of(context).txEmpty,
+                            actionLabel: L.of(context).txAdd,
                             onAction: () => _showAddDialog(context),
                           )
                         else
                           EmptyState(
                             icon: Icons.receipt_long,
-                            message: 'No transactions match',
-                            actionLabel: 'Clear filters',
+                            message: L.of(context).txNoMatch,
+                            actionLabel: L.of(context).commonClearFilters,
                             onAction: _resetFilters,
                           ),
                       ],
@@ -265,7 +266,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.bookmark_outline),
-            tooltip: 'Saved views',
+            tooltip: L.of(context).savedViewsTitle,
             iconSize: 20,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
@@ -295,7 +296,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       label: Text(active ? _typeLabel(_filter.type!) : 'Type'),
       onPressed: () => _openOptionsSheet<String>(
         context,
-        title: 'Transaction type',
+        title: L.of(context).txTypeFilter,
         options: const [
           _ChipOption('All', null),
           _ChipOption('Expense', 'EXPENSE'),
@@ -386,7 +387,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       label: Text(active?.accountName ?? 'Account'),
       onPressed: () => _openOptionsSheet<int>(
         context,
-        title: 'Account',
+        title: L.of(context).commonAccount,
         options: [
           const _ChipOption('All accounts', null),
           for (final a in accounts) _ChipOption(a.accountName, a.id),
@@ -630,7 +631,7 @@ class _TransactionTile extends StatelessWidget {
           children: [
             Icon(Icons.edit, color: editColor),
             const SizedBox(width: 8),
-            Text('Edit', style: TextStyle(color: editColor)),
+            Text(L.of(context).commonEdit, style: TextStyle(color: editColor)),
           ],
         ),
       ),
@@ -642,7 +643,7 @@ class _TransactionTile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
-              'Delete',
+              L.of(context).commonDelete,
               style: TextStyle(color: colorScheme.onErrorContainer),
             ),
             const SizedBox(width: 8),
@@ -654,8 +655,8 @@ class _TransactionTile extends StatelessWidget {
         if (direction == DismissDirection.endToStart) {
           final confirmed = await showConfirmSheet(
             context,
-            title: 'Delete transaction?',
-            message: 'This action cannot be undone.',
+            title: L.of(context).txDeleteTitle,
+            message: L.of(context).commonUndoWarning,
           );
           if (confirmed && transaction.id != null) {
             onDelete(transaction.id!);

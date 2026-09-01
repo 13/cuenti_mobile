@@ -1,5 +1,6 @@
 import 'package:cuentimobile/features/vehicles/domain/fuel_memo.dart';
 import 'package:cuentimobile/features/vehicles/ui/fuel_meta_provider.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 
 /// Odometer comparison baseline: the newest reading strictly before
 /// [transactionDate] (web parity — `VehicleReportService.lastOdometer`).
@@ -23,15 +24,16 @@ double? fuelBaseline(FuelMeta? meta, DateTime transactionDate) {
 
 /// Complaint about an implausible fill-up volume, or null when it is fine
 /// (or the field is empty).
-String? fuelLitersWarning(double? liters) {
+String? fuelLitersWarning(L l, double? liters) {
   if (liters == null) return null;
-  return (liters <= 0 || liters > 200) ? 'Implausible liters value' : null;
+  return (liters <= 0 || liters > 200) ? l.fuelImplausibleLiters : null;
 }
 
 /// The line shown under the fuel fields as (message, isWarning), or null
 /// when there is nothing to say. First matching rule wins, mirroring the
 /// web app.
 (String, bool)? fuelInfoLine({
+  required L l,
   required double? odometer,
   required double? lastOdometer,
   required double? liters,
@@ -40,25 +42,17 @@ String? fuelLitersWarning(double? liters) {
   if (odometer == null || lastOdometer == null) return null;
   final distance = odometer - lastOdometer;
   if (distance <= 0) {
-    return (
-      'Odometer is not higher than the last reading '
-          '(${formatFuelNumber(lastOdometer)})',
-      true,
-    );
+    return (l.fuelNotIncreasing(formatFuelNumber(lastOdometer)), true);
   }
   if (distance > 2000) {
-    return (
-      'Very large jump since the last reading '
-          '(${formatFuelNumber(distance)} km) — typo?',
-      true,
-    );
+    return (l.fuelLargeJump(formatFuelNumber(distance)), true);
   }
   if (fullTank && liters != null && liters > 0) {
     final consumption = (liters / distance * 100).toStringAsFixed(1);
     return (
-      '${formatFuelNumber(distance)} km since last, ~$consumption L/100km',
+      l.fuelConsumption(formatFuelNumber(distance), consumption),
       false,
     );
   }
-  return ('${formatFuelNumber(distance)} km since last fill-up', false);
+  return (l.fuelDistanceOnly(formatFuelNumber(distance)), false);
 }

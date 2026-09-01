@@ -10,6 +10,7 @@ import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/dashboard/domain/asset_performance.dart';
 import 'package:cuentimobile/features/dashboard/domain/dashboard_data.dart';
 import 'package:cuentimobile/features/dashboard/ui/dashboard_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,7 +52,7 @@ class DashboardScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Net worth',
+                      L.of(context).dashboardNetWorth,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.white.withValues(alpha: 0.8),
                       ),
@@ -93,7 +94,7 @@ class DashboardScreen extends ConsumerWidget {
                             padding: const EdgeInsets.all(8),
                             child: StatChip(
                               icon: Icons.account_balance_wallet,
-                              label: 'Cash',
+                              label: L.of(context).dashboardCash,
                               maskable: true,
                               direction: Axis.vertical,
                               value:
@@ -111,7 +112,7 @@ class DashboardScreen extends ConsumerWidget {
                             padding: const EdgeInsets.all(8),
                             child: StatChip(
                               icon: Icons.trending_up,
-                              label: 'Portfolio',
+                              label: L.of(context).dashboardPortfolio,
                               maskable: true,
                               direction: Axis.vertical,
                               value:
@@ -141,11 +142,11 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 )
               else
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   child: EmptyState(
                     icon: Icons.account_balance_wallet,
-                    message: 'No accounts',
+                    message: L.of(context).dashboardNoAccounts,
                   ),
                 ),
               const SizedBox(height: 24),

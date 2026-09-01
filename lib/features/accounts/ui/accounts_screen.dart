@@ -10,6 +10,7 @@ import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
 import 'package:cuentimobile/features/currencies/domain/currency.dart';
 import 'package:cuentimobile/features/currencies/ui/currencies_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,8 +42,8 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                     const SizedBox(height: 80),
                     EmptyState(
                       icon: Icons.account_balance_wallet,
-                      message: 'No accounts yet',
-                      actionLabel: 'Add account',
+                      message: L.of(context).accountsEmpty,
+                      actionLabel: L.of(context).accountsAdd,
                       onAction: () =>
                           _showEditDialog(context, null, currencies),
                     ),
@@ -79,9 +80,8 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                       ),
                       confirmDismiss: (_) => showConfirmSheet(
                         context,
-                        title: 'Delete Account?',
-                        message:
-                            'All associated transactions will be affected.',
+                        title: L.of(context).accountsDeleteTitle,
+                        message: L.of(context).accountsDeleteBody,
                       ),
                       onDismissed: (_) => _delete(a.id!),
                       child: Card(
@@ -267,17 +267,17 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                   const SizedBox(height: 16),
                   TextField(
                     controller: name,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonName,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: type,
-                    decoration: const InputDecoration(
-                      labelText: 'Type',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonType,
+                      border: const OutlineInputBorder(),
                     ),
                     items: kAccountTypes
                         .map((t) => DropdownMenuItem(value: t, child: Text(t)))
@@ -287,25 +287,25 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: institution,
-                    decoration: const InputDecoration(
-                      labelText: 'Institution',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).accountsInstitution,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: group,
-                    decoration: const InputDecoration(
-                      labelText: 'Group',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonGroup,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: startBalance,
-                    decoration: const InputDecoration(
-                      labelText: 'Start Balance',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).accountsStartBalance,
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -314,9 +314,9 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: currency,
-                    decoration: const InputDecoration(
-                      labelText: 'Currency',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonCurrency,
+                      border: const OutlineInputBorder(),
                     ),
                     items: currencies
                         .map(
@@ -331,12 +331,12 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                   ),
                   const SizedBox(height: 12),
                   SwitchListTile(
-                    title: const Text('Exclude from Summary'),
+                    title: Text(L.of(context).accountsExcludeSummary),
                     value: excludeSummary,
                     onChanged: (v) => setModalState(() => excludeSummary = v),
                   ),
                   SwitchListTile(
-                    title: const Text('Exclude from Reports'),
+                    title: Text(L.of(context).accountsExcludeReports),
                     value: excludeReports,
                     onChanged: (v) => setModalState(() => excludeReports = v),
                   ),
@@ -348,7 +348,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                           onPressed: saving
                               ? null
                               : () => Navigator.pop(context),
-                          child: const Text('Cancel'),
+                          child: Text(L.of(context).commonCancel),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -405,7 +405,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text('Save'),
+                              : Text(L.of(context).commonSave),
                         ),
                       ),
                     ],

@@ -4,6 +4,7 @@ import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/app_update/data/app_update_repository.dart';
 import 'package:cuentimobile/features/app_update/domain/app_release.dart';
 import 'package:cuentimobile/features/app_update/ui/update_check.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -71,6 +72,8 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
           home: Scaffold(
             body: Consumer(

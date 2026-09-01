@@ -7,6 +7,7 @@ import 'package:cuentimobile/core/widgets/section_header.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/forecasts/domain/forecast_data.dart';
 import 'package:cuentimobile/features/forecasts/ui/forecasts_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -181,7 +182,10 @@ class _MonthlyForecastChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hidden = ref.watch(privacyModeProvider);
     if (months.isEmpty) {
-      return const EmptyState(icon: Icons.bar_chart, message: 'No data');
+      return EmptyState(
+        icon: Icons.bar_chart,
+        message: L.of(context).commonNoData,
+      );
     }
 
     final cuenti = context.cuentiColors;
@@ -275,7 +279,7 @@ class _BreakdownList extends StatelessWidget {
     final fmt = DateFormat('MMM yyyy');
 
     if (filtered.isEmpty) {
-      return const EmptyState(icon: Icons.list, message: 'No data');
+      return EmptyState(icon: Icons.list, message: L.of(context).commonNoData);
     }
 
     return Column(
@@ -299,7 +303,7 @@ class _BreakdownList extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            'Income',
+                            L.of(context).commonIncome,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                           AmountText(
@@ -315,7 +319,7 @@ class _BreakdownList extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            'Expense',
+                            L.of(context).commonExpense,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                           AmountText(
@@ -331,7 +335,7 @@ class _BreakdownList extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            'Net',
+                            L.of(context).forecastsNet,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                           AmountText(

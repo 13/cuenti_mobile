@@ -12,6 +12,7 @@ import 'package:cuentimobile/features/user/data/export_import_repository.dart';
 import 'package:cuentimobile/features/user/data/user_repository.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/features/user/ui/user_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,7 +38,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final user = authState.user;
     final currencies = ref.watch(currenciesControllerProvider).value ?? [];
 
-    if (user == null) return const Center(child: Text('Not logged in'));
+    if (user == null) {
+      return Center(child: Text(L.of(context).settingsNotLoggedIn));
+    }
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -57,7 +60,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 8),
                 FilledButton.tonal(
                   onPressed: () => _showEditProfileDialog(context, user),
-                  child: const Text('Edit Profile'),
+                  child: Text(L.of(context).settingsEditProfile),
                 ),
               ],
             ),
@@ -75,7 +78,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SectionHeader('Preferences'),
                 const SizedBox(height: 12),
                 SwitchListTile(
-                  title: const Text('Dark Mode'),
+                  title: Text(L.of(context).settingsDarkMode),
                   value: user.darkMode,
                   onChanged: (v) async {
                     await ref.read(userRepositoryProvider).updatePreferences({
@@ -85,7 +88,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   },
                 ),
                 ListTile(
-                  title: const Text('Default Currency'),
+                  title: Text(L.of(context).settingsDefaultCurrency),
                   trailing: Text(
                     user.defaultCurrency,
                     style: const TextStyle(fontWeight: FontWeight.bold),
@@ -93,13 +96,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onTap: () => _showCurrencyPicker(context, currencies),
                 ),
                 ListTile(
-                  title: const Text('Locale'),
+                  title: Text(L.of(context).settingsLocale),
                   trailing: Text(user.locale),
                   onTap: () => _showLocalePicker(context),
                 ),
                 SwitchListTile(
-                  title: const Text('API Access'),
-                  subtitle: const Text('Enable API access for this account'),
+                  title: Text(L.of(context).settingsApiAccess),
+                  subtitle: Text(L.of(context).settingsApiAccessSubtitle),
                   value: user.apiEnabled,
                   onChanged: (v) async {
                     await ref.read(userRepositoryProvider).updatePreferences({
@@ -124,9 +127,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SectionHeader('Security'),
                 const SizedBox(height: 12),
                 SwitchListTile(
-                  title: const Text('Biometric Unlock'),
-                  subtitle: const Text(
-                    'Require fingerprint/face to reopen or sign in',
+                  title: Text(L.of(context).settingsBiometric),
+                  subtitle: Text(
+                    L.of(context).settingsBiometricSubtitle,
                   ),
                   value: authState.biometricEnabled,
                   onChanged: (v) =>
@@ -135,7 +138,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 8),
                 FilledButton.tonal(
                   onPressed: () => _showChangePasswordDialog(context),
-                  child: const Text('Change Password'),
+                  child: Text(L.of(context).settingsChangePassword),
                 ),
               ],
             ),
@@ -159,7 +162,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 8),
                 OutlinedButton(
                   onPressed: () => context.go('/server-setup'),
-                  child: const Text('Change Server'),
+                  child: Text(L.of(context).serverChange),
                 ),
               ],
             ),
@@ -179,7 +182,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.upload_file),
-                  title: const Text('Export data'),
+                  title: Text(L.of(context).settingsExportData),
                   trailing: _exporting
                       ? const SizedBox(
                           width: 20,
@@ -192,7 +195,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.download),
-                  title: const Text('Import data'),
+                  title: Text(L.of(context).settingsImportData),
                   trailing: _importing
                       ? const SizedBox(
                           width: 20,
@@ -220,7 +223,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: 12),
                   FilledButton.tonal(
                     onPressed: () => _showAdminPanel(context),
-                    child: const Text('Admin Panel'),
+                    child: Text(L.of(context).settingsAdminPanel),
                   ),
                 ],
               ),
@@ -233,7 +236,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Card(
           child: ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('About'),
+            title: Text(L.of(context).settingsAbout),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/about'),
           ),
@@ -253,7 +256,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               router.go('/login');
             },
             icon: const Icon(Icons.logout),
-            label: const Text('Logout'),
+            label: Text(L.of(context).actionLogout),
           ),
         ),
       ],
@@ -293,29 +296,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Edit Profile', style: Theme.of(ctx).textTheme.titleLarge),
+              Text(
+                L.of(context).settingsEditProfile,
+                style: Theme.of(ctx).textTheme.titleLarge,
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: firstName,
-                decoration: const InputDecoration(
-                  labelText: 'First Name',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: L.of(context).commonFirstName,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: lastName,
-                decoration: const InputDecoration(
-                  labelText: 'Last Name',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: L.of(context).commonLastName,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: email,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: L.of(context).commonEmail,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
@@ -324,7 +330,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Cancel'),
+                      child: Text(L.of(context).commonCancel),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -355,7 +361,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           }
                         }
                       },
-                      child: const Text('Save'),
+                      child: Text(L.of(context).commonSave),
                     ),
                   ),
                 ],
@@ -389,34 +395,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Change Password',
+                L.of(context).settingsChangePassword,
                 style: Theme.of(ctx).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: oldPw,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Current Password',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: L.of(context).settingsCurrentPassword,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: newPw,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'New Password',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: L.of(context).settingsNewPassword,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: confirmPw,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Confirm New Password',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: L.of(context).settingsConfirmNewPassword,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
@@ -425,7 +431,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Cancel'),
+                      child: Text(L.of(context).commonCancel),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -434,8 +440,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onPressed: () async {
                         if (newPw.text != confirmPw.text) {
                           ScaffoldMessenger.of(ctx).showSnackBar(
-                            const SnackBar(
-                              content: Text('Passwords do not match'),
+                            SnackBar(
+                              content: Text(
+                                L.of(context).settingsPasswordsMismatch,
+                              ),
                             ),
                           );
                           return;
@@ -447,7 +455,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           if (ctx.mounted) {
                             Navigator.pop(ctx);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Password changed')),
+                              SnackBar(
+                                content: Text(
+                                  L.of(context).settingsPasswordChanged,
+                                ),
+                              ),
                             );
                           }
                         } on Exception catch (e) {
@@ -460,7 +472,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           }
                         }
                       },
-                      child: const Text('Change'),
+                      child: Text(L.of(context).settingsChange),
                     ),
                   ),
                 ],
@@ -501,20 +513,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showLocalePicker(BuildContext context) {
-    final locales = ['en-US', 'de-DE', 'it-IT', 'fr-FR', 'es-ES'];
+    // The locales the app actually speaks. It previously also offered
+    // fr-FR and es-ES, which only ever changed number formatting and left
+    // the interface in English; an option that half works reads as a bug.
+    const locales = {
+      'en-US': 'English',
+      'de-DE': 'Deutsch',
+      'it-IT': 'Italiano',
+    };
     final auth = ref.read(authControllerProvider.notifier);
     unawaited(
       showModalBottomSheet<void>(
         context: context,
         builder: (ctx) => ListView(
-          children: locales
+          children: locales.entries
               .map(
-                (l) => ListTile(
-                  title: Text(l),
+                (entry) => ListTile(
+                  title: Text(entry.value),
+                  subtitle: Text(entry.key),
                   onTap: () async {
                     final nav = Navigator.of(ctx);
                     await ref.read(userRepositoryProvider).updatePreferences({
-                      'locale': l,
+                      'locale': entry.key,
                     });
                     await auth.refreshProfile();
                     if (ctx.mounted) nav.pop();
@@ -579,9 +599,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final confirmed = await showConfirmSheet(
       context,
-      title: 'Import data?',
-      message: 'This replaces data on the server with the file contents.',
-      confirmLabel: 'Import',
+      title: L.of(context).settingsImportTitle,
+      message: L.of(context).settingsImportBody,
+      confirmLabel: L.of(context).settingsImport,
     );
     if (!confirmed) return;
     if (!context.mounted) return;
@@ -594,7 +614,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Import complete')));
+        ).showSnackBar(
+          SnackBar(content: Text(L.of(context).settingsImportComplete)),
+        );
       }
     } on ApiException catch (e) {
       if (context.mounted) {
@@ -647,10 +669,13 @@ class _AdminPanel extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Administration', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            L.of(context).settingsAdministration,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 16),
           SwitchListTile(
-            title: const Text('Registration Enabled'),
+            title: Text(L.of(context).settingsRegistrationEnabled),
             value: registrationEnabled,
             onChanged: (v) async {
               await ref
@@ -660,7 +685,7 @@ class _AdminPanel extends ConsumerWidget {
             },
           ),
           SwitchListTile(
-            title: const Text('Global API Enabled'),
+            title: Text(L.of(context).settingsGlobalApiEnabled),
             value: apiEnabled,
             onChanged: (v) async {
               await ref
@@ -704,18 +729,18 @@ class _AdminPanel extends ConsumerWidget {
                           PopupMenuButton<String>(
                             onSelected: (action) =>
                                 _onUserAction(context, ref, u, action),
-                            itemBuilder: (_) => const [
+                            itemBuilder: (_) => [
                               PopupMenuItem(
                                 value: 'enable',
-                                child: Text('Enable'),
+                                child: Text(L.of(context).settingsEnable),
                               ),
                               PopupMenuItem(
                                 value: 'disable',
-                                child: Text('Disable'),
+                                child: Text(L.of(context).settingsDisable),
                               ),
                               PopupMenuItem(
                                 value: 'delete',
-                                child: Text('Delete'),
+                                child: Text(L.of(context).commonDelete),
                               ),
                             ],
                           ),
@@ -727,7 +752,7 @@ class _AdminPanel extends ConsumerWidget {
           const SizedBox(height: 16),
           OutlinedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(L.of(context).commonClose),
           ),
           const SizedBox(height: 16),
         ],
@@ -752,7 +777,7 @@ class _AdminPanel extends ConsumerWidget {
           final confirmed = await showConfirmSheet(
             context,
             title: 'Delete ${user.username}?',
-            message: 'This permanently removes the user and their data.',
+            message: L.of(context).settingsDeleteUserBody,
           );
           if (!confirmed) return;
           await repo.deleteUser(user.id!);

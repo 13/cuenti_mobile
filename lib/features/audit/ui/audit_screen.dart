@@ -6,6 +6,7 @@ import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
 import 'package:cuentimobile/features/audit/domain/audit_entry.dart';
 import 'package:cuentimobile/features/audit/ui/audit_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -90,10 +91,10 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Search audit log...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: L.of(context).auditSearchHint,
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onChanged: _onSearchChanged,
@@ -116,15 +117,15 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
                       children: [
                         const SizedBox(height: 80),
                         if (_filter == null)
-                          const EmptyState(
+                          EmptyState(
                             icon: Icons.history,
-                            message: 'No audit entries',
+                            message: L.of(context).auditEmpty,
                           )
                         else
                           EmptyState(
                             icon: Icons.history,
-                            message: 'No audit entries match',
-                            actionLabel: 'Clear filters',
+                            message: L.of(context).auditNoMatch,
+                            actionLabel: L.of(context).commonClearFilters,
                             onAction: _resetFilters,
                           ),
                       ],

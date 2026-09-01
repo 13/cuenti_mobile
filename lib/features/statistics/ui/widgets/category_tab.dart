@@ -4,6 +4,7 @@ import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
 import 'package:cuentimobile/core/widgets/privacy_blur.dart';
 import 'package:cuentimobile/core/widgets/section_header.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +41,10 @@ class CategoryTab extends ConsumerWidget {
         SectionHeader(title),
         Row(
           children: [
-            Text('Total: ', style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              L.of(context).statsTotal,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             AmountText(
               total,
               type: type,
@@ -96,7 +100,10 @@ class CategoryTab extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
         ] else
-          const EmptyState(icon: Icons.pie_chart_outline, message: 'No data'),
+          EmptyState(
+            icon: Icons.pie_chart_outline,
+            message: L.of(context).commonNoData,
+          ),
 
         ...sorted.asMap().entries.map((entry) {
           final i = entry.key;

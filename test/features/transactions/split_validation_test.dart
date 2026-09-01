@@ -1,4 +1,5 @@
 import 'package:cuentimobile/features/transactions/domain/split_validation.dart';
+import 'package:cuentimobile/l10n/app_localizations_en.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -8,6 +9,7 @@ void main() {
     List<SplitEntry> splits = const [],
     double mainAmount = 40,
   }) => splitsValidationMessage(
+    l: LEn(),
     type: type,
     touched: touched,
     splits: splits,

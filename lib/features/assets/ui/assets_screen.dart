@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
@@ -6,6 +7,7 @@ import 'package:cuentimobile/core/widgets/empty_state.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/assets/domain/asset.dart';
 import 'package:cuentimobile/features/assets/ui/assets_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,8 +33,8 @@ class AssetsScreen extends ConsumerWidget {
                     const SizedBox(height: 80),
                     EmptyState(
                       icon: Icons.show_chart,
-                      message: 'No assets yet',
-                      actionLabel: 'Add asset',
+                      message: L.of(context).assetsEmpty,
+                      actionLabel: L.of(context).assetsAdd,
                       onAction: () => _showEditDialog(context, ref, null),
                     ),
                   ],
@@ -59,7 +61,7 @@ class AssetsScreen extends ConsumerWidget {
                       ),
                       confirmDismiss: (_) => showConfirmSheet(
                         context,
-                        title: 'Delete Asset?',
+                        title: L.of(context).assetsDeleteTitle,
                         message: 'Delete "${a.name}"?',
                       ),
                       onDismissed: (_) => _delete(context, ref, a.id!),
@@ -131,25 +133,25 @@ class AssetsScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   TextField(
                     controller: symbol,
-                    decoration: const InputDecoration(
-                      labelText: 'Symbol (e.g. VWCE.DE)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).assetsSymbolHint,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: name,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonName,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: type,
-                    decoration: const InputDecoration(
-                      labelText: 'Type',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonType,
+                      border: const OutlineInputBorder(),
                     ),
                     items: kAssetTypes
                         .map((t) => DropdownMenuItem(value: t, child: Text(t)))
@@ -159,9 +161,9 @@ class AssetsScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   TextField(
                     controller: currency,
-                    decoration: const InputDecoration(
-                      labelText: 'Currency',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonCurrency,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -170,7 +172,7 @@ class AssetsScreen extends ConsumerWidget {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: saving ? null : () => Navigator.pop(ctx),
-                          child: const Text('Cancel'),
+                          child: Text(L.of(context).commonCancel),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -215,7 +217,7 @@ class AssetsScreen extends ConsumerWidget {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text('Save'),
+                              : Text(L.of(context).commonSave),
                         ),
                       ),
                     ],
@@ -310,7 +312,7 @@ class _AssetTileState extends ConsumerState<_AssetTile> {
                         : IconButton(
                             icon: const Icon(Icons.refresh, size: 18),
                             padding: EdgeInsets.zero,
-                            tooltip: 'Refresh price',
+                            tooltip: L.of(context).assetsRefreshPrice,
                             onPressed: () => _refreshPrice(context, a),
                           ),
                   ),

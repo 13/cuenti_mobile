@@ -1,5 +1,6 @@
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -42,6 +43,8 @@ void main() {
     var current = selectedId;
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: L.localizationsDelegates,
+        supportedLocales: L.supportedLocales,
         home: Scaffold(
           body: StatefulBuilder(
             builder: (context, setState) => CategoryPickerField(
@@ -245,6 +248,8 @@ void main() {
     final formKey = GlobalKey<FormState>();
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: L.localizationsDelegates,
+        supportedLocales: L.supportedLocales,
         home: Scaffold(
           body: Form(
             key: formKey,
@@ -271,6 +276,8 @@ void main() {
     int? selected;
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: L.localizationsDelegates,
+        supportedLocales: L.supportedLocales,
         home: Scaffold(
           body: StatefulBuilder(
             builder: (context, setState) => Form(
@@ -306,6 +313,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: L.localizationsDelegates,
+        supportedLocales: L.supportedLocales,
         home: Scaffold(
           body: CategoryPickerField(
             categories: _categories,
@@ -336,6 +345,8 @@ void main() {
     final starred = <int?>[];
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: L.localizationsDelegates,
+        supportedLocales: L.supportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (context) => TextButton(

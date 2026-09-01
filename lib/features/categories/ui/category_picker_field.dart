@@ -1,4 +1,5 @@
 import 'package:cuentimobile/features/categories/domain/category.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/utils/token_search.dart';
 import 'package:flutter/material.dart';
 
@@ -126,7 +127,7 @@ class _CategorySearchSheetState extends State<CategorySearchSheet> {
                       ? null
                       : IconButton(
                           icon: const Icon(Icons.clear),
-                          tooltip: 'Clear search',
+                          tooltip: L.of(context).categorySearchClear,
                           onPressed: () => setState(_query.clear),
                         ),
                 ),
@@ -149,9 +150,9 @@ class _CategorySearchSheetState extends State<CategorySearchSheet> {
                       onTap: () => _pick(null),
                     ),
                   if (matches.isEmpty)
-                    const ListTile(
+                    ListTile(
                       enabled: false,
-                      title: Text('No matching categories'),
+                      title: Text(L.of(context).categorySearchEmpty),
                     ),
                   for (final category in matches)
                     ListTile(

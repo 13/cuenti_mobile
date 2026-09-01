@@ -1,3 +1,4 @@
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// A strip saying the figures on screen came from the last successful fetch
@@ -38,7 +39,7 @@ class OfflineBanner extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Offline — showing the last figures fetched',
+                      L.of(context).offlineBanner,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colors.onTertiaryContainer,
                       ),

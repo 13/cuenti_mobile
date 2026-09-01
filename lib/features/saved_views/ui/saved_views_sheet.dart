@@ -7,6 +7,7 @@ import 'package:cuentimobile/features/saved_views/ui/saved_views_controller.dart
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter_codec.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -53,7 +54,10 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Saved views', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              L.of(context).savedViewsTitle,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             ConstrainedBox(
               constraints: BoxConstraints(
@@ -64,9 +68,9 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
                 skeleton: SkeletonLoader.tiles(height: 56),
                 data: (views) {
                   if (views.isEmpty) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24),
-                      child: Text('No saved views yet'),
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Text(L.of(context).savedViewsEmpty),
                     );
                   }
                   return ListView.builder(
@@ -80,7 +84,7 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
             const SizedBox(height: 16),
             FilledButton(
               onPressed: canSaveCurrent ? () => _promptSave(context) : null,
-              child: const Text('Save current view'),
+              child: Text(L.of(context).savedViewsSaveCurrent),
             ),
           ],
         ),
@@ -94,7 +98,7 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
     return ListTile(
       enabled: enabled,
       title: Text(view.name),
-      subtitle: enabled ? null : const Text('Saved by web app'),
+      subtitle: enabled ? null : Text(L.of(context).savedViewsFromWeb),
       onTap: enabled
           ? () {
               widget.onApply(decoded);
@@ -102,7 +106,7 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
             }
           : null,
       trailing: IconButton(
-        tooltip: 'Delete view',
+        tooltip: L.of(context).savedViewsDeleteOne,
         icon: const Icon(Icons.delete_outline),
         onPressed: () => _delete(view),
       ),
@@ -112,7 +116,7 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
   Future<void> _delete(SavedView view) async {
     final confirmed = await showConfirmSheet(
       context,
-      title: 'Delete saved view?',
+      title: L.of(context).savedViewsDeleteTitle,
       message: 'Delete "${view.name}"?',
     );
     if (!confirmed || view.id == null) return;
@@ -149,15 +153,15 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Save current view',
+                L.of(context).savedViewsSaveCurrent,
                 style: Theme.of(ctx).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: L.of(context).commonName,
+                  border: const OutlineInputBorder(),
                 ),
                 autofocus: true,
                 onChanged: (_) => setModalState(() {}),
@@ -168,7 +172,7 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: saving ? null : () => Navigator.pop(ctx),
-                      child: const Text('Cancel'),
+                      child: Text(L.of(context).commonCancel),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -206,7 +210,7 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
                               width: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Save'),
+                          : Text(L.of(context).commonSave),
                     ),
                   ),
                 ],

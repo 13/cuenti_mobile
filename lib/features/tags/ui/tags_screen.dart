@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
@@ -6,6 +7,7 @@ import 'package:cuentimobile/core/widgets/empty_state.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/tags/domain/tag.dart';
 import 'package:cuentimobile/features/tags/ui/tags_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,8 +34,8 @@ class TagsScreen extends ConsumerWidget {
                       const SizedBox(height: 80),
                       EmptyState(
                         icon: Icons.sell,
-                        message: 'No tags yet',
-                        actionLabel: 'Add tag',
+                        message: L.of(context).tagsEmpty,
+                        actionLabel: L.of(context).tagsAdd,
                         onAction: () => _showEditDialog(context, ref, null),
                       ),
                     ],
@@ -62,7 +64,7 @@ class TagsScreen extends ConsumerWidget {
                         ),
                         confirmDismiss: (_) => showConfirmSheet(
                           context,
-                          title: 'Delete Tag?',
+                          title: L.of(context).tagsDeleteTitle,
                           message: 'Delete "${tag.name}"?',
                         ),
                         onDismissed: (_) async {
@@ -165,9 +167,9 @@ class TagsScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 TextField(
                   controller: name,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: L.of(context).commonName,
+                    border: const OutlineInputBorder(),
                   ),
                   autofocus: true,
                 ),
@@ -177,7 +179,7 @@ class TagsScreen extends ConsumerWidget {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: saving ? null : () => Navigator.pop(ctx),
-                        child: const Text('Cancel'),
+                        child: Text(L.of(context).commonCancel),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -218,7 +220,7 @@ class TagsScreen extends ConsumerWidget {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text('Save'),
+                            : Text(L.of(context).commonSave),
                       ),
                     ),
                   ],

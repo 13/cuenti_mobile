@@ -2,11 +2,14 @@ import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Widget host(Widget child) => MaterialApp(
+  localizationsDelegates: L.localizationsDelegates,
+  supportedLocales: L.supportedLocales,
   theme: AppTheme.light(),
   home: Scaffold(body: child),
 );

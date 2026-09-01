@@ -12,6 +12,7 @@ import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/user/data/user_repository.dart';
 import 'package:cuentimobile/features/vehicles/domain/vehicle_report.dart';
 import 'package:cuentimobile/features/vehicles/ui/vehicles_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -54,8 +55,8 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
       return Center(
         child: EmptyState(
           icon: Icons.directions_car,
-          message: 'Pick a fuel category to see your vehicle report',
-          actionLabel: 'Choose category',
+          message: L.of(context).vehiclesPickPrompt,
+          actionLabel: L.of(context).vehiclesChooseCategory,
           onAction: () => _openCategorySheet(context),
         ),
       );
@@ -131,7 +132,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
           ),
           const SizedBox(width: 8),
           ChoiceChip(
-            label: const Text('This year'),
+            label: Text(L.of(context).vehiclesThisYear),
             selected: _isThisYear,
             onSelected: (v) {
               if (!v) return;
@@ -197,7 +198,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
       categories: expenseCategories,
       selectedId: _categoryId,
       allowNone: false,
-      title: 'Fuel category',
+      title: L.of(context).vehiclesFuelCategory,
       trailingBuilder: (ctx, c) => Consumer(
         builder: (ctx, ref, _) {
           final isDefault =
@@ -211,7 +212,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
               isDefault ? Icons.star : Icons.star_border,
               color: isDefault ? Theme.of(ctx).colorScheme.primary : null,
             ),
-            tooltip: 'Set as default',
+            tooltip: L.of(context).vehiclesSetDefault,
             onPressed: () async {
               final success = await _setDefaultCategory(ctx, c.id!);
               // Also select the starred category for the current view: close
@@ -243,7 +244,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
       // and this context defunct.
       if (!context.mounted) return true;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Default saved')),
+        SnackBar(content: Text(L.of(context).vehiclesDefaultSaved)),
       );
       return true;
     } on ApiException catch (e) {
@@ -271,7 +272,7 @@ class _StatCardsRow extends StatelessWidget {
       runSpacing: 12,
       children: [
         _StatCard(
-          label: 'Total cost',
+          label: L.of(context).vehiclesTotalCost,
           valueWidget: AmountText(
             report.totalCost,
             currency: report.currency,
@@ -279,21 +280,21 @@ class _StatCardsRow extends StatelessWidget {
           ),
         ),
         _StatCard(
-          label: 'Liters',
+          label: L.of(context).fuelLiters,
           valueWidget: Text(
             '${formatNumber(report.totalLiters, decimals: 1)} L',
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ),
         _StatCard(
-          label: 'Distance',
+          label: L.of(context).vehiclesDistance,
           valueWidget: Text(
             '${formatNumber(report.totalDistance, decimals: 0)} km',
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ),
         _StatCard(
-          label: '⌀ Consumption',
+          label: L.of(context).vehiclesAvgConsumption,
           valueWidget: Text(
             report.avgConsumption != null
                 ? '${formatNumber(report.avgConsumption!, decimals: 1)} l/100km'
@@ -306,7 +307,7 @@ class _StatCardsRow extends StatelessWidget {
           ),
         ),
         _StatCard(
-          label: '⌀ Price/L',
+          label: L.of(context).vehiclesAvgPricePerLiter,
           valueWidget: Text(
             report.avgPricePerLiter != null
                 ? '${report.avgPricePerLiter!.toStringAsFixed(3)} ${report.currency}'
@@ -359,11 +360,11 @@ class _ConsumptionChart extends StatelessWidget {
       ..sort((a, b) => a.date.compareTo(b.date));
 
     if (points.length < 2) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
         child: EmptyState(
           icon: Icons.show_chart,
-          message: 'Not enough data for a chart',
+          message: L.of(context).vehiclesNotEnoughData,
         ),
       );
     }
@@ -474,9 +475,9 @@ class _EntriesList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.local_gas_station,
-        message: 'No fuel entries in this period',
+        message: L.of(context).vehiclesNoEntries,
       );
     }
 
@@ -517,8 +518,11 @@ class _EntriesList extends StatelessWidget {
                   ),
                   if (e.fullTank) ...[
                     const SizedBox(height: 4),
-                    const Chip(
-                      label: Text('Full', style: TextStyle(fontSize: 10)),
+                    Chip(
+                      label: Text(
+                        L.of(context).vehiclesFull,
+                        style: const TextStyle(fontSize: 10),
+                      ),
                       visualDensity: VisualDensity.compact,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       padding: EdgeInsets.zero,

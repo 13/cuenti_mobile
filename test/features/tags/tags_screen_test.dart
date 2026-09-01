@@ -2,6 +2,7 @@ import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/tags/data/tags_repository.dart';
 import 'package:cuentimobile/features/tags/domain/tag.dart';
 import 'package:cuentimobile/features/tags/ui/tags_screen.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,6 +25,8 @@ void main() {
       ProviderScope(
         overrides: [tagsRepositoryProvider.overrideWithValue(repo)],
         child: MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
           home: const TagsScreen(),
         ),

@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:cuentimobile/features/app_update/ui/update_check.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -58,7 +60,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'A mobile cuenti app',
+                  L.of(context).aboutTagline,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
@@ -77,7 +79,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Software Info',
+                  L.of(context).aboutSoftwareInfo,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
@@ -91,7 +93,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () => checkForUpdates(context, ref),
                     icon: const Icon(Icons.system_update_alt),
-                    label: const Text('Check for updates'),
+                    label: Text(L.of(context).aboutCheckUpdates),
                   ),
                 ),
               ],
@@ -108,19 +110,19 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'About Cuenti',
+                  L.of(context).aboutTitle,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Cuenti is a personal finance management application that helps you track your transactions, manage accounts, and monitor your assets across different currencies.',
-                  style: TextStyle(height: 1.5),
+                Text(
+                  L.of(context).aboutDescription,
+                  style: const TextStyle(height: 1.5),
                 ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
                   onPressed: () {}, // Optional: Open project website
                   icon: const Icon(Icons.language),
-                  label: const Text('Visit Website'),
+                  label: Text(L.of(context).aboutVisitWebsite),
                 ),
               ],
             ),

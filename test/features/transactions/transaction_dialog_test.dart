@@ -13,6 +13,7 @@ import 'package:cuentimobile/features/transactions/domain/transaction_page.dart'
 import 'package:cuentimobile/features/transactions/domain/transaction_split.dart';
 import 'package:cuentimobile/features/transactions/ui/transaction_dialog.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -79,6 +80,8 @@ void main() {
           payeesRepositoryProvider.overrideWithValue(payeesRepo),
         ],
         child: MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
           home: Scaffold(
             // The real screen keeps the family provider alive by watching

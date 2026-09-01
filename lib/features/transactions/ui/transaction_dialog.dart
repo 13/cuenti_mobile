@@ -16,6 +16,7 @@ import 'package:cuentimobile/features/transactions/ui/transactions_controller.da
 import 'package:cuentimobile/features/vehicles/domain/fuel_advice.dart';
 import 'package:cuentimobile/features/vehicles/domain/fuel_memo.dart';
 import 'package:cuentimobile/features/vehicles/ui/fuel_meta_provider.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -135,7 +136,8 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   /// Also null for TRANSFER, mirroring the section's visibility: an invalid
   /// draft must not keep Save disabled after the user switches to a type
   /// that hides the section (the save path drops splits for TRANSFER anyway).
-  String? get _splitsValidationMessage => splitsValidationMessage(
+  String? _splitsValidationMessageFor(L l) => splitsValidationMessage(
+    l: l,
     type: _type,
     touched: _splitsTouched,
     splits: [
@@ -191,10 +193,10 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Amount',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.attach_money),
+                  decoration: InputDecoration(
+                    labelText: L.of(context).commonAmount,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.attach_money),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -214,21 +216,21 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
 
                 // Type selector
                 SegmentedButton<String>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: 'EXPENSE',
-                      label: Text('Expense'),
-                      icon: Icon(Icons.arrow_downward),
+                      label: Text(L.of(context).commonExpense),
+                      icon: const Icon(Icons.arrow_downward),
                     ),
                     ButtonSegment(
                       value: 'INCOME',
-                      label: Text('Income'),
-                      icon: Icon(Icons.arrow_upward),
+                      label: Text(L.of(context).commonIncome),
+                      icon: const Icon(Icons.arrow_upward),
                     ),
                     ButtonSegment(
                       value: 'TRANSFER',
-                      label: Text('Transfer'),
-                      icon: Icon(Icons.swap_horiz),
+                      label: Text(L.of(context).commonTransfer),
+                      icon: const Icon(Icons.swap_horiz),
                     ),
                   ],
                   selected: {_type},
@@ -267,9 +269,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                     initialValue: accounts.any((a) => a.id == _fromAccountId)
                         ? _fromAccountId
                         : null,
-                    decoration: const InputDecoration(
-                      labelText: 'From Account',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).txFromAccount,
+                      border: const OutlineInputBorder(),
                     ),
                     items: accounts
                         .map(
@@ -291,9 +293,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                     initialValue: accounts.any((a) => a.id == _toAccountId)
                         ? _toAccountId
                         : null,
-                    decoration: const InputDecoration(
-                      labelText: 'To Account',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).txToAccount,
+                      border: const OutlineInputBorder(),
                     ),
                     items: accounts
                         .map(
@@ -347,7 +349,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                     categories: categories
                         .where((c) => c.type == _type)
                         .toList(),
-                    validationMessage: _splitsValidationMessage,
+                    validationMessage: _splitsValidationMessageFor(
+                      L.of(context),
+                    ),
                     onAdd: () => setState(() {
                       _splits.add(SplitDraft());
                       _splitsTouched = true;
@@ -362,9 +366,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                 // Payment method
                 DropdownButtonFormField<String>(
                   initialValue: _paymentMethod,
-                  decoration: const InputDecoration(
-                    labelText: 'Payment Method',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: L.of(context).txPaymentMethod,
+                    border: const OutlineInputBorder(),
                   ),
                   items: kPaymentMethods
                       .map((p) => DropdownMenuItem(value: p, child: Text(p)))
@@ -377,9 +381,9 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                 // Memo
                 TextFormField(
                   controller: _memo,
-                  decoration: const InputDecoration(
-                    labelText: 'Memo',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: L.of(context).commonMemo,
+                    border: const OutlineInputBorder(),
                   ),
                   maxLines: 2,
                   onChanged: _reparseFuelFromMemo,
@@ -389,15 +393,17 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                 // Tags
                 TextFormField(
                   controller: _tags,
-                  decoration: const InputDecoration(
-                    labelText: 'Tags (comma separated)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: L.of(context).txTagsHint,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 24),
 
                 FilledButton(
-                  onPressed: _submitting || _splitsValidationMessage != null
+                  onPressed:
+                      _submitting ||
+                          _splitsValidationMessageFor(L.of(context)) != null
                       ? null
                       : _save,
                   child: _submitting
@@ -406,7 +412,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Save'),
+                      : Text(L.of(context).commonSave),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -419,7 +425,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_splitsValidationMessage != null) return;
+    if (_splitsValidationMessageFor(L.of(context)) != null) return;
 
     if (_fuelVisible &&
         parseFuelInput(_fuelOdometer.text) == null &&

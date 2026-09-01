@@ -1,5 +1,6 @@
 import 'package:cuentimobile/features/vehicles/domain/fuel_advice.dart';
 import 'package:cuentimobile/features/vehicles/domain/fuel_memo.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 
@@ -32,7 +33,9 @@ class FuelEntrySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l = L.of(context);
     final info = fuelInfoLine(
+      l: l,
       odometer: parseFuelInput(odometer.text),
       lastOdometer: baseline,
       liters: parseFuelInput(liters.text),
@@ -49,7 +52,7 @@ class FuelEntrySection extends StatelessWidget {
                 controller: odometer,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'Odometer (km)',
+                  labelText: L.of(context).fuelOdometer,
                   border: const OutlineInputBorder(),
                   helperText: baseline != null
                       ? 'last: ${formatFuelNumber(baseline!)}'
@@ -67,9 +70,10 @@ class FuelEntrySection extends StatelessWidget {
                   decimal: true,
                 ),
                 decoration: InputDecoration(
-                  labelText: 'Liters',
+                  labelText: L.of(context).fuelLiters,
                   border: const OutlineInputBorder(),
                   helperText: fuelLitersWarning(
+                    l,
                     parseFuelInput(liters.text),
                   ),
                   helperStyle: TextStyle(color: colors.error),
@@ -93,7 +97,7 @@ class FuelEntrySection extends StatelessWidget {
         SwitchListTile(
           key: const Key('fuel-full'),
           contentPadding: EdgeInsets.zero,
-          title: const Text('Full tank'),
+          title: Text(L.of(context).fuelFullTank),
           value: fullTank,
           onChanged: onFullTankChanged,
         ),

@@ -1,12 +1,15 @@
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/amount_text.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Widget host(Widget child) => ProviderScope(
   child: MaterialApp(
+    localizationsDelegates: L.localizationsDelegates,
+    supportedLocales: L.supportedLocales,
     theme: AppTheme.light(),
     home: Scaffold(body: child),
   ),

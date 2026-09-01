@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -101,7 +103,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Image.asset('assets/Cuenti.png', width: 80, height: 80),
                   const SizedBox(height: 16),
                   Text(
-                    'Sign in',
+                    L.of(context).authSignInTitle,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -110,10 +112,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   TextFormField(
                     controller: _usernameController,
                     focusNode: _usernameFocus,
-                    decoration: const InputDecoration(
-                      labelText: 'Username',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonUsername,
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.person),
                     ),
                     validator: (v) =>
                         v == null || v.isEmpty ? 'Required' : null,
@@ -124,7 +126,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: _submitting ? null : _forgetSavedCredentials,
-                        child: const Text('Not you?'),
+                        child: Text(L.of(context).authNotYou),
                       ),
                     ),
                   const SizedBox(height: 16),
@@ -133,7 +135,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     focusNode: _passwordFocus,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                      labelText: L.of(context).commonPassword,
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
@@ -176,7 +178,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               width: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Sign In'),
+                          : Text(L.of(context).authSignInButton),
                     ),
                   ),
                   if (auth.biometricEnabled && auth.hasSavedPassword) ...[
@@ -186,7 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: OutlinedButton.icon(
                         onPressed: _submitting ? null : _biometricLogin,
                         icon: const Icon(Icons.fingerprint),
-                        label: const Text('Sign in with biometrics'),
+                        label: Text(L.of(context).authSignInBiometrics),
                       ),
                     ),
                   ],

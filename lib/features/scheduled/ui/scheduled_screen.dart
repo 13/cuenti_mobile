@@ -6,6 +6,7 @@ import 'package:cuentimobile/core/widgets/empty_state.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
 import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -26,11 +27,11 @@ class ScheduledScreen extends ConsumerWidget {
         },
         child: items.isEmpty
             ? ListView(
-                children: const [
-                  SizedBox(height: 80),
+                children: [
+                  const SizedBox(height: 80),
                   EmptyState(
                     icon: Icons.schedule,
-                    message: 'No scheduled transactions',
+                    message: L.of(context).scheduledEmpty,
                   ),
                 ],
               )
@@ -126,13 +127,13 @@ class ScheduledScreen extends ConsumerWidget {
                                 TextButton.icon(
                                   onPressed: () => _post(context, ref, st.id!),
                                   icon: const Icon(Icons.check, size: 18),
-                                  label: const Text('Post'),
+                                  label: Text(L.of(context).scheduledPost),
                                 ),
                                 const SizedBox(width: 8),
                                 TextButton.icon(
                                   onPressed: () => _skip(context, ref, st.id!),
                                   icon: const Icon(Icons.skip_next, size: 18),
-                                  label: const Text('Skip'),
+                                  label: Text(L.of(context).scheduledSkip),
                                 ),
                               ],
                             ),
@@ -175,7 +176,7 @@ class ScheduledScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Transaction posted')));
+        ).showSnackBar(SnackBar(content: Text(L.of(context).scheduledPosted)));
       }
     } on ApiException catch (e) {
       if (context.mounted) {
@@ -195,7 +196,7 @@ class ScheduledScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Occurrence skipped')));
+        ).showSnackBar(SnackBar(content: Text(L.of(context).scheduledSkipped)));
       }
     } on ApiException catch (e) {
       if (context.mounted) {
@@ -216,7 +217,7 @@ class ScheduledScreen extends ConsumerWidget {
   ) async {
     final confirmed = await showConfirmSheet(
       context,
-      title: 'Delete Schedule?',
+      title: L.of(context).scheduledDeleteTitle,
       message: 'Delete "${st.payee ?? st.type}" recurring transaction?',
     );
     if (!confirmed) return;

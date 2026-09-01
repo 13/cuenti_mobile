@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
@@ -6,6 +7,7 @@ import 'package:cuentimobile/core/widgets/empty_state.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/currencies/domain/currency.dart';
 import 'package:cuentimobile/features/currencies/ui/currencies_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,8 +33,8 @@ class CurrenciesScreen extends ConsumerWidget {
                     const SizedBox(height: 80),
                     EmptyState(
                       icon: Icons.currency_exchange,
-                      message: 'No currencies yet',
-                      actionLabel: 'Add currency',
+                      message: L.of(context).currenciesEmpty,
+                      actionLabel: L.of(context).currenciesAdd,
                       onAction: () => _showEditDialog(context, ref, null),
                     ),
                   ],
@@ -59,7 +61,7 @@ class CurrenciesScreen extends ConsumerWidget {
                       ),
                       confirmDismiss: (_) => showConfirmSheet(
                         context,
-                        title: 'Delete Currency?',
+                        title: L.of(context).currenciesDeleteTitle,
                         message: 'Delete "${c.code} - ${c.name}"?',
                       ),
                       onDismissed: (_) => _delete(context, ref, c.id!),
@@ -191,25 +193,25 @@ class CurrenciesScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   TextField(
                     controller: code,
-                    decoration: const InputDecoration(
-                      labelText: 'Code (e.g. EUR)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).currenciesCodeHint,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: name,
-                    decoration: const InputDecoration(
-                      labelText: 'Name (e.g. Euro)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).currenciesNameHint,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: symbol,
-                    decoration: const InputDecoration(
-                      labelText: 'Symbol (e.g. €)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).currenciesSymbolHint,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -218,9 +220,9 @@ class CurrenciesScreen extends ConsumerWidget {
                       Expanded(
                         child: TextField(
                           controller: decimalChar,
-                          decoration: const InputDecoration(
-                            labelText: 'Decimal',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: L.of(context).currenciesDecimal,
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                       ),
@@ -228,9 +230,9 @@ class CurrenciesScreen extends ConsumerWidget {
                       Expanded(
                         child: TextField(
                           controller: groupingChar,
-                          decoration: const InputDecoration(
-                            labelText: 'Grouping',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: L.of(context).currenciesGrouping,
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                       ),
@@ -238,9 +240,9 @@ class CurrenciesScreen extends ConsumerWidget {
                       Expanded(
                         child: DropdownButtonFormField<int>(
                           initialValue: fracDigits,
-                          decoration: const InputDecoration(
-                            labelText: 'Decimals',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: L.of(context).currenciesDecimals,
+                            border: const OutlineInputBorder(),
                           ),
                           items: List.generate(
                             9,
@@ -259,7 +261,7 @@ class CurrenciesScreen extends ConsumerWidget {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: saving ? null : () => Navigator.pop(ctx),
-                          child: const Text('Cancel'),
+                          child: Text(L.of(context).commonCancel),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -308,7 +310,7 @@ class CurrenciesScreen extends ConsumerWidget {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text('Save'),
+                              : Text(L.of(context).commonSave),
                         ),
                       ),
                     ],

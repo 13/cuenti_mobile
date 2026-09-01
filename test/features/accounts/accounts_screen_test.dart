@@ -4,6 +4,7 @@ import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_screen.dart';
 import 'package:cuentimobile/features/currencies/data/currencies_repository.dart';
 import 'package:cuentimobile/features/currencies/domain/currency.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,6 +41,8 @@ void main() {
           currenciesRepositoryProvider.overrideWithValue(currenciesRepo),
         ],
         child: MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
           home: const AccountsScreen(),
         ),

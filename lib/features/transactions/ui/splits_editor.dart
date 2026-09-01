@@ -1,6 +1,7 @@
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/transactions/ui/split_draft.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 
@@ -43,13 +44,13 @@ class SplitsEditor extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Splits',
+                L.of(context).txSplits,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
             IconButton(
               icon: const Icon(Icons.add),
-              tooltip: 'Add split',
+              tooltip: L.of(context).txAddSplit,
               onPressed: onAdd,
             ),
           ],
@@ -81,9 +82,9 @@ class SplitsEditor extends StatelessWidget {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: const InputDecoration(
-                      labelText: 'Amount',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonAmount,
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                     validator: (v) {
@@ -99,9 +100,9 @@ class SplitsEditor extends StatelessWidget {
                   flex: 2,
                   child: TextFormField(
                     controller: splits[i].memo,
-                    decoration: const InputDecoration(
-                      labelText: 'Memo',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonMemo,
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                     onChanged: (_) => onChanged(),
@@ -109,7 +110,7 @@ class SplitsEditor extends StatelessWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.remove_circle_outline),
-                  tooltip: 'Remove split',
+                  tooltip: L.of(context).txRemoveSplit,
                   onPressed: () => onRemove(i),
                 ),
               ],

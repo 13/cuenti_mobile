@@ -5,6 +5,7 @@ import 'package:cuentimobile/core/privacy/privacy_mode.dart';
 import 'package:cuentimobile/core/widgets/offline_banner.dart';
 import 'package:cuentimobile/core/widgets/refresh_all.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,17 +14,33 @@ class ShellScreen extends ConsumerWidget {
   const ShellScreen({required this.child, super.key});
   final Widget child;
 
-  static const List<({IconData icon, String label, String path})> _navItems = [
-    (icon: Icons.dashboard, label: 'Dashboard', path: '/dashboard'),
-    (icon: Icons.receipt_long, label: 'Transactions', path: '/transactions'),
-    (icon: Icons.pie_chart, label: 'Budgets', path: '/budgets'),
-    (icon: Icons.bar_chart, label: 'Statistics', path: '/statistics'),
+  /// Built per call rather than held as a const: the labels are localised,
+  /// so they depend on the context they are shown in.
+  static List<({IconData icon, String label, String path})> _navItems(
+    BuildContext context,
+  ) => [
+    (
+      icon: Icons.dashboard,
+      label: L.of(context).navDashboard,
+      path: '/dashboard',
+    ),
+    (
+      icon: Icons.receipt_long,
+      label: L.of(context).navTransactions,
+      path: '/transactions',
+    ),
+    (icon: Icons.pie_chart, label: L.of(context).navBudgets, path: '/budgets'),
+    (
+      icon: Icons.bar_chart,
+      label: L.of(context).navStatistics,
+      path: '/statistics',
+    ),
   ];
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
-    for (var i = 0; i < _navItems.length; i++) {
-      if (location == _navItems[i].path) return i;
+    for (var i = 0; i < _navItems(context).length; i++) {
+      if (location == _navItems(context)[i].path) return i;
     }
     return 0;
   }
@@ -164,7 +181,7 @@ class ShellScreen extends ConsumerWidget {
             _buildNavItem(context, Icons.info_outline, 'About', '/about'),
             ListTile(
               leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
+              title: Text(L.of(context).actionLogout),
               onTap: () async {
                 // Capture the router before the gap: popping the drawer
                 // tears this ListTile's context down, so it cannot route
@@ -198,7 +215,7 @@ class ShellScreen extends ConsumerWidget {
             },
           ),
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: L.of(context).actionRefresh,
             icon: const Icon(Icons.refresh),
             onPressed: () {
               unawaited(
@@ -220,9 +237,9 @@ class ShellScreen extends ConsumerWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex(context),
         onDestinationSelected: (index) {
-          context.go(_navItems[index].path);
+          context.go(_navItems(context)[index].path);
         },
-        destinations: _navItems
+        destinations: _navItems(context)
             .map(
               (item) => NavigationDestination(
                 icon: Icon(item.icon),

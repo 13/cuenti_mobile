@@ -1,6 +1,7 @@
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -89,7 +90,7 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
                 Image.asset('assets/Cuenti.png', width: 80, height: 80),
                 const SizedBox(height: 16),
                 Text(
-                  'Server Setup',
+                  L.of(context).serverSetupTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -97,11 +98,11 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
                 const SizedBox(height: 32),
                 TextField(
                   controller: _controller,
-                  decoration: const InputDecoration(
-                    labelText: 'Server URL',
+                  decoration: InputDecoration(
+                    labelText: L.of(context).serverUrl,
                     hintText: 'http://192.168.1.100:8080',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.link),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.link),
                   ),
                   keyboardType: TextInputType.url,
                 ),
@@ -116,7 +117,7 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Save & Continue'),
+                        : Text(L.of(context).serverSaveContinue),
                   ),
                 ),
               ],
@@ -151,7 +152,10 @@ class _TrustCertificateSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Unrecognised certificate', style: theme.textTheme.titleLarge),
+          Text(
+            L.of(context).serverUntrustedTitle,
+            style: theme.textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
           Text(
             '${rejected.host} presented a certificate no certificate '
@@ -174,14 +178,14 @@ class _TrustCertificateSheet extends StatelessWidget {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
+                  child: Text(L.of(context).commonCancel),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Trust'),
+                  child: Text(L.of(context).serverTrust),
                 ),
               ),
             ],

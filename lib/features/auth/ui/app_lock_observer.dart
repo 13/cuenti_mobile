@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
@@ -131,14 +133,14 @@ class _LockScreen extends StatelessWidget {
             Image.asset('assets/Cuenti.png', width: 100, height: 100),
             const SizedBox(height: 24),
             Text(
-              'Cuenti is Locked',
+              L.of(context).authLockedTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: onUnlock,
               icon: const Icon(Icons.fingerprint),
-              label: const Text('Unlock'),
+              label: Text(L.of(context).authUnlock),
             ),
           ],
         ),

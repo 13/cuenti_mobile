@@ -6,6 +6,7 @@ import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/features/vehicles/data/vehicles_repository.dart';
 import 'package:cuentimobile/features/vehicles/domain/vehicle_report.dart';
 import 'package:cuentimobile/features/vehicles/ui/vehicles_screen.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -67,6 +68,8 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
           home: const Scaffold(body: VehiclesScreen()),
         ),

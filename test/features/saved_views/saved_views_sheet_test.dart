@@ -3,6 +3,7 @@ import 'package:cuentimobile/features/saved_views/data/saved_views_repository.da
 import 'package:cuentimobile/features/saved_views/domain/saved_view.dart';
 import 'package:cuentimobile/features/saved_views/ui/saved_views_sheet.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -39,6 +40,8 @@ void main() {
       ProviderScope(
         overrides: [savedViewsRepositoryProvider.overrideWithValue(repo)],
         child: MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
           home: Scaffold(
             body: Builder(
@@ -96,6 +99,8 @@ void main() {
       ProviderScope(
         overrides: [savedViewsRepositoryProvider.overrideWithValue(repo)],
         child: MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
           home: Scaffold(
             body: Builder(

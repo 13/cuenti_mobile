@@ -1,8 +1,12 @@
 import 'package:cuentimobile/features/vehicles/domain/fuel_advice.dart';
 import 'package:cuentimobile/features/vehicles/ui/fuel_meta_provider.dart';
+import 'package:cuentimobile/l10n/app_localizations_en.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  // The messages are localised; assert against the English ones.
+  final l = LEn();
+
   group('fuelBaseline', () {
     final meta = FuelMeta(
       isFuel: true,
@@ -37,23 +41,24 @@ void main() {
 
   group('fuelLitersWarning', () {
     test('accepts a plausible fill-up', () {
-      expect(fuelLitersWarning(41.3), isNull);
+      expect(fuelLitersWarning(l, 41.3), isNull);
     });
 
     test('rejects zero, negative and absurd volumes', () {
-      expect(fuelLitersWarning(0), isNotNull);
-      expect(fuelLitersWarning(-1), isNotNull);
-      expect(fuelLitersWarning(200.1), isNotNull);
+      expect(fuelLitersWarning(l, 0), isNotNull);
+      expect(fuelLitersWarning(l, -1), isNotNull);
+      expect(fuelLitersWarning(l, 200.1), isNotNull);
     });
 
     test('says nothing when the field is empty', () {
-      expect(fuelLitersWarning(null), isNull);
+      expect(fuelLitersWarning(l, null), isNull);
     });
   });
 
   group('fuelInfoLine', () {
     test('warns when the odometer did not increase', () {
       final line = fuelInfoLine(
+        l: l,
         odometer: 44000,
         lastOdometer: 44000,
         liters: 40,
@@ -65,6 +70,7 @@ void main() {
 
     test('warns on an implausibly large jump', () {
       final line = fuelInfoLine(
+        l: l,
         odometer: 47001,
         lastOdometer: 44000,
         liters: 40,
@@ -76,6 +82,7 @@ void main() {
 
     test('reports consumption for a full tank', () {
       final line = fuelInfoLine(
+        l: l,
         odometer: 44500,
         lastOdometer: 44000,
         liters: 40,
@@ -87,6 +94,7 @@ void main() {
 
     test('reports distance only when the tank was not filled', () {
       final line = fuelInfoLine(
+        l: l,
         odometer: 44500,
         lastOdometer: 44000,
         liters: 40,
@@ -98,6 +106,7 @@ void main() {
     test('is null without an odometer or a baseline', () {
       expect(
         fuelInfoLine(
+          l: l,
           odometer: null,
           lastOdometer: 44000,
           liters: 40,
@@ -107,6 +116,7 @@ void main() {
       );
       expect(
         fuelInfoLine(
+          l: l,
           odometer: 44500,
           lastOdometer: null,
           liters: 40,

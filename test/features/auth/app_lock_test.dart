@@ -1,6 +1,7 @@
 import 'package:cuentimobile/features/auth/ui/app_lock_observer.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,6 +31,8 @@ Widget _host({
       authControllerProvider.overrideWith(() => _FakeAuthController(authState)),
     ],
     child: MaterialApp(
+      localizationsDelegates: L.localizationsDelegates,
+      supportedLocales: L.supportedLocales,
       home: AppLockObserver(
         authenticator: authenticator,
         child: const Text('Home'),

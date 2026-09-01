@@ -5,6 +5,7 @@ import 'package:cuentimobile/features/currencies/data/currencies_repository.dart
 import 'package:cuentimobile/features/user/data/user_repository.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/features/user/ui/settings_screen.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -71,6 +72,7 @@ void main() {
 
   Future<_FakeAuthController> pumpSettings(
     WidgetTester tester, {
+    Locale? locale,
     // Tall surface: the screen is one long ListView and several assertions
     // target cards below the fold of a phone-sized viewport.
     UserProfile? profile = user,
@@ -105,7 +107,12 @@ void main() {
           userRepositoryProvider.overrideWithValue(userRepo),
           currenciesRepositoryProvider.overrideWithValue(currenciesRepo),
         ],
-        child: MaterialApp.router(routerConfig: router),
+        child: MaterialApp.router(
+          locale: locale,
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
+          routerConfig: router,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -215,5 +222,42 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('login page'), findsOneWidget);
+  });
+
+  testWidgets('the whole screen renders in German', (tester) async {
+    await pumpSettings(tester, locale: const Locale('de'));
+
+    expect(find.text('Dunkler Modus'), findsOneWidget);
+    expect(find.text('Biometrische Entsperrung'), findsOneWidget);
+    expect(find.text('Passwort ändern'), findsOneWidget);
+    expect(find.text('Abmelden'), findsOneWidget);
+    expect(find.text('Dark Mode'), findsNothing);
+  });
+
+  testWidgets('the whole screen renders in Italian', (tester) async {
+    await pumpSettings(tester, locale: const Locale('it'));
+
+    expect(find.text('Modalità scura'), findsOneWidget);
+    expect(find.text('Sblocco biometrico'), findsOneWidget);
+    expect(find.text('Cambia password'), findsOneWidget);
+    expect(find.text('Esci'), findsOneWidget);
+  });
+
+  testWidgets('the locale picker offers only languages the app speaks', (
+    tester,
+  ) async {
+    await pumpSettings(tester);
+
+    await tester.tap(find.widgetWithText(ListTile, 'Locale'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('English'), findsOneWidget);
+    expect(find.text('Deutsch'), findsOneWidget);
+    expect(find.text('Italiano'), findsOneWidget);
+    expect(
+      find.textContaining('fr-FR'),
+      findsNothing,
+      reason: 'French was offered but never translated',
+    );
   });
 }

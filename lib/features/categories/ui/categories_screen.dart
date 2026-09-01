@@ -9,6 +9,7 @@ import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,8 +39,8 @@ class CategoriesScreen extends ConsumerWidget {
                       const SizedBox(height: 80),
                       EmptyState(
                         icon: Icons.category,
-                        message: 'No categories yet',
-                        actionLabel: 'Add category',
+                        message: L.of(context).categoriesEmpty,
+                        actionLabel: L.of(context).categoriesAdd,
                         onAction: () => _showEditDialog(context, ref, null),
                       ),
                     ],
@@ -83,13 +84,13 @@ class CategoriesScreen extends ConsumerWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                tooltip: 'Edit category',
+                                tooltip: L.of(context).categoriesEditOne,
                                 icon: const Icon(Icons.edit, size: 20),
                                 onPressed: () =>
                                     _showEditDialog(context, ref, parent),
                               ),
                               IconButton(
-                                tooltip: 'Delete category',
+                                tooltip: L.of(context).categoriesDeleteOne,
                                 icon: const Icon(Icons.delete, size: 20),
                                 onPressed: () =>
                                     _confirmDelete(context, ref, parent),
@@ -108,7 +109,9 @@ class CategoriesScreen extends ConsumerWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        tooltip: 'Edit category',
+                                        tooltip: L
+                                            .of(context)
+                                            .categoriesEditOne,
                                         icon: const Icon(Icons.edit, size: 20),
                                         onPressed: () => _showEditDialog(
                                           context,
@@ -117,7 +120,9 @@ class CategoriesScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       IconButton(
-                                        tooltip: 'Delete category',
+                                        tooltip: L
+                                            .of(context)
+                                            .categoriesDeleteOne,
                                         icon: const Icon(
                                           Icons.delete,
                                           size: 20,
@@ -152,7 +157,7 @@ class CategoriesScreen extends ConsumerWidget {
   ) async {
     final confirmed = await showConfirmSheet(
       context,
-      title: 'Delete Category?',
+      title: L.of(context).categoriesDeleteTitle,
       message: 'Delete "${category.fullName ?? category.name}"?',
     );
     if (!confirmed) return;
@@ -211,24 +216,27 @@ class CategoriesScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   TextField(
                     controller: name,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonName,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: type,
-                    decoration: const InputDecoration(
-                      labelText: 'Type',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonType,
+                      border: const OutlineInputBorder(),
                     ),
-                    items: const [
+                    items: [
                       DropdownMenuItem(
                         value: 'EXPENSE',
-                        child: Text('Expense'),
+                        child: Text(L.of(context).commonExpense),
                       ),
-                      DropdownMenuItem(value: 'INCOME', child: Text('Income')),
+                      DropdownMenuItem(
+                        value: 'INCOME',
+                        child: Text(L.of(context).commonIncome),
+                      ),
                     ],
                     onChanged: (v) =>
                         setModalState(() => type = v ?? 'EXPENSE'),
@@ -237,9 +245,9 @@ class CategoriesScreen extends ConsumerWidget {
                   CategoryPickerField(
                     categories: parentOptions,
                     selectedId: parentId,
-                    labelText: 'Parent Category',
-                    placeholder: 'None (Top Level)',
-                    noneLabel: 'None (Top Level)',
+                    labelText: L.of(context).categoriesParent,
+                    placeholder: L.of(context).categoriesTopLevel,
+                    noneLabel: L.of(context).categoriesTopLevel,
                     onChanged: (v) => setModalState(() => parentId = v),
                   ),
                   const SizedBox(height: 16),
@@ -248,7 +256,7 @@ class CategoriesScreen extends ConsumerWidget {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: saving ? null : () => Navigator.pop(ctx),
-                          child: const Text('Cancel'),
+                          child: Text(L.of(context).commonCancel),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -293,7 +301,7 @@ class CategoriesScreen extends ConsumerWidget {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text('Save'),
+                              : Text(L.of(context).commonSave),
                         ),
                       ),
                     ],

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cuentimobile/features/app_update/data/app_update_repository.dart';
 import 'package:cuentimobile/features/app_update/domain/app_release.dart';
 import 'package:cuentimobile/features/app_update/domain/version_compare.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,13 +28,16 @@ final apkInstallerProvider = Provider<Future<void> Function(String path)>(
 
 Future<void> checkForUpdates(BuildContext context, WidgetRef ref) async {
   final messenger = ScaffoldMessenger.of(context);
+  // Captured alongside the messenger, for the same reason: both are read
+  // from context, and the awaits below outlive it.
+  final l = L.of(context);
   final repo = ref.read(appUpdateRepositoryProvider);
   try {
     final release = await repo.getLatestRelease();
     final current = (await PackageInfo.fromPlatform()).version;
     if (!isNewerVersion(current, release.tagName)) {
       messenger.showSnackBar(
-        const SnackBar(content: Text("You're up to date")),
+        SnackBar(content: Text(l.updateUpToDate)),
       );
       return;
     }
@@ -41,7 +45,7 @@ Future<void> checkForUpdates(BuildContext context, WidgetRef ref) async {
     final asset = repo.pickAsset(release, abis);
     if (asset == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('No APK found in the latest release')),
+        SnackBar(content: Text(l.updateNoApk)),
       );
       return;
     }
@@ -52,7 +56,7 @@ Future<void> checkForUpdates(BuildContext context, WidgetRef ref) async {
     );
   } on Exception catch (_) {
     messenger.showSnackBar(
-      const SnackBar(content: Text("Couldn't check for updates")),
+      SnackBar(content: Text(l.updateCheckFailed)),
     );
   }
 }
@@ -103,7 +107,7 @@ class _UpdateDialogState extends ConsumerState<_UpdateDialog> {
   Widget build(BuildContext context) {
     final downloading = _progress != null;
     return AlertDialog(
-      title: const Text('Update available'),
+      title: Text(L.of(context).updateAvailable),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,7 +142,7 @@ class _UpdateDialogState extends ConsumerState<_UpdateDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Later'),
+          child: Text(L.of(context).updateLater),
         ),
         FilledButton(
           onPressed: downloading ? null : _download,

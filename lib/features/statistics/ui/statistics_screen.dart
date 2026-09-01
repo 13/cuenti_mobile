@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
@@ -8,6 +9,7 @@ import 'package:cuentimobile/features/statistics/domain/time_range.dart';
 import 'package:cuentimobile/features/statistics/ui/statistics_controller.dart';
 import 'package:cuentimobile/features/statistics/ui/widgets/category_tab.dart';
 import 'package:cuentimobile/features/statistics/ui/widgets/overview_tab.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -96,10 +98,10 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
         const SizedBox(height: 4),
         TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Overview'),
-            Tab(text: 'Income'),
-            Tab(text: 'Expense'),
+          tabs: [
+            Tab(text: L.of(context).statsOverview),
+            Tab(text: L.of(context).commonIncome),
+            Tab(text: L.of(context).commonExpense),
           ],
         ),
         Expanded(
@@ -128,13 +130,13 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
                 ),
                 CategoryTab(
                   data: stats.incomeByCategory,
-                  title: 'Income by Category',
+                  title: L.of(context).statsIncomeByCategory,
                   currency: stats.currency,
                   type: 'INCOME',
                 ),
                 CategoryTab(
                   data: stats.expenseByCategory,
-                  title: 'Expense by Category',
+                  title: L.of(context).statsExpenseByCategory,
                   currency: stats.currency,
                   type: 'EXPENSE',
                 ),
@@ -215,13 +217,13 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Account',
+                  L.of(context).commonAccount,
                   style: Theme.of(ctx).textTheme.titleMedium,
                 ),
               ),
             ),
             ListTile(
-              title: const Text('All Accounts'),
+              title: Text(L.of(context).statsAllAccounts),
               onTap: () => Navigator.pop(ctx),
             ),
             for (final a in accounts)

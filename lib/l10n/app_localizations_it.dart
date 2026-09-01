@@ -1,0 +1,683 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Italian (`it`).
+class LIt extends L {
+  LIt([String locale = 'it']) : super(locale);
+
+  @override
+  String get commonSave => 'Salva';
+
+  @override
+  String get commonCancel => 'Annulla';
+
+  @override
+  String get commonDelete => 'Elimina';
+
+  @override
+  String get commonClose => 'Chiudi';
+
+  @override
+  String get commonEdit => 'Modifica';
+
+  @override
+  String get commonRetry => 'Riprova';
+
+  @override
+  String get commonName => 'Nome';
+
+  @override
+  String get commonType => 'Tipo';
+
+  @override
+  String get commonCurrency => 'Valuta';
+
+  @override
+  String get commonAmount => 'Importo';
+
+  @override
+  String get commonMemo => 'Nota';
+
+  @override
+  String get commonNone => 'Nessuna';
+
+  @override
+  String get commonNoData => 'Nessun dato';
+
+  @override
+  String get commonAccount => 'Conto';
+
+  @override
+  String get commonExpense => 'Uscita';
+
+  @override
+  String get commonIncome => 'Entrata';
+
+  @override
+  String get commonTransfer => 'Trasferimento';
+
+  @override
+  String get commonClearFilters => 'Azzera i filtri';
+
+  @override
+  String get commonEmail => 'Email';
+
+  @override
+  String get commonPassword => 'Password';
+
+  @override
+  String get commonUsername => 'Nome utente';
+
+  @override
+  String get commonFirstName => 'Nome';
+
+  @override
+  String get commonLastName => 'Cognome';
+
+  @override
+  String get commonGroup => 'Gruppo';
+
+  @override
+  String get commonUndoWarning => 'Questa azione non può essere annullata.';
+
+  @override
+  String get offlineBanner =>
+      'Offline — sono mostrati gli ultimi dati scaricati';
+
+  @override
+  String get navDashboard => 'Riepilogo';
+
+  @override
+  String get navTransactions => 'Movimenti';
+
+  @override
+  String get navBudgets => 'Budget';
+
+  @override
+  String get navStatistics => 'Statistiche';
+
+  @override
+  String get actionRefresh => 'Aggiorna';
+
+  @override
+  String get actionLogout => 'Esci';
+
+  @override
+  String get authSignInTitle => 'Accedi';
+
+  @override
+  String get authSignInButton => 'Accedi';
+
+  @override
+  String get authSignInBiometrics => 'Accedi con la biometria';
+
+  @override
+  String get authNotYou => 'Non sei tu?';
+
+  @override
+  String get authNoAccountRegister => 'Non hai un account? Registrati';
+
+  @override
+  String get authHaveAccountSignIn => 'Hai già un account? Accedi';
+
+  @override
+  String get authRegister => 'Registrati';
+
+  @override
+  String get authCreateAccount => 'Crea account';
+
+  @override
+  String get authConfirmPassword => 'Conferma password';
+
+  @override
+  String get authLockedTitle => 'Cuenti è bloccata';
+
+  @override
+  String get authUnlock => 'Sblocca';
+
+  @override
+  String get authShowPassword => 'Mostra password';
+
+  @override
+  String get authHidePassword => 'Nascondi password';
+
+  @override
+  String get serverSetupTitle => 'Configurazione server';
+
+  @override
+  String get serverUrl => 'URL del server';
+
+  @override
+  String get serverSaveContinue => 'Salva e continua';
+
+  @override
+  String get serverTrust => 'Considera attendibile';
+
+  @override
+  String get serverUntrustedTitle => 'Certificato non riconosciuto';
+
+  @override
+  String get serverChange => 'Cambia server';
+
+  @override
+  String get accountsEmpty => 'Nessun conto';
+
+  @override
+  String get accountsAdd => 'Aggiungi conto';
+
+  @override
+  String get accountsDeleteTitle => 'Eliminare il conto?';
+
+  @override
+  String get accountsDeleteBody =>
+      'Tutti i movimenti collegati ne saranno interessati.';
+
+  @override
+  String get accountsInstitution => 'Istituto';
+
+  @override
+  String get accountsStartBalance => 'Saldo iniziale';
+
+  @override
+  String get accountsExcludeSummary => 'Escludi dal riepilogo';
+
+  @override
+  String get accountsExcludeReports => 'Escludi dai report';
+
+  @override
+  String get assetsEmpty => 'Nessun asset';
+
+  @override
+  String get assetsAdd => 'Aggiungi asset';
+
+  @override
+  String get assetsDeleteTitle => 'Eliminare l\'asset?';
+
+  @override
+  String get assetsSymbolHint => 'Simbolo (es. VWCE.DE)';
+
+  @override
+  String get assetsRefreshPrice => 'Aggiorna quotazione';
+
+  @override
+  String get currenciesEmpty => 'Nessuna valuta';
+
+  @override
+  String get currenciesAdd => 'Aggiungi valuta';
+
+  @override
+  String get currenciesDeleteTitle => 'Eliminare la valuta?';
+
+  @override
+  String get currenciesCodeHint => 'Codice (es. EUR)';
+
+  @override
+  String get currenciesNameHint => 'Nome (es. Euro)';
+
+  @override
+  String get currenciesSymbolHint => 'Simbolo (es. €)';
+
+  @override
+  String get currenciesDecimals => 'Decimali';
+
+  @override
+  String get currenciesDecimal => 'Separatore decimale';
+
+  @override
+  String get currenciesGrouping => 'Separatore migliaia';
+
+  @override
+  String get tagsEmpty => 'Nessun tag';
+
+  @override
+  String get tagsAdd => 'Aggiungi tag';
+
+  @override
+  String get tagsDeleteTitle => 'Eliminare il tag?';
+
+  @override
+  String get payeesEmpty => 'Nessun beneficiario';
+
+  @override
+  String get payeesAdd => 'Aggiungi beneficiario';
+
+  @override
+  String get payeesDeleteTitle => 'Eliminare il beneficiario?';
+
+  @override
+  String get payeesNotes => 'Note';
+
+  @override
+  String get payeesDefaultCategory => 'Categoria predefinita';
+
+  @override
+  String get payeesDefaultPayment => 'Pagamento predefinito';
+
+  @override
+  String get payeeLabel => 'Beneficiario';
+
+  @override
+  String get categoriesEmpty => 'Nessuna categoria';
+
+  @override
+  String get categoriesAdd => 'Aggiungi categoria';
+
+  @override
+  String get categoriesDeleteTitle => 'Eliminare la categoria?';
+
+  @override
+  String get categoriesEditOne => 'Modifica categoria';
+
+  @override
+  String get categoriesDeleteOne => 'Elimina categoria';
+
+  @override
+  String get categoriesParent => 'Categoria principale';
+
+  @override
+  String get categoriesTopLevel => 'Nessuna (primo livello)';
+
+  @override
+  String get categoryLabel => 'Categoria';
+
+  @override
+  String get categorySearchClear => 'Cancella ricerca';
+
+  @override
+  String get categorySearchEmpty => 'Nessuna categoria corrispondente';
+
+  @override
+  String categorySearchHint(String what) {
+    return 'Cerca $what';
+  }
+
+  @override
+  String get txEmpty => 'Nessun movimento';
+
+  @override
+  String get txNoMatch => 'Nessun movimento corrispondente';
+
+  @override
+  String get txAdd => 'Aggiungi movimento';
+
+  @override
+  String get txSearchHint => 'Cerca movimenti…';
+
+  @override
+  String get txDeleteTitle => 'Eliminare il movimento?';
+
+  @override
+  String get txTypeFilter => 'Tipo di movimento';
+
+  @override
+  String get txFromAccount => 'Dal conto';
+
+  @override
+  String get txToAccount => 'Al conto';
+
+  @override
+  String get txPaymentMethod => 'Metodo di pagamento';
+
+  @override
+  String get txTagsHint => 'Tag (separati da virgola)';
+
+  @override
+  String get txSplits => 'Suddivisioni';
+
+  @override
+  String get txAddSplit => 'Aggiungi suddivisione';
+
+  @override
+  String get txRemoveSplit => 'Rimuovi suddivisione';
+
+  @override
+  String get txSplitNeedsCategory => 'Ogni suddivisione richiede una categoria';
+
+  @override
+  String txSplitSumMismatch(String sum, String total) {
+    return 'Le suddivisioni devono corrispondere all\'importo: $sum di $total';
+  }
+
+  @override
+  String get txRequired => 'Obbligatorio';
+
+  @override
+  String get txInvalidNumber => 'Numero non valido';
+
+  @override
+  String get fuelOdometer => 'Contachilometri (km)';
+
+  @override
+  String get fuelLiters => 'Litri';
+
+  @override
+  String get fuelFullTank => 'Pieno';
+
+  @override
+  String fuelLastReading(String value) {
+    return 'ultimo: $value';
+  }
+
+  @override
+  String get fuelImplausibleLiters => 'Valore in litri non plausibile';
+
+  @override
+  String fuelNotIncreasing(String last) {
+    return 'Il contachilometri non supera l\'ultima lettura ($last)';
+  }
+
+  @override
+  String fuelLargeJump(String distance) {
+    return 'Salto molto ampio dall\'ultima lettura ($distance km) — errore di battitura?';
+  }
+
+  @override
+  String fuelConsumption(String distance, String consumption) {
+    return '$distance km dall\'ultimo, ~$consumption L/100km';
+  }
+
+  @override
+  String fuelDistanceOnly(String distance) {
+    return '$distance km dall\'ultimo rifornimento';
+  }
+
+  @override
+  String get vehiclesChooseCategory => 'Scegli categoria';
+
+  @override
+  String get vehiclesFuelCategory => 'Categoria carburante';
+
+  @override
+  String get vehiclesSetDefault => 'Imposta come predefinita';
+
+  @override
+  String get vehiclesDefaultSaved => 'Predefinita salvata';
+
+  @override
+  String get vehiclesPickPrompt =>
+      'Scegli una categoria carburante per vedere il report del veicolo';
+
+  @override
+  String get vehiclesNoEntries => 'Nessun rifornimento in questo periodo';
+
+  @override
+  String get vehiclesNotEnoughData => 'Dati insufficienti per un grafico';
+
+  @override
+  String get vehiclesThisYear => 'Quest\'anno';
+
+  @override
+  String get vehiclesTotalCost => 'Costo totale';
+
+  @override
+  String get vehiclesDistance => 'Distanza';
+
+  @override
+  String get vehiclesAvgConsumption => '⌀ Consumo';
+
+  @override
+  String get vehiclesAvgPricePerLiter => '⌀ Prezzo/L';
+
+  @override
+  String get vehiclesFull => 'Pieno';
+
+  @override
+  String get budgetsEmpty => 'Nessun budget';
+
+  @override
+  String get budgetsAdd => 'Aggiungi budget';
+
+  @override
+  String get budgetsDeleteTitle => 'Eliminare il budget?';
+
+  @override
+  String get budgetsMonthlyLimit => 'Limite mensile';
+
+  @override
+  String get budgetsActive => 'Attivo';
+
+  @override
+  String get budgetsRemaining => 'Rimanente: ';
+
+  @override
+  String get budgetsSelectCategory => 'Scegli una categoria';
+
+  @override
+  String get scheduledEmpty => 'Nessun movimento pianificato';
+
+  @override
+  String get scheduledDeleteTitle => 'Eliminare la pianificazione?';
+
+  @override
+  String get scheduledPost => 'Registra';
+
+  @override
+  String get scheduledSkip => 'Salta';
+
+  @override
+  String get scheduledPosted => 'Movimento registrato';
+
+  @override
+  String get scheduledSkipped => 'Ricorrenza saltata';
+
+  @override
+  String get savedViewsTitle => 'Viste salvate';
+
+  @override
+  String get savedViewsEmpty => 'Nessuna vista salvata';
+
+  @override
+  String get savedViewsSaveCurrent => 'Salva la vista corrente';
+
+  @override
+  String get savedViewsDeleteTitle => 'Eliminare la vista salvata?';
+
+  @override
+  String get savedViewsDeleteOne => 'Elimina vista';
+
+  @override
+  String get savedViewsFromWeb => 'Salvata dall\'app web';
+
+  @override
+  String get auditEmpty => 'Nessuna voce di audit';
+
+  @override
+  String get auditNoMatch => 'Nessuna voce di audit corrispondente';
+
+  @override
+  String get auditSearchHint => 'Cerca nel registro…';
+
+  @override
+  String get auditTitle => 'Registro attività';
+
+  @override
+  String get dashboardNetWorth => 'Patrimonio netto';
+
+  @override
+  String get dashboardCash => 'Liquidità';
+
+  @override
+  String get dashboardPortfolio => 'Portafoglio';
+
+  @override
+  String get dashboardNoAccounts => 'Nessun conto';
+
+  @override
+  String get forecastsNet => 'Netto';
+
+  @override
+  String get statsAllAccounts => 'Tutti i conti';
+
+  @override
+  String get statsIncomeByCategory => 'Entrate per categoria';
+
+  @override
+  String get statsExpenseByCategory => 'Uscite per categoria';
+
+  @override
+  String get statsTotal => 'Totale: ';
+
+  @override
+  String get statsOverview => 'Panoramica';
+
+  @override
+  String get updateAvailable => 'Aggiornamento disponibile';
+
+  @override
+  String get updateUpToDate => 'Sei aggiornato';
+
+  @override
+  String get updateCheckFailed => 'Impossibile verificare gli aggiornamenti';
+
+  @override
+  String get updateNoApk => 'Nessun APK nell\'ultima release';
+
+  @override
+  String get updateLater => 'Più tardi';
+
+  @override
+  String get settingsProfile => 'Profilo';
+
+  @override
+  String get settingsPreferences => 'Preferenze';
+
+  @override
+  String get settingsSecurity => 'Sicurezza';
+
+  @override
+  String get settingsServer => 'Server';
+
+  @override
+  String get settingsData => 'Dati';
+
+  @override
+  String get settingsNotLoggedIn => 'Non connesso';
+
+  @override
+  String get settingsEditProfile => 'Modifica profilo';
+
+  @override
+  String get settingsDarkMode => 'Modalità scura';
+
+  @override
+  String get settingsDefaultCurrency => 'Valuta predefinita';
+
+  @override
+  String get settingsLocale => 'Lingua';
+
+  @override
+  String get settingsApiAccess => 'Accesso API';
+
+  @override
+  String get settingsApiAccessSubtitle =>
+      'Abilita l\'accesso API per questo account';
+
+  @override
+  String get settingsBiometric => 'Sblocco biometrico';
+
+  @override
+  String get settingsBiometricSubtitle =>
+      'Richiedi impronta o volto per riaprire e accedere';
+
+  @override
+  String get settingsChangePassword => 'Cambia password';
+
+  @override
+  String get settingsCurrentPassword => 'Password attuale';
+
+  @override
+  String get settingsNewPassword => 'Nuova password';
+
+  @override
+  String get settingsConfirmNewPassword => 'Conferma nuova password';
+
+  @override
+  String get settingsPasswordsMismatch => 'Le password non coincidono';
+
+  @override
+  String get settingsPasswordChanged => 'Password modificata';
+
+  @override
+  String settingsConnectedTo(String url) {
+    return 'Connesso a: $url';
+  }
+
+  @override
+  String get settingsExportData => 'Esporta dati';
+
+  @override
+  String get settingsImportData => 'Importa dati';
+
+  @override
+  String get settingsImportTitle => 'Importare i dati?';
+
+  @override
+  String get settingsImportBody =>
+      'Questo sostituisce i dati sul server con il contenuto del file.';
+
+  @override
+  String get settingsImport => 'Importa';
+
+  @override
+  String get settingsImportComplete => 'Importazione completata';
+
+  @override
+  String settingsExportFailed(String error) {
+    return 'Esportazione non riuscita: $error';
+  }
+
+  @override
+  String settingsImportFailed(String error) {
+    return 'Importazione non riuscita: $error';
+  }
+
+  @override
+  String get settingsAdministration => 'Amministrazione';
+
+  @override
+  String get settingsAdminPanel => 'Pannello di amministrazione';
+
+  @override
+  String get settingsGlobalApiEnabled => 'API globale abilitata';
+
+  @override
+  String get settingsRegistrationEnabled => 'Registrazione abilitata';
+
+  @override
+  String get settingsEnable => 'Abilita';
+
+  @override
+  String get settingsDisable => 'Disabilita';
+
+  @override
+  String get settingsDeleteUserBody =>
+      'Questo rimuove definitivamente l\'utente e i suoi dati.';
+
+  @override
+  String get settingsChange => 'Cambia';
+
+  @override
+  String get settingsAbout => 'Informazioni';
+
+  @override
+  String get aboutTitle => 'Informazioni su Cuenti';
+
+  @override
+  String get aboutTagline => 'L\'app Cuenti per dispositivi mobili';
+
+  @override
+  String get aboutDescription =>
+      'Cuenti è un\'applicazione per la gestione delle finanze personali: registra i movimenti, gestisci i conti e tieni sotto controllo i tuoi asset in diverse valute.';
+
+  @override
+  String get aboutSoftwareInfo => 'Informazioni sul software';
+
+  @override
+  String get aboutCheckUpdates => 'Cerca aggiornamenti';
+
+  @override
+  String get aboutVisitWebsite => 'Visita il sito web';
+}

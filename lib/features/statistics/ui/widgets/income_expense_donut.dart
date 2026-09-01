@@ -1,6 +1,7 @@
 import 'package:cuentimobile/core/privacy/privacy_mode.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -19,9 +20,12 @@ class IncomeExpenseDonut extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hidden = ref.watch(privacyModeProvider);
     if (income == 0 && expense == 0) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: EmptyState(icon: Icons.pie_chart_outline, message: 'No data'),
+        child: EmptyState(
+          icon: Icons.pie_chart_outline,
+          message: L.of(context).commonNoData,
+        ),
       );
     }
     final colors = context.cuentiColors;

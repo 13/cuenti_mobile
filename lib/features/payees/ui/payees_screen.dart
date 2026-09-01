@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
@@ -6,6 +7,7 @@ import 'package:cuentimobile/core/widgets/empty_state.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/payees/domain/payee.dart';
 import 'package:cuentimobile/features/payees/ui/payees_controller.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -35,8 +37,8 @@ class PayeesScreen extends ConsumerWidget {
                       const SizedBox(height: 80),
                       EmptyState(
                         icon: Icons.storefront,
-                        message: 'No payees yet',
-                        actionLabel: 'Add payee',
+                        message: L.of(context).payeesEmpty,
+                        actionLabel: L.of(context).payeesAdd,
                         onAction: () => _showEditDialog(context, ref, null),
                       ),
                     ],
@@ -65,7 +67,7 @@ class PayeesScreen extends ConsumerWidget {
                         ),
                         confirmDismiss: (_) => showConfirmSheet(
                           context,
-                          title: 'Delete Payee?',
+                          title: L.of(context).payeesDeleteTitle,
                           message: 'Delete "${p.name}"?',
                         ),
                         onDismissed: (_) async {
@@ -201,38 +203,38 @@ class PayeesScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   TextField(
                     controller: name,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).commonName,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: notes,
-                    decoration: const InputDecoration(
-                      labelText: 'Notes',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).payeesNotes,
+                      border: const OutlineInputBorder(),
                     ),
                     maxLines: 2,
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int?>(
                     initialValue: categoryId,
-                    decoration: const InputDecoration(
-                      labelText: 'Default Category',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).payeesDefaultCategory,
+                      border: const OutlineInputBorder(),
                     ),
-                    items: const [
-                      DropdownMenuItem(child: Text('None')),
+                    items: [
+                      DropdownMenuItem(child: Text(L.of(context).commonNone)),
                     ],
                     onChanged: (v) => setModalState(() => categoryId = v),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: paymentMethod,
-                    decoration: const InputDecoration(
-                      labelText: 'Default Payment',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: L.of(context).payeesDefaultPayment,
+                      border: const OutlineInputBorder(),
                     ),
                     items: kPaymentMethods
                         .map((p) => DropdownMenuItem(value: p, child: Text(p)))
@@ -246,7 +248,7 @@ class PayeesScreen extends ConsumerWidget {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: saving ? null : () => Navigator.pop(ctx),
-                          child: const Text('Cancel'),
+                          child: Text(L.of(context).commonCancel),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -292,7 +294,7 @@ class PayeesScreen extends ConsumerWidget {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text('Save'),
+                              : Text(L.of(context).commonSave),
                         ),
                       ),
                     ],

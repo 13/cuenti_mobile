@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/privacy/privacy_mode.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
@@ -13,6 +14,7 @@ import 'package:cuentimobile/features/budgets/domain/budget_progress.dart';
 import 'package:cuentimobile/features/budgets/ui/budgets_controller.dart';
 import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,8 +70,8 @@ class _BudgetsList extends ConsumerWidget {
           const SizedBox(height: 80),
           EmptyState(
             icon: Icons.pie_chart,
-            message: 'No budgets yet',
-            actionLabel: 'Add budget',
+            message: L.of(context).budgetsEmpty,
+            actionLabel: L.of(context).budgetsAdd,
             onAction: () =>
                 _openEditSheet(context, existing: null, allProgress: progress),
           ),
@@ -198,7 +200,7 @@ class _BudgetCard extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Remaining: ',
+                    L.of(context).budgetsRemaining,
                     style: Theme.of(context).textTheme.labelSmall,
                   ),
                   if (hidden)
@@ -234,7 +236,7 @@ class _BudgetCard extends ConsumerWidget {
       ),
       confirmDismiss: (_) => showConfirmSheet(
         context,
-        title: 'Delete Budget?',
+        title: L.of(context).budgetsDeleteTitle,
         message: 'Delete budget for "${progress.categoryName}"?',
       ),
       onDismissed: (_) => onDelete(),
@@ -317,16 +319,16 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
                 categories: categoryOptions,
                 selectedId: _categoryId,
                 allowNone: false,
-                placeholder: 'Select a category',
+                placeholder: L.of(context).budgetsSelectCategory,
                 onChanged: (v) => setState(() => _categoryId = v),
                 validator: (v) => v == null ? 'Required' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _limit,
-                decoration: const InputDecoration(
-                  labelText: 'Monthly Limit',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: L.of(context).budgetsMonthlyLimit,
+                  border: const OutlineInputBorder(),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -346,7 +348,7 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
               if (widget.existing != null) ...[
                 const SizedBox(height: 12),
                 SwitchListTile(
-                  title: const Text('Active'),
+                  title: Text(L.of(context).budgetsActive),
                   value: _active,
                   onChanged: (v) => setState(() => _active = v),
                 ),
@@ -360,7 +362,7 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Save'),
+                    : Text(L.of(context).commonSave),
               ),
               if (widget.existing != null) ...[
                 const SizedBox(height: 8),
@@ -369,7 +371,7 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Theme.of(context).colorScheme.error,
                   ),
-                  child: const Text('Delete'),
+                  child: Text(L.of(context).commonDelete),
                 ),
               ],
               const SizedBox(height: 16),
@@ -417,7 +419,7 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
     if (existing == null) return;
     final confirmed = await showConfirmSheet(
       context,
-      title: 'Delete Budget?',
+      title: L.of(context).budgetsDeleteTitle,
       message: 'Delete budget for "${existing.categoryName}"?',
     );
     if (!confirmed) return;

@@ -1,6 +1,7 @@
 import 'package:cuentimobile/core/privacy/privacy_mode.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,10 @@ class MonthlyChart extends ConsumerWidget {
     final allMonths = {...monthlyIncome.keys, ...monthlyExpense.keys}.toList()
       ..sort();
     if (allMonths.isEmpty) {
-      return const EmptyState(icon: Icons.bar_chart, message: 'No data');
+      return EmptyState(
+        icon: Icons.bar_chart,
+        message: L.of(context).commonNoData,
+      );
     }
 
     final cuenti = context.cuentiColors;

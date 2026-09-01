@@ -7,6 +7,7 @@ import 'package:cuentimobile/features/dashboard/data/dashboard_repository.dart';
 import 'package:cuentimobile/features/dashboard/domain/asset_performance.dart';
 import 'package:cuentimobile/features/dashboard/domain/dashboard_data.dart';
 import 'package:cuentimobile/features/dashboard/ui/dashboard_screen.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,6 +29,8 @@ void main() {
           dashboardRepositoryProvider.overrideWithValue(dashboardRepo),
         ],
         child: MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
           // DashboardScreen is always mounted inside ShellScreen's Scaffold
           // in the real app; wrap it here too so the themed DefaultTextStyle
@@ -164,6 +167,8 @@ void main() {
           dashboardRepositoryProvider.overrideWithValue(dashboardRepo),
         ],
         child: MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
           // DashboardScreen is always mounted inside ShellScreen's Scaffold
           // in the real app; wrap it here too so the themed DefaultTextStyle

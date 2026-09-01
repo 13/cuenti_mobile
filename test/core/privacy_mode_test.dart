@@ -4,6 +4,7 @@ import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/privacy_blur.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,6 +28,8 @@ void main() {
       ProviderScope(
         overrides: [privacyModeProvider.overrideWith(_FalsePrivacyMode.new)],
         child: MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
           home: const Scaffold(body: AmountText(1234.5, currency: 'EUR')),
         ),
@@ -44,6 +47,8 @@ void main() {
       ProviderScope(
         overrides: [privacyModeProvider.overrideWith(_TruePrivacyMode.new)],
         child: MaterialApp(
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
           home: const Scaffold(body: AmountText(1234.5, currency: 'EUR')),
         ),

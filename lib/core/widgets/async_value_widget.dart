@@ -1,4 +1,5 @@
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -52,7 +53,10 @@ class _ErrorCard extends StatelessWidget {
             Text(error.toString(), textAlign: TextAlign.center),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
-              FilledButton(onPressed: onRetry, child: const Text('Retry')),
+              FilledButton(
+                onPressed: onRetry,
+                child: Text(L.of(context).commonRetry),
+              ),
             ],
           ],
         ),
