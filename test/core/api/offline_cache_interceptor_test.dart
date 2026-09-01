@@ -59,64 +59,74 @@ void main() {
 
   tearDown(() => dir.deleteSync(recursive: true));
 
-  test('a live request is answered by the server and not marked stale',
-      () async {
-    final res = await dio.get<Object>('/transactions');
+  test(
+    'a live request is answered by the server and not marked stale',
+    () async {
+      final res = await dio.get<Object>('/transactions');
 
-    expect(res.data, {'total': 1});
-    expect(isStale(res), isFalse);
-    expect(interceptor.servingStaleData, isFalse);
-  });
+      expect(res.data, {'total': 1});
+      expect(isStale(res), isFalse);
+      expect(interceptor.servingStaleData, isFalse);
+    },
+  );
 
-  test('an unreachable server is answered from the last successful response',
-      () async {
-    await dio.get<Object>('/transactions');
-    adapter.offline = true;
+  test(
+    'an unreachable server is answered from the last successful response',
+    () async {
+      await dio.get<Object>('/transactions');
+      adapter.offline = true;
 
-    final res = await dio.get<Object>('/transactions');
+      final res = await dio.get<Object>('/transactions');
 
-    expect(res.data, {'total': 1});
-    expect(isStale(res), isTrue);
-    expect(interceptor.servingStaleData, isTrue);
-  });
+      expect(res.data, {'total': 1});
+      expect(isStale(res), isTrue);
+      expect(interceptor.servingStaleData, isTrue);
+    },
+  );
 
-  test('an endpoint never seen still fails, rather than inventing data',
-      () async {
-    adapter.offline = true;
+  test(
+    'an endpoint never seen still fails, rather than inventing data',
+    () async {
+      adapter.offline = true;
 
-    expect(
-      () => dio.get<Object>('/never-fetched'),
-      throwsA(isA<DioException>()),
-    );
-  });
+      expect(
+        () => dio.get<Object>('/never-fetched'),
+        throwsA(isA<DioException>()),
+      );
+    },
+  );
 
-  test('a different query is a different answer and is not substituted',
-      () async {
-    await dio.get<Object>('/transactions', queryParameters: {'page': 0});
-    adapter.offline = true;
+  test(
+    'a different query is a different answer and is not substituted',
+    () async {
+      await dio.get<Object>('/transactions', queryParameters: {'page': 0});
+      adapter.offline = true;
 
-    expect(
-      () => dio.get<Object>('/transactions', queryParameters: {'page': 1}),
-      throwsA(isA<DioException>()),
-    );
-  });
+      expect(
+        () => dio.get<Object>('/transactions', queryParameters: {'page': 1}),
+        throwsA(isA<DioException>()),
+      );
+    },
+  );
 
-  test('a server error is passed through, since the server did answer',
-      () async {
-    await dio.get<Object>('/transactions');
-    adapter
-      ..offline = false
-      ..body = {'total': 2};
-    // A 500 is not an offline condition; serving stale data would hide it.
-    final failing = Dio(BaseOptions(baseUrl: 'https://cuenti.test'))
-      ..httpClientAdapter = _ErrorAdapter()
-      ..interceptors.add(OfflineCacheInterceptor(cache));
+  test(
+    'a server error is passed through, since the server did answer',
+    () async {
+      await dio.get<Object>('/transactions');
+      adapter
+        ..offline = false
+        ..body = {'total': 2};
+      // A 500 is not an offline condition; serving stale data would hide it.
+      final failing = Dio(BaseOptions(baseUrl: 'https://cuenti.test'))
+        ..httpClientAdapter = _ErrorAdapter()
+        ..interceptors.add(OfflineCacheInterceptor(cache));
 
-    expect(
-      () => failing.get<Object>('/transactions'),
-      throwsA(isA<DioException>()),
-    );
-  });
+      expect(
+        () => failing.get<Object>('/transactions'),
+        throwsA(isA<DioException>()),
+      );
+    },
+  );
 
   test('writes are never cached or served', () async {
     await dio.post<Object>('/transactions', data: {'amount': 1});
@@ -156,9 +166,13 @@ class _ErrorAdapter implements HttpClientAdapter {
     RequestOptions options,
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
-  ) async => ResponseBody.fromString('{"error":"boom"}', 500, headers: {
-        Headers.contentTypeHeader: [Headers.jsonContentType],
-      });
+  ) async => ResponseBody.fromString(
+    '{"error":"boom"}',
+    500,
+    headers: {
+      Headers.contentTypeHeader: [Headers.jsonContentType],
+    },
+  );
 
   @override
   void close({bool force = false}) {}

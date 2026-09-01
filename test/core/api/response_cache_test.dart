@@ -56,14 +56,18 @@ void main() {
       expect(entry?.body, {'total': 42});
     });
 
-    test('records when it was stored, so the UI can say how stale it is',
-        () async {
-      final before = DateTime.now().subtract(const Duration(seconds: 1));
-      await cache.store('k', {'total': 42});
+    test(
+      'records when it was stored, so the UI can say how stale it is',
+      () async {
+        final before = DateTime.now().subtract(const Duration(seconds: 1));
+        await cache.store('k', {'total': 42});
 
-      expect(await cache.read('k').then((e) => e!.storedAt.isAfter(before)),
-          isTrue);
-    });
+        expect(
+          await cache.read('k').then((e) => e!.storedAt.isAfter(before)),
+          isTrue,
+        );
+      },
+    );
 
     test('a later store replaces the earlier one', () async {
       await cache.store('k', {'total': 1});
