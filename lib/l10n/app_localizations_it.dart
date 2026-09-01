@@ -680,4 +680,25 @@ class LIt extends L {
 
   @override
   String get aboutVisitWebsite => 'Visita il sito web';
+
+  @override
+  String get updateSkipVersion => 'Salta questa versione';
+
+  @override
+  String get updateInstall => 'Aggiorna';
+
+  @override
+  String get updateDownloadFailed => 'Download non riuscito';
+
+  @override
+  String updateReady(String tag) {
+    return '$tag è pronta per l\'installazione.';
+  }
+
+  @override
+  String get settingsAutoUpdate => 'Controllo automatico aggiornamenti';
+
+  @override
+  String get settingsAutoUpdateSubtitle =>
+      'Cerca una nuova versione su GitHub all\'apertura dell\'app';
 }

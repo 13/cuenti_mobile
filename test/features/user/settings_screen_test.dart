@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/currencies/data/currencies_repository.dart';
 import 'package:cuentimobile/features/user/data/user_repository.dart';
@@ -13,6 +15,17 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockUserRepository extends Mock implements UserRepository {}
+
+class _MemoryStorage extends SecureStorage {
+  _MemoryStorage() : super();
+  final Map<String, String> data = {};
+  @override
+  Future<String?> read(String key) async => data[key];
+  @override
+  Future<void> write(String key, String value) async => data[key] = value;
+  @override
+  Future<void> delete(String key) async => data.remove(key);
+}
 
 class MockCurrenciesRepository extends Mock implements CurrenciesRepository {}
 
@@ -50,6 +63,7 @@ class _FakeAuthController extends AuthController {
 void main() {
   late MockUserRepository userRepo;
   late MockCurrenciesRepository currenciesRepo;
+  late _MemoryStorage storage;
 
   const user = UserProfile(
     id: 1,
@@ -64,6 +78,7 @@ void main() {
   setUp(() {
     userRepo = MockUserRepository();
     currenciesRepo = MockCurrenciesRepository();
+    storage = _MemoryStorage();
     when(() => currenciesRepo.getAll()).thenAnswer((_) async => []);
     when(
       () => userRepo.updatePreferences(any()),
@@ -106,6 +121,7 @@ void main() {
           authControllerProvider.overrideWith(() => auth),
           userRepositoryProvider.overrideWithValue(userRepo),
           currenciesRepositoryProvider.overrideWithValue(currenciesRepo),
+          secureStorageProvider.overrideWithValue(storage),
         ],
         child: MaterialApp.router(
           locale: locale,
@@ -259,5 +275,56 @@ void main() {
       findsNothing,
       reason: 'French was offered but never translated',
     );
+  });
+
+  group('the automatic update check toggle', () {
+    testWidgets('is on for a fresh install', (tester) async {
+      await pumpSettings(tester);
+
+      final tile = tester.widget<SwitchListTile>(
+        find.widgetWithText(SwitchListTile, 'Automatic update check'),
+      );
+      expect(tile.value, isTrue);
+    });
+
+    testWidgets('turning it off is remembered', (tester) async {
+      await pumpSettings(tester);
+
+      await tester.tap(
+        find.widgetWithText(SwitchListTile, 'Automatic update check'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(storage.data['update_auto_check'], 'false');
+      final tile = tester.widget<SwitchListTile>(
+        find.widgetWithText(SwitchListTile, 'Automatic update check'),
+      );
+      expect(tile.value, isFalse);
+    });
+
+    testWidgets('reads back as off when it was switched off before', (
+      tester,
+    ) async {
+      storage.data['update_auto_check'] = 'false';
+
+      await pumpSettings(tester);
+
+      final tile = tester.widget<SwitchListTile>(
+        find.widgetWithText(SwitchListTile, 'Automatic update check'),
+      );
+      expect(tile.value, isFalse);
+    });
+
+    testWidgets('stays local rather than syncing to the account, which has '
+        'no use for an Android updater setting', (tester) async {
+      await pumpSettings(tester);
+
+      await tester.tap(
+        find.widgetWithText(SwitchListTile, 'Automatic update check'),
+      );
+      await tester.pumpAndSettle();
+
+      verifyNever(() => userRepo.updatePreferences(any()));
+    });
   });
 }

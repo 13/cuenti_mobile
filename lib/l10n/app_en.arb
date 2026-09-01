@@ -495,5 +495,23 @@
   "aboutCheckUpdates": "Check for updates",
   "@aboutCheckUpdates": {},
   "aboutVisitWebsite": "Visit Website",
-  "@aboutVisitWebsite": {}
+  "@aboutVisitWebsite": {},
+  "updateSkipVersion": "Skip this version",
+  "@updateSkipVersion": {},
+  "updateInstall": "Update",
+  "@updateInstall": {},
+  "updateDownloadFailed": "Download failed",
+  "@updateDownloadFailed": {},
+  "updateReady": "{tag} is ready to install.",
+  "@updateReady": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAutoUpdate": "Automatic update check",
+  "@settingsAutoUpdate": {},
+  "settingsAutoUpdateSubtitle": "Look for a new release on GitHub when the app opens",
+  "@settingsAutoUpdateSubtitle": {}
 }

@@ -5,6 +5,7 @@ import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/core/widgets/refresh_all.dart';
 import 'package:cuentimobile/core/widgets/section_header.dart';
+import 'package:cuentimobile/features/app_update/data/update_preferences.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/currencies/domain/currency.dart';
 import 'package:cuentimobile/features/currencies/ui/currencies_controller.dart';
@@ -99,6 +100,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   title: Text(L.of(context).settingsLocale),
                   trailing: Text(user.locale),
                   onTap: () => _showLocalePicker(context),
+                ),
+                SwitchListTile(
+                  title: Text(L.of(context).settingsAutoUpdate),
+                  subtitle: Text(L.of(context).settingsAutoUpdateSubtitle),
+                  // Defaults to on while the stored value is still loading:
+                  // the switch must not flicker off and read as disabled.
+                  value: ref.watch(autoUpdateCheckProvider).value ?? true,
+                  onChanged: (v) => unawaited(
+                    ref.read(autoUpdateCheckProvider.notifier).set(enabled: v),
+                  ),
                 ),
                 SwitchListTile(
                   title: Text(L.of(context).settingsApiAccess),

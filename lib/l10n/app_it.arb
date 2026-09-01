@@ -214,5 +214,11 @@
   "aboutDescription": "Cuenti è un'applicazione per la gestione delle finanze personali: registra i movimenti, gestisci i conti e tieni sotto controllo i tuoi asset in diverse valute.",
   "aboutSoftwareInfo": "Informazioni sul software",
   "aboutCheckUpdates": "Cerca aggiornamenti",
-  "aboutVisitWebsite": "Visita il sito web"
+  "aboutVisitWebsite": "Visita il sito web",
+  "updateSkipVersion": "Salta questa versione",
+  "updateInstall": "Aggiorna",
+  "updateDownloadFailed": "Download non riuscito",
+  "updateReady": "{tag} è pronta per l'installazione.",
+  "settingsAutoUpdate": "Controllo automatico aggiornamenti",
+  "settingsAutoUpdateSubtitle": "Cerca una nuova versione su GitHub all'apertura dell'app"
 }

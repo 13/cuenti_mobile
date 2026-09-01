@@ -214,5 +214,11 @@
   "aboutDescription": "Cuenti ist eine Anwendung für die private Finanzverwaltung: Buchungen erfassen, Konten verwalten und Anlagen über verschiedene Währungen hinweg im Blick behalten.",
   "aboutSoftwareInfo": "Softwareinfo",
   "aboutCheckUpdates": "Nach Updates suchen",
-  "aboutVisitWebsite": "Website besuchen"
+  "aboutVisitWebsite": "Website besuchen",
+  "updateSkipVersion": "Diese Version überspringen",
+  "updateInstall": "Aktualisieren",
+  "updateDownloadFailed": "Download fehlgeschlagen",
+  "updateReady": "{tag} kann installiert werden.",
+  "settingsAutoUpdate": "Automatische Update-Prüfung",
+  "settingsAutoUpdateSubtitle": "Beim Öffnen der App auf GitHub nach einer neuen Version suchen"
 }

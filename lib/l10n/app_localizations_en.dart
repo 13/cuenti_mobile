@@ -678,4 +678,25 @@ class LEn extends L {
 
   @override
   String get aboutVisitWebsite => 'Visit Website';
+
+  @override
+  String get updateSkipVersion => 'Skip this version';
+
+  @override
+  String get updateInstall => 'Update';
+
+  @override
+  String get updateDownloadFailed => 'Download failed';
+
+  @override
+  String updateReady(String tag) {
+    return '$tag is ready to install.';
+  }
+
+  @override
+  String get settingsAutoUpdate => 'Automatic update check';
+
+  @override
+  String get settingsAutoUpdateSubtitle =>
+      'Look for a new release on GitHub when the app opens';
 }

@@ -1388,6 +1388,42 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Visit Website'**
   String get aboutVisitWebsite;
+
+  /// No description provided for @updateSkipVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip this version'**
+  String get updateSkipVersion;
+
+  /// No description provided for @updateInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateInstall;
+
+  /// No description provided for @updateDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed'**
+  String get updateDownloadFailed;
+
+  /// No description provided for @updateReady.
+  ///
+  /// In en, this message translates to:
+  /// **'{tag} is ready to install.'**
+  String updateReady(String tag);
+
+  /// No description provided for @settingsAutoUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic update check'**
+  String get settingsAutoUpdate;
+
+  /// No description provided for @settingsAutoUpdateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Look for a new release on GitHub when the app opens'**
+  String get settingsAutoUpdateSubtitle;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

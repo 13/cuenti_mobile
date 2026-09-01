@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cuentimobile/features/app_update/ui/update_check.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +41,11 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
   // unnecessarily.
   bool _coldStartHandled = false;
 
+  // Once per app session, the same way the cold-start lock is decided once:
+  // the check throttles itself across launches, and this stops a rebuild
+  // from re-entering it within one.
+  bool _updateCheckStarted = false;
+
   @override
   void initState() {
     super.initState();
@@ -55,14 +61,35 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final auth = ref.read(authControllerProvider);
-    if (!auth.isLoggedIn || !auth.biometricEnabled) return;
+    if (!auth.isLoggedIn) return;
+    if (!auth.biometricEnabled) {
+      // No lock to apply, but a resume is still a good moment to look for a
+      // new release.
+      if (state == AppLifecycleState.resumed) _maybeCheckForUpdates();
+      return;
+    }
 
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
       setState(() => _locked = true);
-    } else if (state == AppLifecycleState.resumed && _locked) {
-      unawaited(_authenticate());
+    } else if (state == AppLifecycleState.resumed) {
+      if (_locked) {
+        unawaited(_authenticate());
+      } else {
+        _maybeCheckForUpdates();
+      }
     }
+  }
+
+  /// Runs the throttled update check. Gated on being unlocked and signed in
+  /// so the update dialog cannot appear over the lock screen, or before the
+  /// user has got into the app at all.
+  void _maybeCheckForUpdates() {
+    if (_locked) return;
+    if (!ref.read(authControllerProvider).isLoggedIn) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(maybeCheckForUpdates(context, ref));
+    });
   }
 
   /// Decides the cold-start lock exactly once, the first time [state] shows
@@ -114,6 +141,10 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
 
     if (_locked) {
       return _LockScreen(onUnlock: _authenticate);
+    }
+    if (!_updateCheckStarted) {
+      _updateCheckStarted = true;
+      _maybeCheckForUpdates();
     }
     return widget.child;
   }

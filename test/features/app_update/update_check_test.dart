@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/app_update/data/app_update_repository.dart';
 import 'package:cuentimobile/features/app_update/domain/app_release.dart';
@@ -12,6 +14,17 @@ import 'package:mocktail/mocktail.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class MockAppUpdateRepository extends Mock implements AppUpdateRepository {}
+
+class _MemoryStorage extends SecureStorage {
+  _MemoryStorage() : super();
+  final Map<String, String> data = {};
+  @override
+  Future<String?> read(String key) async => data[key];
+  @override
+  Future<void> write(String key, String value) async => data[key] = value;
+  @override
+  Future<void> delete(String key) async => data.remove(key);
+}
 
 const _release = AppRelease(
   tagName: 'v9.9.9',
@@ -27,6 +40,7 @@ const _release = AppRelease(
 
 void main() {
   late MockAppUpdateRepository repo;
+  late _MemoryStorage storage;
   final installed = <String>[];
 
   setUpAll(() {
@@ -36,6 +50,7 @@ void main() {
 
   setUp(() {
     installed.clear();
+    storage = _MemoryStorage();
     repo = MockAppUpdateRepository();
     PackageInfo.setMockInitialValues(
       appName: 'Cuenti',
@@ -56,11 +71,12 @@ void main() {
     });
   });
 
-  Future<void> pumpHost(WidgetTester tester) async {
+  Future<void> pumpHost(WidgetTester tester, {bool automatic = false}) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appUpdateRepositoryProvider.overrideWithValue(repo),
+          secureStorageProvider.overrideWithValue(storage),
           supportedAbisProvider.overrideWith((ref) async => ['arm64-v8a']),
           // No real IO here — actual file IO never completes under the
           // widget-test FakeAsync zone.
@@ -78,7 +94,9 @@ void main() {
           home: Scaffold(
             body: Consumer(
               builder: (context, ref, _) => ElevatedButton(
-                onPressed: () => checkForUpdates(context, ref),
+                onPressed: () => automatic
+                    ? maybeCheckForUpdates(context, ref)
+                    : checkForUpdates(context, ref),
                 child: const Text('check'),
               ),
             ),
@@ -116,5 +134,111 @@ void main() {
 
     expect(find.text("You're up to date"), findsOneWidget);
     expect(find.text('Update available'), findsNothing);
+  });
+
+  group('the automatic check', () {
+    testWidgets('prompts when a newer release is out', (tester) async {
+      await pumpHost(tester, automatic: true);
+      await tester.tap(find.text('check'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Update available'), findsOneWidget);
+    });
+
+    testWidgets('records when it looked, so it does not ask GitHub again on '
+        'the next resume', (tester) async {
+      await pumpHost(tester, automatic: true);
+      await tester.tap(find.text('check'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Later'));
+      await tester.pumpAndSettle();
+
+      expect(storage.data['update_last_checked'], isNotNull);
+
+      await tester.tap(find.text('check'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Update available'), findsNothing);
+      verify(() => repo.getLatestRelease()).called(1);
+    });
+
+    testWidgets('says nothing at all when already up to date', (tester) async {
+      when(
+        () => repo.getLatestRelease(),
+      ).thenAnswer((_) async => const AppRelease(tagName: 'v2.0.4'));
+
+      await pumpHost(tester, automatic: true);
+      await tester.tap(find.text('check'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text("You're up to date"),
+        findsNothing,
+        reason: 'a launch-time check should be silent unless it has news',
+      );
+    });
+
+    testWidgets('stays quiet when GitHub cannot be reached', (tester) async {
+      when(() => repo.getLatestRelease()).thenThrow(Exception('offline'));
+
+      await pumpHost(tester, automatic: true);
+      await tester.tap(find.text('check'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Couldn't check for updates"), findsNothing);
+      expect(find.text('Update available'), findsNothing);
+    });
+
+    testWidgets('does not check at all once switched off in settings', (
+      tester,
+    ) async {
+      storage.data['update_auto_check'] = 'false';
+
+      await pumpHost(tester, automatic: true);
+      await tester.tap(find.text('check'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => repo.getLatestRelease());
+      expect(find.text('Update available'), findsNothing);
+    });
+
+    testWidgets('does not prompt again for a version the user skipped', (
+      tester,
+    ) async {
+      storage.data['update_skipped_version'] = 'v9.9.9';
+
+      await pumpHost(tester, automatic: true);
+      await tester.tap(find.text('check'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Update available'), findsNothing);
+    });
+  });
+
+  testWidgets('Skip this version records the tag so it stops asking', (
+    tester,
+  ) async {
+    await pumpHost(tester, automatic: true);
+    await tester.tap(find.text('check'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Skip this version'));
+    await tester.pumpAndSettle();
+
+    expect(storage.data['update_skipped_version'], 'v9.9.9');
+    expect(find.text('Update available'), findsNothing);
+  });
+
+  testWidgets('the manual check still reports being up to date, and ignores '
+      'both the throttle and a skipped version', (tester) async {
+    storage.data
+      ..['update_skipped_version'] = 'v9.9.9'
+      ..['update_last_checked'] = DateTime.now().toIso8601String();
+
+    await pumpHost(tester);
+    await tester.tap(find.text('check'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Update available'), findsOneWidget);
   });
 }

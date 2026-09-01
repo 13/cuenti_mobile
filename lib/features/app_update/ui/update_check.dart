@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:cuentimobile/features/app_update/data/app_update_repository.dart';
+import 'package:cuentimobile/features/app_update/data/update_preferences.dart';
 import 'package:cuentimobile/features/app_update/domain/app_release.dart';
+import 'package:cuentimobile/features/app_update/domain/update_policy.dart';
 import 'package:cuentimobile/features/app_update/domain/version_compare.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -26,6 +28,50 @@ final apkInstallerProvider = Provider<Future<void> Function(String path)>(
       (path) async => OpenFilex.open(path),
 );
 
+/// The automatic check, run on launch and on resume.
+///
+/// Silent unless it has news: no "up to date" confirmation, no error when
+/// GitHub is unreachable. A dialog about a new version is welcome at launch;
+/// a snackbar about a failed background request is not, and the manual check
+/// in About exists for anyone who wants the answer either way.
+Future<void> maybeCheckForUpdates(BuildContext context, WidgetRef ref) async {
+  final prefs = ref.read(updatePreferencesProvider);
+  if (!await prefs.autoCheckEnabled()) return;
+  if (!shouldCheck(
+    lastChecked: await prefs.lastChecked(),
+    now: DateTime.now(),
+  )) {
+    return;
+  }
+  final repo = ref.read(appUpdateRepositoryProvider);
+  try {
+    final release = await repo.getLatestRelease();
+    // Recorded before deciding whether to prompt: the point of the throttle
+    // is to rate-limit GitHub, and the request has already happened.
+    await prefs.setLastChecked(DateTime.now());
+    final current = (await PackageInfo.fromPlatform()).version;
+    if (!shouldPrompt(
+      currentVersion: current,
+      tagName: release.tagName,
+      skippedVersion: await prefs.skippedVersion(),
+    )) {
+      return;
+    }
+    final abis = await ref.read(supportedAbisProvider.future);
+    final asset = repo.pickAsset(release, abis);
+    if (asset == null || !context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _UpdateDialog(release: release, asset: asset),
+    );
+  } on Exception catch (_) {
+    // Nothing to say: the user did not ask.
+  }
+}
+
+/// The manual check from About. Always asks, always answers -- including
+/// "you're up to date" -- and ignores both the throttle and any skipped
+/// version, because the user just asked the question out loud.
 Future<void> checkForUpdates(BuildContext context, WidgetRef ref) async {
   final messenger = ScaffoldMessenger.of(context);
   // Captured alongside the messenger, for the same reason: both are read
@@ -34,6 +80,7 @@ Future<void> checkForUpdates(BuildContext context, WidgetRef ref) async {
   final repo = ref.read(appUpdateRepositoryProvider);
   try {
     final release = await repo.getLatestRelease();
+    await ref.read(updatePreferencesProvider).setLastChecked(DateTime.now());
     final current = (await PackageInfo.fromPlatform()).version;
     if (!isNewerVersion(current, release.tagName)) {
       messenger.showSnackBar(
@@ -75,6 +122,16 @@ class _UpdateDialogState extends ConsumerState<_UpdateDialog> {
   double? _progress;
   String? _error;
 
+  /// Records the tag so the automatic check stops raising it. Without this
+  /// an automatic check re-asks about the same release on every launch,
+  /// which is how people learn to dismiss updates without reading them.
+  Future<void> _skip() async {
+    await ref
+        .read(updatePreferencesProvider)
+        .skipVersion(widget.release.tagName);
+    if (mounted) Navigator.pop(context);
+  }
+
   Future<void> _download() async {
     setState(() {
       _progress = 0;
@@ -97,7 +154,7 @@ class _UpdateDialogState extends ConsumerState<_UpdateDialog> {
       if (mounted) {
         setState(() {
           _progress = null;
-          _error = 'Download failed';
+          _error = L.of(context).updateDownloadFailed;
         });
       }
     }
@@ -113,7 +170,7 @@ class _UpdateDialogState extends ConsumerState<_UpdateDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${widget.release.tagName} is ready to install.',
+            L.of(context).updateReady(widget.release.tagName),
             style: Theme.of(context).textTheme.titleSmall,
           ),
           if ((widget.release.body ?? '').isNotEmpty) ...[
@@ -141,12 +198,20 @@ class _UpdateDialogState extends ConsumerState<_UpdateDialog> {
       ),
       actions: [
         TextButton(
+          onPressed: downloading ? null : _skip,
+          child: Text(L.of(context).updateSkipVersion),
+        ),
+        TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(L.of(context).updateLater),
         ),
         FilledButton(
           onPressed: downloading ? null : _download,
-          child: Text(_error != null ? 'Retry' : 'Update'),
+          child: Text(
+            _error != null
+                ? L.of(context).commonRetry
+                : L.of(context).updateInstall,
+          ),
         ),
       ],
     );

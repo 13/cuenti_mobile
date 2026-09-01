@@ -681,4 +681,25 @@ class LDe extends L {
 
   @override
   String get aboutVisitWebsite => 'Website besuchen';
+
+  @override
+  String get updateSkipVersion => 'Diese Version überspringen';
+
+  @override
+  String get updateInstall => 'Aktualisieren';
+
+  @override
+  String get updateDownloadFailed => 'Download fehlgeschlagen';
+
+  @override
+  String updateReady(String tag) {
+    return '$tag kann installiert werden.';
+  }
+
+  @override
+  String get settingsAutoUpdate => 'Automatische Update-Prüfung';
+
+  @override
+  String get settingsAutoUpdateSubtitle =>
+      'Beim Öffnen der App auf GitHub nach einer neuen Version suchen';
 }
