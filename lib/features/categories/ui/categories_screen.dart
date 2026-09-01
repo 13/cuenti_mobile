@@ -83,11 +83,13 @@ class CategoriesScreen extends ConsumerWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
+                                tooltip: 'Edit category',
                                 icon: const Icon(Icons.edit, size: 20),
                                 onPressed: () =>
                                     _showEditDialog(context, ref, parent),
                               ),
                               IconButton(
+                                tooltip: 'Delete category',
                                 icon: const Icon(Icons.delete, size: 20),
                                 onPressed: () =>
                                     _confirmDelete(context, ref, parent),
@@ -106,6 +108,7 @@ class CategoriesScreen extends ConsumerWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
+                                        tooltip: 'Edit category',
                                         icon: const Icon(Icons.edit, size: 20),
                                         onPressed: () => _showEditDialog(
                                           context,
@@ -114,6 +117,7 @@ class CategoriesScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       IconButton(
+                                        tooltip: 'Delete category',
                                         icon: const Icon(
                                           Icons.delete,
                                           size: 20,

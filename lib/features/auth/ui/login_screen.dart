@@ -137,6 +137,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
+                        tooltip: _obscurePassword
+                            ? 'Show password'
+                            : 'Hide password',
                         icon: Icon(
                           _obscurePassword
                               ? Icons.visibility

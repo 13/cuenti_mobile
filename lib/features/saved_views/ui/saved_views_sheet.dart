@@ -102,6 +102,7 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
             }
           : null,
       trailing: IconButton(
+        tooltip: 'Delete view',
         icon: const Icon(Icons.delete_outline),
         onPressed: () => _delete(view),
       ),

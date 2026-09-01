@@ -194,6 +194,7 @@ class ShellScreen extends ConsumerWidget {
             },
           ),
           IconButton(
+            tooltip: 'Refresh',
             icon: const Icon(Icons.refresh),
             onPressed: () {
               unawaited(
