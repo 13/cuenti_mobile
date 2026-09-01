@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
@@ -180,122 +181,129 @@ class CategoriesScreen extends ConsumerWidget {
         .where((c) => c.parentId == null && c.id != category?.id)
         .toList();
 
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  category == null ? 'Add Category' : 'Edit Category',
-                  style: Theme.of(ctx).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: name,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setModalState) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 16,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    category == null ? 'Add Category' : 'Edit Category',
+                    style: Theme.of(ctx).textTheme.titleLarge,
                   ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: type,
-                  decoration: const InputDecoration(
-                    labelText: 'Type',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'EXPENSE', child: Text('Expense')),
-                    DropdownMenuItem(value: 'INCOME', child: Text('Income')),
-                  ],
-                  onChanged: (v) => setModalState(() => type = v ?? 'EXPENSE'),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<int?>(
-                  initialValue: parentId,
-                  decoration: const InputDecoration(
-                    labelText: 'Parent Category',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: [
-                    const DropdownMenuItem(
-                      child: Text('None (Top Level)'),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: name,
+                    decoration: const InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(),
                     ),
-                    ...parentOptions.map(
-                      (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: type,
+                    decoration: const InputDecoration(
+                      labelText: 'Type',
+                      border: OutlineInputBorder(),
                     ),
-                  ],
-                  onChanged: (v) => setModalState(() => parentId = v),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: saving ? null : () => Navigator.pop(ctx),
-                        child: const Text('Cancel'),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'EXPENSE',
+                        child: Text('Expense'),
                       ),
+                      DropdownMenuItem(value: 'INCOME', child: Text('Income')),
+                    ],
+                    onChanged: (v) =>
+                        setModalState(() => type = v ?? 'EXPENSE'),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int?>(
+                    initialValue: parentId,
+                    decoration: const InputDecoration(
+                      labelText: 'Parent Category',
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: saving
-                            ? null
-                            : () async {
-                                setModalState(() => saving = true);
-                                try {
-                                  final newCategory = Category(
-                                    id: category?.id,
-                                    name: name.text,
-                                    type: type,
-                                    parentId: parentId,
-                                  );
-                                  await ref
-                                      .read(
-                                        categoriesControllerProvider.notifier,
-                                      )
-                                      .save(newCategory);
-                                  if (ctx.mounted) Navigator.pop(ctx);
-                                } on ApiException catch (e) {
-                                  setModalState(() => saving = false);
-                                  if (ctx.mounted) {
-                                    ScaffoldMessenger.of(ctx).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Error: ${e.message}'),
-                                        backgroundColor: Theme.of(
-                                          ctx,
-                                        ).colorScheme.error,
-                                      ),
+                    items: [
+                      const DropdownMenuItem(
+                        child: Text('None (Top Level)'),
+                      ),
+                      ...parentOptions.map(
+                        (c) =>
+                            DropdownMenuItem(value: c.id, child: Text(c.name)),
+                      ),
+                    ],
+                    onChanged: (v) => setModalState(() => parentId = v),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: saving ? null : () => Navigator.pop(ctx),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: saving
+                              ? null
+                              : () async {
+                                  setModalState(() => saving = true);
+                                  try {
+                                    final newCategory = Category(
+                                      id: category?.id,
+                                      name: name.text,
+                                      type: type,
+                                      parentId: parentId,
                                     );
+                                    await ref
+                                        .read(
+                                          categoriesControllerProvider.notifier,
+                                        )
+                                        .save(newCategory);
+                                    if (ctx.mounted) Navigator.pop(ctx);
+                                  } on ApiException catch (e) {
+                                    setModalState(() => saving = false);
+                                    if (ctx.mounted) {
+                                      ScaffoldMessenger.of(ctx).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Error: ${e.message}'),
+                                          backgroundColor: Theme.of(
+                                            ctx,
+                                          ).colorScheme.error,
+                                        ),
+                                      );
+                                    }
                                   }
-                                }
-                              },
-                        child: saving
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Save'),
+                                },
+                          child: saving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Save'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         ),

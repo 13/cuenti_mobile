@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cuentimobile/core/privacy/privacy_mode.dart';
 import 'package:cuentimobile/core/widgets/refresh_all.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
@@ -185,13 +186,15 @@ class ShellScreen extends ConsumerWidget {
             ),
             tooltip: privacyMode ? 'Show amounts' : 'Hide amounts',
             onPressed: () {
-              ref.read(privacyModeProvider.notifier).toggle();
+              unawaited(ref.read(privacyModeProvider.notifier).toggle());
             },
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              ref.read(authControllerProvider.notifier).refreshProfile();
+              unawaited(
+                ref.read(authControllerProvider.notifier).refreshProfile(),
+              );
               invalidateAllData(ref);
             },
           ),

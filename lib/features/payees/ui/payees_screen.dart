@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
@@ -176,127 +177,129 @@ class PayeesScreen extends ConsumerWidget {
     var paymentMethod = payee?.defaultPaymentMethod ?? 'NONE';
     var saving = false;
 
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  payee == null ? 'Add Payee' : 'Edit Payee',
-                  style: Theme.of(ctx).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: name,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setModalState) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 16,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    payee == null ? 'Add Payee' : 'Edit Payee',
+                    style: Theme.of(ctx).textTheme.titleLarge,
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: notes,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<int?>(
-                  initialValue: categoryId,
-                  decoration: const InputDecoration(
-                    labelText: 'Default Category',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(child: Text('None')),
-                  ],
-                  onChanged: (v) => setModalState(() => categoryId = v),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: paymentMethod,
-                  decoration: const InputDecoration(
-                    labelText: 'Default Payment',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: kPaymentMethods
-                      .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                      .toList(),
-                  onChanged: (v) =>
-                      setModalState(() => paymentMethod = v ?? 'NONE'),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: saving ? null : () => Navigator.pop(ctx),
-                        child: const Text('Cancel'),
-                      ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: name,
+                    decoration: const InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: saving
-                            ? null
-                            : () async {
-                                setModalState(() => saving = true);
-                                try {
-                                  final newPayee = Payee(
-                                    id: payee?.id,
-                                    name: name.text,
-                                    notes: notes.text.isNotEmpty
-                                        ? notes.text
-                                        : null,
-                                    defaultCategoryId: categoryId,
-                                    defaultPaymentMethod: paymentMethod,
-                                  );
-                                  await ref
-                                      .read(payeesControllerProvider.notifier)
-                                      .save(newPayee);
-                                  if (ctx.mounted) Navigator.pop(ctx);
-                                } on ApiException catch (e) {
-                                  setModalState(() => saving = false);
-                                  if (ctx.mounted) {
-                                    ScaffoldMessenger.of(ctx).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Error: ${e.message}'),
-                                        backgroundColor: Theme.of(
-                                          ctx,
-                                        ).colorScheme.error,
-                                      ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: notes,
+                    decoration: const InputDecoration(
+                      labelText: 'Notes',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int?>(
+                    initialValue: categoryId,
+                    decoration: const InputDecoration(
+                      labelText: 'Default Category',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(child: Text('None')),
+                    ],
+                    onChanged: (v) => setModalState(() => categoryId = v),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: paymentMethod,
+                    decoration: const InputDecoration(
+                      labelText: 'Default Payment',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: kPaymentMethods
+                        .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                        .toList(),
+                    onChanged: (v) =>
+                        setModalState(() => paymentMethod = v ?? 'NONE'),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: saving ? null : () => Navigator.pop(ctx),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: saving
+                              ? null
+                              : () async {
+                                  setModalState(() => saving = true);
+                                  try {
+                                    final newPayee = Payee(
+                                      id: payee?.id,
+                                      name: name.text,
+                                      notes: notes.text.isNotEmpty
+                                          ? notes.text
+                                          : null,
+                                      defaultCategoryId: categoryId,
+                                      defaultPaymentMethod: paymentMethod,
                                     );
+                                    await ref
+                                        .read(payeesControllerProvider.notifier)
+                                        .save(newPayee);
+                                    if (ctx.mounted) Navigator.pop(ctx);
+                                  } on ApiException catch (e) {
+                                    setModalState(() => saving = false);
+                                    if (ctx.mounted) {
+                                      ScaffoldMessenger.of(ctx).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Error: ${e.message}'),
+                                          backgroundColor: Theme.of(
+                                            ctx,
+                                          ).colorScheme.error,
+                                        ),
+                                      );
+                                    }
                                   }
-                                }
-                              },
-                        child: saving
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Save'),
+                                },
+                          child: saving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Save'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         ),

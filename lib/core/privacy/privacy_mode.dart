@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -13,7 +14,7 @@ const _privacyModeKey = 'privacy_mode';
 class PrivacyMode extends _$PrivacyMode {
   @override
   bool build() {
-    Future.microtask(_load);
+    unawaited(Future.microtask(_load));
     return false;
   }
 

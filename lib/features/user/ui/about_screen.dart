@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cuentimobile/features/app_update/ui/update_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,7 +17,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
   @override
   void initState() {
     super.initState();
-    _initPackageInfo();
+    unawaited(_initPackageInfo());
   }
 
   Future<void> _initPackageInfo() async {

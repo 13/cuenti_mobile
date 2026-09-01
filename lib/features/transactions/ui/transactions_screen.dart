@@ -50,7 +50,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   void _onScroll() {
     if (_scrollController.position.pixels >
         _scrollController.position.maxScrollExtent - 200) {
-      _loadMore();
+      unawaited(_loadMore());
     }
   }
 
@@ -455,10 +455,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 
   void _showAddDialog(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => TransactionDialog(filter: _filter),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => TransactionDialog(filter: _filter),
+      ),
     );
   }
 }
@@ -682,12 +684,14 @@ class _TransactionTile extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         onTap: () {
-          showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            builder: (_) => TransactionDialog(
-              transaction: transaction,
-              filter: filter,
+          unawaited(
+            showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              builder: (_) => TransactionDialog(
+                transaction: transaction,
+                filter: filter,
+              ),
             ),
           );
         },

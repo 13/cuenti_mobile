@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cuentimobile/core/privacy/privacy_mode.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/amount_text.dart';
@@ -178,7 +179,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
       selected: _timeRange == r,
       onSelected: (selected) {
         if (r == TimeRange.custom) {
-          _pickCustomRange();
+          unawaited(_pickCustomRange());
         } else if (selected) {
           setState(() => _timeRange = r);
         }

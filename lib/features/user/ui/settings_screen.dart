@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cuentimobile/core/api/api_exception.dart';
@@ -272,85 +273,91 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final lastName = TextEditingController(text: user.lastName);
     final email = TextEditingController(text: user.email);
 
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          left: 16,
-          right: 16,
-          top: 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Edit Profile', style: Theme.of(ctx).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            TextField(
-              controller: firstName,
-              decoration: const InputDecoration(
-                labelText: 'First Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: lastName,
-              decoration: const InputDecoration(
-                labelText: 'Last Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: email,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Cancel'),
-                  ),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Edit Profile', style: Theme.of(ctx).textTheme.titleLarge),
+              const SizedBox(height: 16),
+              TextField(
+                controller: firstName,
+                decoration: const InputDecoration(
+                  labelText: 'First Name',
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () async {
-                      try {
-                        final auth = ref.read(authControllerProvider.notifier);
-                        final nav = Navigator.of(ctx);
-                        await ref
-                            .read(userRepositoryProvider)
-                            .updateProfile(
-                              email: email.text,
-                              firstName: firstName.text,
-                              lastName: lastName.text,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: lastName,
+                decoration: const InputDecoration(
+                  labelText: 'Last Name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: email,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () async {
+                        try {
+                          final auth = ref.read(
+                            authControllerProvider.notifier,
+                          );
+                          final nav = Navigator.of(ctx);
+                          await ref
+                              .read(userRepositoryProvider)
+                              .updateProfile(
+                                email: email.text,
+                                firstName: firstName.text,
+                                lastName: lastName.text,
+                              );
+                          await auth.refreshProfile();
+                          if (ctx.mounted) nav.pop();
+                        } catch (e) {
+                          if (ctx.mounted) {
+                            ScaffoldMessenger.of(
+                              ctx,
+                            ).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
                             );
-                        await auth.refreshProfile();
-                        if (ctx.mounted) nav.pop();
-                      } catch (e) {
-                        if (ctx.mounted) {
-                          ScaffoldMessenger.of(
-                            ctx,
-                          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                          }
                         }
-                      }
-                    },
-                    child: const Text('Save'),
+                      },
+                      child: const Text('Save'),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -361,94 +368,101 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final newPw = TextEditingController();
     final confirmPw = TextEditingController();
 
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          left: 16,
-          right: 16,
-          top: 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Change Password', style: Theme.of(ctx).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            TextField(
-              controller: oldPw,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Current Password',
-                border: OutlineInputBorder(),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Change Password',
+                style: Theme.of(ctx).textTheme.titleLarge,
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: newPw,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'New Password',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: confirmPw,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Confirm New Password',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Cancel'),
-                  ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: oldPw,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Current Password',
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () async {
-                      if (newPw.text != confirmPw.text) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          const SnackBar(
-                            content: Text('Passwords do not match'),
-                          ),
-                        );
-                        return;
-                      }
-                      try {
-                        await ref
-                            .read(userRepositoryProvider)
-                            .updatePassword(oldPw.text, newPw.text);
-                        if (ctx.mounted) {
-                          Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Password changed')),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: newPw,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'New Password',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: confirmPw,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm New Password',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () async {
+                        if (newPw.text != confirmPw.text) {
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            const SnackBar(
+                              content: Text('Passwords do not match'),
+                            ),
                           );
+                          return;
                         }
-                      } catch (e) {
-                        if (ctx.mounted) {
-                          ScaffoldMessenger.of(
-                            ctx,
-                          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                        try {
+                          await ref
+                              .read(userRepositoryProvider)
+                              .updatePassword(oldPw.text, newPw.text);
+                          if (ctx.mounted) {
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Password changed')),
+                            );
+                          }
+                        } catch (e) {
+                          if (ctx.mounted) {
+                            ScaffoldMessenger.of(
+                              ctx,
+                            ).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
                         }
-                      }
-                    },
-                    child: const Text('Change'),
+                      },
+                      child: const Text('Change'),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -456,25 +470,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _showCurrencyPicker(BuildContext context, List<Currency> currencies) {
     final auth = ref.read(authControllerProvider.notifier);
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) => ListView(
-        children: currencies
-            .map(
-              (c) => ListTile(
-                leading: Text(c.symbol, style: const TextStyle(fontSize: 20)),
-                title: Text('${c.code} - ${c.name}'),
-                onTap: () async {
-                  final nav = Navigator.of(ctx);
-                  await ref.read(userRepositoryProvider).updatePreferences({
-                    'defaultCurrency': c.code,
-                  });
-                  await auth.refreshProfile();
-                  if (ctx.mounted) nav.pop();
-                },
-              ),
-            )
-            .toList(),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        builder: (ctx) => ListView(
+          children: currencies
+              .map(
+                (c) => ListTile(
+                  leading: Text(c.symbol, style: const TextStyle(fontSize: 20)),
+                  title: Text('${c.code} - ${c.name}'),
+                  onTap: () async {
+                    final nav = Navigator.of(ctx);
+                    await ref.read(userRepositoryProvider).updatePreferences({
+                      'defaultCurrency': c.code,
+                    });
+                    await auth.refreshProfile();
+                    if (ctx.mounted) nav.pop();
+                  },
+                ),
+              )
+              .toList(),
+        ),
       ),
     );
   }
@@ -482,33 +498,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showLocalePicker(BuildContext context) {
     final locales = ['en-US', 'de-DE', 'it-IT', 'fr-FR', 'es-ES'];
     final auth = ref.read(authControllerProvider.notifier);
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) => ListView(
-        children: locales
-            .map(
-              (l) => ListTile(
-                title: Text(l),
-                onTap: () async {
-                  final nav = Navigator.of(ctx);
-                  await ref.read(userRepositoryProvider).updatePreferences({
-                    'locale': l,
-                  });
-                  await auth.refreshProfile();
-                  if (ctx.mounted) nav.pop();
-                },
-              ),
-            )
-            .toList(),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        builder: (ctx) => ListView(
+          children: locales
+              .map(
+                (l) => ListTile(
+                  title: Text(l),
+                  onTap: () async {
+                    final nav = Navigator.of(ctx);
+                    await ref.read(userRepositoryProvider).updatePreferences({
+                      'locale': l,
+                    });
+                    await auth.refreshProfile();
+                    if (ctx.mounted) nav.pop();
+                  },
+                ),
+              )
+              .toList(),
+        ),
       ),
     );
   }
 
   void _showAdminPanel(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => const _AdminPanel(),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) => const _AdminPanel(),
+      ),
     );
   }
 

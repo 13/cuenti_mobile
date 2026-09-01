@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
@@ -106,120 +107,122 @@ class AssetsScreen extends ConsumerWidget {
     var type = asset?.type ?? 'STOCK';
     var saving = false;
 
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  asset == null ? 'Add Asset' : 'Edit Asset',
-                  style: Theme.of(ctx).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: symbol,
-                  decoration: const InputDecoration(
-                    labelText: 'Symbol (e.g. VWCE.DE)',
-                    border: OutlineInputBorder(),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setModalState) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 16,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    asset == null ? 'Add Asset' : 'Edit Asset',
+                    style: Theme.of(ctx).textTheme.titleLarge,
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: name,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: type,
-                  decoration: const InputDecoration(
-                    labelText: 'Type',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: kAssetTypes
-                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                      .toList(),
-                  onChanged: (v) => setModalState(() => type = v ?? 'STOCK'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: currency,
-                  decoration: const InputDecoration(
-                    labelText: 'Currency',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: saving ? null : () => Navigator.pop(ctx),
-                        child: const Text('Cancel'),
-                      ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: symbol,
+                    decoration: const InputDecoration(
+                      labelText: 'Symbol (e.g. VWCE.DE)',
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: saving
-                            ? null
-                            : () async {
-                                setModalState(() => saving = true);
-                                try {
-                                  await ref
-                                      .read(assetsControllerProvider.notifier)
-                                      .save(
-                                        Asset(
-                                          id: asset?.id,
-                                          symbol: symbol.text,
-                                          name: name.text,
-                                          type: type,
-                                          currency: currency.text,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: name,
+                    decoration: const InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: type,
+                    decoration: const InputDecoration(
+                      labelText: 'Type',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: kAssetTypes
+                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                        .toList(),
+                    onChanged: (v) => setModalState(() => type = v ?? 'STOCK'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: currency,
+                    decoration: const InputDecoration(
+                      labelText: 'Currency',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: saving ? null : () => Navigator.pop(ctx),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: saving
+                              ? null
+                              : () async {
+                                  setModalState(() => saving = true);
+                                  try {
+                                    await ref
+                                        .read(assetsControllerProvider.notifier)
+                                        .save(
+                                          Asset(
+                                            id: asset?.id,
+                                            symbol: symbol.text,
+                                            name: name.text,
+                                            type: type,
+                                            currency: currency.text,
+                                          ),
+                                        );
+                                    if (ctx.mounted) Navigator.pop(ctx);
+                                  } on ApiException catch (e) {
+                                    setModalState(() => saving = false);
+                                    if (ctx.mounted) {
+                                      ScaffoldMessenger.of(ctx).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Error: ${e.message}'),
+                                          backgroundColor: Theme.of(
+                                            ctx,
+                                          ).colorScheme.error,
                                         ),
                                       );
-                                  if (ctx.mounted) Navigator.pop(ctx);
-                                } on ApiException catch (e) {
-                                  setModalState(() => saving = false);
-                                  if (ctx.mounted) {
-                                    ScaffoldMessenger.of(ctx).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Error: ${e.message}'),
-                                        backgroundColor: Theme.of(
-                                          ctx,
-                                        ).colorScheme.error,
-                                      ),
-                                    );
+                                    }
                                   }
-                                }
-                              },
-                        child: saving
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Save'),
+                                },
+                          child: saving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Save'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         ),

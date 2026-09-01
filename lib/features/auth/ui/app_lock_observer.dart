@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,7 +59,7 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
         state == AppLifecycleState.hidden) {
       setState(() => _locked = true);
     } else if (state == AppLifecycleState.resumed && _locked) {
-      _authenticate();
+      unawaited(_authenticate());
     }
   }
 
@@ -82,7 +83,7 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
       setState(() => _locked = true);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _authenticate();
+      if (mounted) unawaited(_authenticate());
     });
   }
 

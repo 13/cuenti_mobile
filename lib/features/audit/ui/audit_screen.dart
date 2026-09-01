@@ -41,7 +41,7 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
   void _onScroll() {
     if (_scrollController.position.pixels >
         _scrollController.position.maxScrollExtent - 200) {
-      _loadMore();
+      unawaited(_loadMore());
     }
   }
 

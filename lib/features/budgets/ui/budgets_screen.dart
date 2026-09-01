@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/privacy/privacy_mode.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
@@ -127,11 +128,13 @@ void _openEditSheet(
   required BudgetProgress? existing,
   required List<BudgetProgress> allProgress,
 }) {
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    builder: (_) =>
-        _BudgetEditSheet(existing: existing, allProgress: allProgress),
+  unawaited(
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) =>
+          _BudgetEditSheet(existing: existing, allProgress: allProgress),
+    ),
   );
 }
 

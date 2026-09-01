@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
@@ -141,86 +142,90 @@ class TagsScreen extends ConsumerWidget {
     final name = TextEditingController(text: tag?.name ?? '');
     var saving = false;
 
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                tag == null ? 'Add Tag' : 'Edit Tag',
-                style: Theme.of(ctx).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: name,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setModalState) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  tag == null ? 'Add Tag' : 'Edit Tag',
+                  style: Theme.of(ctx).textTheme.titleLarge,
                 ),
-                autofocus: true,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: saving ? null : () => Navigator.pop(ctx),
-                      child: const Text('Cancel'),
-                    ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: name,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    border: OutlineInputBorder(),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: saving
-                          ? null
-                          : () async {
-                              setModalState(() => saving = true);
-                              try {
-                                final newTag = Tag(
-                                  id: tag?.id,
-                                  name: name.text,
-                                );
-                                await ref
-                                    .read(tagsControllerProvider.notifier)
-                                    .save(newTag);
-                                if (ctx.mounted) Navigator.pop(ctx);
-                              } on ApiException catch (e) {
-                                setModalState(() => saving = false);
-                                if (ctx.mounted) {
-                                  ScaffoldMessenger.of(ctx).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Error: ${e.message}'),
-                                      backgroundColor: Theme.of(
-                                        ctx,
-                                      ).colorScheme.error,
-                                    ),
+                  autofocus: true,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: saving ? null : () => Navigator.pop(ctx),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: saving
+                            ? null
+                            : () async {
+                                setModalState(() => saving = true);
+                                try {
+                                  final newTag = Tag(
+                                    id: tag?.id,
+                                    name: name.text,
                                   );
+                                  await ref
+                                      .read(tagsControllerProvider.notifier)
+                                      .save(newTag);
+                                  if (ctx.mounted) Navigator.pop(ctx);
+                                } on ApiException catch (e) {
+                                  setModalState(() => saving = false);
+                                  if (ctx.mounted) {
+                                    ScaffoldMessenger.of(ctx).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Error: ${e.message}'),
+                                        backgroundColor: Theme.of(
+                                          ctx,
+                                        ).colorScheme.error,
+                                      ),
+                                    );
+                                  }
                                 }
-                              }
-                            },
-                      child: saving
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Save'),
+                              },
+                        child: saving
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Save'),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),

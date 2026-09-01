@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
@@ -33,7 +34,7 @@ abstract class AuthState with _$AuthState {
 class AuthController extends _$AuthController {
   @override
   AuthState build() {
-    Future.microtask(init);
+    unawaited(Future.microtask(init));
     return const AuthState();
   }
 

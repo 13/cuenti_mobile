@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
@@ -166,152 +167,155 @@ class CurrenciesScreen extends ConsumerWidget {
     var fracDigits = currency?.fracDigits ?? 2;
     var saving = false;
 
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  currency == null ? 'Add Currency' : 'Edit Currency',
-                  style: Theme.of(ctx).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: code,
-                  decoration: const InputDecoration(
-                    labelText: 'Code (e.g. EUR)',
-                    border: OutlineInputBorder(),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setModalState) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 16,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    currency == null ? 'Add Currency' : 'Edit Currency',
+                    style: Theme.of(ctx).textTheme.titleLarge,
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: name,
-                  decoration: const InputDecoration(
-                    labelText: 'Name (e.g. Euro)',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: code,
+                    decoration: const InputDecoration(
+                      labelText: 'Code (e.g. EUR)',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: symbol,
-                  decoration: const InputDecoration(
-                    labelText: 'Symbol (e.g. €)',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: name,
+                    decoration: const InputDecoration(
+                      labelText: 'Name (e.g. Euro)',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: decimalChar,
-                        decoration: const InputDecoration(
-                          labelText: 'Decimal',
-                          border: OutlineInputBorder(),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: symbol,
+                    decoration: const InputDecoration(
+                      labelText: 'Symbol (e.g. €)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: decimalChar,
+                          decoration: const InputDecoration(
+                            labelText: 'Decimal',
+                            border: OutlineInputBorder(),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: groupingChar,
-                        decoration: const InputDecoration(
-                          labelText: 'Grouping',
-                          border: OutlineInputBorder(),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: groupingChar,
+                          decoration: const InputDecoration(
+                            labelText: 'Grouping',
+                            border: OutlineInputBorder(),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: DropdownButtonFormField<int>(
-                        initialValue: fracDigits,
-                        decoration: const InputDecoration(
-                          labelText: 'Decimals',
-                          border: OutlineInputBorder(),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DropdownButtonFormField<int>(
+                          initialValue: fracDigits,
+                          decoration: const InputDecoration(
+                            labelText: 'Decimals',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: List.generate(
+                            9,
+                            (i) =>
+                                DropdownMenuItem(value: i, child: Text('$i')),
+                          ),
+                          onChanged: (v) =>
+                              setModalState(() => fracDigits = v ?? 2),
                         ),
-                        items: List.generate(
-                          9,
-                          (i) => DropdownMenuItem(value: i, child: Text('$i')),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: saving ? null : () => Navigator.pop(ctx),
+                          child: const Text('Cancel'),
                         ),
-                        onChanged: (v) =>
-                            setModalState(() => fracDigits = v ?? 2),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: saving ? null : () => Navigator.pop(ctx),
-                        child: const Text('Cancel'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: saving
-                            ? null
-                            : () async {
-                                setModalState(() => saving = true);
-                                try {
-                                  await ref
-                                      .read(
-                                        currenciesControllerProvider.notifier,
-                                      )
-                                      .save(
-                                        Currency(
-                                          id: currency?.id,
-                                          code: code.text,
-                                          name: name.text,
-                                          symbol: symbol.text,
-                                          decimalChar: decimalChar.text,
-                                          groupingChar: groupingChar.text,
-                                          fracDigits: fracDigits,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: saving
+                              ? null
+                              : () async {
+                                  setModalState(() => saving = true);
+                                  try {
+                                    await ref
+                                        .read(
+                                          currenciesControllerProvider.notifier,
+                                        )
+                                        .save(
+                                          Currency(
+                                            id: currency?.id,
+                                            code: code.text,
+                                            name: name.text,
+                                            symbol: symbol.text,
+                                            decimalChar: decimalChar.text,
+                                            groupingChar: groupingChar.text,
+                                            fracDigits: fracDigits,
+                                          ),
+                                        );
+                                    if (ctx.mounted) Navigator.pop(ctx);
+                                  } on ApiException catch (e) {
+                                    setModalState(() => saving = false);
+                                    if (ctx.mounted) {
+                                      ScaffoldMessenger.of(ctx).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Error: ${e.message}'),
+                                          backgroundColor: Theme.of(
+                                            ctx,
+                                          ).colorScheme.error,
                                         ),
                                       );
-                                  if (ctx.mounted) Navigator.pop(ctx);
-                                } on ApiException catch (e) {
-                                  setModalState(() => saving = false);
-                                  if (ctx.mounted) {
-                                    ScaffoldMessenger.of(ctx).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Error: ${e.message}'),
-                                        backgroundColor: Theme.of(
-                                          ctx,
-                                        ).colorScheme.error,
-                                      ),
-                                    );
+                                    }
                                   }
-                                }
-                              },
-                        child: saving
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Save'),
+                                },
+                          child: saving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Save'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         ),

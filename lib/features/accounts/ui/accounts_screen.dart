@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
@@ -56,7 +57,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                     final ids = accounts.map((a) => a.id!).toList();
                     final id = ids.removeAt(old);
                     ids.insert(newIdx > old ? newIdx - 1 : newIdx, id);
-                    _updateSortOrder(ids);
+                    unawaited(_updateSortOrder(ids));
                   },
                   itemBuilder: (context, i) {
                     final a = accounts[i];
@@ -238,167 +239,176 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
     var excludeReports = account?.excludeFromReports ?? false;
     var saving = false;
 
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  account == null ? 'Add Account' : 'Edit Account',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: name,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => StatefulBuilder(
+          builder: (context, setModalState) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 16,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    account == null ? 'Add Account' : 'Edit Account',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: type,
-                  decoration: const InputDecoration(
-                    labelText: 'Type',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: kAccountTypes
-                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                      .toList(),
-                  onChanged: (v) => setModalState(() => type = v ?? 'BANK'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: institution,
-                  decoration: const InputDecoration(
-                    labelText: 'Institution',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: group,
-                  decoration: const InputDecoration(
-                    labelText: 'Group',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: startBalance,
-                  decoration: const InputDecoration(
-                    labelText: 'Start Balance',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: currency,
-                  decoration: const InputDecoration(
-                    labelText: 'Currency',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: currencies
-                      .map(
-                        (c) => DropdownMenuItem(
-                          value: c.code,
-                          child: Text('${c.code} - ${c.name}'),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setModalState(() => currency = v ?? 'EUR'),
-                ),
-                const SizedBox(height: 12),
-                SwitchListTile(
-                  title: const Text('Exclude from Summary'),
-                  value: excludeSummary,
-                  onChanged: (v) => setModalState(() => excludeSummary = v),
-                ),
-                SwitchListTile(
-                  title: const Text('Exclude from Reports'),
-                  value: excludeReports,
-                  onChanged: (v) => setModalState(() => excludeReports = v),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: saving ? null : () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: name,
+                    decoration: const InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: saving
-                            ? null
-                            : () async {
-                                setModalState(() => saving = true);
-                                try {
-                                  await ref
-                                      .read(accountsControllerProvider.notifier)
-                                      .save(
-                                        Account(
-                                          id: account?.id,
-                                          accountName: name.text,
-                                          accountType: type,
-                                          institution: institution.text,
-                                          accountGroup: group.text,
-                                          currency: currency,
-                                          startBalance:
-                                              double.tryParse(
-                                                startBalance.text,
-                                              ) ??
-                                              0,
-                                          excludeFromSummary: excludeSummary,
-                                          excludeFromReports: excludeReports,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: type,
+                    decoration: const InputDecoration(
+                      labelText: 'Type',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: kAccountTypes
+                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                        .toList(),
+                    onChanged: (v) => setModalState(() => type = v ?? 'BANK'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: institution,
+                    decoration: const InputDecoration(
+                      labelText: 'Institution',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: group,
+                    decoration: const InputDecoration(
+                      labelText: 'Group',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: startBalance,
+                    decoration: const InputDecoration(
+                      labelText: 'Start Balance',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: currency,
+                    decoration: const InputDecoration(
+                      labelText: 'Currency',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: currencies
+                        .map(
+                          (c) => DropdownMenuItem(
+                            value: c.code,
+                            child: Text('${c.code} - ${c.name}'),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) =>
+                        setModalState(() => currency = v ?? 'EUR'),
+                  ),
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    title: const Text('Exclude from Summary'),
+                    value: excludeSummary,
+                    onChanged: (v) => setModalState(() => excludeSummary = v),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Exclude from Reports'),
+                    value: excludeReports,
+                    onChanged: (v) => setModalState(() => excludeReports = v),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: saving
+                              ? null
+                              : () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: saving
+                              ? null
+                              : () async {
+                                  setModalState(() => saving = true);
+                                  try {
+                                    await ref
+                                        .read(
+                                          accountsControllerProvider.notifier,
+                                        )
+                                        .save(
+                                          Account(
+                                            id: account?.id,
+                                            accountName: name.text,
+                                            accountType: type,
+                                            institution: institution.text,
+                                            accountGroup: group.text,
+                                            currency: currency,
+                                            startBalance:
+                                                double.tryParse(
+                                                  startBalance.text,
+                                                ) ??
+                                                0,
+                                            excludeFromSummary: excludeSummary,
+                                            excludeFromReports: excludeReports,
+                                          ),
+                                        );
+                                    if (context.mounted) Navigator.pop(context);
+                                  } on ApiException catch (e) {
+                                    setModalState(() => saving = false);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Error: ${e.message}'),
+                                          backgroundColor: Theme.of(
+                                            context,
+                                          ).colorScheme.error,
                                         ),
                                       );
-                                  if (context.mounted) Navigator.pop(context);
-                                } on ApiException catch (e) {
-                                  setModalState(() => saving = false);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Error: ${e.message}'),
-                                        backgroundColor: Theme.of(
-                                          context,
-                                        ).colorScheme.error,
-                                      ),
-                                    );
+                                    }
                                   }
-                                }
-                              },
-                        child: saving
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Save'),
+                                },
+                          child: saving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Save'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         ),
