@@ -3,6 +3,7 @@ import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
+import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
@@ -121,12 +122,17 @@ void main() {
   }
 
   Future<void> selectCategory(WidgetTester tester, String name) async {
-    final dropdown = find.byType(DropdownButtonFormField<int?>).first;
-    await tester.ensureVisible(dropdown);
+    final field = find.byType(CategoryPickerField).first;
+    await tester.ensureVisible(field);
     await tester.pumpAndSettle();
-    await tester.tap(dropdown);
+    await tester.tap(field);
     await tester.pumpAndSettle();
-    await tester.tap(find.text(name).last);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(CategorySearchSheet),
+        matching: find.text(name),
+      ),
+    );
     await tester.pumpAndSettle();
   }
 

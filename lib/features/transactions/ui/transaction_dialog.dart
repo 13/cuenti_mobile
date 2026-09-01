@@ -5,6 +5,7 @@ import '../../../core/theme/cuenti_colors.dart';
 import '../../../utils/number_format.dart';
 import '../../accounts/ui/accounts_controller.dart';
 import '../../categories/ui/categories_controller.dart';
+import '../../categories/ui/category_picker_field.dart';
 import '../../vehicles/domain/fuel_memo.dart';
 import '../../vehicles/ui/fuel_meta_provider.dart';
 import '../domain/transaction.dart';
@@ -398,27 +399,11 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                 const SizedBox(height: 12),
 
                 // Category
-                DropdownButtonFormField<int?>(
-                  initialValue:
-                      _categoryId == null ||
-                          categories.any((c) => c.id == _categoryId)
-                      ? _categoryId
-                      : null,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: [
-                    const DropdownMenuItem(value: null, child: Text('None')),
-                    ...categories
-                        .where((c) => _type == 'TRANSFER' || c.type == _type)
-                        .map(
-                          (c) => DropdownMenuItem(
-                            value: c.id,
-                            child: Text(c.fullName ?? c.name),
-                          ),
-                        ),
-                  ],
+                CategoryPickerField(
+                  categories: categories
+                      .where((c) => _type == 'TRANSFER' || c.type == _type)
+                      .toList(),
+                  selectedId: _categoryId,
                   onChanged: (v) => setState(() => _categoryId = v),
                 ),
                 const SizedBox(height: 12),
@@ -522,28 +507,13 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                         children: [
                           Expanded(
                             flex: 3,
-                            child: DropdownButtonFormField<int?>(
-                              initialValue:
-                                  _splits[i].categoryId != null &&
-                                      categories.any(
-                                        (c) => c.id == _splits[i].categoryId,
-                                      )
-                                  ? _splits[i].categoryId
-                                  : null,
-                              decoration: const InputDecoration(
-                                labelText: 'Category',
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                              items: categories
+                            child: CategoryPickerField(
+                              categories: categories
                                   .where((c) => c.type == _type)
-                                  .map(
-                                    (c) => DropdownMenuItem(
-                                      value: c.id,
-                                      child: Text(c.fullName ?? c.name),
-                                    ),
-                                  )
                                   .toList(),
+                              selectedId: _splits[i].categoryId,
+                              allowNone: false,
+                              isDense: true,
                               onChanged: (v) => setState(() {
                                 _splits[i].categoryId = v;
                                 _splitsTouched = true;

@@ -3,6 +3,7 @@ import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
+import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
@@ -88,6 +89,27 @@ void main() {
             ),
           ),
         ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  /// Opens the category picker at [index] (0 is the main Category field,
+  /// the rest are split rows) and picks the entry labelled [name].
+  Future<void> selectCategoryAt(
+    WidgetTester tester,
+    int index,
+    String name,
+  ) async {
+    final field = find.byType(CategoryPickerField).at(index);
+    await tester.ensureVisible(field);
+    await tester.pumpAndSettle();
+    await tester.tap(field);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(CategorySearchSheet),
+        matching: find.text(name),
       ),
     );
     await tester.pumpAndSettle();
@@ -239,13 +261,7 @@ void main() {
 
       // Give the new (3rd) row a category so only the sum mismatches
       // (10 + 20 + 0 = 30, main amount is 40).
-      final newRowCategory = find.byType(DropdownButtonFormField<int?>).at(3);
-      await tester.ensureVisible(newRowCategory);
-      await tester.pumpAndSettle();
-      await tester.tap(newRowCategory);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Misc').last);
-      await tester.pumpAndSettle();
+      await selectCategoryAt(tester, 3, 'Misc');
 
       expect(
         find.textContaining('Splits must sum to the amount'),
@@ -291,13 +307,7 @@ void main() {
 
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
-      final newRowCategory = find.byType(DropdownButtonFormField<int?>).at(3);
-      await tester.ensureVisible(newRowCategory);
-      await tester.pumpAndSettle();
-      await tester.tap(newRowCategory);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Misc').last);
-      await tester.pumpAndSettle();
+      await selectCategoryAt(tester, 3, 'Misc');
 
       // 10 + 20 + 10 = 40, matching the main amount.
       final newRowAmount = find.widgetWithText(TextFormField, 'Amount').at(3);
