@@ -401,7 +401,11 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                                           content: Text(
                                             L
                                                 .of(context)
-                                                .commonError(e.message),
+                                                .commonError(
+                                                  e.localizedMessage(
+                                                    L.of(context),
+                                                  ),
+                                                ),
                                           ),
                                           backgroundColor: Theme.of(
                                             context,

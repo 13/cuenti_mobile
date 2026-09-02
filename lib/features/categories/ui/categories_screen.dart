@@ -301,7 +301,11 @@ class CategoriesScreen extends ConsumerWidget {
                                           content: Text(
                                             L
                                                 .of(context)
-                                                .commonError(e.message),
+                                                .commonError(
+                                                  e.localizedMessage(
+                                                    L.of(context),
+                                                  ),
+                                                ),
                                           ),
                                           backgroundColor: Theme.of(
                                             ctx,
