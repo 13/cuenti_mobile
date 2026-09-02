@@ -1,33 +1,27 @@
-## Figures from one server can no longer appear under another
+## Your currency settings now do something
 
-Cuenti keeps a local copy of your latest figures so they are still there
-when the server cannot be reached. That copy was not tied to the server it
-came from, so pointing the app at a different Cuenti instance and then
-going offline showed the *previous* instance's balances as though they were
-this one's — marked only as offline, with nothing to say they belonged
-somewhere else.
+Cuenti has always let you set a currency's symbol, its number of decimal
+places, and its decimal and thousands separators. Nothing used them. Every
+amount in the app was shown with two decimals, punctuated to your app
+language, followed by the currency code.
 
-Changing the server address now clears those figures, exactly as signing
-out already did.
+So a yen or forint balance showed two decimal places it does not have, a
+dinar showed two of its three, and changing a currency's separators
+appeared to work while nothing else on any screen moved.
 
-## An expired session takes you back to sign-in
+Amounts now follow the currency they are in. **If you have edited a
+currency's settings, expect its amounts to look different — that is the
+change.** Anything Cuenti does not recognise is shown exactly as before.
 
-When the server stopped accepting your login — because it expired, or was
-revoked — the app carried on as if you were still signed in. Every screen
-showed "Not authenticated" and none of them recovered; the only way out was
-finding Logout in the menu.
+## The category chart shows which slices open
 
-Now it returns you to the sign-in screen, with your username still filled
-in.
+A slice with subcategories beneath it now carries the same arrow the list
+below it uses, so you can tell what will open before tapping. Very thin
+slices are left unmarked to keep the chart readable; their row in the list
+still shows the arrow.
 
-## Errors are in your language
+## More of the app speaks your language
 
-Failures on the accounts, assets, categories, currencies, payees and
-settings screens were reported in English whatever language you had
-chosen. They are translated now.
-
-## Exports are tidied up
-
-The export file is written to the app's own private storage, and an earlier
-export is removed when you make a new one, rather than a full copy of your
-financial history being left behind each time.
+The dashboard's asset units, the "Next:" date and overdue marker on
+scheduled transactions, the fuel entry's "last" hint, and the currency
+format summary were English whatever language you had chosen.
