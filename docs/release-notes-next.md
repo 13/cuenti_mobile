@@ -1,14 +1,16 @@
-## This update needs a reinstall
+## Signing in to a self-hosted server
 
-Cuenti is now signed with its own release key. Until this version it was
-signed with the Android debug key, which ships with every Android SDK — so
-anyone could have built an APK that your phone would accept as an update to
-Cuenti.
+A fresh install now asks you to approve your server's certificate on the
+sign-in screen, showing you its fingerprint to check against your server.
+Until this version it refused the connection and told you to re-run Server
+Setup — a screen a first install never passes through, so there was no way
+to approve the certificate from where you were.
 
-Android will not install an update whose signing key differs from the one
-already on the device, so **this version cannot install over your current
-one**. Uninstall Cuenti and install this APK fresh.
+## Coming from 2.2.1 or older
 
-Nothing is lost. Your data lives on the server; you will just sign in again.
-
-Future updates install normally.
+Releases from 2.3.0 on are signed with Cuenti's own release key rather than
+the Android debug key that ships with every Android SDK. Android will not
+install an update whose signing key differs, so **a version older than
+2.3.0 cannot update in place** — uninstall Cuenti and install this APK
+fresh. Nothing is lost: your data lives on the server and you just sign in
+again. Updating from 2.3.0 works normally.
