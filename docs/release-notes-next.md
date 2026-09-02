@@ -1,16 +1,17 @@
-## Screenshots work again
+## The app-switcher preview is hidden again on older Android
 
-2.4.0 blocked screenshots of Cuenti entirely. That was heavier than the
-problem warranted: what needed hiding was the app-switcher preview, which
-showed your dashboard and balances to anyone who pressed the recents
-button, not the screenshots you take on purpose.
+2.4.1 stopped blocking screenshots, which was the right call — but the
+mechanism that hides the preview on its own only exists from Android 13, so
+2.4.1 left Android 12 and older with the preview showing your dashboard
+again.
 
-This version hides the preview and leaves screenshots alone.
+This version restores protection there, by the only means those versions
+offer:
 
-The mechanism that does this narrowly arrived in Android 13, so **on
-Android 12 and older the preview is no longer hidden either**. If you are
-on an older device and would rather keep 2.4.0's behaviour there, say so —
-it can be brought back for those versions alone.
+- **Android 13 and newer** — the preview is hidden, screenshots work.
+- **Android 12 and older** — the preview is hidden and screenshots of
+  Cuenti are blocked, as they were in 2.4.0. Nothing else hides the preview
+  on those versions, and the balances are worth more than the screenshots.
 
-Everything else from 2.4.0 is unchanged: backups still exclude your data,
-and an `http://` server address is still warned about.
+So Cuenti behaves differently on two phones running different Android
+versions. That is deliberate, and this is the note that says so.
