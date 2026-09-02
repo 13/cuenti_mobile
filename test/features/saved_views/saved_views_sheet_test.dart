@@ -1,3 +1,4 @@
+import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/saved_views/data/saved_views_repository.dart';
 import 'package:cuentimobile/features/saved_views/domain/saved_view.dart';
@@ -155,5 +156,62 @@ void main() {
       find.widgetWithText(FilledButton, 'Save current view'),
     );
     expect(button.onPressed, isNotNull);
+  });
+
+  group('deleting a saved view', () {
+    testWidgets('asks first, and cancelling keeps the view', (tester) async {
+      await pumpAndOpenSheet(tester, current: const TransactionFilter());
+
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => repo.delete(any()));
+      expect(find.text('My groceries'), findsOneWidget);
+    });
+
+    testWidgets('confirming deletes that view', (tester) async {
+      await pumpAndOpenSheet(tester, current: const TransactionFilter());
+
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.pumpAndSettle();
+
+      verify(() => repo.delete(1)).called(1);
+    });
+
+    testWidgets("a refused delete says why, in the user's language, rather "
+        'than leaving the view looking deleted', (tester) async {
+      when(() => repo.delete(any())).thenThrow(
+        const ValidationException(
+          'Invalid request',
+          serverMessage: 'View is in use',
+        ),
+      );
+
+      await pumpAndOpenSheet(tester, current: const TransactionFilter());
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('View is in use'), findsOneWidget);
+      expect(find.text('My groceries'), findsOneWidget);
+    });
+
+    testWidgets('a view written by the web app cannot be deleted from here '
+        'either, since it cannot be read from here', (tester) async {
+      await pumpAndOpenSheet(tester, current: const TransactionFilter());
+
+      final webTile = tester.widget<ListTile>(
+        find.ancestor(
+          of: find.text('Web view'),
+          matching: find.byType(ListTile),
+        ),
+      );
+      expect(webTile.enabled, isFalse);
+    });
   });
 }
