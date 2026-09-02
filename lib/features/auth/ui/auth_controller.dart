@@ -82,18 +82,19 @@ class AuthController extends _$AuthController {
     );
   }
 
-  Future<String?> login(String username, String password) async {
+  Future<String?> login(L l, String username, String password) async {
     final UserProfile user;
     try {
       user = await _repo.login(username, password);
     } on Exception catch (e) {
-      return _extractError(e);
+      return _errorMessage(l, e);
     }
     await _persistSuccessfulLogin(user, username, password);
     return null;
   }
 
   Future<String?> register({
+    required L l,
     required String username,
     required String email,
     required String password,
@@ -110,7 +111,7 @@ class AuthController extends _$AuthController {
         lastName: lastName,
       );
     } on Exception catch (e) {
-      return _extractError(e);
+      return _errorMessage(l, e);
     }
     await _persistSuccessfulLogin(user, username, password);
     return null;
@@ -138,12 +139,12 @@ class AuthController extends _$AuthController {
       state = state.copyWith(user: user);
       return null;
     } on UnauthorizedException catch (e) {
-      if (e.message != 'Invalid username or password') return _extractError(e);
+      if (e.message != invalidCredentialsMessage) return _errorMessage(l, e);
       await _storage.delete(_savedPasswordKey);
       state = state.copyWith(hasSavedPassword: false);
       return l.errorSavedPasswordInvalid;
     } on Exception catch (e) {
-      return _extractError(e);
+      return _errorMessage(l, e);
     }
   }
 
@@ -164,6 +165,15 @@ class AuthController extends _$AuthController {
   /// [loginWithSavedCredentials]. A storage failure must not surface as a
   /// failed sign-in, so it is swallowed here and `savedUsername`/
   /// `hasSavedPassword` are simply left unchanged.
+  ///
+  /// What is stored is the password itself, not a token. That is a real
+  /// cost -- it is a reusable credential the user has probably reused
+  /// elsewhere, and unlike a token it cannot be revoked server-side -- and
+  /// it is deliberate only because the API offers no refresh token to hold
+  /// instead: `/auth/login` returns a JWT and nothing to renew it with, so
+  /// biometric sign-in has to replay the credentials. It sits in
+  /// [SecureStorage], which is Keystore-backed on Android. If the backend
+  /// ever grows a refresh endpoint, this is the call site to change.
   Future<void> _persistSuccessfulLogin(
     UserProfile user,
     String username,
@@ -193,7 +203,14 @@ class AuthController extends _$AuthController {
 
   Future<void> setServerUrl(String url) => _repo.setServerUrl(url);
 
-  String _extractError(Object e) {
-    return e.toString().replaceAll('Exception: ', '');
-  }
+  /// What to put in front of the user.
+  ///
+  /// Every repository failure arrives as an [ApiException], which knows how
+  /// to say itself in the user's language. Sign-in used to report
+  /// `e.toString()` instead -- the English text [ApiException] keeps for
+  /// logs -- so the first screen of the app was the one screen that never
+  /// spoke German or Italian.
+  String _errorMessage(L l, Exception e) => e is ApiException
+      ? e.localizedMessage(l)
+      : e.toString().replaceAll('Exception: ', '');
 }

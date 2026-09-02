@@ -62,8 +62,12 @@ sealed class ApiException implements Exception {
     return switch (this) {
       NetworkException() =>
         message == _certificateMessage ? l.errorCertificate : l.errorNetwork,
-      UnauthorizedException() =>
-        statusCode == 403 ? l.errorApiDisabled : l.errorNotAuthenticated,
+      UnauthorizedException() => switch (this) {
+        _ when message == invalidCredentialsMessage =>
+          l.errorInvalidCredentials,
+        _ when statusCode == 403 => l.errorApiDisabled,
+        _ => l.errorNotAuthenticated,
+      },
       ValidationException() => l.errorInvalidRequest,
       ServerException() =>
         statusCode == null
@@ -76,6 +80,13 @@ sealed class ApiException implements Exception {
   @override
   String toString() => message;
 }
+
+/// A 401 from the login endpoint means the credentials were wrong, not that
+/// a session expired -- two things an [UnauthorizedException] would
+/// otherwise report identically. Kept as a constant so the repository that
+/// raises it, the controller that special-cases it, and
+/// [ApiException.localizedMessage] all agree on the one spelling.
+const invalidCredentialsMessage = 'Invalid username or password';
 
 /// Kept as a constant so [ApiException.localizedMessage] can tell a
 /// certificate refusal from an ordinary connection failure without adding a

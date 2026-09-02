@@ -38,7 +38,16 @@ class _CuentiAppState extends ConsumerState<CuentiApp> {
       _refreshNotifier,
       () => ref.read(authControllerProvider),
     );
+    // Before the first frame, so the first number anything formats is
+    // already in the user's locale. Kept in step below by a listener rather
+    // than by a call in build(): mutating intl's global state as a side
+    // effect of building is the kind of thing that works until a rebuild
+    // happens at an awkward moment.
+    applyLocale(_localeTagOf(ref.read(authControllerProvider)));
   }
+
+  static String _localeTagOf(AuthState auth) =>
+      auth.user?.locale ?? defaultLocaleTag;
 
   @override
   void dispose() {
@@ -51,11 +60,14 @@ class _CuentiAppState extends ConsumerState<CuentiApp> {
     // Any auth state change (login/logout/session restore) must re-trigger
     // GoRouter's redirect logic.
     ref.listen(authControllerProvider, (_, _) => _refreshNotifier.refresh());
-    final auth = ref.watch(authControllerProvider);
-    final localeTag = auth.user?.locale ?? defaultLocaleTag;
     // Drives intl's ambient locale, which formatNumber and every DateFormat
-    // in the app read.
-    applyLocale(localeTag);
+    // in the app read. Fires only when the chosen locale actually changes.
+    ref.listen(
+      authControllerProvider.select(_localeTagOf),
+      (_, tag) => applyLocale(tag),
+    );
+    final auth = ref.watch(authControllerProvider);
+    final localeTag = _localeTagOf(auth);
 
     return MaterialApp.router(
       title: 'Cuenti',

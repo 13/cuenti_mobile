@@ -38,7 +38,7 @@ class AuthRepository {
           // generic 401 elsewhere means the session expired). 403 keeps its
           // own fromDio message.
           if (e.response?.statusCode == 401) {
-            throw const UnauthorizedException('Invalid username or password');
+            throw const UnauthorizedException(invalidCredentialsMessage);
           }
           rethrow;
         }

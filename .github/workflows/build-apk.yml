@@ -46,7 +46,7 @@ jobs:
       # below the current number does not block today's work but does catch
       # a feature landing with no tests behind it.
       - name: Check coverage
-        run: dart run tool/check_coverage.dart 70
+        run: dart run tool/check_coverage.dart 75
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
@@ -63,6 +63,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Full history and tags: the release-note check below compares this
+          # tag against the previous one, which a shallow clone cannot see.
+          fetch-depth: 0
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -126,6 +130,47 @@ jobs:
             exit 1
           fi
           echo "alias found in keystore"
+
+      # The APK reports the version from pubspec.yaml, while the release the
+      # in-app updater compares against is this tag. Let them disagree and
+      # every user is told an update is available, installs it, still reports
+      # the old version, and is told again -- a nag that only "skip" silences.
+      - name: Verify pubspec version matches the tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          PUBSPEC=$(grep '^version:' pubspec.yaml | sed 's/^version: *//' | cut -d+ -f1)
+          TAG=${GITHUB_REF_NAME#v}
+          if [ "$PUBSPEC" != "$TAG" ]; then
+            echo "::error::pubspec.yaml is $PUBSPEC but the tag is $TAG."
+            echo "::error::Bump pubspec.yaml and re-tag, or the update"
+            echo "::error::checker will offer this release forever."
+            exit 1
+          fi
+          echo "pubspec $PUBSPEC matches tag $TAG"
+
+      # docs/release-notes-next.md is prepended to the release body and shown
+      # verbatim by the in-app updater, so a copy left over from the previous
+      # release actively misinforms -- 2.3.0's "this update needs a reinstall"
+      # nearly went out with 2.3.1, telling everyone to uninstall for nothing.
+      - name: Verify the release note was written for this release
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          PREVIOUS=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)
+          if [ -z "$PREVIOUS" ]; then
+            echo "no previous tag; nothing to compare against"
+            exit 0
+          fi
+          if [ ! -f docs/release-notes-next.md ]; then
+            echo "no release note for this release, which is allowed"
+            exit 0
+          fi
+          if git diff --quiet "$PREVIOUS" "${GITHUB_REF_NAME}" -- docs/release-notes-next.md; then
+            echo "::error::docs/release-notes-next.md is unchanged since $PREVIOUS."
+            echo "::error::It is shown to users verbatim, so it would repeat"
+            echo "::error::the previous release's notes. Rewrite it or delete it."
+            exit 1
+          fi
+          echo "release note was updated since $PREVIOUS"
 
       - name: Install dependencies
         run: flutter pub get

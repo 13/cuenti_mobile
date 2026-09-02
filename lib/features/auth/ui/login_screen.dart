@@ -258,10 +258,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _submitting = true;
       _error = null;
     });
+    final l = L.of(context);
     final error = await _signingIn(
       () => ref
           .read(authControllerProvider.notifier)
           .login(
+            l,
             _usernameController.text.trim(),
             _passwordController.text,
           ),

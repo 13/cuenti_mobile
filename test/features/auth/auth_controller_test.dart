@@ -5,6 +5,7 @@ import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
+import 'package:cuentimobile/l10n/app_localizations_de.dart';
 import 'package:cuentimobile/l10n/app_localizations_en.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -90,7 +91,7 @@ void main() {
       final notifier = container.read(authControllerProvider.notifier);
       await notifier.init();
 
-      final error = await notifier.login('demo', 'secret');
+      final error = await notifier.login(LEn(), 'demo', 'secret');
 
       expect(error, isNull);
       expect(storage.data['saved_username'], 'demo');
@@ -100,6 +101,60 @@ void main() {
       expect(state.hasSavedPassword, isTrue);
     });
 
+    test("a sign-in failure is reported in the user's language, not in the "
+        'English ApiException keeps for its logs', () async {
+      when(
+        () => repo.login(any(), any()),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      expect(
+        await notifier.login(LDe(), 'demo', 'secret'),
+        'Keine Verbindung zum Server',
+      );
+    });
+
+    test('a wrong password says so, rather than reporting the session as '
+        'expired the way a plain 401 would', () async {
+      when(
+        () => repo.login(any(), any()),
+      ).thenThrow(const UnauthorizedException(invalidCredentialsMessage));
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      expect(
+        await notifier.login(LDe(), 'demo', 'wrong'),
+        'Benutzername oder Passwort ist falsch',
+      );
+    });
+
+    test('registration failures are localized too', () async {
+      when(
+        () => repo.register(
+          username: any(named: 'username'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+          firstName: any(named: 'firstName'),
+          lastName: any(named: 'lastName'),
+        ),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      expect(
+        await notifier.register(
+          l: LDe(),
+          username: 'demo',
+          email: 'd@x',
+          password: 'p',
+          firstName: 'D',
+          lastName: 'X',
+        ),
+        'Keine Verbindung zum Server',
+      );
+    });
+
     test('login failure does not persist credentials', () async {
       when(
         () => repo.login(any(), any()),
@@ -107,7 +162,7 @@ void main() {
       final notifier = container.read(authControllerProvider.notifier);
       await notifier.init();
 
-      final error = await notifier.login('demo', 'wrong');
+      final error = await notifier.login(LEn(), 'demo', 'wrong');
 
       expect(error, 'Invalid username or password');
       expect(storage.data.containsKey('saved_username'), isFalse);
@@ -132,7 +187,7 @@ void main() {
         );
         await notifier.init();
 
-        final error = await notifier.login('demo', 'secret');
+        final error = await notifier.login(LEn(), 'demo', 'secret');
 
         expect(error, isNull);
         final state = throwingContainer.read(authControllerProvider);
@@ -155,6 +210,7 @@ void main() {
       await notifier.init();
 
       await notifier.register(
+        l: LEn(),
         username: 'new',
         email: 'n@x',
         password: 'pw',

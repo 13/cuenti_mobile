@@ -164,6 +164,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final error = await ref
         .read(authControllerProvider.notifier)
         .register(
+          l: L.of(context),
           username: _username.text.trim(),
           email: _email.text.trim(),
           password: _password.text,
