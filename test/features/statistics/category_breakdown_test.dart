@@ -169,4 +169,95 @@ void main() {
 
     expect(roots.fold<double>(0, (s, n) => s + n.total), 10);
   });
+
+  group('joining against whatever the server actually sends', () {
+    test('a server that reports types in lower case still builds the tree, '
+        'rather than matching nothing and flattening everything', () {
+      const lowercase = [
+        Category(id: 1, name: 'Food', type: 'expense'),
+        Category(id: 2, name: 'Groceries', parentId: 1, type: 'expense'),
+      ];
+
+      final roots = buildCategoryBreakdown(
+        {
+          'Groceries': 100,
+        },
+        lowercase,
+        type: 'EXPENSE',
+      );
+
+      expect(roots.map((n) => n.name), ['Food']);
+      expect(named(roots, 'Food').children.single.name, 'Groceries');
+    });
+
+    test('a mixed-case type is matched too', () {
+      const mixed = [
+        Category(id: 1, name: 'Salary', type: 'Income'),
+      ];
+
+      final roots = buildCategoryBreakdown(
+        {
+          'Salary': 3200,
+        },
+        mixed,
+        type: 'INCOME',
+      );
+
+      expect(named(roots, 'Salary').id, 1);
+    });
+
+    test('a category name that differs only by case or padding still '
+        'matches the amount reported for it', () {
+      const padded = [
+        Category(id: 1, name: 'Food'),
+        Category(id: 2, name: ' groceries ', parentId: 1),
+      ];
+
+      final roots = buildCategoryBreakdown(
+        {
+          'Groceries': 100,
+        },
+        padded,
+        type: 'EXPENSE',
+      );
+
+      expect(named(roots, 'Food').total, 100);
+    });
+
+    test('two categories whose names differ only by case are still treated '
+        'as ambiguous, not silently merged into one', () {
+      const clashing = [
+        Category(id: 1, name: 'Fuel'),
+        Category(id: 2, name: 'FUEL'),
+      ];
+
+      final roots = buildCategoryBreakdown(
+        {
+          'fuel': 80,
+        },
+        clashing,
+        type: 'EXPENSE',
+      );
+
+      expect(roots.single.name, 'fuel');
+      expect(roots.single.id, isNull);
+      expect(roots.single.total, 80);
+    });
+
+    test('the type still separates income from expense', () {
+      final roots = buildCategoryBreakdown(
+        {
+          'Salary': 3200,
+        },
+        _categories,
+        type: 'EXPENSE',
+      );
+
+      expect(
+        named(roots, 'Salary').id,
+        isNull,
+        reason: 'Salary is an income category and cannot claim expense',
+      );
+    });
+  });
 }

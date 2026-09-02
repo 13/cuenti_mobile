@@ -145,8 +145,16 @@ class _CategoryTabState extends ConsumerState<CategoryTab> {
                     sectionsSpace: 2,
                     centerSpaceRadius: 40,
                     pieTouchData: PieTouchData(
+                      // FlTapUpEvent, explicitly, is the completed tap.
+                      // isInterestedForInteractions looks like the right
+                      // guard and is not: it exists to drive hover
+                      // highlighting, so it excludes the up events and
+                      // admits the down ones. Gating on it drilled in the
+                      // moment a finger landed -- so a scroll that began on
+                      // the chart navigated instead -- and fired twice per
+                      // tap besides.
                       touchCallback: (event, response) {
-                        if (!event.isInterestedForInteractions) return;
+                        if (event is! FlTapUpEvent) return;
                         final index =
                             response?.touchedSection?.touchedSectionIndex;
                         if (index == null ||

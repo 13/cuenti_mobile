@@ -3,6 +3,7 @@ import 'package:cuentimobile/features/categories/data/categories_repository.dart
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/statistics/ui/widgets/category_tab.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -189,5 +190,72 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Alle Kategorien'), findsOneWidget);
+  });
+
+  group('tapping the chart itself', () {
+    /// A point 45 degrees into the largest slice: clear of the seam at
+    /// angle 0, where sectionsSpace leaves a gap that hits nothing.
+    Offset onLargestSlice(WidgetTester tester) {
+      final box = tester.getRect(find.byType(PieChart));
+      return Offset(box.center.dx + 42, box.center.dy + 42);
+    }
+
+    testWidgets('a completed tap on a slice drills into it', (tester) async {
+      await pumpTab(tester);
+
+      await tester.tapAt(onLargestSlice(tester));
+      await tester.pumpAndSettle();
+
+      expect(row('Groceries'), findsOneWidget);
+      expect(row('Food'), findsNothing);
+    });
+
+    testWidgets('touching a slice without lifting does not navigate: a '
+        'finger landing on the chart to scroll must not drill in', (
+      tester,
+    ) async {
+      await pumpTab(tester);
+
+      final gesture = await tester.startGesture(onLargestSlice(tester));
+      await tester.pump(const Duration(milliseconds: 40));
+
+      expect(
+        row('Food'),
+        findsOneWidget,
+        reason: 'still at the top level until the tap completes',
+      );
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a slice dragged off and released does not drill in', (
+      tester,
+    ) async {
+      await pumpTab(tester);
+
+      final gesture = await tester.startGesture(onLargestSlice(tester));
+      await tester.pump(const Duration(milliseconds: 20));
+      await gesture.moveBy(const Offset(0, -300));
+      await tester.pump(const Duration(milliseconds: 20));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(
+        row('Food'),
+        findsOneWidget,
+        reason: 'that gesture was a scroll, not a tap on Food',
+      );
+    });
+
+    testWidgets('tapping the hole in the middle does nothing', (tester) async {
+      await pumpTab(tester);
+      final box = tester.getRect(find.byType(PieChart));
+
+      await tester.tapAt(box.center);
+      await tester.pumpAndSettle();
+
+      expect(row('Food'), findsOneWidget);
+    });
   });
 }

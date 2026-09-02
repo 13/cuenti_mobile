@@ -47,12 +47,17 @@ List<CategoryNode> buildCategoryBreakdown(
   List<Category> categories, {
   required String type,
 }) {
-  final ofType = categories.where((c) => c.type == type && c.id != null);
+  final ofType = categories.where(
+    (c) => _fold(c.type) == _fold(type) && c.id != null,
+  );
 
   // Names claimed by exactly one category can be placed; the rest cannot.
+  // Folded, because the two sides of this join come from different
+  // endpoints: a server that spells a type "expense" or pads a name must
+  // not silently match nothing and flatten the whole chart.
   final byName = <String, List<Category>>{};
   for (final c in ofType) {
-    byName.putIfAbsent(c.name, () => []).add(c);
+    byName.putIfAbsent(_fold(c.name), () => []).add(c);
   }
   final placeable = {
     for (final entry in byName.entries)
@@ -63,7 +68,7 @@ List<CategoryNode> buildCategoryBreakdown(
   final ownById = <int, double>{};
   final unplaced = <String, double>{};
   for (final entry in amountsByName.entries) {
-    final category = placeable[entry.key];
+    final category = placeable[_fold(entry.key)];
     if (category == null) {
       unplaced[entry.key] = (unplaced[entry.key] ?? 0) + entry.value;
     } else {
@@ -129,6 +134,13 @@ List<CategoryNode> buildCategoryBreakdown(
       ),
   ]);
 }
+
+/// The form names and types are compared in. Folding case and padding
+/// keeps the join working across two endpoints that need not agree on
+/// either; the ambiguity rule above still refuses to place a name once
+/// folding makes two categories collide, so this widens what matches
+/// without letting anything match the wrong thing.
+String _fold(String value) => value.trim().toLowerCase();
 
 /// Largest first, the order the chart and the list both read in.
 List<CategoryNode> _sorted(List<CategoryNode> nodes) =>
