@@ -1,25 +1,25 @@
 package com.cuenti.cuentimobile
 
+import android.os.Build
 import android.os.Bundle
-import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 
 class MainActivity : FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Keep account balances out of the task-switcher thumbnail and out of
-        // screenshots. The biometric app-lock guards a resume and privacy mode
-        // blurs amounts on demand, but neither reaches the snapshot Android
-        // takes of the window when the app goes to the background -- which is
-        // the dashboard, in full, with every figure on it.
-        //
-        // The cost is deliberate: screenshots of the app are blocked outright.
-        // FLAG_SECURE is the only mechanism that covers both surfaces on every
-        // API level this app supports (minSdk 28); setRecentsScreenshotEnabled
-        // handles only the thumbnail and only from API 33.
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_SECURE,
-            WindowManager.LayoutParams.FLAG_SECURE,
-        )
         super.onCreate(savedInstanceState)
+
+        // Keep account balances out of the app-switcher preview, which was a
+        // full picture of the dashboard sitting outside everything else that
+        // protects it: the biometric lock only guards a resume, and privacy
+        // mode only blurs what is on screen.
+        //
+        // 2.4.0 used FLAG_SECURE, which covers this on every API level but
+        // also blocks screenshots of the app outright. This is the narrow
+        // version: it hides the preview and leaves deliberate screenshots
+        // working. The trade-off is that it exists only from Android 13, so
+        // on 12 and below (minSdk 28) neither surface is protected.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setRecentsScreenshotEnabled(false)
+        }
     }
 }
