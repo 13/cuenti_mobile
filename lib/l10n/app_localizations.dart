@@ -399,6 +399,12 @@ abstract class L {
   /// **'Unrecognised certificate'**
   String get serverUntrustedTitle;
 
+  /// No description provided for @serverUntrustedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{host} presented a certificate no certificate authority vouches for. That is normal for a self-hosted Cuenti server, but it is also what an intercepted connection looks like. Trust it only if this fingerprint matches your server.'**
+  String serverUntrustedBody(String host);
+
   /// No description provided for @serverChange.
   ///
   /// In en, this message translates to:

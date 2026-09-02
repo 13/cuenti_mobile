@@ -50,6 +50,7 @@
   "serverSaveContinue": "Speichern & weiter",
   "serverTrust": "Vertrauen",
   "serverUntrustedTitle": "Unbekanntes Zertifikat",
+  "serverUntrustedBody": "{host} hat ein Zertifikat vorgelegt, für das keine Zertifizierungsstelle bürgt. Bei einem selbst gehosteten Cuenti-Server ist das normal, aber genauso sieht auch eine abgefangene Verbindung aus. Vertrauen Sie ihm nur, wenn dieser Fingerabdruck zu Ihrem Server passt.",
   "serverChange": "Server wechseln",
   "accountsEmpty": "Noch keine Konten",
   "accountsAdd": "Konto hinzufügen",

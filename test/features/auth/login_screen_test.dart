@@ -1,12 +1,15 @@
 import 'dart:async';
 
+import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/certificate_pins.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
 import 'package:cuentimobile/features/auth/ui/login_screen.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,8 +35,13 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockLocalAuthentication extends Mock implements LocalAuthentication {}
 
+const _fingerprint = 'AA:BB:CC:DD';
+const _host = 'cuenti.muh';
+
 void main() {
   late MockAuthRepository repo;
+  late CertificatePins pins;
+  late ApiClient client;
 
   setUpAll(() {
     registerFallbackValue('');
@@ -53,6 +61,8 @@ void main() {
 
   setUp(() {
     repo = MockAuthRepository();
+    pins = CertificatePins(_MemoryStorage());
+    client = ApiClient(_MemoryStorage(), dioOverride: Dio(), pins: pins);
     // Stub the calls `AuthController.init()` makes automatically on build.
     when(() => repo.hasToken()).thenAnswer((_) async => false);
     when(() => repo.fetchRegistrationEnabled()).thenAnswer((_) async => true);
@@ -82,6 +92,7 @@ void main() {
       ProviderScope(
         overrides: [
           authRepositoryProvider.overrideWithValue(repo),
+          apiClientProvider.overrideWithValue(client),
           secureStorageProvider.overrideWithValue(s),
         ],
         child: MaterialApp.router(
@@ -338,5 +349,106 @@ void main() {
       reason: 'a failed session restore must not escape as an async error',
     );
     expect(find.widgetWithText(FilledButton, 'Sign In'), findsOneWidget);
+  });
+
+  /// The session restore `LoginScreen` runs on first frame reaches the
+  /// server, so a certificate turned away there is what a fresh install sees
+  /// before it has typed anything.
+  void rejectCertificateOnStartupProbe() {
+    when(() => repo.fetchRegistrationEnabled()).thenAnswer((_) async {
+      pins.evaluate(_host, _fingerprint);
+      return true;
+    });
+  }
+
+  testWidgets('a first launch against the default server asks the user to '
+      'vouch for its certificate', (tester) async {
+    rejectCertificateOnStartupProbe();
+
+    await pumpLogin(tester);
+
+    expect(
+      find.textContaining(_fingerprint),
+      findsOneWidget,
+      reason:
+          'the user never passes through server setup on a fresh install, '
+          'so the prompt has to be offered here',
+    );
+    expect(
+      find.textContaining(_host),
+      findsOneWidget,
+      reason: 'the prompt names the host it is asking the user to vouch for',
+    );
+  });
+
+  testWidgets('trusting from the login screen pins the certificate', (
+    tester,
+  ) async {
+    rejectCertificateOnStartupProbe();
+
+    await pumpLogin(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Trust'));
+    await tester.pumpAndSettle();
+
+    expect(pins.pinFor(_host), _fingerprint);
+    expect(find.widgetWithText(FilledButton, 'Sign In'), findsOneWidget);
+  });
+
+  testWidgets('declining leaves the certificate unpinned and the form usable', (
+    tester,
+  ) async {
+    rejectCertificateOnStartupProbe();
+
+    await pumpLogin(tester);
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(pins.pinFor(_host), isNull);
+    expect(find.widgetWithText(FilledButton, 'Sign In'), findsOneWidget);
+  });
+
+  testWidgets('a sign-in refused over an untrusted certificate offers to '
+      'trust it and then goes through', (tester) async {
+    var attempts = 0;
+    when(() => repo.login(any(), any())).thenAnswer((_) async {
+      attempts++;
+      if (attempts == 1) {
+        pins.evaluate(_host, _fingerprint);
+        throw const NetworkException('certificate not trusted');
+      }
+      return user;
+    });
+
+    await pumpLogin(tester);
+    await tester.enterText(find.byType(TextFormField).at(0), 'demo');
+    await tester.enterText(find.byType(TextFormField).at(1), 'secret');
+    await tester.tap(find.widgetWithText(FilledButton, 'Sign In'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining(_fingerprint), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Trust'));
+    await tester.pumpAndSettle();
+
+    expect(pins.pinFor(_host), _fingerprint);
+    expect(attempts, 2, reason: 'the sign-in is retried once trusted');
+    expect(find.text('Dashboard'), findsOneWidget);
+  });
+
+  testWidgets('an ordinary sign-in failure does not raise a trust prompt', (
+    tester,
+  ) async {
+    when(
+      () => repo.login(any(), any()),
+    ).thenThrow(const UnauthorizedException('Invalid username or password'));
+
+    await pumpLogin(tester);
+    await tester.enterText(find.byType(TextFormField).at(0), 'demo');
+    await tester.enterText(find.byType(TextFormField).at(1), 'wrong');
+    await tester.tap(find.widgetWithText(FilledButton, 'Sign In'));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(FilledButton, 'Trust'), findsNothing);
+    expect(find.text('Invalid username or password'), findsOneWidget);
   });
 }

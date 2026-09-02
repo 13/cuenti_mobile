@@ -50,6 +50,7 @@
   "serverSaveContinue": "Salva e continua",
   "serverTrust": "Considera attendibile",
   "serverUntrustedTitle": "Certificato non riconosciuto",
+  "serverUntrustedBody": "{host} ha presentato un certificato per cui nessuna autorità di certificazione garantisce. Per un server Cuenti self-hosted è normale, ma è anche il segno di una connessione intercettata. Consideralo attendibile solo se questa impronta corrisponde a quella del tuo server.",
   "serverChange": "Cambia server",
   "accountsEmpty": "Nessun conto",
   "accountsAdd": "Aggiungi conto",

@@ -159,6 +159,11 @@ class LEn extends L {
   String get serverUntrustedTitle => 'Unrecognised certificate';
 
   @override
+  String serverUntrustedBody(String host) {
+    return '$host presented a certificate no certificate authority vouches for. That is normal for a self-hosted Cuenti server, but it is also what an intercepted connection looks like. Trust it only if this fingerprint matches your server.';
+  }
+
+  @override
   String get serverChange => 'Change Server';
 
   @override

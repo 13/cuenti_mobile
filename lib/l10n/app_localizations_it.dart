@@ -160,6 +160,11 @@ class LIt extends L {
   String get serverUntrustedTitle => 'Certificato non riconosciuto';
 
   @override
+  String serverUntrustedBody(String host) {
+    return '$host ha presentato un certificato per cui nessuna autorità di certificazione garantisce. Per un server Cuenti self-hosted è normale, ma è anche il segno di una connessione intercettata. Consideralo attendibile solo se questa impronta corrisponde a quella del tuo server.';
+  }
+
+  @override
   String get serverChange => 'Cambia server';
 
   @override

@@ -161,6 +161,11 @@ class LDe extends L {
   String get serverUntrustedTitle => 'Unbekanntes Zertifikat';
 
   @override
+  String serverUntrustedBody(String host) {
+    return '$host hat ein Zertifikat vorgelegt, für das keine Zertifizierungsstelle bürgt. Bei einem selbst gehosteten Cuenti-Server ist das normal, aber genauso sieht auch eine abgefangene Verbindung aus. Vertrauen Sie ihm nur, wenn dieser Fingerabdruck zu Ihrem Server passt.';
+  }
+
+  @override
   String get serverChange => 'Server wechseln';
 
   @override

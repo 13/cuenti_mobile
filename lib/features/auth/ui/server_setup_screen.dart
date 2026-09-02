@@ -1,6 +1,7 @@
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/auth/ui/trust_certificate_sheet.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,7 +35,10 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
       if (mounted) setState(() => _saving = false);
     }
     if (!mounted) return;
-    if (rejected != null && !await _askToTrust(rejected)) return;
+    if (rejected != null &&
+        !await promptToTrustCertificate(context, ref, rejected)) {
+      return;
+    }
     if (mounted) context.go('/login');
   }
 
@@ -53,22 +57,6 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
       // fall through to the recorded rejection below
     }
     return pins.lastRejection;
-  }
-
-  Future<bool> _askToTrust(({String host, String fingerprint}) rejected) async {
-    final trusted = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => _TrustCertificateSheet(rejected: rejected),
-    );
-    if (trusted ?? false) {
-      await ref
-          .read(apiClientProvider)
-          .pins
-          .trust(rejected.host, rejected.fingerprint);
-      return true;
-    }
-    return false;
   }
 
   @override
@@ -132,66 +120,5 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-}
-
-/// Asks the user to vouch for a self-signed certificate, showing the
-/// fingerprint so they can compare it against what their server reports
-/// (`openssl x509 -fingerprint -sha256`).
-class _TrustCertificateSheet extends StatelessWidget {
-  const _TrustCertificateSheet({required this.rejected});
-
-  final ({String host, String fingerprint}) rejected;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            L.of(context).serverUntrustedTitle,
-            style: theme.textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${rejected.host} presented a certificate no certificate '
-            'authority vouches for. That is normal for a self-hosted Cuenti '
-            'server, but it is also what an intercepted connection looks '
-            'like. Trust it only if this fingerprint matches your server.',
-            style: theme.textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 16),
-          SelectableText(
-            rejected.fingerprint,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(L.of(context).commonCancel),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: Text(L.of(context).serverTrust),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 }

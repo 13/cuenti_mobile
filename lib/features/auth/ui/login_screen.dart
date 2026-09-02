@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/auth/ui/trust_certificate_sheet.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,18 +50,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   /// must still leave a login form the user can type into, not an
   /// unhandled async error.
   Future<void> _restoreSession() async {
+    var restored = true;
     try {
       await ref.read(authControllerProvider.notifier).init();
     } on Exception catch (_) {
-      return;
+      restored = false;
     }
     if (!mounted) return;
+    // The restore above already reached the server, so a certificate it
+    // turned away is recorded by now. This is the only place a fresh install
+    // meets the default server -- it lands here, not on server setup -- so
+    // without this prompt the first sign-in fails with nothing but an error
+    // telling the user to go and run setup.
+    final rejected = ref.read(apiClientProvider).pins.lastRejection;
+    if (rejected != null) {
+      await promptToTrustCertificate(context, ref, rejected);
+      if (!mounted) return;
+    }
+    if (!restored) return;
     final auth = ref.read(authControllerProvider);
     if (auth.isLoggedIn) {
       context.go('/dashboard');
       return;
     }
     _applySavedCredentials(auth);
+  }
+
+  /// Runs [attempt], and when it fails against a certificate this install
+  /// has not vouched for, offers to trust it and runs [attempt] once more.
+  /// Returns the error message to show, or null once signed in.
+  Future<String?> _signingIn(Future<String?> Function() attempt) async {
+    // Cleared first so a rejection left over from an earlier, declined
+    // prompt is not mistaken for this attempt's.
+    final pins = ref.read(apiClientProvider).pins..lastRejection = null;
+    final error = await attempt();
+    if (error == null || !mounted) return error;
+    final rejected = pins.lastRejection;
+    if (rejected == null) return error;
+    // Drop the progress indicator before the prompt: leaving it spinning
+    // under a modal sheet is both wrong and untestable.
+    setState(() => _submitting = false);
+    final trusted = await promptToTrustCertificate(context, ref, rejected);
+    if (!trusted || !mounted) return error;
+    setState(() => _submitting = true);
+    return attempt();
   }
 
   void _applySavedCredentials(AuthState auth) {
@@ -224,12 +258,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _submitting = true;
       _error = null;
     });
-    final error = await ref
-        .read(authControllerProvider.notifier)
-        .login(
-          _usernameController.text.trim(),
-          _passwordController.text,
-        );
+    final error = await _signingIn(
+      () => ref
+          .read(authControllerProvider.notifier)
+          .login(
+            _usernameController.text.trim(),
+            _passwordController.text,
+          ),
+    );
     if (!mounted) return;
     if (error == null) {
       context.go('/dashboard');
@@ -272,9 +308,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() {
       _error = null;
     });
-    final error = await ref
-        .read(authControllerProvider.notifier)
-        .loginWithSavedCredentials(L.of(context));
+    final l = L.of(context);
+    final error = await _signingIn(
+      () => ref
+          .read(authControllerProvider.notifier)
+          .loginWithSavedCredentials(l),
+    );
     if (!mounted) return;
     if (error == null) {
       context.go('/dashboard');
