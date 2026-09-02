@@ -169,11 +169,29 @@ class _CategoryTabState extends ConsumerState<CategoryTab> {
                       final pct = total > 0
                           ? (level[i].total / total * 100)
                           : 0.0;
+                      // Nothing about a slice says whether tapping it opens
+                      // anything, so the ones that do carry the chevron the
+                      // list rows below already use for the same thing.
+                      // Gated on the same 5% the label is: a slice too thin
+                      // to hold a percentage is too thin to hold a badge
+                      // without it sitting over its neighbours -- and its
+                      // row below still shows one.
+                      final opens = level[i].hasChildren && pct >= 5;
                       return PieChartSectionData(
                         value: level[i].total,
                         title: pct >= 5 ? '${pct.toStringAsFixed(0)}%' : '',
                         color: colors[i],
                         radius: 50,
+                        badgeWidget: opens
+                            ? const Icon(
+                                Icons.chevron_right,
+                                size: 14,
+                                color: Colors.white,
+                              )
+                            : null,
+                        // Outward of the percentage, which sits at the
+                        // default 0.5, so the two do not overlap.
+                        badgePositionPercentageOffset: 0.85,
                         titleStyle: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,

@@ -258,4 +258,78 @@ void main() {
       expect(row('Food'), findsOneWidget);
     });
   });
+
+  group('which slices say they can be opened', () {
+    /// Chevrons drawn on the chart itself, not the ones on the list rows
+    /// below it, which carry the same icon.
+    Finder sliceChevrons() => find.descendant(
+      of: find.byType(PieChart),
+      matching: find.byIcon(Icons.chevron_right),
+    );
+
+    testWidgets('a slice with subcategories under it carries a chevron, the '
+        'same affordance the list row below already has', (tester) async {
+      await pumpTab(tester, data: const {'Groceries': 300, 'Organic': 100});
+
+      expect(
+        sliceChevrons(),
+        findsOneWidget,
+        reason: 'Food is the only root, and it has Groceries beneath it',
+      );
+    });
+
+    testWidgets('a slice with nothing beneath it carries none: a chevron '
+        'that opens nothing is worse than no chevron', (tester) async {
+      await pumpTab(tester, data: const {'Fuel': 100});
+
+      expect(row('Transport'), findsOneWidget);
+      await tester.tapAt(
+        Offset(
+          tester.getRect(find.byType(PieChart)).center.dx + 42,
+          tester.getRect(find.byType(PieChart)).center.dy + 42,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        sliceChevrons(),
+        findsNothing,
+        reason: 'Fuel is a leaf once Transport has been opened',
+      );
+    });
+
+    testWidgets('one chevron per drillable slice, not one per slice', (
+      tester,
+    ) async {
+      await pumpTab(
+        tester,
+        data: const {'Groceries': 300, 'Fuel': 100, 'Mystery': 50},
+      );
+
+      expect(
+        sliceChevrons(),
+        findsNWidgets(2),
+        reason:
+            'Food and Transport open; Mystery matches no category and '
+            'has nothing under it',
+      );
+    });
+
+    testWidgets('a slice too thin to label is too thin to badge', (
+      tester,
+    ) async {
+      await pumpTab(
+        tester,
+        data: const {'Groceries': 1000, 'Fuel': 1},
+      );
+
+      expect(
+        sliceChevrons(),
+        findsOneWidget,
+        reason:
+            'Transport is well under 5% of the total, so its badge would '
+            'sit on top of its neighbours',
+      );
+    });
+  });
 }
