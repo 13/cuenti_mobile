@@ -1,10 +1,7 @@
 import 'dart:async';
 
 import 'package:cuentimobile/core/api/api_exception.dart';
-import 'package:cuentimobile/core/theme/cuenti_colors.dart';
-import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
-import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
 import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
@@ -17,6 +14,7 @@ import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/ui/transaction_dialog.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
+import 'package:cuentimobile/features/transactions/ui/widgets/transaction_list_parts.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -181,16 +179,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             slivers: [
               SliverPersistentHeader(
                 pinned: true,
-                delegate: _DayHeaderDelegate(label: group.label),
+                delegate: DayHeaderDelegate(label: group.label),
               ),
               SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, i) {
                     final (t, index) = group.entries[i];
-                    return _Staggered(
+                    return Staggered(
                       key: ValueKey('stagger-${t.id}'),
                       index: index,
-                      child: _TransactionTile(
+                      child: TransactionTile(
                         transaction: t,
                         filter: _filter,
                         onDelete: _delete,
@@ -219,8 +217,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 
-  List<_DayGroup> _groupByDay(List<Transaction> items) {
-    final groups = <_DayGroup>[];
+  List<DayGroup> _groupByDay(List<Transaction> items) {
+    final groups = <DayGroup>[];
     String? lastKey;
     var index = 0;
     for (final t in items) {
@@ -228,7 +226,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       final key =
           '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
       if (key != lastKey) {
-        groups.add(_DayGroup(key, _dayLabel(d), []));
+        groups.add(DayGroup(key, _dayLabel(d), []));
         lastKey = key;
       }
       groups.last.entries.add((t, index));
@@ -486,233 +484,4 @@ class _ChipOption<T> {
   const _ChipOption(this.label, this.value);
   final String label;
   final T? value;
-}
-
-class _DayGroup {
-  _DayGroup(this.dayKey, this.label, this.entries);
-  final String dayKey;
-  final String label;
-  final List<(Transaction, int)> entries;
-}
-
-class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _DayHeaderDelegate({required this.label});
-  final String label;
-
-  static const double _height = 36;
-
-  @override
-  double get minExtent => _height;
-
-  @override
-  double get maxExtent => _height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      height: _height,
-      alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      color: colorScheme.surfaceContainerHighest,
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: colorScheme.primary,
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _DayHeaderDelegate oldDelegate) =>
-      oldDelegate.label != label;
-}
-
-/// One-shot entrance animation for a list tile: fades and slides in on
-/// first build only (per-[State] lifetime), capped at [index] 12 so a long
-/// list doesn't produce an ever-growing delay. Skipped entirely when the
-/// platform/test requests reduced motion.
-class _Staggered extends StatefulWidget {
-  const _Staggered({required this.child, required this.index, super.key});
-  final Widget child;
-  final int index;
-
-  @override
-  State<_Staggered> createState() => _StaggeredState();
-}
-
-class _StaggeredState extends State<_Staggered> {
-  bool _visible = false;
-  bool _animate = true;
-  bool _scheduled = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_visible || _scheduled) return;
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _animate = false;
-      _visible = true;
-      return;
-    }
-    _scheduled = true;
-    final cappedIndex = widget.index > 12 ? 12 : widget.index;
-    Future.delayed(Duration(milliseconds: cappedIndex * 35), () {
-      if (mounted) setState(() => _visible = true);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_animate) return widget.child;
-    return AnimatedOpacity(
-      opacity: _visible ? 1 : 0,
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
-      child: AnimatedSlide(
-        offset: _visible ? Offset.zero : const Offset(0, 0.08),
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-        child: widget.child,
-      ),
-    );
-  }
-}
-
-class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({
-    required this.transaction,
-    required this.filter,
-    required this.onDelete,
-  });
-
-  final Transaction transaction;
-  final TransactionFilter filter;
-  final void Function(int id) onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = amountColorFor(context, transaction.type);
-    final icon = switch (transaction.type) {
-      'EXPENSE' => Icons.arrow_downward,
-      'INCOME' => Icons.arrow_upward,
-      _ => Icons.swap_horiz,
-    };
-
-    final accountName = switch (transaction.type) {
-      'EXPENSE' => transaction.fromAccountName,
-      'INCOME' => transaction.toAccountName,
-      _ =>
-        transaction.fromAccountName != null && transaction.toAccountName != null
-            ? '${transaction.fromAccountName} → ${transaction.toAccountName}'
-            : null,
-    };
-
-    final title = (transaction.payee?.isNotEmpty ?? false)
-        ? transaction.payee!
-        : (transaction.categoryName ?? transaction.memo ?? transaction.type);
-
-    final subtitleParts = [
-      if (transaction.memo != null && transaction.memo!.isNotEmpty)
-        transaction.memo!,
-      if (accountName != null && accountName.isNotEmpty) accountName,
-    ];
-
-    final colorScheme = Theme.of(context).colorScheme;
-    final editColor = context.cuentiColors.transfer;
-
-    return Dismissible(
-      key: ValueKey(transaction.id),
-      background: Container(
-        color: editColor.withAlpha(31),
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            Icon(Icons.edit, color: editColor),
-            const SizedBox(width: 8),
-            Text(L.of(context).commonEdit, style: TextStyle(color: editColor)),
-          ],
-        ),
-      ),
-      secondaryBackground: Container(
-        color: colorScheme.errorContainer,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              L.of(context).commonDelete,
-              style: TextStyle(color: colorScheme.onErrorContainer),
-            ),
-            const SizedBox(width: 8),
-            Icon(Icons.delete, color: colorScheme.onErrorContainer),
-          ],
-        ),
-      ),
-      confirmDismiss: (direction) async {
-        if (direction == DismissDirection.endToStart) {
-          final confirmed = await showConfirmSheet(
-            context,
-            title: L.of(context).txDeleteTitle,
-            message: L.of(context).commonUndoWarning,
-          );
-          if (confirmed && transaction.id != null) {
-            onDelete(transaction.id!);
-          }
-          return confirmed;
-        }
-        unawaited(
-          showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            builder: (_) => TransactionDialog(
-              transaction: transaction,
-              filter: filter,
-            ),
-          ),
-        );
-        return false;
-      },
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withAlpha(31),
-          child: Icon(icon, color: color),
-        ),
-        title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: subtitleParts.isNotEmpty
-            ? Text(
-                subtitleParts.join(' · '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              )
-            : null,
-        trailing: AmountText(
-          transaction.amount,
-          type: transaction.type,
-          signed: true,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        onTap: () {
-          unawaited(
-            showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              builder: (_) => TransactionDialog(
-                transaction: transaction,
-                filter: filter,
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
 }
