@@ -2,23 +2,44 @@ package com.cuenti.cuentimobile
 
 import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 
 class MainActivity : FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Keep account balances out of the app-switcher preview, which is
+        // otherwise a full picture of the dashboard shown to anyone who
+        // presses the recents button -- outside the biometric lock, which
+        // only guards a resume, and privacy mode, which only blurs what is
+        // on screen.
+        //
+        // How that is done differs by version, deliberately:
+        //
+        //   Android 13+  setRecentsScreenshotEnabled hides the preview and
+        //                nothing else, so screenshots keep working.
+        //   Android 12-  that API does not exist, and FLAG_SECURE is the
+        //                only thing that hides the preview. It also blocks
+        //                screenshots. Protecting the balances is worth more
+        //                than the screenshots on those versions, so the old
+        //                behaviour stays rather than leaving them exposed.
+        //
+        // The cost is an app that behaves differently on two phones. The
+        // release note says which, so it is a surprise that has an
+        // explanation rather than one that does not.
+        val canHidePreviewAlone = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
+        // Before super.onCreate: FLAG_SECURE has to be in place before the
+        // window shows its first frame.
+        if (!canHidePreviewAlone) {
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_SECURE,
+                WindowManager.LayoutParams.FLAG_SECURE,
+            )
+        }
+
         super.onCreate(savedInstanceState)
 
-        // Keep account balances out of the app-switcher preview, which was a
-        // full picture of the dashboard sitting outside everything else that
-        // protects it: the biometric lock only guards a resume, and privacy
-        // mode only blurs what is on screen.
-        //
-        // 2.4.0 used FLAG_SECURE, which covers this on every API level but
-        // also blocks screenshots of the app outright. This is the narrow
-        // version: it hides the preview and leaves deliberate screenshots
-        // working. The trade-off is that it exists only from Android 13, so
-        // on 12 and below (minSdk 28) neither surface is protected.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (canHidePreviewAlone) {
             setRecentsScreenshotEnabled(false)
         }
     }
