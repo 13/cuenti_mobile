@@ -53,7 +53,9 @@ class AuthController extends _$AuthController {
   Future<void> init() => _initFuture ??= _init();
 
   Future<void> _init() async {
-    await ref.read(apiClientProvider).init();
+    final client = ref.read(apiClientProvider)
+      ..onSessionExpired = _handleSessionExpired;
+    await client.init();
 
     final bioStr = await _storage.read(_biometricKey);
     final biometricEnabled = bioStr == 'true';
@@ -115,6 +117,22 @@ class AuthController extends _$AuthController {
     }
     await _persistSuccessfulLogin(user, username, password);
     return null;
+  }
+
+  /// The token stopped being accepted mid-session. Drop it and the user, so
+  /// the router's redirect takes them to the login screen rather than
+  /// leaving every screen erroring around a credential that cannot work.
+  ///
+  /// Unlike [logout] this keeps the saved username and password: the
+  /// session expired, the user did not ask to be forgotten, and making them
+  /// retype everything would be a worse answer than the one they get by
+  /// signing in again.
+  Future<void> _handleSessionExpired() async {
+    // Several requests can fail at once, and a signed-out state must not be
+    // re-cleared while the login screen is already up.
+    if (state.user == null) return;
+    state = state.copyWith(user: null);
+    await _repo.logout();
   }
 
   Future<void> logout() async {

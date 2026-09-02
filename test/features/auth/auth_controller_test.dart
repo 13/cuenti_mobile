@@ -392,4 +392,62 @@ void main() {
       expect(state.hasSavedPassword, isFalse);
     });
   });
+
+  group('a session the server no longer accepts', () {
+    /// The handler AuthController hands to ApiClient for a 401 that is not
+    /// a failed sign-in. Captured from the mock, since that is the seam the
+    /// interceptor calls through on a real client.
+    void Function() expiredCallback() =>
+        verify(() => apiClient.onSessionExpired = captureAny()).captured.last
+            as void Function();
+
+    test(
+      'a 401 from an ordinary endpoint signs the user out, so the router '
+      'sends them to login instead of leaving every screen erroring',
+      () async {
+        when(() => repo.hasToken()).thenAnswer((_) async => true);
+        when(() => repo.getProfile()).thenAnswer((_) async => user);
+        final notifier = container.read(authControllerProvider.notifier);
+        await notifier.init();
+        expect(container.read(authControllerProvider).isLoggedIn, isTrue);
+
+        expiredCallback()();
+        await Future<void>.delayed(Duration.zero);
+
+        expect(container.read(authControllerProvider).isLoggedIn, isFalse);
+        verify(() => repo.logout()).called(1);
+      },
+    );
+
+    test('the username is kept, so signing back in does not start from a '
+        'blank form', () async {
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      when(() => repo.hasToken()).thenAnswer((_) async => true);
+      when(() => repo.getProfile()).thenAnswer((_) async => user);
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      expiredCallback()();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(container.read(authControllerProvider).savedUsername, 'demo');
+      expect(storage.data['saved_password'], 'secret');
+    });
+
+    test('several requests failing at once sign the user out once, not once '
+        'each', () async {
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+      expect(container.read(authControllerProvider).isLoggedIn, isTrue);
+
+      final expired = expiredCallback();
+      expired();
+      expired();
+      expired();
+      await Future<void>.delayed(Duration.zero);
+
+      verify(() => repo.logout()).called(1);
+    });
+  });
 }

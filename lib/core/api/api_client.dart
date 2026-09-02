@@ -58,6 +58,16 @@ class ApiClient {
           handler.next(options);
         },
         onError: (error, handler) {
+          // A 401 anywhere but the sign-in endpoint means the token this
+          // client has been sending is no longer accepted. Without this the
+          // app stayed "signed in" around a dead token: every screen showed
+          // "Not authenticated", none recovered, and the only way out was
+          // finding Logout in the drawer. On /auth/login a 401 means the
+          // password was wrong, which is not an expired session.
+          if (error.response?.statusCode == 401 &&
+              !error.requestOptions.path.contains('/auth/login')) {
+            onSessionExpired?.call();
+          }
           handler.next(error);
         },
       ),
@@ -75,6 +85,11 @@ class ApiClient {
   /// Replays the last successful GET per endpoint when the server cannot be
   /// reached. Null until [init] has opened the on-disk cache.
   OfflineCacheInterceptor? offlineCache;
+
+  /// Called when the server rejects this client's token. Set by the auth
+  /// layer, which owns what "signed out" means; this class only knows that
+  /// the credential it has been presenting has stopped working.
+  void Function()? onSessionExpired;
   late Dio dio;
   String _baseUrl = defaultServerUrl;
 
@@ -109,9 +124,19 @@ class ApiClient {
   String get baseUrl => _baseUrl;
 
   Future<void> setServerUrl(String url) async {
-    _baseUrl = url.endsWith('/') ? url.substring(0, url.length - 1) : url;
+    final normalized = url.endsWith('/')
+        ? url.substring(0, url.length - 1)
+        : url;
+    final movedServer = normalized != _baseUrl;
+    _baseUrl = normalized;
     await _storage.write(_serverUrlKey, _baseUrl);
     dio.options.baseUrl = '$_baseUrl/api';
+    // Cached responses are keyed by endpoint, not by server, so figures
+    // fetched from the old one would replay as this one's the moment it
+    // could not be reached -- one instance's balances shown under
+    // another's address, labelled only as offline. Dropping them on a move
+    // is the same reasoning as dropping them on sign-out.
+    if (movedServer) await offlineCache?.cache.clear();
   }
 
   Future<void> saveToken(String token) async {
