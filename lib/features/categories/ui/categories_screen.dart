@@ -5,7 +5,7 @@ import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
-import 'package:cuentimobile/core/widgets/feedback_snack.dart';
+import 'package:cuentimobile/core/widgets/entity_edit_sheet.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
@@ -190,7 +190,6 @@ class CategoriesScreen extends ConsumerWidget {
     final name = TextEditingController(text: category?.name ?? '');
     var type = category?.type ?? 'EXPENSE';
     var parentId = category?.parentId;
-    var saving = false;
 
     final categories = ref.read(categoriesControllerProvider).value ?? [];
     final parentOptions = categories
@@ -198,142 +197,65 @@ class CategoriesScreen extends ConsumerWidget {
         .toList();
 
     unawaited(
-      showModalBottomSheet<void>(
+      showEntityEditSheet(
         context: context,
-        isScrollControlled: true,
-        builder: (ctx) => StatefulBuilder(
-          builder: (ctx, setModalState) => Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(ctx).viewInsets.bottom,
-              left: 16,
-              right: 16,
-              top: 16,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    category == null
-                        ? L.of(context).categoriesAddTitle
-                        : L.of(context).categoriesEditTitle,
-                    style: Theme.of(ctx).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: name,
-                    decoration: InputDecoration(
-                      labelText: L.of(context).commonName,
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: type,
-                    decoration: InputDecoration(
-                      labelText: L.of(context).commonType,
-                      border: const OutlineInputBorder(),
-                    ),
-                    items: [
-                      DropdownMenuItem(
-                        value: 'EXPENSE',
-                        child: Text(L.of(context).commonExpense),
-                      ),
-                      DropdownMenuItem(
-                        value: 'INCOME',
-                        child: Text(L.of(context).commonIncome),
-                      ),
-                    ],
-                    onChanged: (v) =>
-                        setModalState(() => type = v ?? 'EXPENSE'),
-                  ),
-                  const SizedBox(height: 12),
-                  CategoryPickerField(
-                    categories: parentOptions,
-                    selectedId: parentId,
-                    labelText: L.of(context).categoriesParent,
-                    placeholder: L.of(context).categoriesTopLevel,
-                    noneLabel: L.of(context).categoriesTopLevel,
-                    onChanged: (v) => setModalState(() => parentId = v),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: saving ? null : () => Navigator.pop(ctx),
-                          child: Text(L.of(context).commonCancel),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: saving
-                              ? null
-                              : () async {
-                                  setModalState(() => saving = true);
-                                  try {
-                                    final newCategory = Category(
-                                      id: category?.id,
-                                      name: name.text,
-                                      type: type,
-                                      parentId: parentId,
-                                    );
-                                    await ref
-                                        .read(
-                                          categoriesControllerProvider.notifier,
-                                        )
-                                        .save(newCategory);
-                                    if (ctx.mounted) {
-                                      final messenger = ScaffoldMessenger.of(
-                                        ctx,
-                                      );
-                                      final saved = L.of(ctx).categoriesSaved;
-                                      Navigator.pop(ctx);
-                                      showSuccessSnack(messenger, saved);
-                                    }
-                                  } on ApiException catch (e) {
-                                    setModalState(() => saving = false);
-                                    if (ctx.mounted) {
-                                      ScaffoldMessenger.of(ctx).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            L
-                                                .of(context)
-                                                .commonError(
-                                                  e.localizedMessage(
-                                                    L.of(context),
-                                                  ),
-                                                ),
-                                          ),
-                                          backgroundColor: Theme.of(
-                                            ctx,
-                                          ).colorScheme.error,
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
-                          child: saving
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(L.of(context).commonSave),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
+        title: category == null
+            ? L.of(context).categoriesAddTitle
+            : L.of(context).categoriesEditTitle,
+        successMessage: L.of(context).categoriesSaved,
+        fields: (context, rebuild) => [
+          TextField(
+            controller: name,
+            decoration: InputDecoration(
+              labelText: L.of(context).commonName,
+              border: const OutlineInputBorder(),
             ),
           ),
-        ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: type,
+            decoration: InputDecoration(
+              labelText: L.of(context).commonType,
+              border: const OutlineInputBorder(),
+            ),
+            items: [
+              DropdownMenuItem(
+                value: 'EXPENSE',
+                child: Text(L.of(context).commonExpense),
+              ),
+              DropdownMenuItem(
+                value: 'INCOME',
+                child: Text(L.of(context).commonIncome),
+              ),
+            ],
+            onChanged: (v) {
+              type = v ?? 'EXPENSE';
+              rebuild();
+            },
+          ),
+          const SizedBox(height: 12),
+          CategoryPickerField(
+            categories: parentOptions,
+            selectedId: parentId,
+            labelText: L.of(context).categoriesParent,
+            placeholder: L.of(context).categoriesTopLevel,
+            noneLabel: L.of(context).categoriesTopLevel,
+            onChanged: (v) {
+              parentId = v;
+              rebuild();
+            },
+          ),
+        ],
+        onSave: () => ref
+            .read(categoriesControllerProvider.notifier)
+            .save(
+              Category(
+                id: category?.id,
+                name: name.text,
+                type: type,
+                parentId: parentId,
+              ),
+            ),
       ),
     );
   }

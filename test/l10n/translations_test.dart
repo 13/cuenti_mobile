@@ -222,10 +222,20 @@ void main() {
           for (final m in pattern.allMatches(src)) {
             final text = m.group(1)!;
             if (allowed.contains(text)) continue;
-            // Interpolations and identifiers are not display copy.
-            if (text.contains(r'$') || !RegExp('[a-z]').hasMatch(text)) {
-              continue;
-            }
+            // An interpolated string is not automatically safe: it is only
+            // safe if the parts around the ${...} are punctuation. Skipping
+            // anything containing a '$' is what let "Symbol: ... Decimals:
+            // ..." and "last: ..." sit on screen in English, and hid the
+            // certificate sheet's whole body before them. Strip the
+            // interpolations and judge what is left.
+            final literal = text
+                .replaceAll(RegExp(r'\$\{[^}]*\}'), '')
+                .replaceAll(RegExp(r'\$\w+'), '')
+                // A literal containing a quote of its own ("?? ''", or
+                // "join(', ')") ends the match early, leaving half an
+                // interpolation behind. That tail is code, not copy.
+                .replaceAll(RegExp(r'\$\{.*'), '');
+            if (!RegExp('[a-z]{3}').hasMatch(literal)) continue;
             if (RegExp(r'^[a-z][a-zA-Z]*$').hasMatch(text)) continue;
             final line = '\n'.allMatches(src.substring(0, m.start)).length + 1;
             offenders.add('${file.path}:$line  "$text"');

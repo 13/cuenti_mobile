@@ -4,7 +4,7 @@ import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
-import 'package:cuentimobile/core/widgets/feedback_snack.dart';
+import 'package:cuentimobile/core/widgets/entity_edit_sheet.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/currencies/domain/currency.dart';
 import 'package:cuentimobile/features/currencies/ui/currencies_controller.dart';
@@ -114,7 +114,14 @@ class CurrenciesScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        'Symbol: ${c.symbol} • Decimals: ${c.fracDigits} • Dec: "${c.decimalChar}" Group: "${c.groupingChar}"',
+                                        L
+                                            .of(context)
+                                            .currenciesFormatSummary(
+                                              c.symbol,
+                                              '${c.fracDigits}',
+                                              c.decimalChar,
+                                              c.groupingChar,
+                                            ),
                                         style: Theme.of(
                                           context,
                                         ).textTheme.labelSmall,
@@ -170,177 +177,72 @@ class CurrenciesScreen extends ConsumerWidget {
       text: currency?.groupingChar ?? '.',
     );
     var fracDigits = currency?.fracDigits ?? 2;
-    var saving = false;
+
+    Widget field(TextEditingController controller, String label) => TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+    );
 
     unawaited(
-      showModalBottomSheet<void>(
+      showEntityEditSheet(
         context: context,
-        isScrollControlled: true,
-        builder: (ctx) => StatefulBuilder(
-          builder: (ctx, setModalState) => Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(ctx).viewInsets.bottom,
-              left: 16,
-              right: 16,
-              top: 16,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    currency == null
-                        ? L.of(context).currenciesAddTitle
-                        : L.of(context).currenciesEditTitle,
-                    style: Theme.of(ctx).textTheme.titleLarge,
+        title: currency == null
+            ? L.of(context).currenciesAddTitle
+            : L.of(context).currenciesEditTitle,
+        successMessage: L.of(context).currenciesSaved,
+        fields: (context, rebuild) => [
+          field(code, L.of(context).currenciesCodeHint),
+          const SizedBox(height: 12),
+          field(name, L.of(context).currenciesNameHint),
+          const SizedBox(height: 12),
+          field(symbol, L.of(context).currenciesSymbolHint),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: field(decimalChar, L.of(context).currenciesDecimal),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: field(groupingChar, L.of(context).currenciesGrouping),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  initialValue: fracDigits,
+                  decoration: InputDecoration(
+                    labelText: L.of(context).currenciesDecimals,
+                    border: const OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: code,
-                    decoration: InputDecoration(
-                      labelText: L.of(context).currenciesCodeHint,
-                      border: const OutlineInputBorder(),
-                    ),
+                  items: List.generate(
+                    9,
+                    (i) => DropdownMenuItem(value: i, child: Text('$i')),
                   ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: name,
-                    decoration: InputDecoration(
-                      labelText: L.of(context).currenciesNameHint,
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: symbol,
-                    decoration: InputDecoration(
-                      labelText: L.of(context).currenciesSymbolHint,
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: decimalChar,
-                          decoration: InputDecoration(
-                            labelText: L.of(context).currenciesDecimal,
-                            border: const OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: groupingChar,
-                          decoration: InputDecoration(
-                            labelText: L.of(context).currenciesGrouping,
-                            border: const OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: DropdownButtonFormField<int>(
-                          initialValue: fracDigits,
-                          decoration: InputDecoration(
-                            labelText: L.of(context).currenciesDecimals,
-                            border: const OutlineInputBorder(),
-                          ),
-                          items: List.generate(
-                            9,
-                            (i) =>
-                                DropdownMenuItem(value: i, child: Text('$i')),
-                          ),
-                          onChanged: (v) =>
-                              setModalState(() => fracDigits = v ?? 2),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: saving ? null : () => Navigator.pop(ctx),
-                          child: Text(L.of(context).commonCancel),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: saving
-                              ? null
-                              : () async {
-                                  setModalState(() => saving = true);
-                                  try {
-                                    await ref
-                                        .read(
-                                          currenciesControllerProvider.notifier,
-                                        )
-                                        .save(
-                                          Currency(
-                                            id: currency?.id,
-                                            code: code.text,
-                                            name: name.text,
-                                            symbol: symbol.text,
-                                            decimalChar: decimalChar.text,
-                                            groupingChar: groupingChar.text,
-                                            fracDigits: fracDigits,
-                                          ),
-                                        );
-                                    if (ctx.mounted) {
-                                      final messenger = ScaffoldMessenger.of(
-                                        ctx,
-                                      );
-                                      final saved = L.of(ctx).currenciesSaved;
-                                      Navigator.pop(ctx);
-                                      showSuccessSnack(messenger, saved);
-                                    }
-                                  } on ApiException catch (e) {
-                                    setModalState(() => saving = false);
-                                    if (ctx.mounted) {
-                                      ScaffoldMessenger.of(ctx).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            L
-                                                .of(context)
-                                                .commonError(
-                                                  e.localizedMessage(
-                                                    L.of(context),
-                                                  ),
-                                                ),
-                                          ),
-                                          backgroundColor: Theme.of(
-                                            ctx,
-                                          ).colorScheme.error,
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
-                          child: saving
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(L.of(context).commonSave),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                  onChanged: (v) {
+                    fracDigits = v ?? 2;
+                    rebuild();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+        onSave: () => ref
+            .read(currenciesControllerProvider.notifier)
+            .save(
+              Currency(
+                id: currency?.id,
+                code: code.text,
+                name: name.text,
+                symbol: symbol.text,
+                decimalChar: decimalChar.text,
+                groupingChar: groupingChar.text,
+                fracDigits: fracDigits,
               ),
             ),
-          ),
-        ),
       ),
     );
   }

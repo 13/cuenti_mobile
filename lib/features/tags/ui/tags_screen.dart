@@ -4,7 +4,7 @@ import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
-import 'package:cuentimobile/core/widgets/feedback_snack.dart';
+import 'package:cuentimobile/core/widgets/entity_edit_sheet.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/tags/domain/tag.dart';
 import 'package:cuentimobile/features/tags/ui/tags_controller.dart';
@@ -145,103 +145,27 @@ class TagsScreen extends ConsumerWidget {
 
   void _showEditDialog(BuildContext context, WidgetRef ref, Tag? tag) {
     final name = TextEditingController(text: tag?.name ?? '');
-    var saving = false;
 
     unawaited(
-      showModalBottomSheet<void>(
+      showEntityEditSheet(
         context: context,
-        isScrollControlled: true,
-        builder: (ctx) => StatefulBuilder(
-          builder: (ctx, setModalState) => Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(ctx).viewInsets.bottom,
-              left: 16,
-              right: 16,
-              top: 16,
+        title: tag == null
+            ? L.of(context).tagsAddTitle
+            : L.of(context).tagsEditTitle,
+        successMessage: L.of(context).tagsSaved,
+        fields: (context, _) => [
+          TextField(
+            controller: name,
+            decoration: InputDecoration(
+              labelText: L.of(context).commonName,
+              border: const OutlineInputBorder(),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  tag == null
-                      ? L.of(context).tagsAddTitle
-                      : L.of(context).tagsEditTitle,
-                  style: Theme.of(ctx).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: name,
-                  decoration: InputDecoration(
-                    labelText: L.of(context).commonName,
-                    border: const OutlineInputBorder(),
-                  ),
-                  autofocus: true,
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: saving ? null : () => Navigator.pop(ctx),
-                        child: Text(L.of(context).commonCancel),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: saving
-                            ? null
-                            : () async {
-                                setModalState(() => saving = true);
-                                try {
-                                  final newTag = Tag(
-                                    id: tag?.id,
-                                    name: name.text,
-                                  );
-                                  await ref
-                                      .read(tagsControllerProvider.notifier)
-                                      .save(newTag);
-                                  if (ctx.mounted) {
-                                    final messenger = ScaffoldMessenger.of(ctx);
-                                    final saved = L.of(ctx).tagsSaved;
-                                    Navigator.pop(ctx);
-                                    showSuccessSnack(messenger, saved);
-                                  }
-                                } on ApiException catch (e) {
-                                  setModalState(() => saving = false);
-                                  if (ctx.mounted) {
-                                    ScaffoldMessenger.of(ctx).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          e.localizedMessage(L.of(context)),
-                                        ),
-                                        backgroundColor: Theme.of(
-                                          ctx,
-                                        ).colorScheme.error,
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                        child: saving
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(L.of(context).commonSave),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
+            autofocus: true,
           ),
-        ),
+        ],
+        onSave: () => ref
+            .read(tagsControllerProvider.notifier)
+            .save(Tag(id: tag?.id, name: name.text)),
       ),
     );
   }
