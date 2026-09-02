@@ -32,7 +32,7 @@ class OverviewTab extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Income vs Expense Donut
-          const SectionHeader('Income vs Expense'),
+          SectionHeader(L.of(context).statsIncomeVsExpense),
           const SizedBox(height: 8),
           IncomeExpenseDonut(
             income: stats.totalIncome,
@@ -41,7 +41,7 @@ class OverviewTab extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Net Cash Flow Line Chart
-          const SectionHeader('Net Cash Flow Trend'),
+          SectionHeader(L.of(context).statsNetCashFlowTrend),
           const SizedBox(height: 8),
           SizedBox(
             height: 200,
@@ -52,7 +52,7 @@ class OverviewTab extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          const SectionHeader('Monthly Cash Flow'),
+          SectionHeader(L.of(context).statsMonthlyCashFlow),
           const SizedBox(height: 8),
           SizedBox(
             height: 250,

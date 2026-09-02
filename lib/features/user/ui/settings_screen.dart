@@ -53,7 +53,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader('Profile'),
+                SectionHeader(L.of(context).settingsProfile),
                 const SizedBox(height: 12),
                 _infoRow('Username', user.username),
                 _infoRow('Name', '${user.firstName} ${user.lastName}'),
@@ -76,7 +76,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader('Preferences'),
+                SectionHeader(L.of(context).settingsPreferences),
                 const SizedBox(height: 12),
                 SwitchListTile(
                   title: Text(L.of(context).settingsDarkMode),
@@ -135,7 +135,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader('Security'),
+                SectionHeader(L.of(context).settingsSecurity),
                 const SizedBox(height: 12),
                 SwitchListTile(
                   title: Text(L.of(context).settingsBiometric),
@@ -164,7 +164,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader('Server'),
+                SectionHeader(L.of(context).settingsServer),
                 const SizedBox(height: 8),
                 Text(
                   L.of(context).settingsConnectedTo(auth.serverUrl),
@@ -188,7 +188,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader('Data'),
+                SectionHeader(L.of(context).settingsData),
                 const SizedBox(height: 8),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -230,7 +230,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SectionHeader('Administration'),
+                  SectionHeader(L.of(context).settingsAdministration),
                   const SizedBox(height: 12),
                   FilledButton.tonal(
                     onPressed: () => _showAdminPanel(context),

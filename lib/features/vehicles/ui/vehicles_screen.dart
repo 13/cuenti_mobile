@@ -92,11 +92,11 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
               children: [
                 _StatCardsRow(report: report),
                 const SizedBox(height: 24),
-                const SectionHeader('Consumption'),
+                SectionHeader(L.of(context).vehiclesConsumption),
                 const SizedBox(height: 8),
                 _ConsumptionChart(entries: report.entries),
                 const SizedBox(height: 24),
-                const SectionHeader('Entries'),
+                SectionHeader(L.of(context).vehiclesEntries),
                 const SizedBox(height: 8),
                 _EntriesList(
                   entries: report.entries,

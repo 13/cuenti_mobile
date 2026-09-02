@@ -3,6 +3,8 @@ import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/core/widgets/privacy_blur.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
+import 'package:cuentimobile/features/categories/data/categories_repository.dart';
+import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/statistics/data/statistics_repository.dart';
 import 'package:cuentimobile/features/statistics/domain/statistics_data.dart';
 import 'package:cuentimobile/features/statistics/ui/statistics_screen.dart';
@@ -16,6 +18,8 @@ class MockStatisticsRepository extends Mock implements StatisticsRepository {}
 
 class MockAccountsRepository extends Mock implements AccountsRepository {}
 
+class MockCategoriesRepository extends Mock implements CategoriesRepository {}
+
 const _stats = StatisticsData(
   totalIncome: 3200,
   totalExpense: 1800,
@@ -28,10 +32,19 @@ const _stats = StatisticsData(
 void main() {
   late MockStatisticsRepository statsRepo;
   late MockAccountsRepository accountsRepo;
+  late MockCategoriesRepository categoriesRepo;
 
   setUp(() {
     statsRepo = MockStatisticsRepository();
     accountsRepo = MockAccountsRepository();
+    categoriesRepo = MockCategoriesRepository();
+    when(() => categoriesRepo.getAll()).thenAnswer(
+      (_) async => const [
+        Category(id: 1, name: 'Food'),
+        Category(id: 2, name: 'Groceries', parentId: 1),
+        Category(id: 3, name: 'Transport'),
+      ],
+    );
     when(
       () => accountsRepo.getAll(),
     ).thenAnswer((_) async => [const Account(id: 1, accountName: 'Giro')]);
@@ -57,6 +70,7 @@ void main() {
         overrides: [
           statisticsRepositoryProvider.overrideWithValue(statsRepo),
           accountsRepositoryProvider.overrideWithValue(accountsRepo),
+          categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
           if (privacyMode) privacyModeProvider.overrideWith(_AlwaysPrivate.new),
         ],
         child: MaterialApp(
@@ -126,6 +140,81 @@ void main() {
     expect(
       tester.widgetList<ImageFiltered>(find.byType(ImageFiltered)),
       isNotEmpty,
+    );
+  });
+
+  testWidgets('the expense tab drills into subcategories and the back '
+      'gesture climbs back out, inside the real tab bar', (tester) async {
+    when(
+      () => statsRepo.load(
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer(
+      (_) async => const StatisticsData(
+        totalIncome: 3200,
+        totalExpense: 1800,
+        balance: 1400,
+        expenseByCategory: {'Groceries': 1200, 'Transport': 600},
+      ),
+    );
+
+    await pumpScreen(tester);
+    await tester.tap(
+      find.descendant(of: find.byType(TabBar), matching: find.text('Expense')),
+    );
+    await tester.pumpAndSettle();
+
+    Finder row(String name) => find.byKey(ValueKey('category-row-$name'));
+    expect(row('Food'), findsOneWidget);
+
+    await tester.tap(row('Food'));
+    await tester.pumpAndSettle();
+    expect(row('Groceries'), findsOneWidget);
+
+    expect(await tester.binding.handlePopRoute(), isTrue);
+    await tester.pumpAndSettle();
+    expect(row('Food'), findsOneWidget);
+  });
+
+  testWidgets('a drill-down in one tab does not swallow the back gesture '
+      'while another tab is showing', (tester) async {
+    when(
+      () => statsRepo.load(
+        start: any(named: 'start'),
+        end: any(named: 'end'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer(
+      (_) async => const StatisticsData(
+        totalIncome: 3200,
+        totalExpense: 1800,
+        balance: 1400,
+        expenseByCategory: {'Groceries': 1200},
+        incomeByCategory: {'Salary': 3200},
+      ),
+    );
+
+    await pumpScreen(tester);
+    Finder tab(String label) =>
+        find.descendant(of: find.byType(TabBar), matching: find.text(label));
+    Finder row(String name) => find.byKey(ValueKey('category-row-$name'));
+
+    await tester.tap(tab('Expense'));
+    await tester.pumpAndSettle();
+    await tester.tap(row('Food'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(tab('Overview'));
+    await tester.pumpAndSettle();
+
+    expect(
+      await tester.binding.handlePopRoute(),
+      isFalse,
+      reason:
+          'the overview has nothing to pop, so the gesture must leave '
+          'the screen rather than be eaten by the hidden expense tab',
     );
   });
 }

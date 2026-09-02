@@ -33,38 +33,45 @@ class IncomeExpenseDonut extends ConsumerWidget {
       children: [
         SizedBox(
           height: 180,
-          child: PieChart(
-            PieChartData(
-              sectionsSpace: 3,
-              centerSpaceRadius: 50,
-              // Slice titles are painted TEXT inside the fl_chart canvas,
-              // not real widgets — PrivacyBlur (an ImageFiltered wrapper)
-              // can't reach into the chart painter, so keep the '•••••'
-              // string substitution here.
-              sections: [
-                PieChartSectionData(
-                  value: income,
-                  title: hidden ? '•••••' : formatNumber(income),
-                  color: colors.income,
-                  radius: 40,
-                  titleStyle: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+          // The slice titles are painted into a canvas, so without this the
+          // chart is silent to a screen reader. The figures themselves are
+          // read from the summary card above it.
+          child: Semantics(
+            label: L.of(context).a11yChartIncomeExpense,
+            container: true,
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 3,
+                centerSpaceRadius: 50,
+                // Slice titles are painted TEXT inside the fl_chart canvas,
+                // not real widgets — PrivacyBlur (an ImageFiltered wrapper)
+                // can't reach into the chart painter, so keep the '•••••'
+                // string substitution here.
+                sections: [
+                  PieChartSectionData(
+                    value: income,
+                    title: hidden ? '•••••' : formatNumber(income),
+                    color: colors.income,
+                    radius: 40,
+                    titleStyle: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                PieChartSectionData(
-                  value: expense,
-                  title: hidden ? '•••••' : formatNumber(expense),
-                  color: colors.expense,
-                  radius: 40,
-                  titleStyle: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  PieChartSectionData(
+                    value: expense,
+                    title: hidden ? '•••••' : formatNumber(expense),
+                    color: colors.expense,
+                    radius: 40,
+                    titleStyle: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -74,8 +81,8 @@ class IncomeExpenseDonut extends ConsumerWidget {
           runSpacing: 8,
           alignment: WrapAlignment.center,
           children: [
-            _legendChip('Income', colors.income),
-            _legendChip('Expense', colors.expense),
+            _legendChip(L.of(context).commonIncome, colors.income),
+            _legendChip(L.of(context).commonExpense, colors.expense),
           ],
         ),
       ],

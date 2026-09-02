@@ -65,7 +65,7 @@ class _ForecastsScreenState extends ConsumerState<ForecastsScreen> {
                 const SizedBox(height: 24),
 
                 // Monthly Chart
-                const SectionHeader('Monthly Forecast'),
+                SectionHeader(L.of(context).forecastsMonthlyForecast),
                 const SizedBox(height: 8),
                 SizedBox(
                   height: 250,
@@ -76,7 +76,7 @@ class _ForecastsScreenState extends ConsumerState<ForecastsScreen> {
                 const SizedBox(height: 24),
 
                 // Breakdown List
-                const SectionHeader('Breakdown'),
+                SectionHeader(L.of(context).forecastsBreakdown),
                 const SizedBox(height: 8),
                 _BreakdownList(
                   months: forecast.months,
@@ -144,8 +144,8 @@ class _SummaryCard extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _metric(context, 'Income', income, 'INCOME'),
-            _metric(context, 'Expense', expense, 'EXPENSE'),
+            _metric(context, L.of(context).commonIncome, income, 'INCOME'),
+            _metric(context, L.of(context).commonExpense, expense, 'EXPENSE'),
             _metric(context, 'Net', net, net >= 0 ? 'INCOME' : 'EXPENSE'),
           ],
         ),

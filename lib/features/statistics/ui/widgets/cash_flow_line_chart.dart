@@ -40,95 +40,100 @@ class CashFlowLineChart extends ConsumerWidget {
     final lineColor = cuenti.chartPalette.first;
     final gridColor = colorScheme.outlineVariant.withValues(alpha: 0.5);
 
-    return LineChart(
-      LineChartData(
-        gridData: FlGridData(
-          drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(
-            color: gridColor,
-            strokeWidth: 1,
-          ),
-        ),
-        titlesData: FlTitlesData(
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                final idx = value.toInt();
-                if (idx >= 0 && idx < allMonths.length) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      allMonths[idx].substring(5),
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
+    return Semantics(
+      label: L.of(context).a11yChartCashFlow,
+      container: true,
+      child: LineChart(
+        LineChartData(
+          gridData: FlGridData(
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (_) => FlLine(
+              color: gridColor,
+              strokeWidth: 1,
             ),
           ),
-          leftTitles: const AxisTitles(),
-          topTitles: const AxisTitles(),
-          rightTitles: const AxisTitles(),
-        ),
-        borderData: FlBorderData(show: false),
-        lineTouchData: LineTouchData(
-          getTouchedSpotIndicator: (barData, indexes) => indexes.map((i) {
-            final dotColor = barData.spots[i].y >= 0
-                ? cuenti.income
-                : cuenti.expense;
-            return TouchedSpotIndicatorData(
-              FlLine(color: dotColor),
-              FlDotData(
-                getDotPainter: (spot, percent, bar, idx) => FlDotCirclePainter(
-                  radius: 4,
-                  color: dotColor,
-                  strokeWidth: 2,
-                  strokeColor: colorScheme.surface,
+          titlesData: FlTitlesData(
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  final idx = value.toInt();
+                  if (idx >= 0 && idx < allMonths.length) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        allMonths[idx].substring(5),
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+            leftTitles: const AxisTitles(),
+            topTitles: const AxisTitles(),
+            rightTitles: const AxisTitles(),
+          ),
+          borderData: FlBorderData(show: false),
+          lineTouchData: LineTouchData(
+            getTouchedSpotIndicator: (barData, indexes) => indexes.map((i) {
+              final dotColor = barData.spots[i].y >= 0
+                  ? cuenti.income
+                  : cuenti.expense;
+              return TouchedSpotIndicatorData(
+                FlLine(color: dotColor),
+                FlDotData(
+                  getDotPainter: (spot, percent, bar, idx) =>
+                      FlDotCirclePainter(
+                        radius: 4,
+                        color: dotColor,
+                        strokeWidth: 2,
+                        strokeColor: colorScheme.surface,
+                      ),
+                ),
+              );
+            }).toList(),
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
+              // Tooltip text is painted inside the fl_chart canvas, not a
+              // real widget — PrivacyBlur can't wrap it, so keep the
+              // '•••••' string substitution here.
+              getTooltipItems: (spots) => spots
+                  .map(
+                    (s) => LineTooltipItem(
+                      hidden ? '•••••' : formatNumber(s.y),
+                      TextStyle(
+                        color: s.y >= 0 ? cuenti.income : cuenti.expense,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          lineBarsData: [
+            LineChartBarData(
+              spots: netSpots,
+              isCurved: true,
+              color: lineColor,
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    lineColor.withValues(alpha: 0.35),
+                    lineColor.withValues(alpha: 0),
+                  ],
                 ),
               ),
-            );
-          }).toList(),
-          touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
-            // Tooltip text is painted inside the fl_chart canvas, not a
-            // real widget — PrivacyBlur can't wrap it, so keep the
-            // '•••••' string substitution here.
-            getTooltipItems: (spots) => spots
-                .map(
-                  (s) => LineTooltipItem(
-                    hidden ? '•••••' : formatNumber(s.y),
-                    TextStyle(
-                      color: s.y >= 0 ? cuenti.income : cuenti.expense,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-        lineBarsData: [
-          LineChartBarData(
-            spots: netSpots,
-            isCurved: true,
-            color: lineColor,
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: const FlDotData(show: false),
-            belowBarData: BarAreaData(
-              show: true,
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  lineColor.withValues(alpha: 0.35),
-                  lineColor.withValues(alpha: 0),
-                ],
-              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

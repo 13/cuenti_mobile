@@ -128,7 +128,7 @@ class DashboardScreen extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // Accounts section
-              const SectionHeader('Accounts'),
+              SectionHeader(L.of(context).navAccounts),
               const SizedBox(height: 12),
               if (accounts.isNotEmpty)
                 SizedBox(
@@ -153,7 +153,7 @@ class DashboardScreen extends ConsumerWidget {
 
               // Asset performance section
               if (dashboard.assetPerformance.isNotEmpty) ...[
-                const SectionHeader('Assets'),
+                SectionHeader(L.of(context).navAssets),
                 const SizedBox(height: 12),
                 Column(
                   children: dashboard.assetPerformance

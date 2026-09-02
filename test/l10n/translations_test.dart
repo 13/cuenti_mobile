@@ -199,9 +199,16 @@ void main() {
         'http://192.168.1.100:8080',
       };
       final offenders = <String>[];
+      // Positional constructors that render their first argument are
+      // included by name: SectionHeader('Monthly Cash Flow') reads as copy
+      // on screen but is no Text() and no named argument, which is how
+      // three section titles and a summary card stayed English through a
+      // whole translation pass.
       final pattern = RegExp(
         r'(?:Text\(\s*|labelText:\s*|hintText:\s*|tooltip:\s*|'
-        r'message:\s*|title:\s*|actionLabel:\s*|localizedReason:\s*)'
+        r'message:\s*|title:\s*|actionLabel:\s*|localizedReason:\s*|'
+        r'SectionHeader\(\s*|EmptyState\(\s*|_metric\([^,]+,\s*|'
+        r'_legendChip\(\s*)'
         r"'([^'\\\n]{4,})'",
       );
       for (final dir in ['lib/features', 'lib/screens']) {

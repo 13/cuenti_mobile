@@ -1,7 +1,22 @@
+import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// The period the statistics screen reports on.
 enum TimeRange { daily, weekly, monthly, yearly, custom }
+
+/// What the filter chip for [range] reads.
+///
+/// A switch with no default, so adding a range fails to compile until it
+/// has a translation. The chips used to be labelled by capitalising the
+/// enum name, which left every user reading "Daily" and "Weekly" whatever
+/// language they had chosen.
+String timeRangeLabel(L l, TimeRange range) => switch (range) {
+  TimeRange.daily => l.statsRangeDaily,
+  TimeRange.weekly => l.statsRangeWeekly,
+  TimeRange.monthly => l.statsRangeMonthly,
+  TimeRange.yearly => l.statsRangeYearly,
+  TimeRange.custom => l.commonCustom,
+};
 
 /// The concrete window [range] stands for at [now].
 ///

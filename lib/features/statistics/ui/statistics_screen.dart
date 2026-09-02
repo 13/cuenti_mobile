@@ -34,30 +34,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
     _tabController = TabController(length: 3, vsync: this);
   }
 
-  DateTimeRange _computeDateRange() {
-    final now = DateTime.now();
-    switch (_timeRange) {
-      case TimeRange.daily:
-        return DateTimeRange(
-          start: DateTime(now.year, now.month, now.day),
-          end: now,
-        );
-      case TimeRange.weekly:
-        final start = now.subtract(Duration(days: now.weekday - 1));
-        return DateTimeRange(
-          start: DateTime(start.year, start.month, start.day),
-          end: now,
-        );
-      case TimeRange.monthly:
-        return DateTimeRange(start: DateTime(now.year, now.month), end: now);
-      case TimeRange.yearly:
-        return DateTimeRange(start: DateTime(now.year), end: now);
-      case TimeRange.custom:
-        return _customRange ??
-            DateTimeRange(start: DateTime(now.year, now.month), end: now);
-    }
-  }
-
   Future<void> _pickCustomRange() async {
     final picked = await showDateRangePicker(
       context: context,
@@ -81,7 +57,14 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
   @override
   Widget build(BuildContext context) {
     final accounts = ref.watch(accountsControllerProvider).value ?? [];
-    final range = _computeDateRange();
+    // statisticsRange lives in the domain and is tested there; this screen
+    // used to carry a second copy of the same switch, so the ranges every
+    // user actually got were the untested ones.
+    final range = statisticsRange(
+      _timeRange,
+      now: DateTime.now(),
+      custom: _customRange,
+    );
     final fmt = DateFormat('yyyy-MM-dd');
     final start = fmt.format(range.start);
     final end = fmt.format(range.end);
@@ -166,11 +149,8 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen>
   }
 
   Widget _rangeChip(BuildContext context, TimeRange r) {
-    final label = r == TimeRange.custom
-        ? L.of(context).commonCustom
-        : r.name[0].toUpperCase() + r.name.substring(1);
     return ChoiceChip(
-      label: Text(label),
+      label: Text(timeRangeLabel(L.of(context), r)),
       selected: _timeRange == r,
       onSelected: (selected) {
         if (r == TimeRange.custom) {

@@ -32,75 +32,81 @@ class MonthlyChart extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final gridColor = colorScheme.outlineVariant.withValues(alpha: 0.5);
 
-    return BarChart(
-      BarChartData(
-        barTouchData: BarTouchData(
-          touchTooltipData: BarTouchTooltipData(
-            getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
-            // Tooltip text is painted inside the fl_chart canvas, not a
-            // real widget — PrivacyBlur can't wrap it, so keep the
-            // '•••••' string substitution here.
-            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              final label = rodIndex == 0 ? 'Income' : 'Expense';
-              return BarTooltipItem(
-                '$label\n${hidden ? '•••••' : formatNumber(rod.toY)}',
-                TextStyle(
-                  color: rod.color,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              );
-            },
-          ),
-        ),
-        barGroups: List.generate(allMonths.length, (i) {
-          final month = allMonths[i];
-          return BarChartGroupData(
-            x: i,
-            barRods: [
-              BarChartRodData(
-                toY: monthlyIncome[month] ?? 0,
-                color: cuenti.income,
-                width: 14,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              BarChartRodData(
-                toY: monthlyExpense[month] ?? 0,
-                color: cuenti.expense,
-                width: 14,
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ],
-          );
-        }),
-        titlesData: FlTitlesData(
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                final idx = value.toInt();
-                if (idx >= 0 && idx < allMonths.length) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      allMonths[idx].substring(5),
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
+    return Semantics(
+      label: L.of(context).a11yChartMonthlyCashFlow,
+      container: true,
+      child: BarChart(
+        BarChartData(
+          barTouchData: BarTouchData(
+            touchTooltipData: BarTouchTooltipData(
+              getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
+              // Tooltip text is painted inside the fl_chart canvas, not a
+              // real widget — PrivacyBlur can't wrap it, so keep the
+              // '•••••' string substitution here.
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                final label = rodIndex == 0
+                    ? L.of(context).commonIncome
+                    : L.of(context).commonExpense;
+                return BarTooltipItem(
+                  '$label\n${hidden ? '•••••' : formatNumber(rod.toY)}',
+                  TextStyle(
+                    color: rod.color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                );
               },
             ),
           ),
-          leftTitles: const AxisTitles(),
-          topTitles: const AxisTitles(),
-          rightTitles: const AxisTitles(),
-        ),
-        borderData: FlBorderData(show: false),
-        gridData: FlGridData(
-          drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) =>
-              FlLine(color: gridColor, strokeWidth: 1),
+          barGroups: List.generate(allMonths.length, (i) {
+            final month = allMonths[i];
+            return BarChartGroupData(
+              x: i,
+              barRods: [
+                BarChartRodData(
+                  toY: monthlyIncome[month] ?? 0,
+                  color: cuenti.income,
+                  width: 14,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                BarChartRodData(
+                  toY: monthlyExpense[month] ?? 0,
+                  color: cuenti.expense,
+                  width: 14,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ],
+            );
+          }),
+          titlesData: FlTitlesData(
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  final idx = value.toInt();
+                  if (idx >= 0 && idx < allMonths.length) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        allMonths[idx].substring(5),
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+            leftTitles: const AxisTitles(),
+            topTitles: const AxisTitles(),
+            rightTitles: const AxisTitles(),
+          ),
+          borderData: FlBorderData(show: false),
+          gridData: FlGridData(
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (_) =>
+                FlLine(color: gridColor, strokeWidth: 1),
+          ),
         ),
       ),
     );
