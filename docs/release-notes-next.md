@@ -1,24 +1,33 @@
-## Tapping the category chart works properly
+## Figures from one server can no longer appear under another
 
-Tapping a slice of the statistics pie chart now drills into that category's
-subcategories when you lift your finger, which is what it should always
-have done.
+Cuenti keeps a local copy of your latest figures so they are still there
+when the server cannot be reached. That copy was not tied to the server it
+came from, so pointing the app at a different Cuenti instance and then
+going offline showed the *previous* instance's balances as though they were
+this one's — marked only as offline, with nothing to say they belonged
+somewhere else.
 
-Before, it reacted the instant your finger touched the chart — so scrolling
-the statistics page with a finger that happened to land on the chart jumped
-you into whichever category was under it, and a deliberate tap was handled
-twice.
+Changing the server address now clears those figures, exactly as signing
+out already did.
 
-Tapping a category with nothing beneath it, or the hole in the middle,
-does nothing, as expected.
+## An expired session takes you back to sign-in
 
-## Categories match more reliably
+When the server stopped accepting your login — because it expired, or was
+revoked — the app carried on as if you were still signed in. Every screen
+showed "Not authenticated" and none of them recovered; the only way out was
+finding Logout in the menu.
 
-The figures and the category list come from two different parts of the
-server, which do not have to agree on capitalisation or stray spaces. Where
-they disagreed, no category matched: every slice became a top-level entry
-with nothing to drill into, which looks exactly like a chart that ignores
-you. They are now matched regardless of case or padding.
+Now it returns you to the sign-in screen, with your username still filled
+in.
 
-Two genuinely different categories whose names differ only in case are
-still kept apart rather than quietly merged.
+## Errors are in your language
+
+Failures on the accounts, assets, categories, currencies, payees and
+settings screens were reported in English whatever language you had
+chosen. They are translated now.
+
+## Exports are tidied up
+
+The export file is written to the app's own private storage, and an earlier
+export is removed when you make a new one, rather than a full copy of your
+financial history being left behind each time.
