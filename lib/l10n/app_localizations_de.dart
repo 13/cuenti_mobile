@@ -553,6 +553,29 @@ class LDe extends L {
   String get statsOverview => 'Übersicht';
 
   @override
+  String get scheduledLate => '(ÜBERFÄLLIG!)';
+
+  @override
+  String dashboardAssetUnits(String units, String symbol) {
+    return '$units Einheiten · $symbol';
+  }
+
+  @override
+  String scheduledNextOn(String pattern, String date) {
+    return '$pattern · Nächste: $date';
+  }
+
+  @override
+  String currenciesFormatSummary(
+    String symbol,
+    String digits,
+    String decimal,
+    String grouping,
+  ) {
+    return 'Symbol $symbol · $digits Nachkommastellen · $decimal $grouping';
+  }
+
+  @override
   String get a11yChartIncomeExpense => 'Diagramm: Einnahmen und Ausgaben';
 
   @override

@@ -551,6 +551,29 @@ class LEn extends L {
   String get statsOverview => 'Overview';
 
   @override
+  String get scheduledLate => '(LATE!)';
+
+  @override
+  String dashboardAssetUnits(String units, String symbol) {
+    return '$units units · $symbol';
+  }
+
+  @override
+  String scheduledNextOn(String pattern, String date) {
+    return '$pattern · Next: $date';
+  }
+
+  @override
+  String currenciesFormatSummary(
+    String symbol,
+    String digits,
+    String decimal,
+    String grouping,
+  ) {
+    return 'Symbol $symbol · $digits decimals · $decimal $grouping';
+  }
+
+  @override
   String get a11yChartIncomeExpense => 'Income versus expense chart';
 
   @override

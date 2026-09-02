@@ -1143,6 +1143,35 @@ abstract class L {
   /// **'Overview'**
   String get statsOverview;
 
+  /// No description provided for @scheduledLate.
+  ///
+  /// In en, this message translates to:
+  /// **'(LATE!)'**
+  String get scheduledLate;
+
+  /// No description provided for @dashboardAssetUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'{units} units · {symbol}'**
+  String dashboardAssetUnits(String units, String symbol);
+
+  /// No description provided for @scheduledNextOn.
+  ///
+  /// In en, this message translates to:
+  /// **'{pattern} · Next: {date}'**
+  String scheduledNextOn(String pattern, String date);
+
+  /// No description provided for @currenciesFormatSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Symbol {symbol} · {digits} decimals · {decimal} {grouping}'**
+  String currenciesFormatSummary(
+    String symbol,
+    String digits,
+    String decimal,
+    String grouping,
+  );
+
   /// No description provided for @a11yChartIncomeExpense.
   ///
   /// In en, this message translates to:

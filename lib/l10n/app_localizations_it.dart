@@ -552,6 +552,29 @@ class LIt extends L {
   String get statsOverview => 'Panoramica';
 
   @override
+  String get scheduledLate => '(IN RITARDO!)';
+
+  @override
+  String dashboardAssetUnits(String units, String symbol) {
+    return '$units unità · $symbol';
+  }
+
+  @override
+  String scheduledNextOn(String pattern, String date) {
+    return '$pattern · Prossima: $date';
+  }
+
+  @override
+  String currenciesFormatSummary(
+    String symbol,
+    String digits,
+    String decimal,
+    String grouping,
+  ) {
+    return 'Simbolo $symbol · $digits decimali · $decimal $grouping';
+  }
+
+  @override
   String get a11yChartIncomeExpense => 'Grafico: entrate e uscite';
 
   @override

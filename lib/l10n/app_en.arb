@@ -408,6 +408,55 @@
   "@statsTotal": {},
   "statsOverview": "Overview",
   "@statsOverview": {},
+  "scheduledLate": "(LATE!)",
+  "@scheduledLate": {},
+  "dashboardAssetUnits": "{units} units · {symbol}",
+  "@dashboardAssetUnits": {
+    "placeholders": {
+      "units": {
+        "type": "String"
+      },
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduledNextOn": "{pattern} · Next: {date}",
+  "@scheduledNextOn": {
+    "placeholders": {
+      "pattern": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "currenciesFormatSummary": "Symbol {symbol} · {digits} decimals · {decimal} {grouping}",
+  "@currenciesFormatSummary": {
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      },
+      "digits": {
+        "type": "String"
+      },
+      "decimal": {
+        "type": "String"
+      },
+      "grouping": {
+        "type": "String"
+      }
+    }
+  },
+  "fuelLastReading": "last: {value}",
+  "@fuelLastReading": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "a11yChartIncomeExpense": "Income versus expense chart",
   "@a11yChartIncomeExpense": {},
   "a11yChartCashFlow": "Net cash flow chart",
