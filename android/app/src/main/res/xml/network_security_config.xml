@@ -4,9 +4,28 @@
         <trust-anchors>
             <!-- Trust system CAs -->
             <certificates src="system"/>
-            <!-- Trust user-installed CAs (e.g. self-signed certificates) -->
+
+            <!--
+              Trust user-installed CAs. This is for the self-hoster who runs
+              an internal CA and installs its root on their phone rather
+              than vouching for each host's fingerprint.
+
+              It is a deliberate exception to what CertificatePins promises.
+              The platform accepts a chain that validates BEFORE Dart's
+              badCertificateCallback runs, so a certificate signed by
+              anything in the user store (an internal CA, but equally an MDM
+              profile, mitmproxy, or malware that got a root installed) is
+              accepted silently and never reaches the pinning check at all.
+              "A host whose certificate later changes is refused" holds
+              against a swapped self-signed certificate, not against a
+              user-store CA.
+
+              Removing this line would close that hole and break every user
+              running their own CA. It stays; the trade-off is written down
+              here so the next person reading certificate_pins.dart knows
+              the guarantee has an edge.
+            -->
             <certificates src="user"/>
         </trust-anchors>
     </base-config>
 </network-security-config>
-

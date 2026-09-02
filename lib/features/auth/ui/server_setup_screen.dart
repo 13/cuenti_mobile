@@ -1,6 +1,7 @@
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/auth/ui/insecure_server_sheet.dart';
 import 'package:cuentimobile/features/auth/ui/trust_certificate_sheet.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -22,12 +23,19 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
   /// has not vouched for is caught here rather than surfacing as an opaque
   /// connection error on the login screen.
   Future<void> _save() async {
+    final url = _controller.text.trim();
+    // Before anything is saved or dialled: over http there is no
+    // certificate for the pinning below to check, so this is the one
+    // warning that has to come first.
+    if (isInsecureServerUrl(url) &&
+        !await promptForInsecureServer(context, url)) {
+      return;
+    }
+    if (!mounted) return;
     setState(() => _saving = true);
     ({String host, String fingerprint})? rejected;
     try {
-      await ref
-          .read(authControllerProvider.notifier)
-          .setServerUrl(_controller.text.trim());
+      await ref.read(authControllerProvider.notifier).setServerUrl(url);
       rejected = await _probeForUntrustedCertificate();
     } finally {
       // Drop the progress indicator before any prompt: leaving it spinning

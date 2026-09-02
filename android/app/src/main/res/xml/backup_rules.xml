@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Belt and braces alongside android:allowBackup="false".
+
+  The offline cache writes the account's dashboard, transactions and
+  balances to app support as plain JSON so the figures survive an
+  unreachable server. That is the right call for a cache and the wrong
+  thing to copy off the device: the JWT beside it lives in Keystore-backed
+  storage, and the data it fetched should not be easier to reach than the
+  token that fetched it.
+
+  Applies to Android 11 and below; data_extraction_rules.xml covers 12+.
+-->
+<full-backup-content>
+    <exclude domain="file" />
+    <exclude domain="database" />
+    <exclude domain="sharedpref" />
+</full-backup-content>

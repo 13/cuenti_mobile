@@ -26,7 +26,13 @@ String certificateFingerprint(Uint8List der) {
 /// exactly what an interception attempt looks like.
 ///
 /// Certificates that chain to a real CA never reach here: the platform
-/// accepts them before the bad-certificate callback is consulted.
+/// accepts them before the bad-certificate callback is consulted. That
+/// includes anything signed by a CA in the device's *user* store, which
+/// `network_security_config.xml` trusts on purpose for self-hosters running
+/// an internal CA -- so the refusal above is a guarantee against a swapped
+/// self-signed certificate, not against an interceptor whose root the
+/// device has been persuaded to install. The reasoning is written out in
+/// that file.
 class CertificatePins {
   CertificatePins(this._storage);
 

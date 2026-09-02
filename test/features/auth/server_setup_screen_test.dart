@@ -41,7 +41,10 @@ void main() {
     when(() => repo.fetchRegistrationEnabled()).thenAnswer((_) async => true);
   });
 
-  Future<void> pumpScreen(WidgetTester tester) async {
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    Locale locale = const Locale('en'),
+  }) async {
     final router = GoRouter(
       initialLocation: '/server-setup',
       routes: [
@@ -62,6 +65,7 @@ void main() {
           apiClientProvider.overrideWithValue(client),
         ],
         child: MaterialApp.router(
+          locale: locale,
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,
           routerConfig: router,
@@ -147,5 +151,71 @@ void main() {
     await save(tester);
 
     expect(find.text('login page'), findsOneWidget);
+  });
+
+  group('a server reached without TLS', () {
+    Future<void> saveUrl(WidgetTester tester, String url) async {
+      await tester.enterText(find.byType(TextField), url);
+      await save(tester);
+    }
+
+    testWidgets('warns before accepting an http url: the certificate '
+        'machinery protects nothing when there is no certificate', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      await saveUrl(tester, 'http://192.168.1.50:8080');
+
+      expect(find.text('Unencrypted connection'), findsOneWidget);
+      expect(
+        // Once in the field the user typed it into, once in the warning
+        // naming the host it is about.
+        find.textContaining('192.168.1.50'),
+        findsNWidgets(2),
+      );
+      expect(
+        find.text('login page'),
+        findsNothing,
+        reason: 'the user has not accepted the risk yet',
+      );
+    });
+
+    testWidgets('declining leaves the user on setup to fix the url', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      await saveUrl(tester, 'http://192.168.1.50:8080');
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('login page'), findsNothing);
+    });
+
+    testWidgets('accepting the risk carries on, since a LAN server is a '
+        'legitimate reason to want this', (tester) async {
+      await pumpScreen(tester);
+      await saveUrl(tester, 'http://192.168.1.50:8080');
+      await tester.tap(find.widgetWithText(FilledButton, 'Use http anyway'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('login page'), findsOneWidget);
+    });
+
+    testWidgets('an https url is not warned about', (tester) async {
+      await pumpScreen(tester);
+      await saveUrl(tester, 'https://cuenti.example');
+
+      expect(find.textContaining('unencrypted'), findsNothing);
+      expect(find.text('login page'), findsOneWidget);
+    });
+
+    testWidgets('the warning is translated', (tester) async {
+      await pumpScreen(tester, locale: const Locale('de'));
+      await tester.enterText(find.byType(TextField), 'http://192.168.1.50');
+      await tester.tap(find.widgetWithText(FilledButton, 'Speichern & weiter'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unverschlüsselte Verbindung'), findsOneWidget);
+    });
   });
 }
