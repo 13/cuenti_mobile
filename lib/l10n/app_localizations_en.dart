@@ -159,6 +159,17 @@ class LEn extends L {
   String get serverUntrustedTitle => 'Unrecognised certificate';
 
   @override
+  String get serverInsecureTitle => 'Unencrypted connection';
+
+  @override
+  String serverInsecureBody(String host) {
+    return '$host will be reached over http, so your password, your session and everything this app loads travel unencrypted. Anyone on the same network can read them. Use https unless you trust every device on this network.';
+  }
+
+  @override
+  String get serverInsecureContinue => 'Use http anyway';
+
+  @override
   String serverUntrustedBody(String host) {
     return '$host presented a certificate no certificate authority vouches for. That is normal for a self-hosted Cuenti server, but it is also what an intercepted connection looks like. Trust it only if this fingerprint matches your server.';
   }
@@ -513,6 +524,18 @@ class LEn extends L {
   String get forecastsNet => 'Net';
 
   @override
+  String get forecastsMonthlyForecast => 'Monthly Forecast';
+
+  @override
+  String get forecastsBreakdown => 'Breakdown';
+
+  @override
+  String get vehiclesConsumption => 'Consumption';
+
+  @override
+  String get vehiclesEntries => 'Entries';
+
+  @override
   String get statsAllAccounts => 'All Accounts';
 
   @override
@@ -522,10 +545,57 @@ class LEn extends L {
   String get statsExpenseByCategory => 'Expense by Category';
 
   @override
-  String get statsTotal => 'Total: ';
+  String get statsTotal => 'Total';
 
   @override
   String get statsOverview => 'Overview';
+
+  @override
+  String get a11yChartIncomeExpense => 'Income versus expense chart';
+
+  @override
+  String get a11yChartCashFlow => 'Net cash flow chart';
+
+  @override
+  String get a11yChartMonthlyCashFlow => 'Monthly cash flow chart';
+
+  @override
+  String get a11yChartCategories => 'Category breakdown chart';
+
+  @override
+  String get commonBalance => 'Balance';
+
+  @override
+  String get statsSavingsRate => 'Savings rate';
+
+  @override
+  String get statsIncomeVsExpense => 'Income vs Expense';
+
+  @override
+  String get statsNetCashFlowTrend => 'Net Cash Flow Trend';
+
+  @override
+  String get statsMonthlyCashFlow => 'Monthly Cash Flow';
+
+  @override
+  String get statsRangeDaily => 'Daily';
+
+  @override
+  String get statsRangeWeekly => 'Weekly';
+
+  @override
+  String get statsRangeMonthly => 'Monthly';
+
+  @override
+  String get statsRangeYearly => 'Yearly';
+
+  @override
+  String get statsAllCategories => 'All categories';
+
+  @override
+  String statsDirectAmount(String name) {
+    return '$name (direct)';
+  }
 
   @override
   String get updateAvailable => 'Update available';
@@ -911,6 +981,9 @@ class LEn extends L {
 
   @override
   String get errorNotAuthenticated => 'Not authenticated';
+
+  @override
+  String get errorInvalidCredentials => 'Invalid username or password';
 
   @override
   String get errorApiDisabled => 'API access is not enabled';

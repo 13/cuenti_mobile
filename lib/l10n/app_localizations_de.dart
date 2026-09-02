@@ -161,6 +161,17 @@ class LDe extends L {
   String get serverUntrustedTitle => 'Unbekanntes Zertifikat';
 
   @override
+  String get serverInsecureTitle => 'Unverschlüsselte Verbindung';
+
+  @override
+  String serverInsecureBody(String host) {
+    return '$host wird über http erreicht. Ihr Passwort, Ihre Sitzung und alles, was diese App lädt, werden dabei unverschlüsselt übertragen und sind für jeden im selben Netz lesbar. Verwenden Sie https, sofern Sie nicht jedem Gerät in diesem Netz vertrauen.';
+  }
+
+  @override
+  String get serverInsecureContinue => 'Trotzdem http verwenden';
+
+  @override
   String serverUntrustedBody(String host) {
     return '$host hat ein Zertifikat vorgelegt, für das keine Zertifizierungsstelle bürgt. Bei einem selbst gehosteten Cuenti-Server ist das normal, aber genauso sieht auch eine abgefangene Verbindung aus. Vertrauen Sie ihm nur, wenn dieser Fingerabdruck zu Ihrem Server passt.';
   }
@@ -515,6 +526,18 @@ class LDe extends L {
   String get forecastsNet => 'Saldo';
 
   @override
+  String get forecastsMonthlyForecast => 'Monatsprognose';
+
+  @override
+  String get forecastsBreakdown => 'Aufschlüsselung';
+
+  @override
+  String get vehiclesConsumption => 'Verbrauch';
+
+  @override
+  String get vehiclesEntries => 'Einträge';
+
+  @override
   String get statsAllAccounts => 'Alle Konten';
 
   @override
@@ -524,10 +547,57 @@ class LDe extends L {
   String get statsExpenseByCategory => 'Ausgaben nach Kategorie';
 
   @override
-  String get statsTotal => 'Gesamt: ';
+  String get statsTotal => 'Gesamt';
 
   @override
   String get statsOverview => 'Übersicht';
+
+  @override
+  String get a11yChartIncomeExpense => 'Diagramm: Einnahmen und Ausgaben';
+
+  @override
+  String get a11yChartCashFlow => 'Diagramm: Saldoentwicklung';
+
+  @override
+  String get a11yChartMonthlyCashFlow => 'Diagramm: monatlicher Verlauf';
+
+  @override
+  String get a11yChartCategories => 'Diagramm: Kategorien';
+
+  @override
+  String get commonBalance => 'Saldo';
+
+  @override
+  String get statsSavingsRate => 'Sparquote';
+
+  @override
+  String get statsIncomeVsExpense => 'Einnahmen und Ausgaben';
+
+  @override
+  String get statsNetCashFlowTrend => 'Entwicklung des Saldos';
+
+  @override
+  String get statsMonthlyCashFlow => 'Monatlicher Verlauf';
+
+  @override
+  String get statsRangeDaily => 'Täglich';
+
+  @override
+  String get statsRangeWeekly => 'Wöchentlich';
+
+  @override
+  String get statsRangeMonthly => 'Monatlich';
+
+  @override
+  String get statsRangeYearly => 'Jährlich';
+
+  @override
+  String get statsAllCategories => 'Alle Kategorien';
+
+  @override
+  String statsDirectAmount(String name) {
+    return '$name (direkt)';
+  }
 
   @override
   String get updateAvailable => 'Update verfügbar';
@@ -914,6 +984,9 @@ class LDe extends L {
 
   @override
   String get errorNotAuthenticated => 'Nicht angemeldet';
+
+  @override
+  String get errorInvalidCredentials => 'Benutzername oder Passwort ist falsch';
 
   @override
   String get errorApiDisabled => 'API-Zugriff ist nicht aktiviert';

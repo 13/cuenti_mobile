@@ -100,6 +100,18 @@
   "@serverTrust": {},
   "serverUntrustedTitle": "Unrecognised certificate",
   "@serverUntrustedTitle": {},
+  "serverInsecureTitle": "Unencrypted connection",
+  "@serverInsecureTitle": {},
+  "serverInsecureBody": "{host} will be reached over http, so your password, your session and everything this app loads travel unencrypted. Anyone on the same network can read them. Use https unless you trust every device on this network.",
+  "@serverInsecureBody": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "serverInsecureContinue": "Use http anyway",
+  "@serverInsecureContinue": {},
   "serverUntrustedBody": "{host} presented a certificate no certificate authority vouches for. That is normal for a self-hosted Cuenti server, but it is also what an intercepted connection looks like. Trust it only if this fingerprint matches your server.",
   "@serverUntrustedBody": {
     "placeholders": {
@@ -377,6 +389,14 @@
   "dashboardNoAccounts": "No accounts",
   "@dashboardNoAccounts": {},
   "forecastsNet": "Net",
+  "forecastsMonthlyForecast": "Monthly Forecast",
+  "@forecastsMonthlyForecast": {},
+  "forecastsBreakdown": "Breakdown",
+  "@forecastsBreakdown": {},
+  "vehiclesConsumption": "Consumption",
+  "@vehiclesConsumption": {},
+  "vehiclesEntries": "Entries",
+  "@vehiclesEntries": {},
   "@forecastsNet": {},
   "statsAllAccounts": "All Accounts",
   "@statsAllAccounts": {},
@@ -384,10 +404,46 @@
   "@statsIncomeByCategory": {},
   "statsExpenseByCategory": "Expense by Category",
   "@statsExpenseByCategory": {},
-  "statsTotal": "Total: ",
+  "statsTotal": "Total",
   "@statsTotal": {},
   "statsOverview": "Overview",
   "@statsOverview": {},
+  "a11yChartIncomeExpense": "Income versus expense chart",
+  "@a11yChartIncomeExpense": {},
+  "a11yChartCashFlow": "Net cash flow chart",
+  "@a11yChartCashFlow": {},
+  "a11yChartMonthlyCashFlow": "Monthly cash flow chart",
+  "@a11yChartMonthlyCashFlow": {},
+  "a11yChartCategories": "Category breakdown chart",
+  "@a11yChartCategories": {},
+  "commonBalance": "Balance",
+  "@commonBalance": {},
+  "statsSavingsRate": "Savings rate",
+  "@statsSavingsRate": {},
+  "statsIncomeVsExpense": "Income vs Expense",
+  "@statsIncomeVsExpense": {},
+  "statsNetCashFlowTrend": "Net Cash Flow Trend",
+  "@statsNetCashFlowTrend": {},
+  "statsMonthlyCashFlow": "Monthly Cash Flow",
+  "@statsMonthlyCashFlow": {},
+  "statsRangeDaily": "Daily",
+  "@statsRangeDaily": {},
+  "statsRangeWeekly": "Weekly",
+  "@statsRangeWeekly": {},
+  "statsRangeMonthly": "Monthly",
+  "@statsRangeMonthly": {},
+  "statsRangeYearly": "Yearly",
+  "@statsRangeYearly": {},
+  "statsAllCategories": "All categories",
+  "@statsAllCategories": {},
+  "statsDirectAmount": "{name} (direct)",
+  "@statsDirectAmount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "updateAvailable": "Update available",
   "@updateAvailable": {},
   "updateUpToDate": "You're up to date",
@@ -699,6 +755,8 @@
   "@errorNetwork": {},
   "errorNotAuthenticated": "Not authenticated",
   "@errorNotAuthenticated": {},
+  "errorInvalidCredentials": "Invalid username or password",
+  "@errorInvalidCredentials": {},
   "errorApiDisabled": "API access is not enabled",
   "@errorApiDisabled": {},
   "errorInvalidRequest": "Invalid request",

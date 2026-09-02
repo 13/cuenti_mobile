@@ -399,6 +399,24 @@ abstract class L {
   /// **'Unrecognised certificate'**
   String get serverUntrustedTitle;
 
+  /// No description provided for @serverInsecureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unencrypted connection'**
+  String get serverInsecureTitle;
+
+  /// No description provided for @serverInsecureBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{host} will be reached over http, so your password, your session and everything this app loads travel unencrypted. Anyone on the same network can read them. Use https unless you trust every device on this network.'**
+  String serverInsecureBody(String host);
+
+  /// No description provided for @serverInsecureContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Use http anyway'**
+  String get serverInsecureContinue;
+
   /// No description provided for @serverUntrustedBody.
   ///
   /// In en, this message translates to:
@@ -1071,6 +1089,30 @@ abstract class L {
   /// **'Net'**
   String get forecastsNet;
 
+  /// No description provided for @forecastsMonthlyForecast.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Forecast'**
+  String get forecastsMonthlyForecast;
+
+  /// No description provided for @forecastsBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakdown'**
+  String get forecastsBreakdown;
+
+  /// No description provided for @vehiclesConsumption.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumption'**
+  String get vehiclesConsumption;
+
+  /// No description provided for @vehiclesEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries'**
+  String get vehiclesEntries;
+
   /// No description provided for @statsAllAccounts.
   ///
   /// In en, this message translates to:
@@ -1092,7 +1134,7 @@ abstract class L {
   /// No description provided for @statsTotal.
   ///
   /// In en, this message translates to:
-  /// **'Total: '**
+  /// **'Total'**
   String get statsTotal;
 
   /// No description provided for @statsOverview.
@@ -1100,6 +1142,96 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Overview'**
   String get statsOverview;
+
+  /// No description provided for @a11yChartIncomeExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Income versus expense chart'**
+  String get a11yChartIncomeExpense;
+
+  /// No description provided for @a11yChartCashFlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Net cash flow chart'**
+  String get a11yChartCashFlow;
+
+  /// No description provided for @a11yChartMonthlyCashFlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly cash flow chart'**
+  String get a11yChartMonthlyCashFlow;
+
+  /// No description provided for @a11yChartCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Category breakdown chart'**
+  String get a11yChartCategories;
+
+  /// No description provided for @commonBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get commonBalance;
+
+  /// No description provided for @statsSavingsRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings rate'**
+  String get statsSavingsRate;
+
+  /// No description provided for @statsIncomeVsExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Income vs Expense'**
+  String get statsIncomeVsExpense;
+
+  /// No description provided for @statsNetCashFlowTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Cash Flow Trend'**
+  String get statsNetCashFlowTrend;
+
+  /// No description provided for @statsMonthlyCashFlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Cash Flow'**
+  String get statsMonthlyCashFlow;
+
+  /// No description provided for @statsRangeDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get statsRangeDaily;
+
+  /// No description provided for @statsRangeWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get statsRangeWeekly;
+
+  /// No description provided for @statsRangeMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get statsRangeMonthly;
+
+  /// No description provided for @statsRangeYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get statsRangeYearly;
+
+  /// No description provided for @statsAllCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'All categories'**
+  String get statsAllCategories;
+
+  /// No description provided for @statsDirectAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (direct)'**
+  String statsDirectAmount(String name);
 
   /// No description provided for @updateAvailable.
   ///
@@ -1778,6 +1910,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Not authenticated'**
   String get errorNotAuthenticated;
+
+  /// No description provided for @errorInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid username or password'**
+  String get errorInvalidCredentials;
 
   /// No description provided for @errorApiDisabled.
   ///
