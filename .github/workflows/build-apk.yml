@@ -76,11 +76,16 @@ jobs:
           channel: 'stable'
           flutter-version: ${{ env.FLUTTER_VERSION }}
 
-      # Without this the build silently falls back to the debug key, which
-      # ships with every Android SDK -- anything signed with it can be
-      # replaced in place by anyone. A release must never go out that way,
-      # so a missing secret fails the job instead.
+      # Only for tags, which are the only builds that publish. A push to
+      # main or a pull request produces artifacts nobody installs, so
+      # requiring the release key there just breaks ordinary CI -- which is
+      # exactly what it did.
+      #
+      # For a tag the key is mandatory: without it the build falls back to
+      # the debug key, which ships with every Android SDK, and anything
+      # signed with that can be replaced in place by anyone.
       - name: Restore release keystore
+        if: startsWith(github.ref, 'refs/tags/v')
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -142,7 +147,10 @@ jobs:
 
       # Proves the shipped APK carries the release certificate. A build that
       # quietly fell back to the debug key would pass every other check.
+      # Tags only, for the same reason: everything else is debug-signed on
+      # purpose.
       - name: Verify the APKs are not debug-signed
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort | tail -1)
           for apk in build/app/outputs/flutter-apk/app-*.apk; do

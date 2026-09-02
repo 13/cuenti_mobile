@@ -6,8 +6,13 @@ under a known password — meaning anyone could build an APK that Android
 would accept as an in-place update to Cuenti, inheriting its data
 directory along with the stored token and saved password.
 
-The build now reads a real keystore, and the release workflow fails rather
+The build now reads a real keystore, and a **tagged** build fails rather
 than fall back to the debug key.
+
+Pushes to `main` and pull requests still build with the debug key. They
+produce artifacts nobody installs, so requiring the release key there would
+only break ordinary CI. The key is mandatory exactly where it matters: the
+tag that publishes a release.
 
 ## One-time setup
 
@@ -52,9 +57,12 @@ gh secret set ANDROID_KEY_ALIAS           # cuenti
 gh secret set ANDROID_KEY_PASSWORD        # key password
 ```
 
-The workflow writes the keystore back out, builds, and then verifies with
-`apksigner` that the result is not debug-signed. A missing secret fails the
-job with a pointer to this file.
+On a tag, the workflow writes the keystore back out, builds, and then
+verifies with `apksigner` that the result is not debug-signed. A missing
+secret fails the job with a pointer to this file.
+
+Check what is set with `gh secret list` — it prints names only, never
+values.
 
 ## The cut-over
 
