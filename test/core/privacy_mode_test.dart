@@ -4,10 +4,23 @@ import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/privacy_blur.dart';
+import 'package:cuentimobile/features/currencies/data/currencies_repository.dart';
+import 'package:cuentimobile/features/currencies/domain/currency.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// AmountText reads the currency list so a currency's own fraction digits
+/// and punctuation are honoured; stubbed empty so a bare pump leaves no
+/// request in flight at teardown.
+class _NoCurrencies implements CurrenciesRepository {
+  @override
+  Future<List<Currency>> getAll() async => const [];
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class MemoryStorage extends SecureStorage {
   MemoryStorage() : super();
@@ -26,7 +39,10 @@ void main() {
   ) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [privacyModeProvider.overrideWith(_FalsePrivacyMode.new)],
+        overrides: [
+          currenciesRepositoryProvider.overrideWithValue(_NoCurrencies()),
+          privacyModeProvider.overrideWith(_FalsePrivacyMode.new),
+        ],
         child: MaterialApp(
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,
@@ -45,7 +61,10 @@ void main() {
   ) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [privacyModeProvider.overrideWith(_TruePrivacyMode.new)],
+        overrides: [
+          currenciesRepositoryProvider.overrideWithValue(_NoCurrencies()),
+          privacyModeProvider.overrideWith(_TruePrivacyMode.new),
+        ],
         child: MaterialApp(
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,

@@ -1,12 +1,27 @@
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/amount_text.dart';
+import 'package:cuentimobile/features/currencies/data/currencies_repository.dart';
+import 'package:cuentimobile/features/currencies/domain/currency.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// AmountText reads the currency list so a currency's own fraction digits
+/// and punctuation are honoured. Stubbed empty here: these tests are about
+/// colour and sign, and a bare pump would otherwise leave the real request
+/// in flight at teardown.
+class _NoCurrencies implements CurrenciesRepository {
+  @override
+  Future<List<Currency>> getAll() async => const [];
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 Widget host(Widget child) => ProviderScope(
+  overrides: [currenciesRepositoryProvider.overrideWithValue(_NoCurrencies())],
   child: MaterialApp(
     localizationsDelegates: L.localizationsDelegates,
     supportedLocales: L.supportedLocales,
