@@ -11,14 +11,16 @@ import 'package:cuentimobile/features/currencies/domain/currency.dart';
 import 'package:cuentimobile/features/currencies/ui/currencies_controller.dart';
 import 'package:cuentimobile/features/user/data/export_import_repository.dart';
 import 'package:cuentimobile/features/user/data/user_repository.dart';
-import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/features/user/ui/widgets/admin_panel.dart';
+import 'package:cuentimobile/features/user/ui/widgets/change_password_sheet.dart';
+import 'package:cuentimobile/features/user/ui/widgets/edit_profile_sheet.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -60,7 +62,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 _infoRow('Email', user.email),
                 const SizedBox(height: 8),
                 FilledButton.tonal(
-                  onPressed: () => _showEditProfileDialog(context, user),
+                  onPressed: () => _showSheet(EditProfileSheet(user: user)),
                   child: Text(L.of(context).settingsEditProfile),
                 ),
               ],
@@ -148,7 +150,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 FilledButton.tonal(
-                  onPressed: () => _showChangePasswordDialog(context),
+                  onPressed: () => _showSheet(const ChangePasswordSheet()),
                   child: Text(L.of(context).settingsChangePassword),
                 ),
               ],
@@ -274,6 +276,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  /// Both editing sheets are keyboard-facing, so they need the scroll
+  /// control that lets the padding lift them clear of it.
+  void _showSheet(Widget sheet) {
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => sheet,
+      ),
+    );
+  }
+
   Widget _infoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -283,219 +297,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Text(label, style: const TextStyle(color: Colors.grey)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
         ],
-      ),
-    );
-  }
-
-  void _showEditProfileDialog(BuildContext context, UserProfile user) {
-    final firstName = TextEditingController(text: user.firstName);
-    final lastName = TextEditingController(text: user.lastName);
-    final email = TextEditingController(text: user.email);
-
-    unawaited(
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        builder: (ctx) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                L.of(context).settingsEditProfile,
-                style: Theme.of(ctx).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: firstName,
-                decoration: InputDecoration(
-                  labelText: L.of(context).commonFirstName,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: lastName,
-                decoration: InputDecoration(
-                  labelText: L.of(context).commonLastName,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: email,
-                decoration: InputDecoration(
-                  labelText: L.of(context).commonEmail,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text(L.of(context).commonCancel),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () async {
-                        try {
-                          final auth = ref.read(
-                            authControllerProvider.notifier,
-                          );
-                          final nav = Navigator.of(ctx);
-                          await ref
-                              .read(userRepositoryProvider)
-                              .updateProfile(
-                                email: email.text,
-                                firstName: firstName.text,
-                                lastName: lastName.text,
-                              );
-                          await auth.refreshProfile();
-                          if (ctx.mounted) nav.pop();
-                        } on Exception catch (e) {
-                          if (ctx.mounted) {
-                            ScaffoldMessenger.of(
-                              ctx,
-                            ).showSnackBar(
-                              SnackBar(
-                                content: Text(L.of(context).commonError('$e')),
-                              ),
-                            );
-                          }
-                        }
-                      },
-                      child: Text(L.of(context).commonSave),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showChangePasswordDialog(BuildContext context) {
-    final oldPw = TextEditingController();
-    final newPw = TextEditingController();
-    final confirmPw = TextEditingController();
-
-    unawaited(
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        builder: (ctx) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                L.of(context).settingsChangePassword,
-                style: Theme.of(ctx).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: oldPw,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: L.of(context).settingsCurrentPassword,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: newPw,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: L.of(context).settingsNewPassword,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: confirmPw,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: L.of(context).settingsConfirmNewPassword,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text(L.of(context).commonCancel),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () async {
-                        if (newPw.text != confirmPw.text) {
-                          ScaffoldMessenger.of(ctx).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                L.of(context).settingsPasswordsMismatch,
-                              ),
-                            ),
-                          );
-                          return;
-                        }
-                        try {
-                          await ref
-                              .read(userRepositoryProvider)
-                              .updatePassword(oldPw.text, newPw.text);
-                          if (ctx.mounted) {
-                            Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  L.of(context).settingsPasswordChanged,
-                                ),
-                              ),
-                            );
-                          }
-                        } on Exception catch (e) {
-                          if (ctx.mounted) {
-                            ScaffoldMessenger.of(
-                              ctx,
-                            ).showSnackBar(
-                              SnackBar(
-                                content: Text(L.of(context).commonError('$e')),
-                              ),
-                            );
-                          }
-                        }
-                      },
-                      child: Text(L.of(context).settingsChange),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -572,12 +373,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  /// Drops exports left by earlier runs, so at most one copy of the
+  /// account's entire history sits in temp at a time.
+  ///
+  /// Done before writing rather than after sharing: the share sheet hands
+  /// the file to another app, and deleting it the moment that call returns
+  /// races whatever is still reading it.
+  Future<void> _removeEarlierExports(Directory dir) async {
+    try {
+      for (final entry in dir.listSync()) {
+        final name = entry.path.split(Platform.pathSeparator).last;
+        if (entry is File &&
+            name.startsWith('cuenti-export-') &&
+            name.endsWith('.json')) {
+          await entry.delete();
+        }
+      }
+    } on FileSystemException catch (_) {
+      // Housekeeping only: a temp directory that will not co-operate must
+      // not stop the user exporting their data.
+    }
+  }
+
   Future<void> _exportData(BuildContext context) async {
     setState(() => _exporting = true);
     try {
       final json = await ref.read(exportImportRepositoryProvider).exportJson();
       final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      final path = '${Directory.systemTemp.path}/cuenti-export-$date.json';
+      // The app's own temp directory, via path_provider, the way the
+      // updater already does it: Directory.systemTemp is whatever the
+      // platform makes of TMPDIR, and a complete financial export is not
+      // the file to be relaxed about the location of.
+      final dir = await getTemporaryDirectory();
+      await _removeEarlierExports(dir);
+      final path = '${dir.path}/cuenti-export-$date.json';
       await File(path).writeAsString(json);
       await SharePlus.instance.share(ShareParams(files: [XFile(path)]));
     } on ApiException catch (e) {
