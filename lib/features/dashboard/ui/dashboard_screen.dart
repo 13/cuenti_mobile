@@ -246,7 +246,12 @@ class _AssetTile extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   Text(
-                    '${formatNumber(asset.totalUnits, decimals: 4)} units • ${asset.assetSymbol}',
+                    L
+                        .of(context)
+                        .dashboardAssetUnits(
+                          formatNumber(asset.totalUnits, decimals: 4),
+                          asset.assetSymbol,
+                        ),
                     style: Theme.of(context).textTheme.labelSmall,
                   ),
                 ],

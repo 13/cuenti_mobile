@@ -55,7 +55,9 @@ class FuelEntrySection extends StatelessWidget {
                   labelText: L.of(context).fuelOdometer,
                   border: const OutlineInputBorder(),
                   helperText: baseline != null
-                      ? 'last: ${formatFuelNumber(baseline!)}'
+                      ? L
+                            .of(context)
+                            .fuelLastReading(formatFuelNumber(baseline!))
                       : null,
                 ),
                 onChanged: (_) => onFieldChanged(),

@@ -82,8 +82,17 @@ class ScheduledScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '${st.recurrencePattern} • Next: ${_formatDate(st.nextOccurrence)}'
-                                        '${isLate ? ' (LATE!)' : ''}',
+                                        L
+                                                .of(context)
+                                                .scheduledNextOn(
+                                                  st.recurrencePattern,
+                                                  _formatDate(
+                                                    st.nextOccurrence,
+                                                  ),
+                                                ) +
+                                            (isLate
+                                                ? ' ${L.of(context).scheduledLate}'
+                                                : ''),
                                         style: Theme.of(
                                           context,
                                         ).textTheme.labelSmall,
