@@ -3,6 +3,7 @@ import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
 import 'package:cuentimobile/features/vehicles/domain/vehicle_report.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
+import 'package:cuentimobile/utils/chart_labels.dart';
 import 'package:cuentimobile/utils/number_format.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -153,86 +154,121 @@ class ConsumptionChart extends StatelessWidget {
 
     return SizedBox(
       height: 200,
-      child: LineChart(
-        LineChartData(
-          gridData: FlGridData(
-            drawVerticalLine: false,
-            getDrawingHorizontalLine: (_) =>
-                FlLine(color: gridColor, strokeWidth: 1),
-          ),
-          titlesData: FlTitlesData(
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  final idx = value.toInt();
-                  if (idx >= 0 && idx < points.length) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        dateFmt.format(points[idx].date),
-                        style: const TextStyle(fontSize: 10),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final stride = labelStride(
+            pointCount: points.length,
+            width: constraints.maxWidth,
+          );
+          return LineChart(
+            LineChartData(
+              gridData: FlGridData(
+                drawVerticalLine: false,
+                getDrawingHorizontalLine: (_) =>
+                    FlLine(color: gridColor, strokeWidth: 1),
               ),
-            ),
-            leftTitles: const AxisTitles(),
-            topTitles: const AxisTitles(),
-            rightTitles: const AxisTitles(),
-          ),
-          borderData: FlBorderData(show: false),
-          lineTouchData: LineTouchData(
-            getTouchedSpotIndicator: (barData, indexes) => indexes.map((i) {
-              return TouchedSpotIndicatorData(
-                FlLine(color: lineColor),
-                FlDotData(
-                  getDotPainter: (spot, percent, bar, idx) =>
-                      FlDotCirclePainter(
-                        radius: 4,
-                        color: lineColor,
-                        strokeWidth: 2,
-                        strokeColor: colorScheme.surface,
-                      ),
+              titlesData: FlTitlesData(
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    // One tick per fill-up. Without it fl_chart chooses its own
+                    // positions, and a tick at 1.5 used to truncate to 1 and
+                    // print that point's date a second time, under nothing.
+                    interval: 1,
+                    getTitlesWidget: (value, meta) {
+                      if (value != value.roundToDouble()) {
+                        return const SizedBox.shrink();
+                      }
+                      final idx = value.toInt();
+                      if (idx < 0 || idx >= points.length) {
+                        return const SizedBox.shrink();
+                      }
+                      if (!showsLabel(idx, points.length, stride)) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          dateFmt.format(points[idx].date),
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              );
-            }).toList(),
-            touchTooltipData: LineTouchTooltipData(
-              getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
-              getTooltipItems: (spots) => spots
-                  .map(
-                    (s) => LineTooltipItem(
-                      '${formatNumber(s.y, decimals: 1)} l/100km',
-                      TextStyle(color: lineColor, fontWeight: FontWeight.bold),
+                leftTitles: const AxisTitles(),
+                topTitles: const AxisTitles(),
+                rightTitles: const AxisTitles(),
+              ),
+              borderData: FlBorderData(show: false),
+              lineTouchData: LineTouchData(
+                getTouchedSpotIndicator: (barData, indexes) => indexes.map((i) {
+                  return TouchedSpotIndicatorData(
+                    FlLine(color: lineColor),
+                    FlDotData(
+                      getDotPainter: (spot, percent, bar, idx) =>
+                          FlDotCirclePainter(
+                            radius: 4,
+                            color: lineColor,
+                            strokeWidth: 2,
+                            strokeColor: colorScheme.surface,
+                          ),
                     ),
-                  )
-                  .toList(),
-            ),
-          ),
-          lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              isCurved: true,
-              color: lineColor,
-              barWidth: 3,
-              isStrokeCapRound: true,
-              dotData: const FlDotData(show: false),
-              belowBarData: BarAreaData(
-                show: true,
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    lineColor.withValues(alpha: 0.35),
-                    lineColor.withValues(alpha: 0),
+                  );
+                }).toList(),
+                touchTooltipData: LineTouchTooltipData(
+                  getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
+                  // The date as well as the figure: once labels are thinned,
+                  // it is the only way to tell which fill-up is under a finger.
+                  // Text wears text ink, not the series colour -- the line
+                  // beside it already carries the identity.
+                  getTooltipItems: (spots) => [
+                    for (final s in spots)
+                      LineTooltipItem(
+                        '${dateFmt.format(points[s.x.toInt()].date)}\n'
+                        '${formatNumber(s.y, decimals: 1)} l/100km',
+                        TextStyle(
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                   ],
                 ),
               ),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  color: lineColor,
+                  barWidth: 3,
+                  isStrokeCapRound: true,
+                  // A point per fill-up: 8px across with a surface-coloured
+                  // ring, so a dot stays legible where the line runs under it.
+                  dotData: FlDotData(
+                    getDotPainter: (spot, percent, bar, index) =>
+                        FlDotCirclePainter(
+                          radius: 4,
+                          color: lineColor,
+                          strokeWidth: 2,
+                          strokeColor: colorScheme.surface,
+                        ),
+                  ),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        lineColor.withValues(alpha: 0.35),
+                        lineColor.withValues(alpha: 0),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

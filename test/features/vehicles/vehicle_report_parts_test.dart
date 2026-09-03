@@ -4,6 +4,7 @@ import 'package:cuentimobile/features/currencies/domain/currency.dart';
 import 'package:cuentimobile/features/vehicles/domain/vehicle_report.dart';
 import 'package:cuentimobile/features/vehicles/ui/widgets/vehicle_report_parts.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -131,4 +132,95 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  group('the consumption chart', () {
+    List<FuelEntry> fillUps(int count) => [
+      for (var i = 0; i < count; i++)
+        FuelEntry(
+          date: DateTime(2026).add(Duration(days: i * 14)),
+          liters: 40,
+          consumption: 6 + i * 0.1,
+        ),
+    ];
+
+    /// The line the chart draws, read straight off the fl_chart widget.
+    LineChartBarData barOf(WidgetTester tester) => tester
+        .widget<LineChart>(find.byType(LineChart))
+        .data
+        .lineBarsData
+        .single;
+
+    testWidgets('marks every fill-up with a point', (tester) async {
+      await pump(tester, ConsumptionChart(entries: fillUps(6)));
+
+      expect(barOf(tester).dotData.show, isTrue);
+      expect(barOf(tester).spots, hasLength(6));
+    });
+
+    testWidgets('asks for a label only at whole points, never between them', (
+      tester,
+    ) async {
+      await pump(tester, ConsumptionChart(entries: fillUps(6)));
+
+      final titles = tester
+          .widget<LineChart>(find.byType(LineChart))
+          .data
+          .titlesData
+          .bottomTitles
+          .sideTitles;
+
+      expect(titles.interval, 1);
+    });
+
+    testWidgets('a tick that falls between points draws nothing, so a date '
+        'is never repeated where there is no fill-up', (tester) async {
+      await pump(tester, ConsumptionChart(entries: fillUps(6)));
+
+      final titles = tester
+          .widget<LineChart>(find.byType(LineChart))
+          .data
+          .titlesData
+          .bottomTitles
+          .sideTitles;
+      final between = titles.getTitlesWidget(1.5, _meta);
+
+      expect(between, isA<SizedBox>());
+      expect((between as SizedBox).child, isNull);
+    });
+
+    testWidgets('labels every point when there are only a few', (
+      tester,
+    ) async {
+      await pump(tester, ConsumptionChart(entries: fillUps(4)));
+
+      expect(find.textContaining('Jan'), findsWidgets);
+    });
+
+    testWidgets('thins the labels when there are many, while keeping a point '
+        'for each fill-up', (tester) async {
+      await pump(tester, ConsumptionChart(entries: fillUps(30)));
+
+      expect(barOf(tester).spots, hasLength(30));
+      // Far fewer labels than points, or they would overlap.
+      final labels = tester
+          .widgetList<Text>(find.byType(Text))
+          .where((t) => (t.data ?? '').isNotEmpty)
+          .length;
+      expect(labels, lessThan(30));
+    });
+  });
 }
+
+/// fl_chart hands its title builder a meta object; the widget under test
+/// only reads the value, so a bare instance is enough.
+final _meta = TitleMeta(
+  min: 0,
+  max: 5,
+  parentAxisSize: 300,
+  axisPosition: 0,
+  appliedInterval: 1,
+  sideTitles: const SideTitles(),
+  formattedValue: '',
+  axisSide: AxisSide.bottom,
+  rotationQuarterTurns: 0,
+);
