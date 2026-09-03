@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'forecast_data.dart';
@@ -9,6 +9,7 @@ part of 'forecast_data.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $MonthForecastCopyWith<MonthForecast> get copyWith => _$MonthForecastCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MonthForecast&&(identical(other.month, month) || other.month == month)&&(identical(other.income, income) || other.income == income)&&(identical(other.expense, expense) || other.expense == expense)&&(identical(other.net, net) || other.net == net));
+  final _this = this as MonthForecast;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MonthForecast&&(identical(other.month, _this.month) || other.month == _this.month)&&(identical(other.income, _this.income) || other.income == _this.income)&&(identical(other.expense, _this.expense) || other.expense == _this.expense)&&(identical(other.net, _this.net) || other.net == _this.net));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,month,income,expense,net);
+int get hashCode {
+  final _this = this as MonthForecast;
+  return Object.hash(runtimeType,_this.month,_this.income,_this.expense,_this.net);
+}
 
 @override
 String toString() {
-  return 'MonthForecast(month: $month, income: $income, expense: $expense, net: $net)';
+  final _this = this as MonthForecast;
+  return 'MonthForecast(month: ${_this.month}, income: ${_this.income}, expense: ${_this.expense}, net: ${_this.net})';
 }
 
 
@@ -66,7 +72,7 @@ class _$MonthForecastCopyWithImpl<$Res>
 /// Create a copy of MonthForecast
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? month = null,Object? income = null,Object? expense = null,Object? net = null,}) {
-  return _then(_self.copyWith(
+  return _then(MonthForecast(
 month: null == month ? _self.month : month // ignore: cast_nullable_to_non_nullable
 as String,income: null == income ? _self.income : income // ignore: cast_nullable_to_non_nullable
 as double,expense: null == expense ? _self.expense : expense // ignore: cast_nullable_to_non_nullable
@@ -233,16 +239,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MonthForecast&&(identical(other.month, month) || other.month == month)&&(identical(other.income, income) || other.income == income)&&(identical(other.expense, expense) || other.expense == expense)&&(identical(other.net, net) || other.net == net));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MonthForecast&&(identical(other.month, month) || other.month == month)&&(identical(other.income, income) || other.income == income)&&(identical(other.expense, expense) || other.expense == expense)&&(identical(other.net, net) || other.net == net));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,month,income,expense,net);
+int get hashCode {
+    return Object.hash(runtimeType,month,income,expense,net);
+}
 
 @override
 String toString() {
-  return 'MonthForecast(month: $month, income: $income, expense: $expense, net: $net)';
+    return 'MonthForecast(month: $month, income: $income, expense: $expense, net: $net)';
 }
 
 
@@ -300,16 +308,21 @@ $ForecastDataCopyWith<ForecastData> get copyWith => _$ForecastDataCopyWithImpl<F
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ForecastData&&(identical(other.year, year) || other.year == year)&&const DeepCollectionEquality().equals(other.months, months)&&(identical(other.totalIncome, totalIncome) || other.totalIncome == totalIncome)&&(identical(other.totalExpense, totalExpense) || other.totalExpense == totalExpense)&&(identical(other.netForecast, netForecast) || other.netForecast == netForecast)&&(identical(other.currency, currency) || other.currency == currency));
+  final _this = this as ForecastData;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ForecastData&&(identical(other.year, _this.year) || other.year == _this.year)&&const DeepCollectionEquality().equals(other.months, _this.months)&&(identical(other.totalIncome, _this.totalIncome) || other.totalIncome == _this.totalIncome)&&(identical(other.totalExpense, _this.totalExpense) || other.totalExpense == _this.totalExpense)&&(identical(other.netForecast, _this.netForecast) || other.netForecast == _this.netForecast)&&(identical(other.currency, _this.currency) || other.currency == _this.currency));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,year,const DeepCollectionEquality().hash(months),totalIncome,totalExpense,netForecast,currency);
+int get hashCode {
+  final _this = this as ForecastData;
+  return Object.hash(runtimeType,_this.year,const DeepCollectionEquality().hash(_this.months),_this.totalIncome,_this.totalExpense,_this.netForecast,_this.currency);
+}
 
 @override
 String toString() {
-  return 'ForecastData(year: $year, months: $months, totalIncome: $totalIncome, totalExpense: $totalExpense, netForecast: $netForecast, currency: $currency)';
+  final _this = this as ForecastData;
+  return 'ForecastData(year: ${_this.year}, months: ${_this.months}, totalIncome: ${_this.totalIncome}, totalExpense: ${_this.totalExpense}, netForecast: ${_this.netForecast}, currency: ${_this.currency})';
 }
 
 
@@ -338,7 +351,7 @@ class _$ForecastDataCopyWithImpl<$Res>
 /// Create a copy of ForecastData
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? year = null,Object? months = null,Object? totalIncome = null,Object? totalExpense = null,Object? netForecast = null,Object? currency = null,}) {
-  return _then(_self.copyWith(
+  return _then(ForecastData(
 year: null == year ? _self.year : year // ignore: cast_nullable_to_non_nullable
 as int,months: null == months ? _self.months : months // ignore: cast_nullable_to_non_nullable
 as List<MonthForecast>,totalIncome: null == totalIncome ? _self.totalIncome : totalIncome // ignore: cast_nullable_to_non_nullable
@@ -486,7 +499,7 @@ return $default(_that.year,_that.months,_that.totalIncome,_that.totalExpense,_th
 @JsonSerializable()
 
 class _ForecastData implements ForecastData {
-  const _ForecastData({required this.year, final  List<MonthForecast> months = const [], @JsonKey(fromJson: jsonToDouble) this.totalIncome = 0, @JsonKey(fromJson: jsonToDouble) this.totalExpense = 0, @JsonKey(fromJson: jsonToDouble) this.netForecast = 0, this.currency = 'EUR'}): _months = months;
+  const _ForecastData({required this.year,  List<MonthForecast> months = const [], @JsonKey(fromJson: jsonToDouble) this.totalIncome = 0, @JsonKey(fromJson: jsonToDouble) this.totalExpense = 0, @JsonKey(fromJson: jsonToDouble) this.netForecast = 0, this.currency = 'EUR'}): _months = months;
   factory _ForecastData.fromJson(Map<String, dynamic> json) => _$ForecastDataFromJson(json);
 
 @override final  int year;
@@ -515,16 +528,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ForecastData&&(identical(other.year, year) || other.year == year)&&const DeepCollectionEquality().equals(other._months, _months)&&(identical(other.totalIncome, totalIncome) || other.totalIncome == totalIncome)&&(identical(other.totalExpense, totalExpense) || other.totalExpense == totalExpense)&&(identical(other.netForecast, netForecast) || other.netForecast == netForecast)&&(identical(other.currency, currency) || other.currency == currency));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ForecastData&&(identical(other.year, year) || other.year == year)&&const DeepCollectionEquality().equals(other.months, _months)&&(identical(other.totalIncome, totalIncome) || other.totalIncome == totalIncome)&&(identical(other.totalExpense, totalExpense) || other.totalExpense == totalExpense)&&(identical(other.netForecast, netForecast) || other.netForecast == netForecast)&&(identical(other.currency, currency) || other.currency == currency));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,year,const DeepCollectionEquality().hash(_months),totalIncome,totalExpense,netForecast,currency);
+int get hashCode {
+    return Object.hash(runtimeType,year,const DeepCollectionEquality().hash(_months),totalIncome,totalExpense,netForecast,currency);
+}
 
 @override
 String toString() {
-  return 'ForecastData(year: $year, months: $months, totalIncome: $totalIncome, totalExpense: $totalExpense, netForecast: $netForecast, currency: $currency)';
+    return 'ForecastData(year: $year, months: $months, totalIncome: $totalIncome, totalExpense: $totalExpense, netForecast: $netForecast, currency: $currency)';
 }
 
 

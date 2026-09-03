@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'payee.dart';
@@ -9,6 +9,7 @@ part of 'payee.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $PayeeCopyWith<Payee> get copyWith => _$PayeeCopyWithImpl<Payee>(this as Payee, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Payee&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.defaultCategoryId, defaultCategoryId) || other.defaultCategoryId == defaultCategoryId)&&(identical(other.defaultCategoryName, defaultCategoryName) || other.defaultCategoryName == defaultCategoryName)&&(identical(other.defaultPaymentMethod, defaultPaymentMethod) || other.defaultPaymentMethod == defaultPaymentMethod));
+  final _this = this as Payee;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Payee&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.notes, _this.notes) || other.notes == _this.notes)&&(identical(other.defaultCategoryId, _this.defaultCategoryId) || other.defaultCategoryId == _this.defaultCategoryId)&&(identical(other.defaultCategoryName, _this.defaultCategoryName) || other.defaultCategoryName == _this.defaultCategoryName)&&(identical(other.defaultPaymentMethod, _this.defaultPaymentMethod) || other.defaultPaymentMethod == _this.defaultPaymentMethod));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,notes,defaultCategoryId,defaultCategoryName,defaultPaymentMethod);
+int get hashCode {
+  final _this = this as Payee;
+  return Object.hash(runtimeType,_this.id,_this.name,_this.notes,_this.defaultCategoryId,_this.defaultCategoryName,_this.defaultPaymentMethod);
+}
 
 @override
 String toString() {
-  return 'Payee(id: $id, name: $name, notes: $notes, defaultCategoryId: $defaultCategoryId, defaultCategoryName: $defaultCategoryName, defaultPaymentMethod: $defaultPaymentMethod)';
+  final _this = this as Payee;
+  return 'Payee(id: ${_this.id}, name: ${_this.name}, notes: ${_this.notes}, defaultCategoryId: ${_this.defaultCategoryId}, defaultCategoryName: ${_this.defaultCategoryName}, defaultPaymentMethod: ${_this.defaultPaymentMethod})';
 }
 
 
@@ -66,7 +72,7 @@ class _$PayeeCopyWithImpl<$Res>
 /// Create a copy of Payee
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? name = null,Object? notes = freezed,Object? defaultCategoryId = freezed,Object? defaultCategoryName = freezed,Object? defaultPaymentMethod = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(Payee(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
@@ -237,16 +243,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Payee&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.defaultCategoryId, defaultCategoryId) || other.defaultCategoryId == defaultCategoryId)&&(identical(other.defaultCategoryName, defaultCategoryName) || other.defaultCategoryName == defaultCategoryName)&&(identical(other.defaultPaymentMethod, defaultPaymentMethod) || other.defaultPaymentMethod == defaultPaymentMethod));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Payee&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.defaultCategoryId, defaultCategoryId) || other.defaultCategoryId == defaultCategoryId)&&(identical(other.defaultCategoryName, defaultCategoryName) || other.defaultCategoryName == defaultCategoryName)&&(identical(other.defaultPaymentMethod, defaultPaymentMethod) || other.defaultPaymentMethod == defaultPaymentMethod));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,notes,defaultCategoryId,defaultCategoryName,defaultPaymentMethod);
+int get hashCode {
+    return Object.hash(runtimeType,id,name,notes,defaultCategoryId,defaultCategoryName,defaultPaymentMethod);
+}
 
 @override
 String toString() {
-  return 'Payee(id: $id, name: $name, notes: $notes, defaultCategoryId: $defaultCategoryId, defaultCategoryName: $defaultCategoryName, defaultPaymentMethod: $defaultPaymentMethod)';
+    return 'Payee(id: $id, name: $name, notes: $notes, defaultCategoryId: $defaultCategoryId, defaultCategoryName: $defaultCategoryName, defaultPaymentMethod: $defaultPaymentMethod)';
 }
 
 

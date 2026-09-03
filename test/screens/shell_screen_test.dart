@@ -253,4 +253,49 @@ void main() {
       expect(find.byType(Badge), findsNothing);
     });
   });
+
+  group('the drawer avatar initial', () {
+    Future<void> pumpWithProfile(WidgetTester tester, UserProfile user) async {
+      await pumpShell(
+        tester,
+        controller: _FakeAuthController(AuthState(user: user)),
+      );
+    }
+
+    testWidgets('uses the first letter of the first name', (tester) async {
+      await pumpWithProfile(
+        tester,
+        const UserProfile(username: 'demo', email: 'd@x', firstName: 'Ada'),
+      );
+      await tester.tap(find.byTooltip('Open navigation menu'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('A'), findsOneWidget);
+    });
+
+    testWidgets('a profile with no first name falls back instead of '
+        'crashing the whole shell on an empty string', (tester) async {
+      await pumpWithProfile(
+        tester,
+        const UserProfile(username: 'demo', email: 'd@x'),
+      );
+
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.byTooltip('Open navigation menu'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('U'), findsOneWidget);
+    });
+
+    testWidgets('a first name of only spaces falls back too', (tester) async {
+      await pumpWithProfile(
+        tester,
+        const UserProfile(username: 'demo', email: 'd@x', firstName: '   '),
+      );
+
+      expect(tester.takeException(), isNull);
+    });
+  });
 }

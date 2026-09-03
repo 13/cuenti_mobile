@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'audit_page.dart';
@@ -9,6 +9,7 @@ part of 'audit_page.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $AuditPageCopyWith<AuditPage> get copyWith => _$AuditPageCopyWithImpl<AuditPage>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuditPage&&const DeepCollectionEquality().equals(other.content, content)&&(identical(other.page, page) || other.page == page)&&(identical(other.size, size) || other.size == size)&&(identical(other.totalElements, totalElements) || other.totalElements == totalElements)&&(identical(other.totalPages, totalPages) || other.totalPages == totalPages));
+  final _this = this as AuditPage;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuditPage&&const DeepCollectionEquality().equals(other.content, _this.content)&&(identical(other.page, _this.page) || other.page == _this.page)&&(identical(other.size, _this.size) || other.size == _this.size)&&(identical(other.totalElements, _this.totalElements) || other.totalElements == _this.totalElements)&&(identical(other.totalPages, _this.totalPages) || other.totalPages == _this.totalPages));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(content),page,size,totalElements,totalPages);
+int get hashCode {
+  final _this = this as AuditPage;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.content),_this.page,_this.size,_this.totalElements,_this.totalPages);
+}
 
 @override
 String toString() {
-  return 'AuditPage(content: $content, page: $page, size: $size, totalElements: $totalElements, totalPages: $totalPages)';
+  final _this = this as AuditPage;
+  return 'AuditPage(content: ${_this.content}, page: ${_this.page}, size: ${_this.size}, totalElements: ${_this.totalElements}, totalPages: ${_this.totalPages})';
 }
 
 
@@ -66,7 +72,7 @@ class _$AuditPageCopyWithImpl<$Res>
 /// Create a copy of AuditPage
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? content = null,Object? page = null,Object? size = null,Object? totalElements = null,Object? totalPages = null,}) {
-  return _then(_self.copyWith(
+  return _then(AuditPage(
 content: null == content ? _self.content : content // ignore: cast_nullable_to_non_nullable
 as List<AuditEntry>,page: null == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
 as int,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
@@ -213,7 +219,7 @@ return $default(_that.content,_that.page,_that.size,_that.totalElements,_that.to
 @JsonSerializable()
 
 class _AuditPage implements AuditPage {
-  const _AuditPage({final  List<AuditEntry> content = const [], this.page = 0, this.size = 50, this.totalElements = 0, this.totalPages = 0}): _content = content;
+  const _AuditPage({ List<AuditEntry> content = const [], this.page = 0, this.size = 50, this.totalElements = 0, this.totalPages = 0}): _content = content;
   factory _AuditPage.fromJson(Map<String, dynamic> json) => _$AuditPageFromJson(json);
 
  final  List<AuditEntry> _content;
@@ -241,16 +247,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuditPage&&const DeepCollectionEquality().equals(other._content, _content)&&(identical(other.page, page) || other.page == page)&&(identical(other.size, size) || other.size == size)&&(identical(other.totalElements, totalElements) || other.totalElements == totalElements)&&(identical(other.totalPages, totalPages) || other.totalPages == totalPages));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuditPage&&const DeepCollectionEquality().equals(other.content, _content)&&(identical(other.page, page) || other.page == page)&&(identical(other.size, size) || other.size == size)&&(identical(other.totalElements, totalElements) || other.totalElements == totalElements)&&(identical(other.totalPages, totalPages) || other.totalPages == totalPages));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_content),page,size,totalElements,totalPages);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_content),page,size,totalElements,totalPages);
+}
 
 @override
 String toString() {
-  return 'AuditPage(content: $content, page: $page, size: $size, totalElements: $totalElements, totalPages: $totalPages)';
+    return 'AuditPage(content: $content, page: $page, size: $size, totalElements: $totalElements, totalPages: $totalPages)';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'currency.dart';
@@ -9,6 +9,7 @@ part of 'currency.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $CurrencyCopyWith<Currency> get copyWith => _$CurrencyCopyWithImpl<Currency>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Currency&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.symbol, symbol) || other.symbol == symbol)&&(identical(other.decimalChar, decimalChar) || other.decimalChar == decimalChar)&&(identical(other.fracDigits, fracDigits) || other.fracDigits == fracDigits)&&(identical(other.groupingChar, groupingChar) || other.groupingChar == groupingChar));
+  final _this = this as Currency;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Currency&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.symbol, _this.symbol) || other.symbol == _this.symbol)&&(identical(other.decimalChar, _this.decimalChar) || other.decimalChar == _this.decimalChar)&&(identical(other.fracDigits, _this.fracDigits) || other.fracDigits == _this.fracDigits)&&(identical(other.groupingChar, _this.groupingChar) || other.groupingChar == _this.groupingChar));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,code,name,symbol,decimalChar,fracDigits,groupingChar);
+int get hashCode {
+  final _this = this as Currency;
+  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.symbol,_this.decimalChar,_this.fracDigits,_this.groupingChar);
+}
 
 @override
 String toString() {
-  return 'Currency(id: $id, code: $code, name: $name, symbol: $symbol, decimalChar: $decimalChar, fracDigits: $fracDigits, groupingChar: $groupingChar)';
+  final _this = this as Currency;
+  return 'Currency(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, symbol: ${_this.symbol}, decimalChar: ${_this.decimalChar}, fracDigits: ${_this.fracDigits}, groupingChar: ${_this.groupingChar})';
 }
 
 
@@ -66,7 +72,7 @@ class _$CurrencyCopyWithImpl<$Res>
 /// Create a copy of Currency
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? code = null,Object? name = null,Object? symbol = null,Object? decimalChar = null,Object? fracDigits = null,Object? groupingChar = null,}) {
-  return _then(_self.copyWith(
+  return _then(Currency(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -239,16 +245,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Currency&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.symbol, symbol) || other.symbol == symbol)&&(identical(other.decimalChar, decimalChar) || other.decimalChar == decimalChar)&&(identical(other.fracDigits, fracDigits) || other.fracDigits == fracDigits)&&(identical(other.groupingChar, groupingChar) || other.groupingChar == groupingChar));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Currency&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.symbol, symbol) || other.symbol == symbol)&&(identical(other.decimalChar, decimalChar) || other.decimalChar == decimalChar)&&(identical(other.fracDigits, fracDigits) || other.fracDigits == fracDigits)&&(identical(other.groupingChar, groupingChar) || other.groupingChar == groupingChar));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,code,name,symbol,decimalChar,fracDigits,groupingChar);
+int get hashCode {
+    return Object.hash(runtimeType,id,code,name,symbol,decimalChar,fracDigits,groupingChar);
+}
 
 @override
 String toString() {
-  return 'Currency(id: $id, code: $code, name: $name, symbol: $symbol, decimalChar: $decimalChar, fracDigits: $fracDigits, groupingChar: $groupingChar)';
+    return 'Currency(id: $id, code: $code, name: $name, symbol: $symbol, decimalChar: $decimalChar, fracDigits: $fracDigits, groupingChar: $groupingChar)';
 }
 
 

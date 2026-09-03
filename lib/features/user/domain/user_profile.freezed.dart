@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'user_profile.dart';
@@ -9,6 +9,7 @@ part of 'user_profile.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $UserProfileCopyWith<UserProfile> get copyWith => _$UserProfileCopyWithImpl<User
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserProfile&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.email, email) || other.email == email)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.defaultCurrency, defaultCurrency) || other.defaultCurrency == defaultCurrency)&&(identical(other.darkMode, darkMode) || other.darkMode == darkMode)&&(identical(other.locale, locale) || other.locale == locale)&&(identical(other.apiEnabled, apiEnabled) || other.apiEnabled == apiEnabled)&&const DeepCollectionEquality().equals(other.roles, roles)&&(identical(other.defaultVehicleCategoryId, defaultVehicleCategoryId) || other.defaultVehicleCategoryId == defaultVehicleCategoryId));
+  final _this = this as UserProfile;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserProfile&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.username, _this.username) || other.username == _this.username)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.firstName, _this.firstName) || other.firstName == _this.firstName)&&(identical(other.lastName, _this.lastName) || other.lastName == _this.lastName)&&(identical(other.defaultCurrency, _this.defaultCurrency) || other.defaultCurrency == _this.defaultCurrency)&&(identical(other.darkMode, _this.darkMode) || other.darkMode == _this.darkMode)&&(identical(other.locale, _this.locale) || other.locale == _this.locale)&&(identical(other.apiEnabled, _this.apiEnabled) || other.apiEnabled == _this.apiEnabled)&&const DeepCollectionEquality().equals(other.roles, _this.roles)&&(identical(other.defaultVehicleCategoryId, _this.defaultVehicleCategoryId) || other.defaultVehicleCategoryId == _this.defaultVehicleCategoryId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,username,email,firstName,lastName,defaultCurrency,darkMode,locale,apiEnabled,const DeepCollectionEquality().hash(roles),defaultVehicleCategoryId);
+int get hashCode {
+  final _this = this as UserProfile;
+  return Object.hash(runtimeType,_this.id,_this.username,_this.email,_this.firstName,_this.lastName,_this.defaultCurrency,_this.darkMode,_this.locale,_this.apiEnabled,const DeepCollectionEquality().hash(_this.roles),_this.defaultVehicleCategoryId);
+}
 
 @override
 String toString() {
-  return 'UserProfile(id: $id, username: $username, email: $email, firstName: $firstName, lastName: $lastName, defaultCurrency: $defaultCurrency, darkMode: $darkMode, locale: $locale, apiEnabled: $apiEnabled, roles: $roles, defaultVehicleCategoryId: $defaultVehicleCategoryId)';
+  final _this = this as UserProfile;
+  return 'UserProfile(id: ${_this.id}, username: ${_this.username}, email: ${_this.email}, firstName: ${_this.firstName}, lastName: ${_this.lastName}, defaultCurrency: ${_this.defaultCurrency}, darkMode: ${_this.darkMode}, locale: ${_this.locale}, apiEnabled: ${_this.apiEnabled}, roles: ${_this.roles}, defaultVehicleCategoryId: ${_this.defaultVehicleCategoryId})';
 }
 
 
@@ -66,7 +72,7 @@ class _$UserProfileCopyWithImpl<$Res>
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? username = null,Object? email = null,Object? firstName = null,Object? lastName = null,Object? defaultCurrency = null,Object? darkMode = null,Object? locale = null,Object? apiEnabled = null,Object? roles = null,Object? defaultVehicleCategoryId = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(UserProfile(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
@@ -219,7 +225,7 @@ return $default(_that.id,_that.username,_that.email,_that.firstName,_that.lastNa
 @JsonSerializable()
 
 class _UserProfile extends UserProfile {
-  const _UserProfile({this.id, this.username = '', this.email = '', this.firstName = '', this.lastName = '', this.defaultCurrency = 'EUR', this.darkMode = true, this.locale = 'de-DE', this.apiEnabled = false, final  Set<String> roles = const <String>{}, this.defaultVehicleCategoryId}): _roles = roles,super._();
+  const _UserProfile({this.id, this.username = '', this.email = '', this.firstName = '', this.lastName = '', this.defaultCurrency = 'EUR', this.darkMode = true, this.locale = 'de-DE', this.apiEnabled = false,  Set<String> roles = const <String>{}, this.defaultVehicleCategoryId}): _roles = roles,super._();
   factory _UserProfile.fromJson(Map<String, dynamic> json) => _$UserProfileFromJson(json);
 
 @override final  int? id;
@@ -253,16 +259,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserProfile&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.email, email) || other.email == email)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.defaultCurrency, defaultCurrency) || other.defaultCurrency == defaultCurrency)&&(identical(other.darkMode, darkMode) || other.darkMode == darkMode)&&(identical(other.locale, locale) || other.locale == locale)&&(identical(other.apiEnabled, apiEnabled) || other.apiEnabled == apiEnabled)&&const DeepCollectionEquality().equals(other._roles, _roles)&&(identical(other.defaultVehicleCategoryId, defaultVehicleCategoryId) || other.defaultVehicleCategoryId == defaultVehicleCategoryId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserProfile&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.email, email) || other.email == email)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.defaultCurrency, defaultCurrency) || other.defaultCurrency == defaultCurrency)&&(identical(other.darkMode, darkMode) || other.darkMode == darkMode)&&(identical(other.locale, locale) || other.locale == locale)&&(identical(other.apiEnabled, apiEnabled) || other.apiEnabled == apiEnabled)&&const DeepCollectionEquality().equals(other.roles, _roles)&&(identical(other.defaultVehicleCategoryId, defaultVehicleCategoryId) || other.defaultVehicleCategoryId == defaultVehicleCategoryId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,username,email,firstName,lastName,defaultCurrency,darkMode,locale,apiEnabled,const DeepCollectionEquality().hash(_roles),defaultVehicleCategoryId);
+int get hashCode {
+    return Object.hash(runtimeType,id,username,email,firstName,lastName,defaultCurrency,darkMode,locale,apiEnabled,const DeepCollectionEquality().hash(_roles),defaultVehicleCategoryId);
+}
 
 @override
 String toString() {
-  return 'UserProfile(id: $id, username: $username, email: $email, firstName: $firstName, lastName: $lastName, defaultCurrency: $defaultCurrency, darkMode: $darkMode, locale: $locale, apiEnabled: $apiEnabled, roles: $roles, defaultVehicleCategoryId: $defaultVehicleCategoryId)';
+    return 'UserProfile(id: $id, username: $username, email: $email, firstName: $firstName, lastName: $lastName, defaultCurrency: $defaultCurrency, darkMode: $darkMode, locale: $locale, apiEnabled: $apiEnabled, roles: $roles, defaultVehicleCategoryId: $defaultVehicleCategoryId)';
 }
 
 

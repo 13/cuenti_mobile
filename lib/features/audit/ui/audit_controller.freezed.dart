@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'audit_controller.dart';
@@ -9,6 +9,7 @@ part of 'audit_controller.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $AuditStateCopyWith<AuditState> get copyWith => _$AuditStateCopyWithImpl<AuditSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuditState&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.nextPage, nextPage) || other.nextPage == nextPage)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.filter, filter) || other.filter == filter));
+  final _this = this as AuditState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuditState&&const DeepCollectionEquality().equals(other.items, _this.items)&&(identical(other.nextPage, _this.nextPage) || other.nextPage == _this.nextPage)&&(identical(other.hasMore, _this.hasMore) || other.hasMore == _this.hasMore)&&(identical(other.loadingMore, _this.loadingMore) || other.loadingMore == _this.loadingMore)&&(identical(other.filter, _this.filter) || other.filter == _this.filter));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),nextPage,hasMore,loadingMore,filter);
+int get hashCode {
+  final _this = this as AuditState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.items),_this.nextPage,_this.hasMore,_this.loadingMore,_this.filter);
+}
 
 @override
 String toString() {
-  return 'AuditState(items: $items, nextPage: $nextPage, hasMore: $hasMore, loadingMore: $loadingMore, filter: $filter)';
+  final _this = this as AuditState;
+  return 'AuditState(items: ${_this.items}, nextPage: ${_this.nextPage}, hasMore: ${_this.hasMore}, loadingMore: ${_this.loadingMore}, filter: ${_this.filter})';
 }
 
 
@@ -63,7 +69,7 @@ class _$AuditStateCopyWithImpl<$Res>
 /// Create a copy of AuditState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? nextPage = null,Object? hasMore = null,Object? loadingMore = null,Object? filter = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AuditState(
 items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<AuditEntry>,nextPage: null == nextPage ? _self.nextPage : nextPage // ignore: cast_nullable_to_non_nullable
 as int,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
@@ -210,7 +216,7 @@ return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that
 
 
 class _AuditState implements AuditState {
-  const _AuditState({final  List<AuditEntry> items = const [], this.nextPage = 0, this.hasMore = true, this.loadingMore = false, this.filter}): _items = items;
+  const _AuditState({ List<AuditEntry> items = const [], this.nextPage = 0, this.hasMore = true, this.loadingMore = false, this.filter}): _items = items;
   
 
  final  List<AuditEntry> _items;
@@ -235,16 +241,18 @@ _$AuditStateCopyWith<_AuditState> get copyWith => __$AuditStateCopyWithImpl<_Aud
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuditState&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.nextPage, nextPage) || other.nextPage == nextPage)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.filter, filter) || other.filter == filter));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuditState&&const DeepCollectionEquality().equals(other.items, _items)&&(identical(other.nextPage, nextPage) || other.nextPage == nextPage)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.filter, filter) || other.filter == filter));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),nextPage,hasMore,loadingMore,filter);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),nextPage,hasMore,loadingMore,filter);
+}
 
 @override
 String toString() {
-  return 'AuditState(items: $items, nextPage: $nextPage, hasMore: $hasMore, loadingMore: $loadingMore, filter: $filter)';
+    return 'AuditState(items: $items, nextPage: $nextPage, hasMore: $hasMore, loadingMore: $loadingMore, filter: $filter)';
 }
 
 

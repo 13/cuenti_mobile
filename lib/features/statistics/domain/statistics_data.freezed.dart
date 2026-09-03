@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'statistics_data.dart';
@@ -9,6 +9,7 @@ part of 'statistics_data.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $StatisticsDataCopyWith<StatisticsData> get copyWith => _$StatisticsDataCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StatisticsData&&(identical(other.totalIncome, totalIncome) || other.totalIncome == totalIncome)&&(identical(other.totalExpense, totalExpense) || other.totalExpense == totalExpense)&&(identical(other.balance, balance) || other.balance == balance)&&(identical(other.currency, currency) || other.currency == currency)&&const DeepCollectionEquality().equals(other.incomeByCategory, incomeByCategory)&&const DeepCollectionEquality().equals(other.expenseByCategory, expenseByCategory)&&const DeepCollectionEquality().equals(other.monthlyIncome, monthlyIncome)&&const DeepCollectionEquality().equals(other.monthlyExpense, monthlyExpense)&&(identical(other.transactionCount, transactionCount) || other.transactionCount == transactionCount));
+  final _this = this as StatisticsData;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StatisticsData&&(identical(other.totalIncome, _this.totalIncome) || other.totalIncome == _this.totalIncome)&&(identical(other.totalExpense, _this.totalExpense) || other.totalExpense == _this.totalExpense)&&(identical(other.balance, _this.balance) || other.balance == _this.balance)&&(identical(other.currency, _this.currency) || other.currency == _this.currency)&&const DeepCollectionEquality().equals(other.incomeByCategory, _this.incomeByCategory)&&const DeepCollectionEquality().equals(other.expenseByCategory, _this.expenseByCategory)&&const DeepCollectionEquality().equals(other.monthlyIncome, _this.monthlyIncome)&&const DeepCollectionEquality().equals(other.monthlyExpense, _this.monthlyExpense)&&(identical(other.transactionCount, _this.transactionCount) || other.transactionCount == _this.transactionCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,totalIncome,totalExpense,balance,currency,const DeepCollectionEquality().hash(incomeByCategory),const DeepCollectionEquality().hash(expenseByCategory),const DeepCollectionEquality().hash(monthlyIncome),const DeepCollectionEquality().hash(monthlyExpense),transactionCount);
+int get hashCode {
+  final _this = this as StatisticsData;
+  return Object.hash(runtimeType,_this.totalIncome,_this.totalExpense,_this.balance,_this.currency,const DeepCollectionEquality().hash(_this.incomeByCategory),const DeepCollectionEquality().hash(_this.expenseByCategory),const DeepCollectionEquality().hash(_this.monthlyIncome),const DeepCollectionEquality().hash(_this.monthlyExpense),_this.transactionCount);
+}
 
 @override
 String toString() {
-  return 'StatisticsData(totalIncome: $totalIncome, totalExpense: $totalExpense, balance: $balance, currency: $currency, incomeByCategory: $incomeByCategory, expenseByCategory: $expenseByCategory, monthlyIncome: $monthlyIncome, monthlyExpense: $monthlyExpense, transactionCount: $transactionCount)';
+  final _this = this as StatisticsData;
+  return 'StatisticsData(totalIncome: ${_this.totalIncome}, totalExpense: ${_this.totalExpense}, balance: ${_this.balance}, currency: ${_this.currency}, incomeByCategory: ${_this.incomeByCategory}, expenseByCategory: ${_this.expenseByCategory}, monthlyIncome: ${_this.monthlyIncome}, monthlyExpense: ${_this.monthlyExpense}, transactionCount: ${_this.transactionCount})';
 }
 
 
@@ -66,7 +72,7 @@ class _$StatisticsDataCopyWithImpl<$Res>
 /// Create a copy of StatisticsData
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? totalIncome = null,Object? totalExpense = null,Object? balance = null,Object? currency = null,Object? incomeByCategory = null,Object? expenseByCategory = null,Object? monthlyIncome = null,Object? monthlyExpense = null,Object? transactionCount = null,}) {
-  return _then(_self.copyWith(
+  return _then(StatisticsData(
 totalIncome: null == totalIncome ? _self.totalIncome : totalIncome // ignore: cast_nullable_to_non_nullable
 as double,totalExpense: null == totalExpense ? _self.totalExpense : totalExpense // ignore: cast_nullable_to_non_nullable
 as double,balance: null == balance ? _self.balance : balance // ignore: cast_nullable_to_non_nullable
@@ -217,7 +223,7 @@ return $default(_that.totalIncome,_that.totalExpense,_that.balance,_that.currenc
 @JsonSerializable()
 
 class _StatisticsData extends StatisticsData {
-  const _StatisticsData({@JsonKey(fromJson: jsonToDouble) required this.totalIncome, @JsonKey(fromJson: jsonToDouble) required this.totalExpense, @JsonKey(fromJson: jsonToDouble) required this.balance, this.currency = 'EUR', @JsonKey(fromJson: jsonToDoubleMap) final  Map<String, double> incomeByCategory = const {}, @JsonKey(fromJson: jsonToDoubleMap) final  Map<String, double> expenseByCategory = const {}, @JsonKey(fromJson: jsonToDoubleMap) final  Map<String, double> monthlyIncome = const {}, @JsonKey(fromJson: jsonToDoubleMap) final  Map<String, double> monthlyExpense = const {}, this.transactionCount = 0}): _incomeByCategory = incomeByCategory,_expenseByCategory = expenseByCategory,_monthlyIncome = monthlyIncome,_monthlyExpense = monthlyExpense,super._();
+  const _StatisticsData({@JsonKey(fromJson: jsonToDouble) required this.totalIncome, @JsonKey(fromJson: jsonToDouble) required this.totalExpense, @JsonKey(fromJson: jsonToDouble) required this.balance, this.currency = 'EUR', @JsonKey(fromJson: jsonToDoubleMap)  Map<String, double> incomeByCategory = const {}, @JsonKey(fromJson: jsonToDoubleMap)  Map<String, double> expenseByCategory = const {}, @JsonKey(fromJson: jsonToDoubleMap)  Map<String, double> monthlyIncome = const {}, @JsonKey(fromJson: jsonToDoubleMap)  Map<String, double> monthlyExpense = const {}, this.transactionCount = 0}): _incomeByCategory = incomeByCategory,_expenseByCategory = expenseByCategory,_monthlyIncome = monthlyIncome,_monthlyExpense = monthlyExpense,super._();
   factory _StatisticsData.fromJson(Map<String, dynamic> json) => _$StatisticsDataFromJson(json);
 
 @override@JsonKey(fromJson: jsonToDouble) final  double totalIncome;
@@ -267,16 +273,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StatisticsData&&(identical(other.totalIncome, totalIncome) || other.totalIncome == totalIncome)&&(identical(other.totalExpense, totalExpense) || other.totalExpense == totalExpense)&&(identical(other.balance, balance) || other.balance == balance)&&(identical(other.currency, currency) || other.currency == currency)&&const DeepCollectionEquality().equals(other._incomeByCategory, _incomeByCategory)&&const DeepCollectionEquality().equals(other._expenseByCategory, _expenseByCategory)&&const DeepCollectionEquality().equals(other._monthlyIncome, _monthlyIncome)&&const DeepCollectionEquality().equals(other._monthlyExpense, _monthlyExpense)&&(identical(other.transactionCount, transactionCount) || other.transactionCount == transactionCount));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _StatisticsData&&(identical(other.totalIncome, totalIncome) || other.totalIncome == totalIncome)&&(identical(other.totalExpense, totalExpense) || other.totalExpense == totalExpense)&&(identical(other.balance, balance) || other.balance == balance)&&(identical(other.currency, currency) || other.currency == currency)&&const DeepCollectionEquality().equals(other.incomeByCategory, _incomeByCategory)&&const DeepCollectionEquality().equals(other.expenseByCategory, _expenseByCategory)&&const DeepCollectionEquality().equals(other.monthlyIncome, _monthlyIncome)&&const DeepCollectionEquality().equals(other.monthlyExpense, _monthlyExpense)&&(identical(other.transactionCount, transactionCount) || other.transactionCount == transactionCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,totalIncome,totalExpense,balance,currency,const DeepCollectionEquality().hash(_incomeByCategory),const DeepCollectionEquality().hash(_expenseByCategory),const DeepCollectionEquality().hash(_monthlyIncome),const DeepCollectionEquality().hash(_monthlyExpense),transactionCount);
+int get hashCode {
+    return Object.hash(runtimeType,totalIncome,totalExpense,balance,currency,const DeepCollectionEquality().hash(_incomeByCategory),const DeepCollectionEquality().hash(_expenseByCategory),const DeepCollectionEquality().hash(_monthlyIncome),const DeepCollectionEquality().hash(_monthlyExpense),transactionCount);
+}
 
 @override
 String toString() {
-  return 'StatisticsData(totalIncome: $totalIncome, totalExpense: $totalExpense, balance: $balance, currency: $currency, incomeByCategory: $incomeByCategory, expenseByCategory: $expenseByCategory, monthlyIncome: $monthlyIncome, monthlyExpense: $monthlyExpense, transactionCount: $transactionCount)';
+    return 'StatisticsData(totalIncome: $totalIncome, totalExpense: $totalExpense, balance: $balance, currency: $currency, incomeByCategory: $incomeByCategory, expenseByCategory: $expenseByCategory, monthlyIncome: $monthlyIncome, monthlyExpense: $monthlyExpense, transactionCount: $transactionCount)';
 }
 
 

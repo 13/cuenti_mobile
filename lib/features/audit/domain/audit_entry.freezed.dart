@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'audit_entry.dart';
@@ -9,6 +9,7 @@ part of 'audit_entry.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $AuditEntryCopyWith<AuditEntry> get copyWith => _$AuditEntryCopyWithImpl<AuditEn
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuditEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.username, username) || other.username == username)&&(identical(other.entityType, entityType) || other.entityType == entityType)&&(identical(other.entityId, entityId) || other.entityId == entityId)&&(identical(other.action, action) || other.action == action)&&(identical(other.details, details) || other.details == details));
+  final _this = this as AuditEntry;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuditEntry&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.timestamp, _this.timestamp) || other.timestamp == _this.timestamp)&&(identical(other.userId, _this.userId) || other.userId == _this.userId)&&(identical(other.username, _this.username) || other.username == _this.username)&&(identical(other.entityType, _this.entityType) || other.entityType == _this.entityType)&&(identical(other.entityId, _this.entityId) || other.entityId == _this.entityId)&&(identical(other.action, _this.action) || other.action == _this.action)&&(identical(other.details, _this.details) || other.details == _this.details));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,timestamp,userId,username,entityType,entityId,action,details);
+int get hashCode {
+  final _this = this as AuditEntry;
+  return Object.hash(runtimeType,_this.id,_this.timestamp,_this.userId,_this.username,_this.entityType,_this.entityId,_this.action,_this.details);
+}
 
 @override
 String toString() {
-  return 'AuditEntry(id: $id, timestamp: $timestamp, userId: $userId, username: $username, entityType: $entityType, entityId: $entityId, action: $action, details: $details)';
+  final _this = this as AuditEntry;
+  return 'AuditEntry(id: ${_this.id}, timestamp: ${_this.timestamp}, userId: ${_this.userId}, username: ${_this.username}, entityType: ${_this.entityType}, entityId: ${_this.entityId}, action: ${_this.action}, details: ${_this.details})';
 }
 
 
@@ -66,7 +72,7 @@ class _$AuditEntryCopyWithImpl<$Res>
 /// Create a copy of AuditEntry
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? timestamp = null,Object? userId = freezed,Object? username = freezed,Object? entityType = freezed,Object? entityId = freezed,Object? action = freezed,Object? details = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AuditEntry(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
 as DateTime,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
@@ -241,16 +247,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuditEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.username, username) || other.username == username)&&(identical(other.entityType, entityType) || other.entityType == entityType)&&(identical(other.entityId, entityId) || other.entityId == entityId)&&(identical(other.action, action) || other.action == action)&&(identical(other.details, details) || other.details == details));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuditEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.username, username) || other.username == username)&&(identical(other.entityType, entityType) || other.entityType == entityType)&&(identical(other.entityId, entityId) || other.entityId == entityId)&&(identical(other.action, action) || other.action == action)&&(identical(other.details, details) || other.details == details));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,timestamp,userId,username,entityType,entityId,action,details);
+int get hashCode {
+    return Object.hash(runtimeType,id,timestamp,userId,username,entityType,entityId,action,details);
+}
 
 @override
 String toString() {
-  return 'AuditEntry(id: $id, timestamp: $timestamp, userId: $userId, username: $username, entityType: $entityType, entityId: $entityId, action: $action, details: $details)';
+    return 'AuditEntry(id: $id, timestamp: $timestamp, userId: $userId, username: $username, entityType: $entityType, entityId: $entityId, action: $action, details: $details)';
 }
 
 

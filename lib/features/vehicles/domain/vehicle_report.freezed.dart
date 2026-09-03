@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'vehicle_report.dart';
@@ -9,6 +9,7 @@ part of 'vehicle_report.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $FuelEntryCopyWith<FuelEntry> get copyWith => _$FuelEntryCopyWithImpl<FuelEntry>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FuelEntry&&(identical(other.date, date) || other.date == date)&&(identical(other.odometer, odometer) || other.odometer == odometer)&&(identical(other.liters, liters) || other.liters == liters)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.station, station) || other.station == station)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.fullTank, fullTank) || other.fullTank == fullTank)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.pricePerLiter, pricePerLiter) || other.pricePerLiter == pricePerLiter)&&(identical(other.consumption, consumption) || other.consumption == consumption));
+  final _this = this as FuelEntry;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FuelEntry&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.odometer, _this.odometer) || other.odometer == _this.odometer)&&(identical(other.liters, _this.liters) || other.liters == _this.liters)&&(identical(other.amount, _this.amount) || other.amount == _this.amount)&&(identical(other.currency, _this.currency) || other.currency == _this.currency)&&(identical(other.station, _this.station) || other.station == _this.station)&&(identical(other.memo, _this.memo) || other.memo == _this.memo)&&(identical(other.fullTank, _this.fullTank) || other.fullTank == _this.fullTank)&&(identical(other.distance, _this.distance) || other.distance == _this.distance)&&(identical(other.pricePerLiter, _this.pricePerLiter) || other.pricePerLiter == _this.pricePerLiter)&&(identical(other.consumption, _this.consumption) || other.consumption == _this.consumption));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,date,odometer,liters,amount,currency,station,memo,fullTank,distance,pricePerLiter,consumption);
+int get hashCode {
+  final _this = this as FuelEntry;
+  return Object.hash(runtimeType,_this.date,_this.odometer,_this.liters,_this.amount,_this.currency,_this.station,_this.memo,_this.fullTank,_this.distance,_this.pricePerLiter,_this.consumption);
+}
 
 @override
 String toString() {
-  return 'FuelEntry(date: $date, odometer: $odometer, liters: $liters, amount: $amount, currency: $currency, station: $station, memo: $memo, fullTank: $fullTank, distance: $distance, pricePerLiter: $pricePerLiter, consumption: $consumption)';
+  final _this = this as FuelEntry;
+  return 'FuelEntry(date: ${_this.date}, odometer: ${_this.odometer}, liters: ${_this.liters}, amount: ${_this.amount}, currency: ${_this.currency}, station: ${_this.station}, memo: ${_this.memo}, fullTank: ${_this.fullTank}, distance: ${_this.distance}, pricePerLiter: ${_this.pricePerLiter}, consumption: ${_this.consumption})';
 }
 
 
@@ -66,7 +72,7 @@ class _$FuelEntryCopyWithImpl<$Res>
 /// Create a copy of FuelEntry
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? odometer = freezed,Object? liters = freezed,Object? amount = freezed,Object? currency = freezed,Object? station = freezed,Object? memo = freezed,Object? fullTank = null,Object? distance = freezed,Object? pricePerLiter = freezed,Object? consumption = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(FuelEntry(
 date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime,odometer: freezed == odometer ? _self.odometer : odometer // ignore: cast_nullable_to_non_nullable
 as double?,liters: freezed == liters ? _self.liters : liters // ignore: cast_nullable_to_non_nullable
@@ -247,16 +253,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FuelEntry&&(identical(other.date, date) || other.date == date)&&(identical(other.odometer, odometer) || other.odometer == odometer)&&(identical(other.liters, liters) || other.liters == liters)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.station, station) || other.station == station)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.fullTank, fullTank) || other.fullTank == fullTank)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.pricePerLiter, pricePerLiter) || other.pricePerLiter == pricePerLiter)&&(identical(other.consumption, consumption) || other.consumption == consumption));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FuelEntry&&(identical(other.date, date) || other.date == date)&&(identical(other.odometer, odometer) || other.odometer == odometer)&&(identical(other.liters, liters) || other.liters == liters)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.station, station) || other.station == station)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.fullTank, fullTank) || other.fullTank == fullTank)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.pricePerLiter, pricePerLiter) || other.pricePerLiter == pricePerLiter)&&(identical(other.consumption, consumption) || other.consumption == consumption));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,date,odometer,liters,amount,currency,station,memo,fullTank,distance,pricePerLiter,consumption);
+int get hashCode {
+    return Object.hash(runtimeType,date,odometer,liters,amount,currency,station,memo,fullTank,distance,pricePerLiter,consumption);
+}
 
 @override
 String toString() {
-  return 'FuelEntry(date: $date, odometer: $odometer, liters: $liters, amount: $amount, currency: $currency, station: $station, memo: $memo, fullTank: $fullTank, distance: $distance, pricePerLiter: $pricePerLiter, consumption: $consumption)';
+    return 'FuelEntry(date: $date, odometer: $odometer, liters: $liters, amount: $amount, currency: $currency, station: $station, memo: $memo, fullTank: $fullTank, distance: $distance, pricePerLiter: $pricePerLiter, consumption: $consumption)';
 }
 
 
@@ -321,16 +329,21 @@ $VehicleReportCopyWith<VehicleReport> get copyWith => _$VehicleReportCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VehicleReport&&const DeepCollectionEquality().equals(other.entries, entries)&&(identical(other.totalCost, totalCost) || other.totalCost == totalCost)&&(identical(other.totalLiters, totalLiters) || other.totalLiters == totalLiters)&&(identical(other.totalDistance, totalDistance) || other.totalDistance == totalDistance)&&(identical(other.avgConsumption, avgConsumption) || other.avgConsumption == avgConsumption)&&(identical(other.avgPricePerLiter, avgPricePerLiter) || other.avgPricePerLiter == avgPricePerLiter)&&(identical(other.currency, currency) || other.currency == currency));
+  final _this = this as VehicleReport;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VehicleReport&&const DeepCollectionEquality().equals(other.entries, _this.entries)&&(identical(other.totalCost, _this.totalCost) || other.totalCost == _this.totalCost)&&(identical(other.totalLiters, _this.totalLiters) || other.totalLiters == _this.totalLiters)&&(identical(other.totalDistance, _this.totalDistance) || other.totalDistance == _this.totalDistance)&&(identical(other.avgConsumption, _this.avgConsumption) || other.avgConsumption == _this.avgConsumption)&&(identical(other.avgPricePerLiter, _this.avgPricePerLiter) || other.avgPricePerLiter == _this.avgPricePerLiter)&&(identical(other.currency, _this.currency) || other.currency == _this.currency));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(entries),totalCost,totalLiters,totalDistance,avgConsumption,avgPricePerLiter,currency);
+int get hashCode {
+  final _this = this as VehicleReport;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.entries),_this.totalCost,_this.totalLiters,_this.totalDistance,_this.avgConsumption,_this.avgPricePerLiter,_this.currency);
+}
 
 @override
 String toString() {
-  return 'VehicleReport(entries: $entries, totalCost: $totalCost, totalLiters: $totalLiters, totalDistance: $totalDistance, avgConsumption: $avgConsumption, avgPricePerLiter: $avgPricePerLiter, currency: $currency)';
+  final _this = this as VehicleReport;
+  return 'VehicleReport(entries: ${_this.entries}, totalCost: ${_this.totalCost}, totalLiters: ${_this.totalLiters}, totalDistance: ${_this.totalDistance}, avgConsumption: ${_this.avgConsumption}, avgPricePerLiter: ${_this.avgPricePerLiter}, currency: ${_this.currency})';
 }
 
 
@@ -359,7 +372,7 @@ class _$VehicleReportCopyWithImpl<$Res>
 /// Create a copy of VehicleReport
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? entries = null,Object? totalCost = null,Object? totalLiters = null,Object? totalDistance = null,Object? avgConsumption = freezed,Object? avgPricePerLiter = freezed,Object? currency = null,}) {
-  return _then(_self.copyWith(
+  return _then(VehicleReport(
 entries: null == entries ? _self.entries : entries // ignore: cast_nullable_to_non_nullable
 as List<FuelEntry>,totalCost: null == totalCost ? _self.totalCost : totalCost // ignore: cast_nullable_to_non_nullable
 as double,totalLiters: null == totalLiters ? _self.totalLiters : totalLiters // ignore: cast_nullable_to_non_nullable
@@ -508,7 +521,7 @@ return $default(_that.entries,_that.totalCost,_that.totalLiters,_that.totalDista
 @JsonSerializable()
 
 class _VehicleReport implements VehicleReport {
-  const _VehicleReport({final  List<FuelEntry> entries = const [], @JsonKey(fromJson: jsonToDouble) this.totalCost = 0, @JsonKey(fromJson: jsonToDouble) this.totalLiters = 0, @JsonKey(fromJson: jsonToDouble) this.totalDistance = 0, @JsonKey(fromJson: jsonToDoubleN) this.avgConsumption, @JsonKey(fromJson: jsonToDoubleN) this.avgPricePerLiter, this.currency = 'EUR'}): _entries = entries;
+  const _VehicleReport({ List<FuelEntry> entries = const [], @JsonKey(fromJson: jsonToDouble) this.totalCost = 0, @JsonKey(fromJson: jsonToDouble) this.totalLiters = 0, @JsonKey(fromJson: jsonToDouble) this.totalDistance = 0, @JsonKey(fromJson: jsonToDoubleN) this.avgConsumption, @JsonKey(fromJson: jsonToDoubleN) this.avgPricePerLiter, this.currency = 'EUR'}): _entries = entries;
   factory _VehicleReport.fromJson(Map<String, dynamic> json) => _$VehicleReportFromJson(json);
 
  final  List<FuelEntry> _entries;
@@ -538,16 +551,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _VehicleReport&&const DeepCollectionEquality().equals(other._entries, _entries)&&(identical(other.totalCost, totalCost) || other.totalCost == totalCost)&&(identical(other.totalLiters, totalLiters) || other.totalLiters == totalLiters)&&(identical(other.totalDistance, totalDistance) || other.totalDistance == totalDistance)&&(identical(other.avgConsumption, avgConsumption) || other.avgConsumption == avgConsumption)&&(identical(other.avgPricePerLiter, avgPricePerLiter) || other.avgPricePerLiter == avgPricePerLiter)&&(identical(other.currency, currency) || other.currency == currency));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _VehicleReport&&const DeepCollectionEquality().equals(other.entries, _entries)&&(identical(other.totalCost, totalCost) || other.totalCost == totalCost)&&(identical(other.totalLiters, totalLiters) || other.totalLiters == totalLiters)&&(identical(other.totalDistance, totalDistance) || other.totalDistance == totalDistance)&&(identical(other.avgConsumption, avgConsumption) || other.avgConsumption == avgConsumption)&&(identical(other.avgPricePerLiter, avgPricePerLiter) || other.avgPricePerLiter == avgPricePerLiter)&&(identical(other.currency, currency) || other.currency == currency));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_entries),totalCost,totalLiters,totalDistance,avgConsumption,avgPricePerLiter,currency);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_entries),totalCost,totalLiters,totalDistance,avgConsumption,avgPricePerLiter,currency);
+}
 
 @override
 String toString() {
-  return 'VehicleReport(entries: $entries, totalCost: $totalCost, totalLiters: $totalLiters, totalDistance: $totalDistance, avgConsumption: $avgConsumption, avgPricePerLiter: $avgPricePerLiter, currency: $currency)';
+    return 'VehicleReport(entries: $entries, totalCost: $totalCost, totalLiters: $totalLiters, totalDistance: $totalDistance, avgConsumption: $avgConsumption, avgPricePerLiter: $avgPricePerLiter, currency: $currency)';
 }
 
 

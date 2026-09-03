@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'transaction_filter.dart';
@@ -9,6 +9,7 @@ part of 'transaction_filter.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $TransactionFilterCopyWith<TransactionFilter> get copyWith => _$TransactionFilte
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TransactionFilter&&(identical(other.accountId, accountId) || other.accountId == accountId)&&(identical(other.type, type) || other.type == type)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.start, start) || other.start == start)&&(identical(other.end, end) || other.end == end)&&(identical(other.search, search) || other.search == search));
+  final _this = this as TransactionFilter;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TransactionFilter&&(identical(other.accountId, _this.accountId) || other.accountId == _this.accountId)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.start, _this.start) || other.start == _this.start)&&(identical(other.end, _this.end) || other.end == _this.end)&&(identical(other.search, _this.search) || other.search == _this.search));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,accountId,type,categoryId,start,end,search);
+int get hashCode {
+  final _this = this as TransactionFilter;
+  return Object.hash(runtimeType,_this.accountId,_this.type,_this.categoryId,_this.start,_this.end,_this.search);
+}
 
 @override
 String toString() {
-  return 'TransactionFilter(accountId: $accountId, type: $type, categoryId: $categoryId, start: $start, end: $end, search: $search)';
+  final _this = this as TransactionFilter;
+  return 'TransactionFilter(accountId: ${_this.accountId}, type: ${_this.type}, categoryId: ${_this.categoryId}, start: ${_this.start}, end: ${_this.end}, search: ${_this.search})';
 }
 
 
@@ -63,7 +69,7 @@ class _$TransactionFilterCopyWithImpl<$Res>
 /// Create a copy of TransactionFilter
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? accountId = freezed,Object? type = freezed,Object? categoryId = freezed,Object? start = freezed,Object? end = freezed,Object? search = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(TransactionFilter(
 accountId: freezed == accountId ? _self.accountId : accountId // ignore: cast_nullable_to_non_nullable
 as int?,type: freezed == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String?,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
@@ -231,16 +237,18 @@ _$TransactionFilterCopyWith<_TransactionFilter> get copyWith => __$TransactionFi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TransactionFilter&&(identical(other.accountId, accountId) || other.accountId == accountId)&&(identical(other.type, type) || other.type == type)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.start, start) || other.start == start)&&(identical(other.end, end) || other.end == end)&&(identical(other.search, search) || other.search == search));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TransactionFilter&&(identical(other.accountId, accountId) || other.accountId == accountId)&&(identical(other.type, type) || other.type == type)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.start, start) || other.start == start)&&(identical(other.end, end) || other.end == end)&&(identical(other.search, search) || other.search == search));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,accountId,type,categoryId,start,end,search);
+int get hashCode {
+    return Object.hash(runtimeType,accountId,type,categoryId,start,end,search);
+}
 
 @override
 String toString() {
-  return 'TransactionFilter(accountId: $accountId, type: $type, categoryId: $categoryId, start: $start, end: $end, search: $search)';
+    return 'TransactionFilter(accountId: $accountId, type: $type, categoryId: $categoryId, start: $start, end: $end, search: $search)';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_release.dart';
@@ -9,6 +9,7 @@ part of 'app_release.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $ReleaseAssetCopyWith<ReleaseAsset> get copyWith => _$ReleaseAssetCopyWithImpl<R
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReleaseAsset&&(identical(other.name, name) || other.name == name)&&(identical(other.browserDownloadUrl, browserDownloadUrl) || other.browserDownloadUrl == browserDownloadUrl)&&(identical(other.size, size) || other.size == size));
+  final _this = this as ReleaseAsset;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReleaseAsset&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.browserDownloadUrl, _this.browserDownloadUrl) || other.browserDownloadUrl == _this.browserDownloadUrl)&&(identical(other.size, _this.size) || other.size == _this.size));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,browserDownloadUrl,size);
+int get hashCode {
+  final _this = this as ReleaseAsset;
+  return Object.hash(runtimeType,_this.name,_this.browserDownloadUrl,_this.size);
+}
 
 @override
 String toString() {
-  return 'ReleaseAsset(name: $name, browserDownloadUrl: $browserDownloadUrl, size: $size)';
+  final _this = this as ReleaseAsset;
+  return 'ReleaseAsset(name: ${_this.name}, browserDownloadUrl: ${_this.browserDownloadUrl}, size: ${_this.size})';
 }
 
 
@@ -66,7 +72,7 @@ class _$ReleaseAssetCopyWithImpl<$Res>
 /// Create a copy of ReleaseAsset
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? browserDownloadUrl = null,Object? size = null,}) {
-  return _then(_self.copyWith(
+  return _then(ReleaseAsset(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,browserDownloadUrl: null == browserDownloadUrl ? _self.browserDownloadUrl : browserDownloadUrl // ignore: cast_nullable_to_non_nullable
 as String,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
@@ -231,16 +237,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReleaseAsset&&(identical(other.name, name) || other.name == name)&&(identical(other.browserDownloadUrl, browserDownloadUrl) || other.browserDownloadUrl == browserDownloadUrl)&&(identical(other.size, size) || other.size == size));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReleaseAsset&&(identical(other.name, name) || other.name == name)&&(identical(other.browserDownloadUrl, browserDownloadUrl) || other.browserDownloadUrl == browserDownloadUrl)&&(identical(other.size, size) || other.size == size));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,browserDownloadUrl,size);
+int get hashCode {
+    return Object.hash(runtimeType,name,browserDownloadUrl,size);
+}
 
 @override
 String toString() {
-  return 'ReleaseAsset(name: $name, browserDownloadUrl: $browserDownloadUrl, size: $size)';
+    return 'ReleaseAsset(name: $name, browserDownloadUrl: $browserDownloadUrl, size: $size)';
 }
 
 
@@ -297,16 +305,21 @@ $AppReleaseCopyWith<AppRelease> get copyWith => _$AppReleaseCopyWithImpl<AppRele
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppRelease&&(identical(other.tagName, tagName) || other.tagName == tagName)&&(identical(other.body, body) || other.body == body)&&const DeepCollectionEquality().equals(other.assets, assets));
+  final _this = this as AppRelease;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppRelease&&(identical(other.tagName, _this.tagName) || other.tagName == _this.tagName)&&(identical(other.body, _this.body) || other.body == _this.body)&&const DeepCollectionEquality().equals(other.assets, _this.assets));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,tagName,body,const DeepCollectionEquality().hash(assets));
+int get hashCode {
+  final _this = this as AppRelease;
+  return Object.hash(runtimeType,_this.tagName,_this.body,const DeepCollectionEquality().hash(_this.assets));
+}
 
 @override
 String toString() {
-  return 'AppRelease(tagName: $tagName, body: $body, assets: $assets)';
+  final _this = this as AppRelease;
+  return 'AppRelease(tagName: ${_this.tagName}, body: ${_this.body}, assets: ${_this.assets})';
 }
 
 
@@ -335,7 +348,7 @@ class _$AppReleaseCopyWithImpl<$Res>
 /// Create a copy of AppRelease
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? tagName = null,Object? body = freezed,Object? assets = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppRelease(
 tagName: null == tagName ? _self.tagName : tagName // ignore: cast_nullable_to_non_nullable
 as String,body: freezed == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
 as String?,assets: null == assets ? _self.assets : assets // ignore: cast_nullable_to_non_nullable
@@ -480,7 +493,7 @@ return $default(_that.tagName,_that.body,_that.assets);case _:
 @JsonSerializable()
 
 class _AppRelease implements AppRelease {
-  const _AppRelease({@JsonKey(name: 'tag_name') this.tagName = '', this.body, final  List<ReleaseAsset> assets = const []}): _assets = assets;
+  const _AppRelease({@JsonKey(name: 'tag_name') this.tagName = '', this.body,  List<ReleaseAsset> assets = const []}): _assets = assets;
   factory _AppRelease.fromJson(Map<String, dynamic> json) => _$AppReleaseFromJson(json);
 
 @override@JsonKey(name: 'tag_name') final  String tagName;
@@ -506,16 +519,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppRelease&&(identical(other.tagName, tagName) || other.tagName == tagName)&&(identical(other.body, body) || other.body == body)&&const DeepCollectionEquality().equals(other._assets, _assets));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppRelease&&(identical(other.tagName, tagName) || other.tagName == tagName)&&(identical(other.body, body) || other.body == body)&&const DeepCollectionEquality().equals(other.assets, _assets));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,tagName,body,const DeepCollectionEquality().hash(_assets));
+int get hashCode {
+    return Object.hash(runtimeType,tagName,body,const DeepCollectionEquality().hash(_assets));
+}
 
 @override
 String toString() {
-  return 'AppRelease(tagName: $tagName, body: $body, assets: $assets)';
+    return 'AppRelease(tagName: $tagName, body: $body, assets: $assets)';
 }
 
 

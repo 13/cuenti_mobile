@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'account.dart';
@@ -9,6 +9,7 @@ part of 'account.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $AccountCopyWith<Account> get copyWith => _$AccountCopyWithImpl<Account>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Account&&(identical(other.id, id) || other.id == id)&&(identical(other.accountName, accountName) || other.accountName == accountName)&&(identical(other.accountNumber, accountNumber) || other.accountNumber == accountNumber)&&(identical(other.accountType, accountType) || other.accountType == accountType)&&(identical(other.accountGroup, accountGroup) || other.accountGroup == accountGroup)&&(identical(other.institution, institution) || other.institution == institution)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.startBalance, startBalance) || other.startBalance == startBalance)&&(identical(other.balance, balance) || other.balance == balance)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.excludeFromSummary, excludeFromSummary) || other.excludeFromSummary == excludeFromSummary)&&(identical(other.excludeFromReports, excludeFromReports) || other.excludeFromReports == excludeFromReports));
+  final _this = this as Account;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Account&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.accountName, _this.accountName) || other.accountName == _this.accountName)&&(identical(other.accountNumber, _this.accountNumber) || other.accountNumber == _this.accountNumber)&&(identical(other.accountType, _this.accountType) || other.accountType == _this.accountType)&&(identical(other.accountGroup, _this.accountGroup) || other.accountGroup == _this.accountGroup)&&(identical(other.institution, _this.institution) || other.institution == _this.institution)&&(identical(other.currency, _this.currency) || other.currency == _this.currency)&&(identical(other.startBalance, _this.startBalance) || other.startBalance == _this.startBalance)&&(identical(other.balance, _this.balance) || other.balance == _this.balance)&&(identical(other.sortOrder, _this.sortOrder) || other.sortOrder == _this.sortOrder)&&(identical(other.excludeFromSummary, _this.excludeFromSummary) || other.excludeFromSummary == _this.excludeFromSummary)&&(identical(other.excludeFromReports, _this.excludeFromReports) || other.excludeFromReports == _this.excludeFromReports));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,accountName,accountNumber,accountType,accountGroup,institution,currency,startBalance,balance,sortOrder,excludeFromSummary,excludeFromReports);
+int get hashCode {
+  final _this = this as Account;
+  return Object.hash(runtimeType,_this.id,_this.accountName,_this.accountNumber,_this.accountType,_this.accountGroup,_this.institution,_this.currency,_this.startBalance,_this.balance,_this.sortOrder,_this.excludeFromSummary,_this.excludeFromReports);
+}
 
 @override
 String toString() {
-  return 'Account(id: $id, accountName: $accountName, accountNumber: $accountNumber, accountType: $accountType, accountGroup: $accountGroup, institution: $institution, currency: $currency, startBalance: $startBalance, balance: $balance, sortOrder: $sortOrder, excludeFromSummary: $excludeFromSummary, excludeFromReports: $excludeFromReports)';
+  final _this = this as Account;
+  return 'Account(id: ${_this.id}, accountName: ${_this.accountName}, accountNumber: ${_this.accountNumber}, accountType: ${_this.accountType}, accountGroup: ${_this.accountGroup}, institution: ${_this.institution}, currency: ${_this.currency}, startBalance: ${_this.startBalance}, balance: ${_this.balance}, sortOrder: ${_this.sortOrder}, excludeFromSummary: ${_this.excludeFromSummary}, excludeFromReports: ${_this.excludeFromReports})';
 }
 
 
@@ -66,7 +72,7 @@ class _$AccountCopyWithImpl<$Res>
 /// Create a copy of Account
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? accountName = null,Object? accountNumber = freezed,Object? accountType = null,Object? accountGroup = freezed,Object? institution = freezed,Object? currency = null,Object? startBalance = null,Object? balance = null,Object? sortOrder = null,Object? excludeFromSummary = null,Object? excludeFromReports = null,}) {
-  return _then(_self.copyWith(
+  return _then(Account(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,accountName: null == accountName ? _self.accountName : accountName // ignore: cast_nullable_to_non_nullable
 as String,accountNumber: freezed == accountNumber ? _self.accountNumber : accountNumber // ignore: cast_nullable_to_non_nullable
@@ -249,16 +255,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Account&&(identical(other.id, id) || other.id == id)&&(identical(other.accountName, accountName) || other.accountName == accountName)&&(identical(other.accountNumber, accountNumber) || other.accountNumber == accountNumber)&&(identical(other.accountType, accountType) || other.accountType == accountType)&&(identical(other.accountGroup, accountGroup) || other.accountGroup == accountGroup)&&(identical(other.institution, institution) || other.institution == institution)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.startBalance, startBalance) || other.startBalance == startBalance)&&(identical(other.balance, balance) || other.balance == balance)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.excludeFromSummary, excludeFromSummary) || other.excludeFromSummary == excludeFromSummary)&&(identical(other.excludeFromReports, excludeFromReports) || other.excludeFromReports == excludeFromReports));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Account&&(identical(other.id, id) || other.id == id)&&(identical(other.accountName, accountName) || other.accountName == accountName)&&(identical(other.accountNumber, accountNumber) || other.accountNumber == accountNumber)&&(identical(other.accountType, accountType) || other.accountType == accountType)&&(identical(other.accountGroup, accountGroup) || other.accountGroup == accountGroup)&&(identical(other.institution, institution) || other.institution == institution)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.startBalance, startBalance) || other.startBalance == startBalance)&&(identical(other.balance, balance) || other.balance == balance)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.excludeFromSummary, excludeFromSummary) || other.excludeFromSummary == excludeFromSummary)&&(identical(other.excludeFromReports, excludeFromReports) || other.excludeFromReports == excludeFromReports));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,accountName,accountNumber,accountType,accountGroup,institution,currency,startBalance,balance,sortOrder,excludeFromSummary,excludeFromReports);
+int get hashCode {
+    return Object.hash(runtimeType,id,accountName,accountNumber,accountType,accountGroup,institution,currency,startBalance,balance,sortOrder,excludeFromSummary,excludeFromReports);
+}
 
 @override
 String toString() {
-  return 'Account(id: $id, accountName: $accountName, accountNumber: $accountNumber, accountType: $accountType, accountGroup: $accountGroup, institution: $institution, currency: $currency, startBalance: $startBalance, balance: $balance, sortOrder: $sortOrder, excludeFromSummary: $excludeFromSummary, excludeFromReports: $excludeFromReports)';
+    return 'Account(id: $id, accountName: $accountName, accountNumber: $accountNumber, accountType: $accountType, accountGroup: $accountGroup, institution: $institution, currency: $currency, startBalance: $startBalance, balance: $balance, sortOrder: $sortOrder, excludeFromSummary: $excludeFromSummary, excludeFromReports: $excludeFromReports)';
 }
 
 

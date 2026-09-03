@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'scheduled_transaction.dart';
@@ -9,6 +9,7 @@ part of 'scheduled_transaction.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $ScheduledTransactionCopyWith<ScheduledTransaction> get copyWith => _$ScheduledT
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScheduledTransaction&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.nextOccurrence, nextOccurrence) || other.nextOccurrence == nextOccurrence)&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.fromAccountId, fromAccountId) || other.fromAccountId == fromAccountId)&&(identical(other.fromAccountName, fromAccountName) || other.fromAccountName == fromAccountName)&&(identical(other.toAccountId, toAccountId) || other.toAccountId == toAccountId)&&(identical(other.toAccountName, toAccountName) || other.toAccountName == toAccountName)&&(identical(other.payee, payee) || other.payee == payee)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.tags, tags) || other.tags == tags)&&(identical(other.number, number) || other.number == number)&&(identical(other.assetId, assetId) || other.assetId == assetId)&&(identical(other.assetName, assetName) || other.assetName == assetName)&&(identical(other.units, units) || other.units == units)&&(identical(other.recurrencePattern, recurrencePattern) || other.recurrencePattern == recurrencePattern)&&(identical(other.recurrenceValue, recurrenceValue) || other.recurrenceValue == recurrenceValue)&&(identical(other.enabled, enabled) || other.enabled == enabled));
+  final _this = this as ScheduledTransaction;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScheduledTransaction&&(identical(other.amount, _this.amount) || other.amount == _this.amount)&&(identical(other.nextOccurrence, _this.nextOccurrence) || other.nextOccurrence == _this.nextOccurrence)&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.fromAccountId, _this.fromAccountId) || other.fromAccountId == _this.fromAccountId)&&(identical(other.fromAccountName, _this.fromAccountName) || other.fromAccountName == _this.fromAccountName)&&(identical(other.toAccountId, _this.toAccountId) || other.toAccountId == _this.toAccountId)&&(identical(other.toAccountName, _this.toAccountName) || other.toAccountName == _this.toAccountName)&&(identical(other.payee, _this.payee) || other.payee == _this.payee)&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.categoryName, _this.categoryName) || other.categoryName == _this.categoryName)&&(identical(other.memo, _this.memo) || other.memo == _this.memo)&&(identical(other.tags, _this.tags) || other.tags == _this.tags)&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.assetId, _this.assetId) || other.assetId == _this.assetId)&&(identical(other.assetName, _this.assetName) || other.assetName == _this.assetName)&&(identical(other.units, _this.units) || other.units == _this.units)&&(identical(other.recurrencePattern, _this.recurrencePattern) || other.recurrencePattern == _this.recurrencePattern)&&(identical(other.recurrenceValue, _this.recurrenceValue) || other.recurrenceValue == _this.recurrenceValue)&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,amount,nextOccurrence,id,type,fromAccountId,fromAccountName,toAccountId,toAccountName,payee,categoryId,categoryName,memo,tags,number,assetId,assetName,units,recurrencePattern,recurrenceValue,enabled]);
+int get hashCode {
+  final _this = this as ScheduledTransaction;
+  return Object.hashAll([runtimeType,_this.amount,_this.nextOccurrence,_this.id,_this.type,_this.fromAccountId,_this.fromAccountName,_this.toAccountId,_this.toAccountName,_this.payee,_this.categoryId,_this.categoryName,_this.memo,_this.tags,_this.number,_this.assetId,_this.assetName,_this.units,_this.recurrencePattern,_this.recurrenceValue,_this.enabled]);
+}
 
 @override
 String toString() {
-  return 'ScheduledTransaction(amount: $amount, nextOccurrence: $nextOccurrence, id: $id, type: $type, fromAccountId: $fromAccountId, fromAccountName: $fromAccountName, toAccountId: $toAccountId, toAccountName: $toAccountName, payee: $payee, categoryId: $categoryId, categoryName: $categoryName, memo: $memo, tags: $tags, number: $number, assetId: $assetId, assetName: $assetName, units: $units, recurrencePattern: $recurrencePattern, recurrenceValue: $recurrenceValue, enabled: $enabled)';
+  final _this = this as ScheduledTransaction;
+  return 'ScheduledTransaction(amount: ${_this.amount}, nextOccurrence: ${_this.nextOccurrence}, id: ${_this.id}, type: ${_this.type}, fromAccountId: ${_this.fromAccountId}, fromAccountName: ${_this.fromAccountName}, toAccountId: ${_this.toAccountId}, toAccountName: ${_this.toAccountName}, payee: ${_this.payee}, categoryId: ${_this.categoryId}, categoryName: ${_this.categoryName}, memo: ${_this.memo}, tags: ${_this.tags}, number: ${_this.number}, assetId: ${_this.assetId}, assetName: ${_this.assetName}, units: ${_this.units}, recurrencePattern: ${_this.recurrencePattern}, recurrenceValue: ${_this.recurrenceValue}, enabled: ${_this.enabled})';
 }
 
 
@@ -66,7 +72,7 @@ class _$ScheduledTransactionCopyWithImpl<$Res>
 /// Create a copy of ScheduledTransaction
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? amount = null,Object? nextOccurrence = null,Object? id = freezed,Object? type = null,Object? fromAccountId = freezed,Object? fromAccountName = freezed,Object? toAccountId = freezed,Object? toAccountName = freezed,Object? payee = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? memo = freezed,Object? tags = freezed,Object? number = freezed,Object? assetId = freezed,Object? assetName = freezed,Object? units = freezed,Object? recurrencePattern = null,Object? recurrenceValue = freezed,Object? enabled = null,}) {
-  return _then(_self.copyWith(
+  return _then(ScheduledTransaction(
 amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
 as double,nextOccurrence: null == nextOccurrence ? _self.nextOccurrence : nextOccurrence // ignore: cast_nullable_to_non_nullable
 as DateTime,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -265,16 +271,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScheduledTransaction&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.nextOccurrence, nextOccurrence) || other.nextOccurrence == nextOccurrence)&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.fromAccountId, fromAccountId) || other.fromAccountId == fromAccountId)&&(identical(other.fromAccountName, fromAccountName) || other.fromAccountName == fromAccountName)&&(identical(other.toAccountId, toAccountId) || other.toAccountId == toAccountId)&&(identical(other.toAccountName, toAccountName) || other.toAccountName == toAccountName)&&(identical(other.payee, payee) || other.payee == payee)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.tags, tags) || other.tags == tags)&&(identical(other.number, number) || other.number == number)&&(identical(other.assetId, assetId) || other.assetId == assetId)&&(identical(other.assetName, assetName) || other.assetName == assetName)&&(identical(other.units, units) || other.units == units)&&(identical(other.recurrencePattern, recurrencePattern) || other.recurrencePattern == recurrencePattern)&&(identical(other.recurrenceValue, recurrenceValue) || other.recurrenceValue == recurrenceValue)&&(identical(other.enabled, enabled) || other.enabled == enabled));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScheduledTransaction&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.nextOccurrence, nextOccurrence) || other.nextOccurrence == nextOccurrence)&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.fromAccountId, fromAccountId) || other.fromAccountId == fromAccountId)&&(identical(other.fromAccountName, fromAccountName) || other.fromAccountName == fromAccountName)&&(identical(other.toAccountId, toAccountId) || other.toAccountId == toAccountId)&&(identical(other.toAccountName, toAccountName) || other.toAccountName == toAccountName)&&(identical(other.payee, payee) || other.payee == payee)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.tags, tags) || other.tags == tags)&&(identical(other.number, number) || other.number == number)&&(identical(other.assetId, assetId) || other.assetId == assetId)&&(identical(other.assetName, assetName) || other.assetName == assetName)&&(identical(other.units, units) || other.units == units)&&(identical(other.recurrencePattern, recurrencePattern) || other.recurrencePattern == recurrencePattern)&&(identical(other.recurrenceValue, recurrenceValue) || other.recurrenceValue == recurrenceValue)&&(identical(other.enabled, enabled) || other.enabled == enabled));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,amount,nextOccurrence,id,type,fromAccountId,fromAccountName,toAccountId,toAccountName,payee,categoryId,categoryName,memo,tags,number,assetId,assetName,units,recurrencePattern,recurrenceValue,enabled]);
+int get hashCode {
+    return Object.hashAll([runtimeType,amount,nextOccurrence,id,type,fromAccountId,fromAccountName,toAccountId,toAccountName,payee,categoryId,categoryName,memo,tags,number,assetId,assetName,units,recurrencePattern,recurrenceValue,enabled]);
+}
 
 @override
 String toString() {
-  return 'ScheduledTransaction(amount: $amount, nextOccurrence: $nextOccurrence, id: $id, type: $type, fromAccountId: $fromAccountId, fromAccountName: $fromAccountName, toAccountId: $toAccountId, toAccountName: $toAccountName, payee: $payee, categoryId: $categoryId, categoryName: $categoryName, memo: $memo, tags: $tags, number: $number, assetId: $assetId, assetName: $assetName, units: $units, recurrencePattern: $recurrencePattern, recurrenceValue: $recurrenceValue, enabled: $enabled)';
+    return 'ScheduledTransaction(amount: $amount, nextOccurrence: $nextOccurrence, id: $id, type: $type, fromAccountId: $fromAccountId, fromAccountName: $fromAccountName, toAccountId: $toAccountId, toAccountName: $toAccountName, payee: $payee, categoryId: $categoryId, categoryName: $categoryName, memo: $memo, tags: $tags, number: $number, assetId: $assetId, assetName: $assetName, units: $units, recurrencePattern: $recurrencePattern, recurrenceValue: $recurrenceValue, enabled: $enabled)';
 }
 
 

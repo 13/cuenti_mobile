@@ -31,6 +31,26 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # Generated sources are committed, and nothing else here re-runs the
+      # generators, so a .g.dart or app_localizations_*.dart left stale by a
+      # change to its input passes every other check. That is not
+      # hypothetical: abb834a carried an auth_controller.g.dart whose hash
+      # did not match its own source, through format, analyze, 853 tests and
+      # the coverage floor, without a murmur.
+      - name: Verify generated code is current
+        run: |
+          flutter gen-l10n
+          dart run build_runner build --delete-conflicting-outputs
+          if ! git diff --quiet; then
+            echo "::error::Generated files are out of date. Run:"
+            echo "::error::  flutter gen-l10n"
+            echo "::error::  dart run build_runner build --delete-conflicting-outputs"
+            echo "::error::and commit the result. Changed:"
+            git diff --name-only | sed 's/^/  /'
+            exit 1
+          fi
+          echo "generated files match their sources"
+
       - name: Verify formatting
         run: |
           dart format --output=none --set-exit-if-changed \

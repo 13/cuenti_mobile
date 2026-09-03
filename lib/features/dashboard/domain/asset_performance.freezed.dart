@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'asset_performance.dart';
@@ -9,6 +9,7 @@ part of 'asset_performance.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $AssetPerformanceCopyWith<AssetPerformance> get copyWith => _$AssetPerformanceCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssetPerformance&&(identical(other.totalUnits, totalUnits) || other.totalUnits == totalUnits)&&(identical(other.totalCost, totalCost) || other.totalCost == totalCost)&&(identical(other.currentValue, currentValue) || other.currentValue == currentValue)&&(identical(other.currentPrice, currentPrice) || other.currentPrice == currentPrice)&&(identical(other.gainLoss, gainLoss) || other.gainLoss == gainLoss)&&(identical(other.gainLossPercent, gainLossPercent) || other.gainLossPercent == gainLossPercent)&&(identical(other.assetName, assetName) || other.assetName == assetName)&&(identical(other.assetSymbol, assetSymbol) || other.assetSymbol == assetSymbol));
+  final _this = this as AssetPerformance;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssetPerformance&&(identical(other.totalUnits, _this.totalUnits) || other.totalUnits == _this.totalUnits)&&(identical(other.totalCost, _this.totalCost) || other.totalCost == _this.totalCost)&&(identical(other.currentValue, _this.currentValue) || other.currentValue == _this.currentValue)&&(identical(other.currentPrice, _this.currentPrice) || other.currentPrice == _this.currentPrice)&&(identical(other.gainLoss, _this.gainLoss) || other.gainLoss == _this.gainLoss)&&(identical(other.gainLossPercent, _this.gainLossPercent) || other.gainLossPercent == _this.gainLossPercent)&&(identical(other.assetName, _this.assetName) || other.assetName == _this.assetName)&&(identical(other.assetSymbol, _this.assetSymbol) || other.assetSymbol == _this.assetSymbol));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,totalUnits,totalCost,currentValue,currentPrice,gainLoss,gainLossPercent,assetName,assetSymbol);
+int get hashCode {
+  final _this = this as AssetPerformance;
+  return Object.hash(runtimeType,_this.totalUnits,_this.totalCost,_this.currentValue,_this.currentPrice,_this.gainLoss,_this.gainLossPercent,_this.assetName,_this.assetSymbol);
+}
 
 @override
 String toString() {
-  return 'AssetPerformance(totalUnits: $totalUnits, totalCost: $totalCost, currentValue: $currentValue, currentPrice: $currentPrice, gainLoss: $gainLoss, gainLossPercent: $gainLossPercent, assetName: $assetName, assetSymbol: $assetSymbol)';
+  final _this = this as AssetPerformance;
+  return 'AssetPerformance(totalUnits: ${_this.totalUnits}, totalCost: ${_this.totalCost}, currentValue: ${_this.currentValue}, currentPrice: ${_this.currentPrice}, gainLoss: ${_this.gainLoss}, gainLossPercent: ${_this.gainLossPercent}, assetName: ${_this.assetName}, assetSymbol: ${_this.assetSymbol})';
 }
 
 
@@ -66,7 +72,7 @@ class _$AssetPerformanceCopyWithImpl<$Res>
 /// Create a copy of AssetPerformance
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? totalUnits = null,Object? totalCost = null,Object? currentValue = null,Object? currentPrice = null,Object? gainLoss = null,Object? gainLossPercent = null,Object? assetName = null,Object? assetSymbol = null,}) {
-  return _then(_self.copyWith(
+  return _then(AssetPerformance(
 totalUnits: null == totalUnits ? _self.totalUnits : totalUnits // ignore: cast_nullable_to_non_nullable
 as double,totalCost: null == totalCost ? _self.totalCost : totalCost // ignore: cast_nullable_to_non_nullable
 as double,currentValue: null == currentValue ? _self.currentValue : currentValue // ignore: cast_nullable_to_non_nullable
@@ -241,16 +247,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AssetPerformance&&(identical(other.totalUnits, totalUnits) || other.totalUnits == totalUnits)&&(identical(other.totalCost, totalCost) || other.totalCost == totalCost)&&(identical(other.currentValue, currentValue) || other.currentValue == currentValue)&&(identical(other.currentPrice, currentPrice) || other.currentPrice == currentPrice)&&(identical(other.gainLoss, gainLoss) || other.gainLoss == gainLoss)&&(identical(other.gainLossPercent, gainLossPercent) || other.gainLossPercent == gainLossPercent)&&(identical(other.assetName, assetName) || other.assetName == assetName)&&(identical(other.assetSymbol, assetSymbol) || other.assetSymbol == assetSymbol));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AssetPerformance&&(identical(other.totalUnits, totalUnits) || other.totalUnits == totalUnits)&&(identical(other.totalCost, totalCost) || other.totalCost == totalCost)&&(identical(other.currentValue, currentValue) || other.currentValue == currentValue)&&(identical(other.currentPrice, currentPrice) || other.currentPrice == currentPrice)&&(identical(other.gainLoss, gainLoss) || other.gainLoss == gainLoss)&&(identical(other.gainLossPercent, gainLossPercent) || other.gainLossPercent == gainLossPercent)&&(identical(other.assetName, assetName) || other.assetName == assetName)&&(identical(other.assetSymbol, assetSymbol) || other.assetSymbol == assetSymbol));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,totalUnits,totalCost,currentValue,currentPrice,gainLoss,gainLossPercent,assetName,assetSymbol);
+int get hashCode {
+    return Object.hash(runtimeType,totalUnits,totalCost,currentValue,currentPrice,gainLoss,gainLossPercent,assetName,assetSymbol);
+}
 
 @override
 String toString() {
-  return 'AssetPerformance(totalUnits: $totalUnits, totalCost: $totalCost, currentValue: $currentValue, currentPrice: $currentPrice, gainLoss: $gainLoss, gainLossPercent: $gainLossPercent, assetName: $assetName, assetSymbol: $assetSymbol)';
+    return 'AssetPerformance(totalUnits: $totalUnits, totalCost: $totalCost, currentValue: $currentValue, currentPrice: $currentPrice, gainLoss: $gainLoss, gainLossPercent: $gainLossPercent, assetName: $assetName, assetSymbol: $assetSymbol)';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'budget.dart';
@@ -9,6 +9,7 @@ part of 'budget.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $BudgetCopyWith<Budget> get copyWith => _$BudgetCopyWithImpl<Budget>(this as Bud
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Budget&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.monthlyLimit, monthlyLimit) || other.monthlyLimit == monthlyLimit)&&(identical(other.active, active) || other.active == active));
+  final _this = this as Budget;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Budget&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.categoryName, _this.categoryName) || other.categoryName == _this.categoryName)&&(identical(other.monthlyLimit, _this.monthlyLimit) || other.monthlyLimit == _this.monthlyLimit)&&(identical(other.active, _this.active) || other.active == _this.active));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,categoryId,id,categoryName,monthlyLimit,active);
+int get hashCode {
+  final _this = this as Budget;
+  return Object.hash(runtimeType,_this.categoryId,_this.id,_this.categoryName,_this.monthlyLimit,_this.active);
+}
 
 @override
 String toString() {
-  return 'Budget(categoryId: $categoryId, id: $id, categoryName: $categoryName, monthlyLimit: $monthlyLimit, active: $active)';
+  final _this = this as Budget;
+  return 'Budget(categoryId: ${_this.categoryId}, id: ${_this.id}, categoryName: ${_this.categoryName}, monthlyLimit: ${_this.monthlyLimit}, active: ${_this.active})';
 }
 
 
@@ -66,7 +72,7 @@ class _$BudgetCopyWithImpl<$Res>
 /// Create a copy of Budget
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? categoryId = null,Object? id = freezed,Object? categoryName = freezed,Object? monthlyLimit = null,Object? active = null,}) {
-  return _then(_self.copyWith(
+  return _then(Budget(
 categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
 as int,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
@@ -235,16 +241,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Budget&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.monthlyLimit, monthlyLimit) || other.monthlyLimit == monthlyLimit)&&(identical(other.active, active) || other.active == active));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Budget&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.monthlyLimit, monthlyLimit) || other.monthlyLimit == monthlyLimit)&&(identical(other.active, active) || other.active == active));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,categoryId,id,categoryName,monthlyLimit,active);
+int get hashCode {
+    return Object.hash(runtimeType,categoryId,id,categoryName,monthlyLimit,active);
+}
 
 @override
 String toString() {
-  return 'Budget(categoryId: $categoryId, id: $id, categoryName: $categoryName, monthlyLimit: $monthlyLimit, active: $active)';
+    return 'Budget(categoryId: $categoryId, id: $id, categoryName: $categoryName, monthlyLimit: $monthlyLimit, active: $active)';
 }
 
 

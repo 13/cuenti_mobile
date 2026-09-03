@@ -40,8 +40,12 @@ class ShellScreen extends ConsumerWidget {
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
-    for (var i = 0; i < _navItems(context).length; i++) {
-      if (location == _navItems(context)[i].path) return i;
+    // Built once. It used to sit in the loop condition as well as the body,
+    // so a four-item bar was rebuilt up to ten times a frame, each rebuild
+    // doing four localisation lookups.
+    final items = _navItems(context);
+    for (var i = 0; i < items.length; i++) {
+      if (location == items[i].path) return i;
     }
     return 0;
   }
@@ -96,6 +100,7 @@ class ShellScreen extends ConsumerWidget {
     // Watched here rather than on the scheduled screen: the point of the
     // badge is to say something is overdue before the user goes looking.
     final overdue = ref.watch(overdueScheduledCountProvider);
+    final navItems = _navItems(context);
 
     return Scaffold(
       drawer: Drawer(
@@ -114,7 +119,10 @@ class ShellScreen extends ConsumerWidget {
                     radius: 28,
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     child: Text(
-                      (auth.user?.firstName ?? 'U')[0].toUpperCase(),
+                      // `??` only guards null, and firstName defaults to the
+                      // empty string -- so a profile without one indexed
+                      // into '' and took the whole shell down with it.
+                      _avatarInitial(auth.user?.firstName),
                       style: TextStyle(
                         fontSize: 24,
                         color: Theme.of(context).colorScheme.onPrimary,
@@ -279,17 +287,11 @@ class ShellScreen extends ConsumerWidget {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex(context),
-        onDestinationSelected: (index) {
-          context.go(_navItems(context)[index].path);
-        },
-        destinations: _navItems(context)
-            .map(
-              (item) => NavigationDestination(
-                icon: Icon(item.icon),
-                label: item.label,
-              ),
-            )
-            .toList(),
+        onDestinationSelected: (index) => context.go(navItems[index].path),
+        destinations: [
+          for (final item in navItems)
+            NavigationDestination(icon: Icon(item.icon), label: item.label),
+        ],
       ),
     );
   }
@@ -305,6 +307,13 @@ class ShellScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// The letter on the drawer avatar: the first of [firstName], or 'U' when
+  /// there is nothing to take one from.
+  static String _avatarInitial(String? firstName) {
+    final trimmed = firstName?.trim() ?? '';
+    return trimmed.isEmpty ? 'U' : trimmed[0].toUpperCase();
   }
 
   Widget _buildNavItem(

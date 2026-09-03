@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'dashboard_data.dart';
@@ -9,6 +9,7 @@ part of 'dashboard_data.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $DashboardDataCopyWith<DashboardData> get copyWith => _$DashboardDataCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardData&&(identical(other.availableCash, availableCash) || other.availableCash == availableCash)&&(identical(other.portfolioValue, portfolioValue) || other.portfolioValue == portfolioValue)&&(identical(other.netWorth, netWorth) || other.netWorth == netWorth)&&(identical(other.defaultCurrency, defaultCurrency) || other.defaultCurrency == defaultCurrency)&&const DeepCollectionEquality().equals(other.accounts, accounts)&&const DeepCollectionEquality().equals(other.assetPerformance, assetPerformance));
+  final _this = this as DashboardData;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardData&&(identical(other.availableCash, _this.availableCash) || other.availableCash == _this.availableCash)&&(identical(other.portfolioValue, _this.portfolioValue) || other.portfolioValue == _this.portfolioValue)&&(identical(other.netWorth, _this.netWorth) || other.netWorth == _this.netWorth)&&(identical(other.defaultCurrency, _this.defaultCurrency) || other.defaultCurrency == _this.defaultCurrency)&&const DeepCollectionEquality().equals(other.accounts, _this.accounts)&&const DeepCollectionEquality().equals(other.assetPerformance, _this.assetPerformance));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,availableCash,portfolioValue,netWorth,defaultCurrency,const DeepCollectionEquality().hash(accounts),const DeepCollectionEquality().hash(assetPerformance));
+int get hashCode {
+  final _this = this as DashboardData;
+  return Object.hash(runtimeType,_this.availableCash,_this.portfolioValue,_this.netWorth,_this.defaultCurrency,const DeepCollectionEquality().hash(_this.accounts),const DeepCollectionEquality().hash(_this.assetPerformance));
+}
 
 @override
 String toString() {
-  return 'DashboardData(availableCash: $availableCash, portfolioValue: $portfolioValue, netWorth: $netWorth, defaultCurrency: $defaultCurrency, accounts: $accounts, assetPerformance: $assetPerformance)';
+  final _this = this as DashboardData;
+  return 'DashboardData(availableCash: ${_this.availableCash}, portfolioValue: ${_this.portfolioValue}, netWorth: ${_this.netWorth}, defaultCurrency: ${_this.defaultCurrency}, accounts: ${_this.accounts}, assetPerformance: ${_this.assetPerformance})';
 }
 
 
@@ -66,7 +72,7 @@ class _$DashboardDataCopyWithImpl<$Res>
 /// Create a copy of DashboardData
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? availableCash = null,Object? portfolioValue = null,Object? netWorth = null,Object? defaultCurrency = null,Object? accounts = null,Object? assetPerformance = null,}) {
-  return _then(_self.copyWith(
+  return _then(DashboardData(
 availableCash: null == availableCash ? _self.availableCash : availableCash // ignore: cast_nullable_to_non_nullable
 as double,portfolioValue: null == portfolioValue ? _self.portfolioValue : portfolioValue // ignore: cast_nullable_to_non_nullable
 as double,netWorth: null == netWorth ? _self.netWorth : netWorth // ignore: cast_nullable_to_non_nullable
@@ -214,7 +220,7 @@ return $default(_that.availableCash,_that.portfolioValue,_that.netWorth,_that.de
 @JsonSerializable()
 
 class _DashboardData extends DashboardData {
-  const _DashboardData({@JsonKey(fromJson: jsonToDouble) required this.availableCash, @JsonKey(fromJson: jsonToDouble) required this.portfolioValue, @JsonKey(fromJson: jsonToDouble) required this.netWorth, this.defaultCurrency = 'EUR', final  List<Account> accounts = const [], final  List<AssetPerformance> assetPerformance = const []}): _accounts = accounts,_assetPerformance = assetPerformance,super._();
+  const _DashboardData({@JsonKey(fromJson: jsonToDouble) required this.availableCash, @JsonKey(fromJson: jsonToDouble) required this.portfolioValue, @JsonKey(fromJson: jsonToDouble) required this.netWorth, this.defaultCurrency = 'EUR',  List<Account> accounts = const [],  List<AssetPerformance> assetPerformance = const []}): _accounts = accounts,_assetPerformance = assetPerformance,super._();
   factory _DashboardData.fromJson(Map<String, dynamic> json) => _$DashboardDataFromJson(json);
 
 @override@JsonKey(fromJson: jsonToDouble) final  double availableCash;
@@ -249,16 +255,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardData&&(identical(other.availableCash, availableCash) || other.availableCash == availableCash)&&(identical(other.portfolioValue, portfolioValue) || other.portfolioValue == portfolioValue)&&(identical(other.netWorth, netWorth) || other.netWorth == netWorth)&&(identical(other.defaultCurrency, defaultCurrency) || other.defaultCurrency == defaultCurrency)&&const DeepCollectionEquality().equals(other._accounts, _accounts)&&const DeepCollectionEquality().equals(other._assetPerformance, _assetPerformance));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardData&&(identical(other.availableCash, availableCash) || other.availableCash == availableCash)&&(identical(other.portfolioValue, portfolioValue) || other.portfolioValue == portfolioValue)&&(identical(other.netWorth, netWorth) || other.netWorth == netWorth)&&(identical(other.defaultCurrency, defaultCurrency) || other.defaultCurrency == defaultCurrency)&&const DeepCollectionEquality().equals(other.accounts, _accounts)&&const DeepCollectionEquality().equals(other.assetPerformance, _assetPerformance));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,availableCash,portfolioValue,netWorth,defaultCurrency,const DeepCollectionEquality().hash(_accounts),const DeepCollectionEquality().hash(_assetPerformance));
+int get hashCode {
+    return Object.hash(runtimeType,availableCash,portfolioValue,netWorth,defaultCurrency,const DeepCollectionEquality().hash(_accounts),const DeepCollectionEquality().hash(_assetPerformance));
+}
 
 @override
 String toString() {
-  return 'DashboardData(availableCash: $availableCash, portfolioValue: $portfolioValue, netWorth: $netWorth, defaultCurrency: $defaultCurrency, accounts: $accounts, assetPerformance: $assetPerformance)';
+    return 'DashboardData(availableCash: $availableCash, portfolioValue: $portfolioValue, netWorth: $netWorth, defaultCurrency: $defaultCurrency, accounts: $accounts, assetPerformance: $assetPerformance)';
 }
 
 
