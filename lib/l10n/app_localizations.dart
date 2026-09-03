@@ -2419,6 +2419,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Spent'**
   String get budgetsSpent;
+
+  /// No description provided for @scheduledOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 overdue} other{{count} overdue}}'**
+  String scheduledOverdue(num count);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

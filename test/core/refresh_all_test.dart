@@ -32,6 +32,10 @@ void main() {
     // Admin-only, and the panel invalidates them itself after every write.
     'adminUsersProvider',
     'adminSettingsProvider',
+    // Derived from scheduledControllerProvider, which is on the list.
+    // Invalidating it as well would recompute a count whose input has not
+    // been refetched yet.
+    'overdueScheduledCountProvider',
   };
 
   /// `xControllerProvider` for `class XController`, `fooProvider` for a

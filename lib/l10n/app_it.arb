@@ -386,5 +386,6 @@
   "commonNext": "Prossima",
   "budgetsSearchHint": "Cerca budget...",
   "budgetsNoMatch": "Nessun budget corrisponde",
-  "budgetsSpent": "Speso"
+  "budgetsSpent": "Speso",
+  "scheduledOverdue": "{count, plural, =1{1 in ritardo} other{{count} in ritardo}}"
 }

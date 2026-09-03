@@ -5,6 +5,7 @@ import 'package:cuentimobile/core/privacy/privacy_mode.dart';
 import 'package:cuentimobile/core/widgets/offline_banner.dart';
 import 'package:cuentimobile/core/widgets/refresh_all.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -92,6 +93,9 @@ class ShellScreen extends ConsumerWidget {
     final l = L.of(context);
     final auth = ref.watch(authControllerProvider);
     final privacyMode = ref.watch(privacyModeProvider);
+    // Watched here rather than on the scheduled screen: the point of the
+    // badge is to say something is overdue before the user goes looking.
+    final overdue = ref.watch(overdueScheduledCountProvider);
 
     return Scaffold(
       drawer: Drawer(
@@ -148,6 +152,7 @@ class ShellScreen extends ConsumerWidget {
               Icons.schedule,
               l.navScheduled,
               '/scheduled',
+              badgeCount: overdue,
             ),
             _buildNavItem(
               context,
@@ -213,6 +218,23 @@ class ShellScreen extends ConsumerWidget {
         ),
       ),
       appBar: AppBar(
+        // Spelled out rather than left to Scaffold, so the badge can ride
+        // on it: the drawer item alerts nobody while the drawer is shut.
+        leading: Builder(
+          builder: (context) {
+            const menu = Icon(Icons.menu);
+            return IconButton(
+              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+              icon: overdue > 0
+                  ? Semantics(
+                      label: l.scheduledOverdue(overdue),
+                      child: const Badge(child: menu),
+                    )
+                  : menu,
+              onPressed: Scaffold.of(context).openDrawer,
+            );
+          },
+        ),
         title: Text(
           _getTitle(context),
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -289,14 +311,25 @@ class ShellScreen extends ConsumerWidget {
     BuildContext context,
     IconData icon,
     String label,
-    String path,
-  ) {
+    String path, {
+    int badgeCount = 0,
+  }) {
     final current = GoRouterState.of(context).matchedLocation == path;
+    final leading = Icon(
+      icon,
+      color: current ? Theme.of(context).colorScheme.primary : null,
+    );
     return ListTile(
-      leading: Icon(
-        icon,
-        color: current ? Theme.of(context).colorScheme.primary : null,
-      ),
+      // The count is spelled out for a screen reader, which would otherwise
+      // announce a bare "3" beside the label and leave it at that.
+      leading: badgeCount > 0
+          ? Semantics(
+              label: L.of(context).scheduledOverdue(badgeCount),
+              child: ExcludeSemantics(
+                child: Badge.count(count: badgeCount, child: leading),
+              ),
+            )
+          : leading,
       title: Text(
         label,
         style: current

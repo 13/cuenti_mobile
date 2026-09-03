@@ -319,4 +319,55 @@ void main() {
       expect(rowY(tester, 'Landlord'), lessThan(rowY(tester, 'Gym')));
     });
   });
+
+  group('the overdue marker on a row', () {
+    final today = DateTime.now();
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    Future<void> pumpWith(
+      WidgetTester tester,
+      DateTime due, {
+      bool enabled = true,
+    }) async {
+      when(repo.getAll).thenAnswer(
+        (_) async => [
+          ScheduledTransaction(
+            id: 1,
+            amount: 800,
+            nextOccurrence: due,
+            payee: 'Landlord',
+            enabled: enabled,
+          ),
+        ],
+      );
+      await pumpScreen(tester);
+    }
+
+    testWidgets('an entry due today is not late, however late in the day it '
+        'is read', (tester) async {
+      await pumpWith(tester, DateTime(today.year, today.month, today.day));
+
+      expect(find.textContaining('(LATE!)'), findsNothing);
+    });
+
+    testWidgets('an entry due yesterday is late', (tester) async {
+      await pumpWith(
+        tester,
+        DateTime(yesterday.year, yesterday.month, yesterday.day),
+      );
+
+      expect(find.textContaining('(LATE!)'), findsOneWidget);
+    });
+
+    testWidgets('a paused entry is not shouted at, matching the badge that '
+        'does not count it', (tester) async {
+      await pumpWith(
+        tester,
+        DateTime(yesterday.year, yesterday.month, yesterday.day),
+        enabled: false,
+      );
+
+      expect(find.textContaining('(LATE!)'), findsNothing);
+    });
+  });
 }

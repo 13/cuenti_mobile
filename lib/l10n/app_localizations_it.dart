@@ -1254,4 +1254,15 @@ class LIt extends L {
 
   @override
   String get budgetsSpent => 'Speso';
+
+  @override
+  String scheduledOverdue(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count in ritardo',
+      one: '1 in ritardo',
+    );
+    return '$_temp0';
+  }
 }

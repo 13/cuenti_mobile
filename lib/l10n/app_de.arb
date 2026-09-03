@@ -386,5 +386,6 @@
   "commonNext": "Nächste",
   "budgetsSearchHint": "Budgets durchsuchen...",
   "budgetsNoMatch": "Keine Budgets gefunden",
-  "budgetsSpent": "Ausgegeben"
+  "budgetsSpent": "Ausgegeben",
+  "scheduledOverdue": "{count, plural, =1{1 überfällig} other{{count} überfällig}}"
 }

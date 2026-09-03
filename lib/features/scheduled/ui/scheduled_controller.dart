@@ -1,5 +1,6 @@
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
 import 'package:cuentimobile/features/scheduled/data/scheduled_repository.dart';
+import 'package:cuentimobile/features/scheduled/domain/overdue.dart';
 import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -50,4 +51,18 @@ class ScheduledController extends _$ScheduledController {
     ref.invalidateSelf();
     await future;
   }
+}
+
+/// How many scheduled transactions are past due, for the badge on the
+/// navigation item.
+///
+/// Zero while the list is loading and zero if the request failed: this
+/// drives an alert, and one raised because a fetch half-worked is worse than
+/// none at all. The shell watches this on every screen, so it must never
+/// throw and never block.
+@riverpod
+int overdueScheduledCount(Ref ref) {
+  final entries = ref.watch(scheduledControllerProvider).value;
+  if (entries == null) return 0;
+  return countOverdue(entries, DateTime.now());
 }

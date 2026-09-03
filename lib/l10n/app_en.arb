@@ -975,5 +975,7 @@
   "budgetsNoMatch": "No budgets match",
   "@budgetsNoMatch": {},
   "budgetsSpent": "Spent",
-  "@budgetsSpent": {}
+  "@budgetsSpent": {},
+  "scheduledOverdue": "{count, plural, =1{1 overdue} other{{count} overdue}}",
+  "@scheduledOverdue": {"placeholders": {"count": {"type": "num"}}}
 }

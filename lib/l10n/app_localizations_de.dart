@@ -1255,4 +1255,15 @@ class LDe extends L {
 
   @override
   String get budgetsSpent => 'Ausgegeben';
+
+  @override
+  String scheduledOverdue(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count überfällig',
+      one: '1 überfällig',
+    );
+    return '$_temp0';
+  }
 }

@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/scheduled/data/scheduled_repository.dart';
+import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/screens/shell_screen.dart';
@@ -8,6 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mocktail/mocktail.dart';
+
+class _MockScheduledRepository extends Mock implements ScheduledRepository {}
 
 /// Supplies an already-initialized auth state synchronously, bypassing the
 /// real controller's async `_init()`.
@@ -31,6 +36,23 @@ class _FakeAuthController extends AuthController {
 }
 
 void main() {
+  /// Scheduled entries the shell reads for the overdue badge. Stubbed empty
+  /// by default so the existing tests see no badge at all.
+  late _MockScheduledRepository scheduledRepo;
+
+  setUp(() {
+    scheduledRepo = _MockScheduledRepository();
+    when(scheduledRepo.getAll).thenAnswer((_) async => []);
+  });
+
+  ScheduledTransaction dueOn(DateTime date, {bool enabled = true}) =>
+      ScheduledTransaction(
+        id: date.millisecondsSinceEpoch,
+        amount: 10,
+        nextOccurrence: date,
+        enabled: enabled,
+      );
+
   Future<void> pumpShell(
     WidgetTester tester, {
     _FakeAuthController? controller,
@@ -56,6 +78,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          scheduledRepositoryProvider.overrideWithValue(scheduledRepo),
           authControllerProvider.overrideWith(
             () =>
                 controller ??
@@ -139,5 +162,95 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('login page'), findsOneWidget);
+  });
+
+  group('the overdue badge on Geplant', () {
+    /// Tall enough that the whole drawer renders without scrolling.
+    void useTallSurface(WidgetTester tester) {
+      tester.view.physicalSize = const Size(1200, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+    }
+
+    final overdue = DateTime.now().subtract(const Duration(days: 3));
+    final upcoming = DateTime.now().add(const Duration(days: 3));
+
+    testWidgets('counts the overdue entries next to the drawer item', (
+      tester,
+    ) async {
+      useTallSurface(tester);
+      when(scheduledRepo.getAll).thenAnswer(
+        (_) async => [dueOn(overdue), dueOn(overdue), dueOn(upcoming)],
+      );
+
+      await pumpShell(tester);
+      await tester.tap(find.byTooltip('Open navigation menu'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Badge), findsWidgets);
+      expect(find.text('2'), findsOneWidget);
+    });
+
+    testWidgets('shows nothing when nothing is overdue', (tester) async {
+      useTallSurface(tester);
+      when(scheduledRepo.getAll).thenAnswer((_) async => [dueOn(upcoming)]);
+
+      await pumpShell(tester);
+      await tester.tap(find.byTooltip('Open navigation menu'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Badge), findsNothing);
+    });
+
+    testWidgets('marks the closed menu button too, since a badge inside a '
+        'shut drawer alerts nobody', (tester) async {
+      when(scheduledRepo.getAll).thenAnswer((_) async => [dueOn(overdue)]);
+
+      await pumpShell(tester);
+
+      expect(
+        find.descendant(
+          of: find.byTooltip('Open navigation menu'),
+          matching: find.byType(Badge),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('leaves the menu button alone when nothing is overdue', (
+      tester,
+    ) async {
+      await pumpShell(tester);
+
+      expect(
+        find.descendant(
+          of: find.byTooltip('Open navigation menu'),
+          matching: find.byType(Badge),
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets('a paused entry raises no alert', (tester) async {
+      when(scheduledRepo.getAll).thenAnswer(
+        (_) async => [dueOn(overdue, enabled: false)],
+      );
+
+      await pumpShell(tester);
+
+      expect(find.byType(Badge), findsNothing);
+    });
+
+    testWidgets('the drawer still opens when the fetch failed, without the '
+        'shell taking the error', (tester) async {
+      when(scheduledRepo.getAll).thenThrow(Exception('offline'));
+
+      await pumpShell(tester);
+      await tester.tap(find.byTooltip('Open navigation menu'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(Badge), findsNothing);
+    });
   });
 }

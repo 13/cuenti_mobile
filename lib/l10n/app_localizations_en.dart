@@ -1251,4 +1251,15 @@ class LEn extends L {
 
   @override
   String get budgetsSpent => 'Spent';
+
+  @override
+  String scheduledOverdue(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count overdue',
+      one: '1 overdue',
+    );
+    return '$_temp0';
+  }
 }

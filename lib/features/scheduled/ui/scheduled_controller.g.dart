@@ -66,3 +66,68 @@ abstract class _$ScheduledController
     return element.handleCreate(ref, build);
   }
 }
+
+/// How many scheduled transactions are past due, for the badge on the
+/// navigation item.
+///
+/// Zero while the list is loading and zero if the request failed: this
+/// drives an alert, and one raised because a fetch half-worked is worse than
+/// none at all. The shell watches this on every screen, so it must never
+/// throw and never block.
+
+@ProviderFor(overdueScheduledCount)
+final overdueScheduledCountProvider = OverdueScheduledCountProvider._();
+
+/// How many scheduled transactions are past due, for the badge on the
+/// navigation item.
+///
+/// Zero while the list is loading and zero if the request failed: this
+/// drives an alert, and one raised because a fetch half-worked is worse than
+/// none at all. The shell watches this on every screen, so it must never
+/// throw and never block.
+
+final class OverdueScheduledCountProvider
+    extends $FunctionalProvider<int, int, int>
+    with $Provider<int> {
+  /// How many scheduled transactions are past due, for the badge on the
+  /// navigation item.
+  ///
+  /// Zero while the list is loading and zero if the request failed: this
+  /// drives an alert, and one raised because a fetch half-worked is worse than
+  /// none at all. The shell watches this on every screen, so it must never
+  /// throw and never block.
+  OverdueScheduledCountProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'overdueScheduledCountProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$overdueScheduledCountHash();
+
+  @$internal
+  @override
+  $ProviderElement<int> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  int create(Ref ref) {
+    return overdueScheduledCount(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$overdueScheduledCountHash() =>
+    r'a8c715357e01cac2f4cb63306b70cf5db4690fa7';

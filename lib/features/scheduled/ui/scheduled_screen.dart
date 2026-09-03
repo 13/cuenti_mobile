@@ -7,6 +7,7 @@ import 'package:cuentimobile/core/widgets/entity_list_filter.dart';
 import 'package:cuentimobile/core/widgets/entity_list_header.dart';
 import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
+import 'package:cuentimobile/features/scheduled/domain/overdue.dart';
 import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
 import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
@@ -127,9 +128,7 @@ class _ScheduledScreenState extends ConsumerState<ScheduledScreen> {
                         itemCount: items.length,
                         itemBuilder: (context, i) {
                           final st = items[i];
-                          final isLate = st.nextOccurrence.isBefore(
-                            DateTime.now(),
-                          );
+                          final isLate = isOverdue(st, DateTime.now());
                           final color = isLate
                               ? Theme.of(context).colorScheme.error
                               : Theme.of(context).colorScheme.primary;

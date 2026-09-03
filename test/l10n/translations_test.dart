@@ -253,6 +253,21 @@ void main() {
     });
   });
 
+  group('the overdue badge agrees with its number', () {
+    test('English uses the singular for one', () {
+      expect(LEn().scheduledOverdue(1), '1 overdue');
+    });
+
+    test('English uses the plural for many', () {
+      expect(LEn().scheduledOverdue(3), '3 overdue');
+    });
+
+    test('German and Italian carry the number too', () {
+      expect(LDe().scheduledOverdue(3), '3 überfällig');
+      expect(LIt().scheduledOverdue(3), '3 in ritardo');
+    });
+  });
+
   group('counted strings agree with their number', () {
     test('English uses the singular for one', () {
       expect(LEn().statsTransactionsInPeriod(1), '1 transaction in period');
