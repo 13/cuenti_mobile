@@ -332,4 +332,63 @@ void main() {
       );
     });
   });
+
+  group('against the shape the real backend sends', () {
+    // The fixtures above name categories by their leaf and carry no
+    // fullName, which is not what this backend does: the captured
+    // responses in test/fixtures use 'Wohnen:Miete'. Every test in this
+    // file passed while the chart was undrillable in the app, because the
+    // data it was given did not look like the real thing.
+    const realShaped = [
+      Category(id: 1, name: 'Wohnen', fullName: 'Wohnen'),
+      Category(id: 2, name: 'Miete', fullName: 'Wohnen:Miete', parentId: 1),
+      Category(id: 3, name: 'Strom', fullName: 'Wohnen:Strom', parentId: 1),
+    ];
+
+    Future<void> pumpReal(WidgetTester tester) async {
+      when(() => categoriesRepo.getAll()).thenAnswer((_) async => realShaped);
+      await pumpTab(
+        tester,
+        data: const {'Wohnen:Miete': 900, 'Wohnen:Strom': 100},
+      );
+    }
+
+    testWidgets('opens on the parent rather than a flat list of paths', (
+      tester,
+    ) async {
+      await pumpReal(tester);
+
+      expect(row('Wohnen'), findsOneWidget);
+      expect(
+        row('Wohnen:Miete'),
+        findsNothing,
+        reason: 'a path left unplaced would show up as its own row',
+      );
+    });
+
+    testWidgets('tapping the parent drills into its subcategories, which is '
+        'what was not happening in the app', (tester) async {
+      await pumpReal(tester);
+
+      await tester.tap(row('Wohnen'));
+      await tester.pumpAndSettle();
+
+      expect(row('Miete'), findsOneWidget);
+      expect(row('Strom'), findsOneWidget);
+    });
+
+    testWidgets('the parent carries the chevron that says it opens', (
+      tester,
+    ) async {
+      await pumpReal(tester);
+
+      expect(
+        find.descendant(
+          of: row('Wohnen'),
+          matching: find.byIcon(Icons.chevron_right),
+        ),
+        findsOneWidget,
+      );
+    });
+  });
 }

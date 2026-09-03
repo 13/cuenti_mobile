@@ -55,20 +55,37 @@ List<CategoryNode> buildCategoryBreakdown(
   // Folded, because the two sides of this join come from different
   // endpoints: a server that spells a type "expense" or pads a name must
   // not silently match nothing and flatten the whole chart.
+  //
+  // Indexed by full path as well as by bare name, and the path is tried
+  // first. This backend names a category by its path -- the captured
+  // responses in test/fixtures hold 'Wohnen:Miete', not 'Miete' -- and
+  // matching only the leaf meant every amount failed the join, landed in
+  // `unplaced`, and became a childless root. The chart drew the right
+  // numbers and nothing could be drilled into, because there was no tree
+  // left to drill. The path is the more specific key too: it separates an
+  // 'Auto:Tanken' from a 'Boot:Tanken', which the bare name has to refuse.
   final byName = <String, List<Category>>{};
+  final byFullName = <String, List<Category>>{};
   for (final c in ofType) {
     byName.putIfAbsent(_fold(c.name), () => []).add(c);
+    final full = c.fullName;
+    if (full != null && full.trim().isNotEmpty) {
+      byFullName.putIfAbsent(_fold(full), () => []).add(c);
+    }
   }
-  final placeable = {
-    for (final entry in byName.entries)
+  Map<String, Category> claimedOnce(Map<String, List<Category>> index) => {
+    for (final entry in index.entries)
       if (entry.value.length == 1) entry.key: entry.value.single,
   };
+  final byPath = claimedOnce(byFullName);
+  final byLeaf = claimedOnce(byName);
   final byId = {for (final c in ofType) c.id!: c};
 
   final ownById = <int, double>{};
   final unplaced = <String, double>{};
   for (final entry in amountsByName.entries) {
-    final category = placeable[_fold(entry.key)];
+    final key = _fold(entry.key);
+    final category = byPath[key] ?? byLeaf[key];
     if (category == null) {
       unplaced[entry.key] = (unplaced[entry.key] ?? 0) + entry.value;
     } else {

@@ -2,6 +2,8 @@ import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/statistics/domain/category_breakdown.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/real_fixture.dart';
+
 /// A three-level expense tree: Food > Groceries > Organic, plus Transport >
 /// Fuel. Ids matter, names are what the statistics endpoint sends back.
 const _categories = [
@@ -257,6 +259,120 @@ void main() {
         named(roots, 'Salary').id,
         isNull,
         reason: 'Salary is an income category and cannot claim expense',
+      );
+    });
+  });
+
+  group('the names the real backend sends', () {
+    // Captured from this backend in test/fixtures/real_tx_envelope.json,
+    // whose categoryName values are 'Einkommen:Gehalt' and 'Wohnen:Miete'.
+    // The statistics endpoint keys its amounts the same way, so the join
+    // has to cope with a full path and not only a bare leaf name.
+    const categories = [
+      Category(id: 1, name: 'Wohnen', fullName: 'Wohnen'),
+      Category(id: 2, name: 'Miete', fullName: 'Wohnen:Miete', parentId: 1),
+      Category(id: 3, name: 'Strom', fullName: 'Wohnen:Strom', parentId: 1),
+    ];
+
+    test('a full-path key is filed under its parent, not left at the top', () {
+      final roots = buildCategoryBreakdown(
+        {'Wohnen:Miete': 900, 'Wohnen:Strom': 100},
+        categories,
+        type: 'EXPENSE',
+      );
+
+      expect(roots, hasLength(1));
+      expect(roots.single.name, 'Wohnen');
+      expect(roots.single.hasChildren, isTrue);
+      expect(roots.single.total, 1000);
+      expect(
+        roots.single.children.map((c) => c.name),
+        containsAll(['Miete', 'Strom']),
+      );
+    });
+
+    test('a bare name still works, so a server that sends leaves is not '
+        'broken by this', () {
+      final roots = buildCategoryBreakdown(
+        {'Miete': 900},
+        categories,
+        type: 'EXPENSE',
+      );
+
+      expect(roots.single.name, 'Wohnen');
+      expect(roots.single.hasChildren, isTrue);
+    });
+
+    test('the full path wins over a bare name shared by two categories, '
+        'which the bare-name rule has to refuse', () {
+      const ambiguous = [
+        Category(id: 1, name: 'Auto', fullName: 'Auto'),
+        Category(id: 2, name: 'Boot', fullName: 'Boot'),
+        Category(id: 3, name: 'Tanken', fullName: 'Auto:Tanken', parentId: 1),
+        Category(id: 4, name: 'Tanken', fullName: 'Boot:Tanken', parentId: 2),
+      ];
+
+      final roots = buildCategoryBreakdown(
+        {'Auto:Tanken': 50},
+        ambiguous,
+        type: 'EXPENSE',
+      );
+
+      expect(roots.single.name, 'Auto');
+      expect(roots.single.children.single.name, 'Tanken');
+    });
+
+    test('a path nothing accounts for still shows its amount', () {
+      final roots = buildCategoryBreakdown(
+        {'Nirgendwo:Irgendwas': 7},
+        categories,
+        type: 'EXPENSE',
+      );
+
+      expect(roots.single.name, 'Nirgendwo:Irgendwas');
+      expect(roots.single.total, 7);
+    });
+  });
+
+  group('driven by the captured response rather than invented names', () {
+    test('every category name the real server sent joins into a tree', () {
+      final names = realCategoryNames();
+      expect(names, isNotEmpty, reason: 'the fixture should hold some');
+      expect(
+        names.every((n) => n.contains(':')),
+        isTrue,
+        reason: 'this backend names categories by path: $names',
+      );
+
+      final roots = buildCategoryBreakdown(
+        {for (final n in names) n: 100},
+        categoriesForRealNames(),
+        type: 'EXPENSE',
+      );
+
+      expect(
+        roots.every((r) => r.id != null),
+        isTrue,
+        reason: 'a null id means the name was never placed',
+      );
+      expect(
+        roots.any((r) => r.hasChildren),
+        isTrue,
+        reason: 'nothing drillable means the chart cannot be opened',
+      );
+    });
+
+    test('no amount is lost in the join', () {
+      final names = realCategoryNames();
+      final roots = buildCategoryBreakdown(
+        {for (final n in names) n: 100},
+        categoriesForRealNames(),
+        type: 'EXPENSE',
+      );
+
+      expect(
+        roots.fold<double>(0, (sum, r) => sum + r.total),
+        names.length * 100,
       );
     });
   });
