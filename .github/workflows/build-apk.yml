@@ -45,8 +45,14 @@ jobs:
       # The lcov file used to be uploaded and never looked at. A floor set
       # below the current number does not block today's work but does catch
       # a feature landing with no tests behind it.
+      #
+      # The floor only means anything now that check_coverage counts files
+      # lcov never mentions. It used to score whole untested screens as
+      # absent rather than as zero, so adding one moved the number not at
+      # all -- the router's redirect, the scheduled screen and the audit
+      # screen all sat outside it.
       - name: Check coverage
-        run: dart run tool/check_coverage.dart 75
+        run: dart run tool/check_coverage.dart 80
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4

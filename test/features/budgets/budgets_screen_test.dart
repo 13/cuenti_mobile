@@ -170,4 +170,61 @@ void main() {
     expect(find.text('Edit Budget'), findsOneWidget);
     expect(find.text('Delete'), findsOneWidget);
   });
+
+  group('search and sort', () {
+    double rowY(WidgetTester tester, String text) =>
+        tester.getTopLeft(find.text(text)).dy;
+
+    testWidgets('typing keeps only the budgets that match', (tester) async {
+      await pumpScreen(tester);
+
+      await tester.enterText(find.byType(TextField).first, 'groc');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Groceries'), findsOneWidget);
+      expect(find.text('Fun'), findsNothing);
+    });
+
+    testWidgets('a search matching nothing offers to clear it', (tester) async {
+      await pumpScreen(tester);
+
+      await tester.enterText(find.byType(TextField).first, 'zzz');
+      await tester.pumpAndSettle();
+
+      expect(find.text('No budgets match'), findsOneWidget);
+
+      await tester.tap(find.text('Clear filters'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Groceries'), findsOneWidget);
+    });
+
+    testWidgets('the spent chip orders the live budgets by what they have '
+        'spent', (tester) async {
+      await pumpScreen(tester);
+
+      await tester.tap(find.widgetWithText(FilterChip, 'Spent'));
+      await tester.pumpAndSettle();
+
+      expect(rowY(tester, 'Fun'), lessThan(rowY(tester, 'Groceries')));
+    });
+
+    testWidgets('an archived budget stays at the bottom whatever the sort, '
+        'rather than rising on a zero it never spent', (tester) async {
+      await pumpScreen(tester);
+
+      await tester.tap(find.widgetWithText(FilterChip, 'Spent'));
+      await tester.pumpAndSettle();
+
+      expect(rowY(tester, 'Groceries'), lessThan(rowY(tester, 'Travel')));
+    });
+
+    testWidgets('with no chip chosen the inactive budgets still sink to the '
+        'bottom, as they always did', (tester) async {
+      await pumpScreen(tester);
+
+      expect(rowY(tester, 'Groceries'), lessThan(rowY(tester, 'Travel')));
+      expect(rowY(tester, 'Fun'), lessThan(rowY(tester, 'Travel')));
+    });
+  });
 }

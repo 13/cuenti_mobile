@@ -60,6 +60,57 @@ void main() {
     await tester.tap(find.text('Retry'));
     expect(retried, isTrue);
   });
+
+  group('SkeletonLoader fits the space it is given', () {
+    testWidgets('tiles taller than the space left do not overflow it', (
+      tester,
+    ) async {
+      // Six 76px tiles want 528px; a screen with a search header above them
+      // has far less to give.
+      await tester.pumpWidget(
+        host(
+          SizedBox(
+            height: 200,
+            child: SkeletonLoader.tiles(items: 6, height: 76),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(host(Container()));
+    });
+
+    testWidgets('a list skeleton in a short space does not overflow either', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(SizedBox(height: 120, child: SkeletonLoader.list(items: 8))),
+      );
+
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(host(Container()));
+    });
+
+    testWidgets(
+      'unbounded height still renders, as the dashboard stacks it inside a '
+      'scroll view',
+      (tester) async {
+        await tester.pumpWidget(
+          host(
+            SingleChildScrollView(
+              child: Column(
+                children: [SkeletonLoader.tiles(items: 2, height: 120)],
+              ),
+            ),
+          ),
+        );
+
+        expect(tester.takeException(), isNull);
+        expect(find.byType(SkeletonLoader), findsOneWidget);
+        await tester.pumpWidget(host(Container()));
+      },
+    );
+  });
 }
 
 Widget _dataText(int v) => Text('$v');

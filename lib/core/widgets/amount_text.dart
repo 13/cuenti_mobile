@@ -28,6 +28,7 @@ class AmountText extends ConsumerWidget {
     this.signed = false,
     this.currency,
     this.style,
+    this.fractionDigits,
     super.key,
   });
 
@@ -36,6 +37,12 @@ class AmountText extends ConsumerWidget {
   final bool signed;
   final String? currency;
   final TextStyle? style;
+
+  /// Overrides the currency's own fraction digits, for a figure that is not
+  /// a sum of money in it -- a fuel price per litre, quoted to a tenth of a
+  /// cent. Null leaves the currency in charge, which is what an amount
+  /// wants.
+  final int? fractionDigits;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,7 +59,11 @@ class AmountText extends ConsumerWidget {
     final currencies =
         ref.watch(currenciesControllerProvider).value ?? const [];
     final resolved = currencyFor(currencies, currency);
-    final formatted = formatMoney(amount.abs(), resolved);
+    final formatted = formatMoney(
+      amount.abs(),
+      resolved,
+      fractionDigits: fractionDigits,
+    );
     final prefix = signed && type != null
         ? (type == 'EXPENSE'
               ? '−'

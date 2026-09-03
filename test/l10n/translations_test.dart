@@ -51,6 +51,13 @@ void main() {
           // 'Tags' is the same word in German; the other two are a
           // label plus a value and a brand line.
           'navTags',
+          // A ticker symbol is a 'Symbol' in German too, a bank a 'Bank',
+          // and an ETF an 'ETF' in every language here.
+          'commonSymbol',
+          'accountTypeBank',
+          'assetTypeEtf',
+          // 'Version' is the German word too.
+          'aboutVersion',
           'authServerLine',
           'aboutCopyright',
         };

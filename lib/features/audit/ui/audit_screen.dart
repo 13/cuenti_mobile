@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/features/audit/domain/audit_entry.dart';
 import 'package:cuentimobile/features/audit/ui/audit_controller.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
+import 'package:cuentimobile/utils/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 class AuditScreen extends ConsumerStatefulWidget {
   const AuditScreen({super.key});
@@ -46,21 +46,11 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
     }
   }
 
-  Future<void> _loadMore() async {
-    try {
-      await ref
-          .read(auditControllerProvider(filter: _filter).notifier)
-          .loadMore();
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.localizedMessage(L.of(context))),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    }
-  }
+  Future<void> _loadMore() => reportingFailure(
+    context,
+    () =>
+        ref.read(auditControllerProvider(filter: _filter).notifier).loadMore(),
+  );
 
   void _onSearchChanged(String value) {
     _debounce?.cancel();
@@ -192,7 +182,7 @@ class _AuditTile extends StatelessWidget {
         ? '${entry.entityType} · ${entry.details}'
         : (entry.entityType ?? entry.details ?? '—');
 
-    final formattedTs = DateFormat('dd.MM.yyyy HH:mm').format(entry.timestamp);
+    final formattedTs = formatDayTime(context, entry.timestamp);
     final subtitle = entry.username != null
         ? '${entry.username} · $formattedTs'
         : formattedTs;

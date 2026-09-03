@@ -1,3 +1,4 @@
+import 'package:cuentimobile/core/enum_labels.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
@@ -197,7 +198,7 @@ class _AccountCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                account.displayType,
+                accountTypeLabel(L.of(context), account.accountType),
                 style: Theme.of(context).textTheme.labelSmall,
               ),
               FittedBox(

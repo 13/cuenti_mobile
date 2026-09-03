@@ -1,7 +1,11 @@
+import 'package:cuentimobile/core/privacy/privacy_mode.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
+import 'package:cuentimobile/core/widgets/privacy_blur.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
+import 'package:cuentimobile/features/currencies/data/currencies_repository.dart';
+import 'package:cuentimobile/features/currencies/domain/currency.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/features/vehicles/data/vehicles_repository.dart';
 import 'package:cuentimobile/features/vehicles/domain/vehicle_report.dart';
@@ -16,6 +20,20 @@ class MockCategoriesRepository extends Mock implements CategoriesRepository {}
 
 class MockVehiclesRepository extends Mock implements VehiclesRepository {}
 
+class MockCurrenciesRepository extends Mock implements CurrenciesRepository {}
+
+class _PrivateMode extends PrivacyMode {
+  @override
+  bool build() => true;
+}
+
+const _euro = Currency(
+  id: 1,
+  code: 'EUR',
+  name: 'Euro',
+  symbol: '€',
+);
+
 /// Supplies an already-initialized auth state synchronously, bypassing the
 /// real controller's async `_init()`.
 class _FakeAuthController extends AuthController {
@@ -28,6 +46,7 @@ class _FakeAuthController extends AuthController {
 void main() {
   late MockCategoriesRepository categoriesRepo;
   late MockVehiclesRepository vehiclesRepo;
+  late MockCurrenciesRepository currenciesRepo;
 
   // Enough expense categories that the sheet cannot show them all at once;
   // 'Fuel' is last so it is only reachable by scrolling.
@@ -43,6 +62,8 @@ void main() {
   setUp(() {
     categoriesRepo = MockCategoriesRepository();
     vehiclesRepo = MockVehiclesRepository();
+    currenciesRepo = MockCurrenciesRepository();
+    when(() => currenciesRepo.getAll()).thenAnswer((_) async => [_euro]);
     when(() => categoriesRepo.getAll()).thenAnswer((_) async => categories);
     when(
       () => vehiclesRepo.getReport(
@@ -53,16 +74,26 @@ void main() {
     ).thenAnswer((_) async => const VehicleReport());
   });
 
-  Future<void> pumpScreen(WidgetTester tester) async {
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    bool privacy = false,
+    int? fuelCategoryId,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
           vehiclesRepositoryProvider.overrideWithValue(vehiclesRepo),
+          currenciesRepositoryProvider.overrideWithValue(currenciesRepo),
+          if (privacy) privacyModeProvider.overrideWith(_PrivateMode.new),
           authControllerProvider.overrideWith(
             () => _FakeAuthController(
-              const AuthState(
-                user: UserProfile(username: 'demo', email: 'd@x'),
+              AuthState(
+                user: UserProfile(
+                  username: 'demo',
+                  email: 'd@x',
+                  defaultVehicleCategoryId: fuelCategoryId,
+                ),
               ),
             ),
           ),
@@ -115,4 +146,75 @@ void main() {
       ).called(1);
     },
   );
+
+  group('the price-per-litre figure reads like every other amount', () {
+    // currency defaults to EUR, which _euro above describes.
+    const report = VehicleReport(totalCost: 1234.5, avgPricePerLiter: 1.859);
+
+    void stubReport() {
+      when(
+        () => vehiclesRepo.getReport(
+          categoryId: any(named: 'categoryId'),
+          start: any(named: 'start'),
+          end: any(named: 'end'),
+        ),
+      ).thenAnswer((_) async => report);
+    }
+
+    testWidgets('keeps its third decimal, which the currency would round', (
+      tester,
+    ) async {
+      stubReport();
+      await pumpScreen(tester, fuelCategoryId: 99);
+
+      expect(find.textContaining('1,859'), findsOneWidget);
+      expect(find.textContaining('1.86'), findsNothing);
+    });
+
+    testWidgets("uses the currency's punctuation, not a bare number", (
+      tester,
+    ) async {
+      stubReport();
+      await pumpScreen(tester, fuelCategoryId: 99);
+
+      expect(
+        find.textContaining('1.234,50'),
+        findsOneWidget,
+        reason: 'the total beside it',
+      );
+    });
+
+    testWidgets(
+      'is hidden by privacy mode, like the total standing next to it',
+      (tester) async {
+        stubReport();
+        await pumpScreen(tester, privacy: true, fuelCategoryId: 99);
+
+        // The blur keeps the real text in the tree on purpose, so that
+        // layout does not jump; what matters is that it is behind one.
+        expect(
+          find.ancestor(
+            of: find.textContaining('1,859'),
+            matching: find.byType(PrivacyBlur),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('a report with no fuel price still renders', (tester) async {
+      when(
+        () => vehiclesRepo.getReport(
+          categoryId: any(named: 'categoryId'),
+          start: any(named: 'start'),
+          end: any(named: 'end'),
+        ),
+      ).thenAnswer((_) async => const VehicleReport());
+
+      await pumpScreen(tester, fuelCategoryId: 99);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('—'), findsWidgets);
+    });
+  });
 }

@@ -1096,4 +1096,159 @@ class LEn extends L {
   String offlineBannerSince(String when) {
     return 'Offline — figures from $when';
   }
+
+  @override
+  String get accountsSearchHint => 'Search accounts...';
+
+  @override
+  String get accountsNoMatch => 'No accounts match';
+
+  @override
+  String get payeesSearchHint => 'Search payees...';
+
+  @override
+  String get payeesNoMatch => 'No payees match';
+
+  @override
+  String get categoriesSearchHint => 'Search categories...';
+
+  @override
+  String get categoriesNoMatch => 'No categories match';
+
+  @override
+  String get tagsSearchHint => 'Search tags...';
+
+  @override
+  String get tagsNoMatch => 'No tags match';
+
+  @override
+  String get currenciesSearchHint => 'Search currencies...';
+
+  @override
+  String get currenciesNoMatch => 'No currencies match';
+
+  @override
+  String get assetsSearchHint => 'Search assets...';
+
+  @override
+  String get assetsNoMatch => 'No assets match';
+
+  @override
+  String get commonSortCustom => 'Custom order';
+
+  @override
+  String get commonCode => 'Code';
+
+  @override
+  String get commonSymbol => 'Symbol';
+
+  @override
+  String get commonPrice => 'Price';
+
+  @override
+  String get accountTypeBank => 'Bank';
+
+  @override
+  String get accountTypeCash => 'Cash';
+
+  @override
+  String get accountTypeAsset => 'Asset';
+
+  @override
+  String get accountTypeCreditCard => 'Credit Card';
+
+  @override
+  String get accountTypeLiability => 'Liability';
+
+  @override
+  String get accountTypeCurrent => 'Current Account';
+
+  @override
+  String get accountTypeSavings => 'Savings Account';
+
+  @override
+  String get assetTypeStock => 'Stock';
+
+  @override
+  String get assetTypeEtf => 'ETF';
+
+  @override
+  String get assetTypeCrypto => 'Crypto';
+
+  @override
+  String get paymentMethodCash => 'Cash';
+
+  @override
+  String get paymentMethodCard => 'Card';
+
+  @override
+  String get paymentMethodBankTransfer => 'Bank Transfer';
+
+  @override
+  String get paymentMethodCheck => 'Cheque';
+
+  @override
+  String get sortAscending => 'Ascending';
+
+  @override
+  String get sortDescending => 'Descending';
+
+  @override
+  String get recurrenceDaily => 'Daily';
+
+  @override
+  String get recurrenceWeekly => 'Weekly';
+
+  @override
+  String get recurrenceBiWeekly => 'Fortnightly';
+
+  @override
+  String get recurrenceMonthly => 'Monthly';
+
+  @override
+  String get recurrenceMonthlyLastDay => 'Monthly (last day)';
+
+  @override
+  String get recurrenceYearly => 'Yearly';
+
+  @override
+  String validationMinCharacters(int count) {
+    return 'Minimum $count characters';
+  }
+
+  @override
+  String get validationInvalidEmail => 'Invalid email';
+
+  @override
+  String get authPasswordsMismatch => 'Passwords do not match';
+
+  @override
+  String get aboutVersion => 'Version';
+
+  @override
+  String get aboutBuildNumber => 'Build Number';
+
+  @override
+  String get aboutBuildDate => 'Build Date';
+
+  @override
+  String get aboutBuildTime => 'Build Time';
+
+  @override
+  String get scheduledSearchHint => 'Search scheduled...';
+
+  @override
+  String get scheduledNoMatch => 'No scheduled transactions match';
+
+  @override
+  String get commonNext => 'Next';
+
+  @override
+  String get budgetsSearchHint => 'Search budgets...';
+
+  @override
+  String get budgetsNoMatch => 'No budgets match';
+
+  @override
+  String get budgetsSpent => 'Spent';
 }

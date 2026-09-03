@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SavedView {
 
- int? get id; String get name; String? get params; DateTime? get createdAt;
+ String get name; int? get id; String? get params; DateTime? get createdAt;
 /// Create a copy of SavedView
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $SavedViewCopyWith<SavedView> get copyWith => _$SavedViewCopyWithImpl<SavedView>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SavedView&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.params, params) || other.params == params)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SavedView&&(identical(other.name, name) || other.name == name)&&(identical(other.id, id) || other.id == id)&&(identical(other.params, params) || other.params == params)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,params,createdAt);
+int get hashCode => Object.hash(runtimeType,name,id,params,createdAt);
 
 @override
 String toString() {
-  return 'SavedView(id: $id, name: $name, params: $params, createdAt: $createdAt)';
+  return 'SavedView(name: $name, id: $id, params: $params, createdAt: $createdAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $SavedViewCopyWith<$Res>  {
   factory $SavedViewCopyWith(SavedView value, $Res Function(SavedView) _then) = _$SavedViewCopyWithImpl;
 @useResult
 $Res call({
- int? id, String name, String? params, DateTime? createdAt
+ String name, int? id, String? params, DateTime? createdAt
 });
 
 
@@ -65,11 +65,11 @@ class _$SavedViewCopyWithImpl<$Res>
 
 /// Create a copy of SavedView
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? name = null,Object? params = freezed,Object? createdAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? id = freezed,Object? params = freezed,Object? createdAt = freezed,}) {
   return _then(_self.copyWith(
-id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int?,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,params: freezed == params ? _self.params : params // ignore: cast_nullable_to_non_nullable
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,params: freezed == params ? _self.params : params // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
@@ -156,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  String name,  String? params,  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  int? id,  String? params,  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SavedView() when $default != null:
-return $default(_that.id,_that.name,_that.params,_that.createdAt);case _:
+return $default(_that.name,_that.id,_that.params,_that.createdAt);case _:
   return orElse();
 
 }
@@ -177,10 +177,10 @@ return $default(_that.id,_that.name,_that.params,_that.createdAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  String name,  String? params,  DateTime? createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  int? id,  String? params,  DateTime? createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _SavedView():
-return $default(_that.id,_that.name,_that.params,_that.createdAt);case _:
+return $default(_that.name,_that.id,_that.params,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +197,10 @@ return $default(_that.id,_that.name,_that.params,_that.createdAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  String name,  String? params,  DateTime? createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  int? id,  String? params,  DateTime? createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _SavedView() when $default != null:
-return $default(_that.id,_that.name,_that.params,_that.createdAt);case _:
+return $default(_that.name,_that.id,_that.params,_that.createdAt);case _:
   return null;
 
 }
@@ -212,11 +212,11 @@ return $default(_that.id,_that.name,_that.params,_that.createdAt);case _:
 @JsonSerializable()
 
 class _SavedView implements SavedView {
-  const _SavedView({this.id, required this.name, this.params, this.createdAt});
+  const _SavedView({required this.name, this.id, this.params, this.createdAt});
   factory _SavedView.fromJson(Map<String, dynamic> json) => _$SavedViewFromJson(json);
 
-@override final  int? id;
 @override final  String name;
+@override final  int? id;
 @override final  String? params;
 @override final  DateTime? createdAt;
 
@@ -233,16 +233,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SavedView&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.params, params) || other.params == params)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SavedView&&(identical(other.name, name) || other.name == name)&&(identical(other.id, id) || other.id == id)&&(identical(other.params, params) || other.params == params)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,params,createdAt);
+int get hashCode => Object.hash(runtimeType,name,id,params,createdAt);
 
 @override
 String toString() {
-  return 'SavedView(id: $id, name: $name, params: $params, createdAt: $createdAt)';
+  return 'SavedView(name: $name, id: $id, params: $params, createdAt: $createdAt)';
 }
 
 
@@ -253,7 +253,7 @@ abstract mixin class _$SavedViewCopyWith<$Res> implements $SavedViewCopyWith<$Re
   factory _$SavedViewCopyWith(_SavedView value, $Res Function(_SavedView) _then) = __$SavedViewCopyWithImpl;
 @override @useResult
 $Res call({
- int? id, String name, String? params, DateTime? createdAt
+ String name, int? id, String? params, DateTime? createdAt
 });
 
 
@@ -270,11 +270,11 @@ class __$SavedViewCopyWithImpl<$Res>
 
 /// Create a copy of SavedView
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? name = null,Object? params = freezed,Object? createdAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? id = freezed,Object? params = freezed,Object? createdAt = freezed,}) {
   return _then(_SavedView(
-id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int?,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,params: freezed == params ? _self.params : params // ignore: cast_nullable_to_non_nullable
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,params: freezed == params ? _self.params : params // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));

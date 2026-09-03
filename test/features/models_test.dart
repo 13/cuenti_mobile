@@ -17,7 +17,7 @@ void main() {
     });
     expect(a.balance, 250.0);
     expect(a.excludeFromReports, false);
-    expect(a.displayType, 'Bank');
+    expect(a.accountType, 'BANK');
   });
 
   test('Transaction parses splits and date', () {

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Budget {
 
- int? get id; int get categoryId; String? get categoryName;@JsonKey(fromJson: jsonToDouble) double get monthlyLimit; bool get active;
+ int get categoryId; int? get id; String? get categoryName;@JsonKey(fromJson: jsonToDouble) double get monthlyLimit; bool get active;
 /// Create a copy of Budget
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $BudgetCopyWith<Budget> get copyWith => _$BudgetCopyWithImpl<Budget>(this as Bud
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Budget&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.monthlyLimit, monthlyLimit) || other.monthlyLimit == monthlyLimit)&&(identical(other.active, active) || other.active == active));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Budget&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.monthlyLimit, monthlyLimit) || other.monthlyLimit == monthlyLimit)&&(identical(other.active, active) || other.active == active));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,categoryId,categoryName,monthlyLimit,active);
+int get hashCode => Object.hash(runtimeType,categoryId,id,categoryName,monthlyLimit,active);
 
 @override
 String toString() {
-  return 'Budget(id: $id, categoryId: $categoryId, categoryName: $categoryName, monthlyLimit: $monthlyLimit, active: $active)';
+  return 'Budget(categoryId: $categoryId, id: $id, categoryName: $categoryName, monthlyLimit: $monthlyLimit, active: $active)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $BudgetCopyWith<$Res>  {
   factory $BudgetCopyWith(Budget value, $Res Function(Budget) _then) = _$BudgetCopyWithImpl;
 @useResult
 $Res call({
- int? id, int categoryId, String? categoryName,@JsonKey(fromJson: jsonToDouble) double monthlyLimit, bool active
+ int categoryId, int? id, String? categoryName,@JsonKey(fromJson: jsonToDouble) double monthlyLimit, bool active
 });
 
 
@@ -65,11 +65,11 @@ class _$BudgetCopyWithImpl<$Res>
 
 /// Create a copy of Budget
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? categoryId = null,Object? categoryName = freezed,Object? monthlyLimit = null,Object? active = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? categoryId = null,Object? id = freezed,Object? categoryName = freezed,Object? monthlyLimit = null,Object? active = null,}) {
   return _then(_self.copyWith(
-id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int?,categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
-as int,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
+categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as int,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
 as String?,monthlyLimit: null == monthlyLimit ? _self.monthlyLimit : monthlyLimit // ignore: cast_nullable_to_non_nullable
 as double,active: null == active ? _self.active : active // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -157,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  int categoryId,  String? categoryName, @JsonKey(fromJson: jsonToDouble)  double monthlyLimit,  bool active)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int categoryId,  int? id,  String? categoryName, @JsonKey(fromJson: jsonToDouble)  double monthlyLimit,  bool active)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Budget() when $default != null:
-return $default(_that.id,_that.categoryId,_that.categoryName,_that.monthlyLimit,_that.active);case _:
+return $default(_that.categoryId,_that.id,_that.categoryName,_that.monthlyLimit,_that.active);case _:
   return orElse();
 
 }
@@ -178,10 +178,10 @@ return $default(_that.id,_that.categoryId,_that.categoryName,_that.monthlyLimit,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  int categoryId,  String? categoryName, @JsonKey(fromJson: jsonToDouble)  double monthlyLimit,  bool active)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int categoryId,  int? id,  String? categoryName, @JsonKey(fromJson: jsonToDouble)  double monthlyLimit,  bool active)  $default,) {final _that = this;
 switch (_that) {
 case _Budget():
-return $default(_that.id,_that.categoryId,_that.categoryName,_that.monthlyLimit,_that.active);case _:
+return $default(_that.categoryId,_that.id,_that.categoryName,_that.monthlyLimit,_that.active);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +198,10 @@ return $default(_that.id,_that.categoryId,_that.categoryName,_that.monthlyLimit,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  int categoryId,  String? categoryName, @JsonKey(fromJson: jsonToDouble)  double monthlyLimit,  bool active)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int categoryId,  int? id,  String? categoryName, @JsonKey(fromJson: jsonToDouble)  double monthlyLimit,  bool active)?  $default,) {final _that = this;
 switch (_that) {
 case _Budget() when $default != null:
-return $default(_that.id,_that.categoryId,_that.categoryName,_that.monthlyLimit,_that.active);case _:
+return $default(_that.categoryId,_that.id,_that.categoryName,_that.monthlyLimit,_that.active);case _:
   return null;
 
 }
@@ -213,11 +213,11 @@ return $default(_that.id,_that.categoryId,_that.categoryName,_that.monthlyLimit,
 @JsonSerializable()
 
 class _Budget implements Budget {
-  const _Budget({this.id, required this.categoryId, this.categoryName, @JsonKey(fromJson: jsonToDouble) this.monthlyLimit = 0, this.active = true});
+  const _Budget({required this.categoryId, this.id, this.categoryName, @JsonKey(fromJson: jsonToDouble) this.monthlyLimit = 0, this.active = true});
   factory _Budget.fromJson(Map<String, dynamic> json) => _$BudgetFromJson(json);
 
-@override final  int? id;
 @override final  int categoryId;
+@override final  int? id;
 @override final  String? categoryName;
 @override@JsonKey(fromJson: jsonToDouble) final  double monthlyLimit;
 @override@JsonKey() final  bool active;
@@ -235,16 +235,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Budget&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.monthlyLimit, monthlyLimit) || other.monthlyLimit == monthlyLimit)&&(identical(other.active, active) || other.active == active));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Budget&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.monthlyLimit, monthlyLimit) || other.monthlyLimit == monthlyLimit)&&(identical(other.active, active) || other.active == active));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,categoryId,categoryName,monthlyLimit,active);
+int get hashCode => Object.hash(runtimeType,categoryId,id,categoryName,monthlyLimit,active);
 
 @override
 String toString() {
-  return 'Budget(id: $id, categoryId: $categoryId, categoryName: $categoryName, monthlyLimit: $monthlyLimit, active: $active)';
+  return 'Budget(categoryId: $categoryId, id: $id, categoryName: $categoryName, monthlyLimit: $monthlyLimit, active: $active)';
 }
 
 
@@ -255,7 +255,7 @@ abstract mixin class _$BudgetCopyWith<$Res> implements $BudgetCopyWith<$Res> {
   factory _$BudgetCopyWith(_Budget value, $Res Function(_Budget) _then) = __$BudgetCopyWithImpl;
 @override @useResult
 $Res call({
- int? id, int categoryId, String? categoryName,@JsonKey(fromJson: jsonToDouble) double monthlyLimit, bool active
+ int categoryId, int? id, String? categoryName,@JsonKey(fromJson: jsonToDouble) double monthlyLimit, bool active
 });
 
 
@@ -272,11 +272,11 @@ class __$BudgetCopyWithImpl<$Res>
 
 /// Create a copy of Budget
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? categoryId = null,Object? categoryName = freezed,Object? monthlyLimit = null,Object? active = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? categoryId = null,Object? id = freezed,Object? categoryName = freezed,Object? monthlyLimit = null,Object? active = null,}) {
   return _then(_Budget(
-id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int?,categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
-as int,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
+categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as int,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
 as String?,monthlyLimit: null == monthlyLimit ? _self.monthlyLimit : monthlyLimit // ignore: cast_nullable_to_non_nullable
 as double,active: null == active ? _self.active : active // ignore: cast_nullable_to_non_nullable
 as bool,

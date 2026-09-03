@@ -30,6 +30,34 @@ class GoRouterRefreshNotifier extends ChangeNotifier {
 }
 
 class AppRouter {
+  /// Reachable without a session: signing in, signing up, and pointing the
+  /// app at a server -- which has to come first, since there is nothing to
+  /// sign in to until it does.
+  static const _openToStrangers = {'/login', '/register', '/server-setup'};
+
+  /// Reachable only without a session: once signed in, these are behind you.
+  ///
+  /// Server setup is deliberately not here. It is the one page that makes
+  /// sense on both sides of signing in -- Settings offers a "change server"
+  /// button that goes straight to it -- and while it was treated as a
+  /// sign-in page, that button bounced the user to the dashboard and did
+  /// nothing else.
+  static const _doneWithOnceSignedIn = {'/login', '/register'};
+
+  /// Where a request for [location] should actually go, or null to let it
+  /// through. Split out from the router so the rule that guards every screen
+  /// can be read and tested on its own.
+  static String? redirectFor({
+    required bool loggedIn,
+    required String location,
+  }) {
+    if (!loggedIn && !_openToStrangers.contains(location)) return '/login';
+    if (loggedIn && _doneWithOnceSignedIn.contains(location)) {
+      return '/dashboard';
+    }
+    return null;
+  }
+
   /// Create the router once and keep it alive for the lifetime of the app.
   /// [refresh] ensures redirects re-evaluate when auth state changes,
   /// without rebuilding the entire GoRouter (which would freeze the UI).
@@ -39,17 +67,10 @@ class AppRouter {
     return GoRouter(
       initialLocation: '/login',
       refreshListenable: refresh,
-      redirect: (context, state) {
-        final loggedIn = readAuth().isLoggedIn;
-        final loggingIn =
-            state.matchedLocation == '/login' ||
-            state.matchedLocation == '/register' ||
-            state.matchedLocation == '/server-setup';
-
-        if (!loggedIn && !loggingIn) return '/login';
-        if (loggedIn && loggingIn) return '/dashboard';
-        return null;
-      },
+      redirect: (context, state) => redirectFor(
+        loggedIn: readAuth().isLoggedIn,
+        location: state.matchedLocation,
+      ),
       routes: [
         GoRoute(
           path: '/login',

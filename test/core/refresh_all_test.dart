@@ -1,6 +1,16 @@
 import 'dart:io';
 
+import 'package:cuentimobile/core/theme/app_theme.dart';
+import 'package:cuentimobile/core/widgets/refresh_all.dart';
+import 'package:cuentimobile/features/tags/data/tags_repository.dart';
+import 'package:cuentimobile/features/tags/domain/tag.dart';
+import 'package:cuentimobile/features/tags/ui/tags_controller.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class _MockTagsRepository extends Mock implements TagsRepository {}
 
 /// `invalidateAllData` is a hand-written list of providers. Nothing links it
 /// to the providers that exist, so adding a feature and forgetting this file
@@ -86,5 +96,43 @@ void main() {
       contains('accountsControllerProvider'),
     );
     expect(providersDeclaredIn(dashboard), contains('dashboardProvider'));
+  });
+
+  /// The source check above proves the list names every provider. It cannot
+  /// prove the call itself works: nothing in the suite ran it, so a provider
+  /// renamed out from under it, or one that throws when invalidated, would
+  /// have gone unnoticed.
+  testWidgets('invalidating actually refetches', (tester) async {
+    final repo = _MockTagsRepository();
+    var calls = 0;
+    when(repo.getAll).thenAnswer((_) async {
+      calls++;
+      return const [Tag(id: 1, name: 'Urlaub')];
+    });
+
+    late WidgetRef captured;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [tagsRepositoryProvider.overrideWithValue(repo)],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: Consumer(
+            builder: (context, ref, _) {
+              captured = ref;
+              final tags = ref.watch(tagsControllerProvider).value ?? [];
+              return Text('${tags.length}', textDirection: TextDirection.ltr);
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(calls, 1);
+
+    invalidateAllData(captured);
+    await tester.pumpAndSettle();
+
+    expect(calls, 2, reason: 'the watched provider refetched');
+    expect(tester.takeException(), isNull);
   });
 }

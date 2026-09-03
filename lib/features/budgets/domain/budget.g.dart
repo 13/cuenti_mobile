@@ -7,8 +7,8 @@ part of 'budget.dart';
 // **************************************************************************
 
 _Budget _$BudgetFromJson(Map<String, dynamic> json) => _Budget(
-  id: (json['id'] as num?)?.toInt(),
   categoryId: (json['categoryId'] as num).toInt(),
+  id: (json['id'] as num?)?.toInt(),
   categoryName: json['categoryName'] as String?,
   monthlyLimit: json['monthlyLimit'] == null
       ? 0
@@ -17,8 +17,8 @@ _Budget _$BudgetFromJson(Map<String, dynamic> json) => _Budget(
 );
 
 Map<String, dynamic> _$BudgetToJson(_Budget instance) => <String, dynamic>{
-  'id': instance.id,
   'categoryId': instance.categoryId,
+  'id': instance.id,
   'categoryName': instance.categoryName,
   'monthlyLimit': instance.monthlyLimit,
   'active': instance.active,

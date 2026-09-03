@@ -621,4 +621,23 @@ void main() {
 
     expect(find.text('Buchung gespeichert'), findsOneWidget);
   });
+
+  testWidgets(
+    'a transaction whose payment method this build does not know still opens '
+    'for editing',
+    (tester) async {
+      await pumpDialog(
+        tester,
+        transaction: Transaction(
+          id: 1,
+          amount: 12,
+          transactionDate: DateTime(2026),
+          paymentMethod: 'DIRECT_DEBIT',
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('DIRECT_DEBIT'), findsOneWidget);
+    },
+  );
 }

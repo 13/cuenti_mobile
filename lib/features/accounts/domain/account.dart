@@ -35,15 +35,4 @@ abstract class Account with _$Account {
 
   factory Account.fromJson(Map<String, dynamic> json) =>
       _$AccountFromJson(json);
-
-  String get displayType => switch (accountType) {
-    'BANK' => 'Bank',
-    'CASH' => 'Cash',
-    'ASSET' => 'Asset',
-    'CREDIT_CARD' => 'Credit Card',
-    'LIABILITY' => 'Liability',
-    'CURRENT' => 'Current Account',
-    'SAVINGS' => 'Savings Account',
-    _ => accountType,
-  };
 }

@@ -1099,4 +1099,159 @@ class LIt extends L {
   String offlineBannerSince(String when) {
     return 'Offline — dati del $when';
   }
+
+  @override
+  String get accountsSearchHint => 'Cerca conti...';
+
+  @override
+  String get accountsNoMatch => 'Nessun conto corrisponde';
+
+  @override
+  String get payeesSearchHint => 'Cerca beneficiari...';
+
+  @override
+  String get payeesNoMatch => 'Nessun beneficiario corrisponde';
+
+  @override
+  String get categoriesSearchHint => 'Cerca categorie...';
+
+  @override
+  String get categoriesNoMatch => 'Nessuna categoria corrisponde';
+
+  @override
+  String get tagsSearchHint => 'Cerca tag...';
+
+  @override
+  String get tagsNoMatch => 'Nessun tag corrisponde';
+
+  @override
+  String get currenciesSearchHint => 'Cerca valute...';
+
+  @override
+  String get currenciesNoMatch => 'Nessuna valuta corrisponde';
+
+  @override
+  String get assetsSearchHint => 'Cerca titoli...';
+
+  @override
+  String get assetsNoMatch => 'Nessun titolo corrisponde';
+
+  @override
+  String get commonSortCustom => 'Ordine personalizzato';
+
+  @override
+  String get commonCode => 'Codice';
+
+  @override
+  String get commonSymbol => 'Simbolo';
+
+  @override
+  String get commonPrice => 'Prezzo';
+
+  @override
+  String get accountTypeBank => 'Banca';
+
+  @override
+  String get accountTypeCash => 'Contanti';
+
+  @override
+  String get accountTypeAsset => 'Attività';
+
+  @override
+  String get accountTypeCreditCard => 'Carta di credito';
+
+  @override
+  String get accountTypeLiability => 'Passività';
+
+  @override
+  String get accountTypeCurrent => 'Conto corrente';
+
+  @override
+  String get accountTypeSavings => 'Conto di risparmio';
+
+  @override
+  String get assetTypeStock => 'Azione';
+
+  @override
+  String get assetTypeEtf => 'ETF';
+
+  @override
+  String get assetTypeCrypto => 'Cripto';
+
+  @override
+  String get paymentMethodCash => 'Contanti';
+
+  @override
+  String get paymentMethodCard => 'Carta';
+
+  @override
+  String get paymentMethodBankTransfer => 'Bonifico';
+
+  @override
+  String get paymentMethodCheck => 'Assegno';
+
+  @override
+  String get sortAscending => 'Crescente';
+
+  @override
+  String get sortDescending => 'Decrescente';
+
+  @override
+  String get recurrenceDaily => 'Giornaliero';
+
+  @override
+  String get recurrenceWeekly => 'Settimanale';
+
+  @override
+  String get recurrenceBiWeekly => 'Quindicinale';
+
+  @override
+  String get recurrenceMonthly => 'Mensile';
+
+  @override
+  String get recurrenceMonthlyLastDay => 'Mensile (ultimo giorno)';
+
+  @override
+  String get recurrenceYearly => 'Annuale';
+
+  @override
+  String validationMinCharacters(int count) {
+    return 'Minimo $count caratteri';
+  }
+
+  @override
+  String get validationInvalidEmail => 'Email non valida';
+
+  @override
+  String get authPasswordsMismatch => 'Le password non coincidono';
+
+  @override
+  String get aboutVersion => 'Versione';
+
+  @override
+  String get aboutBuildNumber => 'Numero build';
+
+  @override
+  String get aboutBuildDate => 'Data build';
+
+  @override
+  String get aboutBuildTime => 'Ora build';
+
+  @override
+  String get scheduledSearchHint => 'Cerca pianificate...';
+
+  @override
+  String get scheduledNoMatch => 'Nessuna operazione pianificata corrisponde';
+
+  @override
+  String get commonNext => 'Prossima';
+
+  @override
+  String get budgetsSearchHint => 'Cerca budget...';
+
+  @override
+  String get budgetsNoMatch => 'Nessun budget corrisponde';
+
+  @override
+  String get budgetsSpent => 'Speso';
 }

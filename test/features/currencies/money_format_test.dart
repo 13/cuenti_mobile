@@ -107,4 +107,30 @@ void main() {
       expect(currencyLabel(null, 'CHF'), 'CHF');
     });
   });
+
+  group('formatMoney with a fraction-digit override', () {
+    test('a unit price can ask for more decimals than the currency uses', () {
+      // Fuel is priced per litre to a tenth of a cent; the currency's own
+      // two digits would round 1.859 away.
+      expect(formatMoney(1.859, euro, fractionDigits: 3), '1,859');
+    });
+
+    test('the currency still supplies the punctuation', () {
+      expect(formatMoney(1234.5678, euro, fractionDigits: 3), '1.234,568');
+    });
+
+    test('an override of zero is honoured, not treated as absent', () {
+      expect(formatMoney(1234.5, euro, fractionDigits: 0), '1.235');
+    });
+
+    test('without an override the currency decides, as before', () {
+      expect(formatMoney(1234.5, euro), '1.234,50');
+    });
+
+    test('an unknown currency with an override still gets the decimals', () {
+      // The fallback keeps the locale's punctuation; what matters here is
+      // that the third decimal survived rather than being rounded away.
+      expect(formatMoney(1.859, null, fractionDigits: 3), endsWith('859'));
+    });
+  });
 }

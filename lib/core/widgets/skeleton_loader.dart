@@ -84,33 +84,48 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
     );
   }
 
+  /// A stack of `widget.items` bars, trimmed to what the height can hold.
+  ///
+  /// A placeholder that overflows its box paints the debug stripes over the
+  /// screen it is standing in for, so it draws only the bars that fit --
+  /// which is all a skeleton needs to do. Height is unbounded when it sits
+  /// inside a scroll view (the dashboard stacks it that way), and then every
+  /// bar is drawn.
+  Widget _bars(double barHeight, Color baseColor) {
+    const gap = 12.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final count = constraints.maxHeight.isFinite
+            ? (constraints.maxHeight / (barHeight + gap)).floor().clamp(
+                0,
+                widget.items,
+              )
+            : widget.items;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < count; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: gap),
+                child: _bar(barHeight, baseColor),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final baseColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
     switch (widget._kind) {
       case _SkeletonKind.list:
-        return Column(
-          children: [
-            for (var i = 0; i < widget.items; i++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _bar(56, baseColor),
-              ),
-          ],
-        );
+        return _bars(56, baseColor);
       case _SkeletonKind.card:
         return _bar(widget.height, baseColor);
       case _SkeletonKind.tiles:
-        return Column(
-          children: [
-            for (var i = 0; i < widget.items; i++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _bar(widget.height, baseColor),
-              ),
-          ],
-        );
+        return _bars(widget.height, baseColor);
     }
   }
 }

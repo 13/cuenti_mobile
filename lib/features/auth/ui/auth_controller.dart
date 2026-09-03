@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
+import 'package:cuentimobile/core/widgets/entity_list_filter.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
@@ -137,6 +138,11 @@ class AuthController extends _$AuthController {
 
   Future<void> logout() async {
     state = state.copyWith(user: null);
+    // The list screens' searches outlive a screen on purpose, so they have
+    // to be dropped here: the data providers dispose themselves, but this
+    // one is kept alive and would otherwise greet the next person with the
+    // last one's filters.
+    ref.invalidate(entityListFilterProvider);
     await _repo.logout();
     await forgetSavedCredentials();
   }

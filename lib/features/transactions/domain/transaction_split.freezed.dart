@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TransactionSplit {
 
- int? get id; int? get categoryId; String? get categoryName;@JsonKey(fromJson: jsonToDouble) double get amount; String? get memo;
+@JsonKey(fromJson: jsonToDouble) double get amount; int? get id; int? get categoryId; String? get categoryName; String? get memo;
 /// Create a copy of TransactionSplit
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $TransactionSplitCopyWith<TransactionSplit> get copyWith => _$TransactionSplitCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TransactionSplit&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.memo, memo) || other.memo == memo));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TransactionSplit&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.memo, memo) || other.memo == memo));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,categoryId,categoryName,amount,memo);
+int get hashCode => Object.hash(runtimeType,amount,id,categoryId,categoryName,memo);
 
 @override
 String toString() {
-  return 'TransactionSplit(id: $id, categoryId: $categoryId, categoryName: $categoryName, amount: $amount, memo: $memo)';
+  return 'TransactionSplit(amount: $amount, id: $id, categoryId: $categoryId, categoryName: $categoryName, memo: $memo)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $TransactionSplitCopyWith<$Res>  {
   factory $TransactionSplitCopyWith(TransactionSplit value, $Res Function(TransactionSplit) _then) = _$TransactionSplitCopyWithImpl;
 @useResult
 $Res call({
- int? id, int? categoryId, String? categoryName,@JsonKey(fromJson: jsonToDouble) double amount, String? memo
+@JsonKey(fromJson: jsonToDouble) double amount, int? id, int? categoryId, String? categoryName, String? memo
 });
 
 
@@ -65,13 +65,13 @@ class _$TransactionSplitCopyWithImpl<$Res>
 
 /// Create a copy of TransactionSplit
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? amount = null,Object? memo = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? amount = null,Object? id = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? memo = freezed,}) {
   return _then(_self.copyWith(
-id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
+as double,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
 as int?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
-as String?,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
-as double,memo: freezed == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
+as String?,memo: freezed == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -157,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  int? categoryId,  String? categoryName, @JsonKey(fromJson: jsonToDouble)  double amount,  String? memo)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: jsonToDouble)  double amount,  int? id,  int? categoryId,  String? categoryName,  String? memo)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TransactionSplit() when $default != null:
-return $default(_that.id,_that.categoryId,_that.categoryName,_that.amount,_that.memo);case _:
+return $default(_that.amount,_that.id,_that.categoryId,_that.categoryName,_that.memo);case _:
   return orElse();
 
 }
@@ -178,10 +178,10 @@ return $default(_that.id,_that.categoryId,_that.categoryName,_that.amount,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  int? categoryId,  String? categoryName, @JsonKey(fromJson: jsonToDouble)  double amount,  String? memo)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: jsonToDouble)  double amount,  int? id,  int? categoryId,  String? categoryName,  String? memo)  $default,) {final _that = this;
 switch (_that) {
 case _TransactionSplit():
-return $default(_that.id,_that.categoryId,_that.categoryName,_that.amount,_that.memo);case _:
+return $default(_that.amount,_that.id,_that.categoryId,_that.categoryName,_that.memo);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +198,10 @@ return $default(_that.id,_that.categoryId,_that.categoryName,_that.amount,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  int? categoryId,  String? categoryName, @JsonKey(fromJson: jsonToDouble)  double amount,  String? memo)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: jsonToDouble)  double amount,  int? id,  int? categoryId,  String? categoryName,  String? memo)?  $default,) {final _that = this;
 switch (_that) {
 case _TransactionSplit() when $default != null:
-return $default(_that.id,_that.categoryId,_that.categoryName,_that.amount,_that.memo);case _:
+return $default(_that.amount,_that.id,_that.categoryId,_that.categoryName,_that.memo);case _:
   return null;
 
 }
@@ -213,13 +213,13 @@ return $default(_that.id,_that.categoryId,_that.categoryName,_that.amount,_that.
 @JsonSerializable()
 
 class _TransactionSplit extends TransactionSplit {
-  const _TransactionSplit({this.id, this.categoryId, this.categoryName, @JsonKey(fromJson: jsonToDouble) required this.amount, this.memo}): super._();
+  const _TransactionSplit({@JsonKey(fromJson: jsonToDouble) required this.amount, this.id, this.categoryId, this.categoryName, this.memo}): super._();
   factory _TransactionSplit.fromJson(Map<String, dynamic> json) => _$TransactionSplitFromJson(json);
 
+@override@JsonKey(fromJson: jsonToDouble) final  double amount;
 @override final  int? id;
 @override final  int? categoryId;
 @override final  String? categoryName;
-@override@JsonKey(fromJson: jsonToDouble) final  double amount;
 @override final  String? memo;
 
 /// Create a copy of TransactionSplit
@@ -235,16 +235,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TransactionSplit&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.memo, memo) || other.memo == memo));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TransactionSplit&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.memo, memo) || other.memo == memo));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,categoryId,categoryName,amount,memo);
+int get hashCode => Object.hash(runtimeType,amount,id,categoryId,categoryName,memo);
 
 @override
 String toString() {
-  return 'TransactionSplit(id: $id, categoryId: $categoryId, categoryName: $categoryName, amount: $amount, memo: $memo)';
+  return 'TransactionSplit(amount: $amount, id: $id, categoryId: $categoryId, categoryName: $categoryName, memo: $memo)';
 }
 
 
@@ -255,7 +255,7 @@ abstract mixin class _$TransactionSplitCopyWith<$Res> implements $TransactionSpl
   factory _$TransactionSplitCopyWith(_TransactionSplit value, $Res Function(_TransactionSplit) _then) = __$TransactionSplitCopyWithImpl;
 @override @useResult
 $Res call({
- int? id, int? categoryId, String? categoryName,@JsonKey(fromJson: jsonToDouble) double amount, String? memo
+@JsonKey(fromJson: jsonToDouble) double amount, int? id, int? categoryId, String? categoryName, String? memo
 });
 
 
@@ -272,13 +272,13 @@ class __$TransactionSplitCopyWithImpl<$Res>
 
 /// Create a copy of TransactionSplit
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? amount = null,Object? memo = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? amount = null,Object? id = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? memo = freezed,}) {
   return _then(_TransactionSplit(
-id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
+as double,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
 as int?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
-as String?,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
-as double,memo: freezed == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
+as String?,memo: freezed == memo ? _self.memo : memo // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

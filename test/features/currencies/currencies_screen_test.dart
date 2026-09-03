@@ -87,4 +87,84 @@ void main() {
 
     expect(find.text('Save'), findsOneWidget);
   });
+
+  group('search and sort', () {
+    const many = [
+      Currency(id: 1, code: 'USD', name: 'US Dollar', symbol: r'$'),
+      Currency(id: 2, code: 'EUR', name: 'Euro', symbol: '€'),
+      Currency(id: 3, code: 'CHF', name: 'Swiss Franc', symbol: 'Fr'),
+    ];
+
+    double rowY(WidgetTester tester, String text) =>
+        tester.getTopLeft(find.text(text)).dy;
+
+    testWidgets('searches the code', (tester) async {
+      when(() => repo.getAll()).thenAnswer((_) async => many);
+      await pumpScreen(tester);
+
+      await tester.enterText(find.byType(TextField).first, 'chf');
+      await tester.pumpAndSettle();
+
+      expect(find.text('CHF - Swiss Franc'), findsOneWidget);
+      expect(find.text('EUR - Euro'), findsNothing);
+    });
+
+    testWidgets('searches the name too, not just the code', (tester) async {
+      when(() => repo.getAll()).thenAnswer((_) async => many);
+      await pumpScreen(tester);
+
+      await tester.enterText(find.byType(TextField).first, 'franc');
+      await tester.pumpAndSettle();
+
+      expect(find.text('CHF - Swiss Franc'), findsOneWidget);
+      expect(find.text('USD - US Dollar'), findsNothing);
+    });
+
+    testWidgets('a search matching nothing offers to clear it', (tester) async {
+      when(() => repo.getAll()).thenAnswer((_) async => many);
+      await pumpScreen(tester);
+
+      await tester.enterText(find.byType(TextField).first, 'zzz');
+      await tester.pumpAndSettle();
+
+      expect(find.text('No currencies match'), findsOneWidget);
+
+      await tester.tap(find.text('Clear filters'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('EUR - Euro'), findsOneWidget);
+    });
+
+    testWidgets('the code chip sorts by code', (tester) async {
+      when(() => repo.getAll()).thenAnswer((_) async => many);
+      await pumpScreen(tester);
+
+      await tester.tap(find.widgetWithText(FilterChip, 'Code'));
+      await tester.pumpAndSettle();
+
+      expect(
+        rowY(tester, 'CHF - Swiss Franc'),
+        lessThan(rowY(tester, 'EUR - Euro')),
+      );
+      expect(
+        rowY(tester, 'EUR - Euro'),
+        lessThan(rowY(tester, 'USD - US Dollar')),
+      );
+    });
+
+    testWidgets('the name chip sorts by name, which is a different order', (
+      tester,
+    ) async {
+      when(() => repo.getAll()).thenAnswer((_) async => many);
+      await pumpScreen(tester);
+
+      await tester.tap(find.widgetWithText(FilterChip, 'Name'));
+      await tester.pumpAndSettle();
+
+      expect(
+        rowY(tester, 'EUR - Euro'),
+        lessThan(rowY(tester, 'CHF - Swiss Franc')),
+      );
+    });
+  });
 }

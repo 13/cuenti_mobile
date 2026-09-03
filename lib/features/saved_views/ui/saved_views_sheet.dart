@@ -1,6 +1,7 @@
-import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
+import 'package:cuentimobile/core/widgets/entity_edit_sheet.dart';
+import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/saved_views/domain/saved_view.dart';
 import 'package:cuentimobile/features/saved_views/ui/saved_views_controller.dart';
@@ -119,109 +120,37 @@ class _SavedViewsSheetState extends ConsumerState<_SavedViewsSheet> {
       title: L.of(context).savedViewsDeleteTitle,
       message: L.of(context).commonDeleteConfirm(view.name),
     );
-    if (!confirmed || view.id == null) return;
-    try {
-      await ref.read(savedViewsControllerProvider.notifier).delete(view.id!);
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.localizedMessage(L.of(context))),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    }
+    if (!confirmed || view.id == null || !mounted) return;
+    await reportingFailure(
+      context,
+      () => ref.read(savedViewsControllerProvider.notifier).delete(view.id!),
+    );
   }
 
   Future<void> _promptSave(BuildContext context) async {
     final nameController = TextEditingController();
-    var saving = false;
 
-    await showModalBottomSheet<void>(
+    await showEntityEditSheet(
       context: context,
-      isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
+      title: L.of(context).savedViewsSaveCurrent,
+      successMessage: L.of(context).savedViewsSaved,
+      // A view with no name is not one anybody could pick out of the list
+      // again, so Save waits until there is one.
+      canSave: () => nameController.text.trim().isNotEmpty,
+      fields: (context, rebuild) => [
+        TextField(
+          controller: nameController,
+          decoration: InputDecoration(
+            labelText: L.of(context).commonName,
+            border: const OutlineInputBorder(),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                L.of(context).savedViewsSaveCurrent,
-                style: Theme.of(ctx).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: L.of(context).commonName,
-                  border: const OutlineInputBorder(),
-                ),
-                autofocus: true,
-                onChanged: (_) => setModalState(() {}),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: saving ? null : () => Navigator.pop(ctx),
-                      child: Text(L.of(context).commonCancel),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: saving || nameController.text.trim().isEmpty
-                          ? null
-                          : () async {
-                              setModalState(() => saving = true);
-                              try {
-                                await ref
-                                    .read(savedViewsControllerProvider.notifier)
-                                    .saveCurrent(
-                                      nameController.text.trim(),
-                                      widget.current,
-                                    );
-                                if (ctx.mounted) Navigator.pop(ctx);
-                              } on ApiException catch (e) {
-                                setModalState(() => saving = false);
-                                if (ctx.mounted) {
-                                  ScaffoldMessenger.of(ctx).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        e.localizedMessage(L.of(context)),
-                                      ),
-                                      backgroundColor: Theme.of(
-                                        ctx,
-                                      ).colorScheme.error,
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                      child: saving
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(L.of(context).commonSave),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
+          autofocus: true,
+          onChanged: (_) => rebuild(),
         ),
-      ),
+      ],
+      onSave: () => ref
+          .read(savedViewsControllerProvider.notifier)
+          .saveCurrent(nameController.text.trim(), widget.current),
     );
   }
 }

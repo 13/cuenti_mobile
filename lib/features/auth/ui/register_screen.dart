@@ -50,8 +50,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.person),
                     ),
-                    validator: (v) =>
-                        v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) => v == null || v.isEmpty
+                        ? L.of(context).commonRequired
+                        : null,
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 12),
@@ -62,8 +63,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.person),
                     ),
-                    validator: (v) =>
-                        v == null || v.isEmpty ? 'Required' : null,
+                    validator: (v) => v == null || v.isEmpty
+                        ? L.of(context).commonRequired
+                        : null,
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 12),
@@ -74,8 +76,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.person),
                     ),
-                    validator: (v) =>
-                        v == null || v.length < 3 ? 'Min 3 characters' : null,
+                    validator: (v) => v == null || v.length < 3
+                        ? L.of(context).validationMinCharacters(3)
+                        : null,
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 12),
@@ -87,8 +90,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       prefixIcon: const Icon(Icons.email),
                     ),
                     keyboardType: TextInputType.emailAddress,
-                    validator: (v) =>
-                        v == null || !v.contains('@') ? 'Invalid email' : null,
+                    validator: (v) => v == null || !v.contains('@')
+                        ? L.of(context).validationInvalidEmail
+                        : null,
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 12),
@@ -100,8 +104,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.lock),
                     ),
-                    validator: (v) =>
-                        v == null || v.length < 6 ? 'Min 6 characters' : null,
+                    validator: (v) => v == null || v.length < 6
+                        ? L.of(context).validationMinCharacters(6)
+                        : null,
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 12),
@@ -113,8 +118,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.lock),
                     ),
-                    validator: (v) =>
-                        v != _password.text ? 'Passwords do not match' : null,
+                    validator: (v) => v != _password.text
+                        ? L.of(context).authPasswordsMismatch
+                        : null,
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: 16),

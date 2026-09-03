@@ -83,10 +83,11 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
-                _infoRow('Version', version),
-                _infoRow('Build Number', buildNumber),
-                _infoRow('Build Date', buildDate),
-                if (buildTime.isNotEmpty) _infoRow('Build Time', buildTime),
+                _infoRow(L.of(context).aboutVersion, version),
+                _infoRow(L.of(context).aboutBuildNumber, buildNumber),
+                _infoRow(L.of(context).aboutBuildDate, buildDate),
+                if (buildTime.isNotEmpty)
+                  _infoRow(L.of(context).aboutBuildTime, buildTime),
                 const SizedBox(height: 12),
                 Align(
                   alignment: Alignment.centerLeft,

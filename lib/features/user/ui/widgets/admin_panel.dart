@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
+import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/user/data/user_repository.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
@@ -135,31 +135,28 @@ class AdminPanel extends ConsumerWidget {
     String action,
   ) async {
     final repo = ref.read(userRepositoryProvider);
-    try {
+
+    // Asked before the work starts rather than inside it, so declining is a
+    // plain return rather than an early exit out of the guarded action.
+    if (action == 'delete') {
+      final confirmed = await showConfirmSheet(
+        context,
+        title: L.of(context).settingsDeleteUserTitle(user.username),
+        message: L.of(context).settingsDeleteUserBody,
+      );
+      if (!confirmed || !context.mounted) return;
+    }
+
+    final ok = await reportingFailure(context, () async {
       switch (action) {
         case 'enable':
           await repo.setUserEnabled(user.id!, enabled: true);
         case 'disable':
           await repo.setUserEnabled(user.id!, enabled: false);
         case 'delete':
-          final confirmed = await showConfirmSheet(
-            context,
-            title: L.of(context).settingsDeleteUserTitle(user.username),
-            message: L.of(context).settingsDeleteUserBody,
-          );
-          if (!confirmed) return;
           await repo.deleteUser(user.id!);
       }
-      if (context.mounted) ref.invalidate(adminUsersProvider);
-    } on ApiException catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.localizedMessage(L.of(context))),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    }
+    });
+    if (ok) ref.invalidate(adminUsersProvider);
   }
 }

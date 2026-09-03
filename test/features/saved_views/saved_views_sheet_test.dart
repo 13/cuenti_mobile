@@ -214,4 +214,78 @@ void main() {
       expect(webTile.enabled, isFalse);
     });
   });
+
+  group('saving the current view', () {
+    const nonDefault = TransactionFilter(search: 'aldi');
+
+    Future<void> openSaveSheet(WidgetTester tester) async {
+      await pumpAndOpenSheet(tester, current: nonDefault);
+      await tester.tap(find.text('Save current view'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Save stays disabled until the view is given a name', (
+      tester,
+    ) async {
+      await openSaveSheet(tester);
+
+      final before = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Save'),
+      );
+      expect(before.onPressed, isNull, reason: 'no name typed yet');
+
+      await tester.enterText(find.byType(TextField).last, 'Aldi runs');
+      await tester.pumpAndSettle();
+
+      final after = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Save'),
+      );
+      expect(after.onPressed, isNotNull);
+    });
+
+    testWidgets('whitespace alone is not a name', (tester) async {
+      await openSaveSheet(tester);
+
+      await tester.enterText(find.byType(TextField).last, '   ');
+      await tester.pumpAndSettle();
+
+      final button = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Save'),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('the name it saves under is the one that was typed', (
+      tester,
+    ) async {
+      when(() => repo.save(any(), any())).thenAnswer((_) async => mobileView);
+
+      await openSaveSheet(tester);
+      await tester.enterText(find.byType(TextField).last, 'Aldi runs');
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      final captured = verify(() => repo.save(captureAny(), any())).captured;
+      expect(captured.single, 'Aldi runs');
+    });
+
+    testWidgets(
+      'a save that fails in a way the app did not anticipate says so and '
+      'leaves the sheet usable, rather than spinning for ever',
+      (tester) async {
+        when(() => repo.save(any(), any())).thenThrow(Exception('boom'));
+
+        await openSaveSheet(tester);
+        await tester.enterText(find.byType(TextField).last, 'Aldi runs');
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('An error occurred'), findsOneWidget);
+        expect(find.widgetWithText(FilledButton, 'Save'), findsOneWidget);
+      },
+    );
+  });
 }

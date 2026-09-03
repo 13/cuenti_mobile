@@ -1,8 +1,6 @@
-import 'package:cuentimobile/core/api/api_exception.dart';
-import 'package:cuentimobile/core/theme/cuenti_colors.dart';
-import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/core/widgets/section_header.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
@@ -12,9 +10,8 @@ import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/user/data/user_repository.dart';
 import 'package:cuentimobile/features/vehicles/domain/vehicle_report.dart';
 import 'package:cuentimobile/features/vehicles/ui/vehicles_controller.dart';
+import 'package:cuentimobile/features/vehicles/ui/widgets/vehicle_report_parts.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
-import 'package:cuentimobile/utils/number_format.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -90,15 +87,15 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
             data: (report) => ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _StatCardsRow(report: report),
+                VehicleStatCards(report: report),
                 const SizedBox(height: 24),
                 SectionHeader(L.of(context).vehiclesConsumption),
                 const SizedBox(height: 8),
-                _ConsumptionChart(entries: report.entries),
+                ConsumptionChart(entries: report.entries),
                 const SizedBox(height: 24),
                 SectionHeader(L.of(context).vehiclesEntries),
                 const SizedBox(height: 8),
-                _EntriesList(
+                FuelEntriesList(
                   entries: report.entries,
                   currency: report.currency,
                 ),
@@ -234,306 +231,18 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
   /// Returns whether the update succeeded, so the caller can decide whether
   /// it's safe to pop the sheet with the newly-starred selection.
   Future<bool> _setDefaultCategory(BuildContext context, int id) async {
-    try {
+    // `context` is the sheet's, not this State's: the sheet can be dismissed
+    // while the request is in flight, so the messenger and the message are
+    // read before the await.
+    final messenger = ScaffoldMessenger.of(context);
+    final saved = L.of(context).vehiclesDefaultSaved;
+    final ok = await reportingFailure(context, () async {
       await ref.read(userRepositoryProvider).updatePreferences({
         'defaultVehicleCategoryId': id,
       });
       await ref.read(authControllerProvider.notifier).refreshProfile();
-      // `context` is the sheet's, not this State's: the sheet can be
-      // dismissed while the request is in flight, leaving `mounted` true
-      // and this context defunct.
-      if (!context.mounted) return true;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(L.of(context).vehiclesDefaultSaved)),
-      );
-      return true;
-    } on ApiException catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.localizedMessage(L.of(context))),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-      return false;
-    }
-  }
-}
-
-class _StatCardsRow extends StatelessWidget {
-  const _StatCardsRow({required this.report});
-  final VehicleReport report;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        _StatCard(
-          label: L.of(context).vehiclesTotalCost,
-          valueWidget: AmountText(
-            report.totalCost,
-            currency: report.currency,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-        ),
-        _StatCard(
-          label: L.of(context).fuelLiters,
-          valueWidget: Text(
-            '${formatNumber(report.totalLiters, decimals: 1)} L',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-        ),
-        _StatCard(
-          label: L.of(context).vehiclesDistance,
-          valueWidget: Text(
-            '${formatNumber(report.totalDistance, decimals: 0)} km',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-        ),
-        _StatCard(
-          label: L.of(context).vehiclesAvgConsumption,
-          valueWidget: Text(
-            report.avgConsumption != null
-                ? '${formatNumber(report.avgConsumption!, decimals: 1)} l/100km'
-                : '—',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              fontFeatures: [FontFeature.tabularFigures()],
-            ),
-          ),
-        ),
-        _StatCard(
-          label: L.of(context).vehiclesAvgPricePerLiter,
-          valueWidget: Text(
-            report.avgPricePerLiter != null
-                ? '${report.avgPricePerLiter!.toStringAsFixed(3)} ${report.currency}'
-                : '—',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              fontFeatures: [FontFeature.tabularFigures()],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  const _StatCard({required this.label, required this.valueWidget});
-  final String label;
-  final Widget valueWidget;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: Theme.of(context).textTheme.bodySmall),
-              const SizedBox(height: 4),
-              valueWidget,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ConsumptionChart extends StatelessWidget {
-  const _ConsumptionChart({required this.entries});
-  final List<FuelEntry> entries;
-
-  @override
-  Widget build(BuildContext context) {
-    final points = entries.where((e) => e.consumption != null).toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
-
-    if (points.length < 2) {
-      return SizedBox(
-        height: 200,
-        child: EmptyState(
-          icon: Icons.show_chart,
-          message: L.of(context).vehiclesNotEnoughData,
-        ),
-      );
-    }
-
-    final cuenti = context.cuentiColors;
-    final colorScheme = Theme.of(context).colorScheme;
-    final lineColor = cuenti.chartPalette[0];
-    final gridColor = colorScheme.outlineVariant.withValues(alpha: 0.5);
-    final dateFmt = DateFormat('d MMM');
-
-    final spots = [
-      for (var i = 0; i < points.length; i++)
-        FlSpot(i.toDouble(), points[i].consumption!),
-    ];
-
-    return SizedBox(
-      height: 200,
-      child: LineChart(
-        LineChartData(
-          gridData: FlGridData(
-            drawVerticalLine: false,
-            getDrawingHorizontalLine: (_) =>
-                FlLine(color: gridColor, strokeWidth: 1),
-          ),
-          titlesData: FlTitlesData(
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  final idx = value.toInt();
-                  if (idx >= 0 && idx < points.length) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        dateFmt.format(points[idx].date),
-                        style: const TextStyle(fontSize: 10),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-            ),
-            leftTitles: const AxisTitles(),
-            topTitles: const AxisTitles(),
-            rightTitles: const AxisTitles(),
-          ),
-          borderData: FlBorderData(show: false),
-          lineTouchData: LineTouchData(
-            getTouchedSpotIndicator: (barData, indexes) => indexes.map((i) {
-              return TouchedSpotIndicatorData(
-                FlLine(color: lineColor),
-                FlDotData(
-                  getDotPainter: (spot, percent, bar, idx) =>
-                      FlDotCirclePainter(
-                        radius: 4,
-                        color: lineColor,
-                        strokeWidth: 2,
-                        strokeColor: colorScheme.surface,
-                      ),
-                ),
-              );
-            }).toList(),
-            touchTooltipData: LineTouchTooltipData(
-              getTooltipColor: (_) => colorScheme.surfaceContainerHighest,
-              getTooltipItems: (spots) => spots
-                  .map(
-                    (s) => LineTooltipItem(
-                      '${formatNumber(s.y, decimals: 1)} l/100km',
-                      TextStyle(color: lineColor, fontWeight: FontWeight.bold),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-          lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              isCurved: true,
-              color: lineColor,
-              barWidth: 3,
-              isStrokeCapRound: true,
-              dotData: const FlDotData(show: false),
-              belowBarData: BarAreaData(
-                show: true,
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    lineColor.withValues(alpha: 0.35),
-                    lineColor.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EntriesList extends StatelessWidget {
-  const _EntriesList({required this.entries, required this.currency});
-  final List<FuelEntry> entries;
-  final String currency;
-
-  @override
-  Widget build(BuildContext context) {
-    if (entries.isEmpty) {
-      return EmptyState(
-        icon: Icons.local_gas_station,
-        message: L.of(context).vehiclesNoEntries,
-      );
-    }
-
-    final dateFmt = DateFormat('d MMM yyyy');
-
-    return Column(
-      children: entries.map((e) {
-        final subtitleParts = <String>[
-          if (e.odometer != null)
-            '${formatNumber(e.odometer!, decimals: 0)} km',
-          if (e.liters != null) '${formatNumber(e.liters!, decimals: 1)} L',
-        ];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Card(
-            child: ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.local_gas_station)),
-              title: Text('${dateFmt.format(e.date)} · ${e.station ?? 'Fuel'}'),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (subtitleParts.isNotEmpty) Text(subtitleParts.join(' · ')),
-                  if (e.consumption != null)
-                    Text(
-                      '${formatNumber(e.consumption!, decimals: 1)} l/100km',
-                    ),
-                ],
-              ),
-              trailing: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  AmountText(
-                    e.amount ?? 0,
-                    currency: e.currency ?? currency,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  if (e.fullTank) ...[
-                    const SizedBox(height: 4),
-                    Chip(
-                      label: Text(
-                        L.of(context).vehiclesFull,
-                        style: const TextStyle(fontSize: 10),
-                      ),
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      padding: EdgeInsets.zero,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
+    });
+    if (ok) messenger.showSnackBar(SnackBar(content: Text(saved)));
+    return ok;
   }
 }

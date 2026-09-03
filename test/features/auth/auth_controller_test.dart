@@ -2,6 +2,7 @@ import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
+import 'package:cuentimobile/core/widgets/entity_list_filter.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
@@ -267,6 +268,22 @@ void main() {
       expect(state.hasSavedPassword, isTrue);
       expect(storage.data['saved_password'], 'secret');
     });
+
+    test(
+      'logout forgets what was searched on the list screens, so the next '
+      'person to sign in does not inherit it',
+      () async {
+        final notifier = container.read(authControllerProvider.notifier);
+        await notifier.init();
+        container
+            .read(entityListFilterProvider('accounts').notifier)
+            .setQuery('giro');
+
+        await notifier.logout();
+
+        expect(container.read(entityListFilterProvider('accounts')).query, '');
+      },
+    );
 
     test('logout deletes both keys and clears state', () async {
       storage.data['saved_username'] = 'demo';

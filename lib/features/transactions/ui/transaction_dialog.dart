@@ -1,5 +1,7 @@
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/enum_labels.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
+import 'package:cuentimobile/core/widgets/enum_dropdown.dart';
 import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
 import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
@@ -373,9 +375,11 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                     labelText: L.of(context).txPaymentMethod,
                     border: const OutlineInputBorder(),
                   ),
-                  items: kPaymentMethods
-                      .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                      .toList(),
+                  items: dropdownItemsFor(
+                    kPaymentMethods,
+                    _paymentMethod,
+                    label: (v) => paymentMethodLabel(L.of(context), v),
+                  ),
                   onChanged: (v) =>
                       setState(() => _paymentMethod = v ?? 'NONE'),
                 ),

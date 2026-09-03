@@ -38,7 +38,7 @@ final class ScheduledControllerProvider
 }
 
 String _$scheduledControllerHash() =>
-    r'f757045d4653df9ac6de4077e90f1407589824ec';
+    r'841b271b9d25aa58eb5558d1ca06a0912d92f803';
 
 abstract class _$ScheduledController
     extends $AsyncNotifier<List<ScheduledTransaction>> {

@@ -7,8 +7,8 @@ part of 'saved_view.dart';
 // **************************************************************************
 
 _SavedView _$SavedViewFromJson(Map<String, dynamic> json) => _SavedView(
-  id: (json['id'] as num?)?.toInt(),
   name: json['name'] as String,
+  id: (json['id'] as num?)?.toInt(),
   params: json['params'] as String?,
   createdAt: json['createdAt'] == null
       ? null
@@ -17,8 +17,8 @@ _SavedView _$SavedViewFromJson(Map<String, dynamic> json) => _SavedView(
 
 Map<String, dynamic> _$SavedViewToJson(_SavedView instance) =>
     <String, dynamic>{
-      'id': instance.id,
       'name': instance.name,
+      'id': instance.id,
       'params': instance.params,
       'createdAt': instance.createdAt?.toIso8601String(),
     };

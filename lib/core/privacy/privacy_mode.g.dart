@@ -52,7 +52,7 @@ final class PrivacyModeProvider extends $NotifierProvider<PrivacyMode, bool> {
   }
 }
 
-String _$privacyModeHash() => r'fb92c6311b8baf3ee04725fa5df9e89f2b62fa52';
+String _$privacyModeHash() => r'28e1b8bb4a1bd86a524783a6cb1396d0c89989fa';
 
 /// App-wide "hide amounts" toggle. Starts `false` (amounts visible) and
 /// asynchronously loads the persisted value on first build, mirroring

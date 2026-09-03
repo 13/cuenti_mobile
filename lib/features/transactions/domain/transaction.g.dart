@@ -7,14 +7,14 @@ part of 'transaction.dart';
 // **************************************************************************
 
 _Transaction _$TransactionFromJson(Map<String, dynamic> json) => _Transaction(
+  amount: jsonToDouble(json['amount']),
+  transactionDate: DateTime.parse(json['transactionDate'] as String),
   id: (json['id'] as num?)?.toInt(),
   type: json['type'] as String? ?? 'EXPENSE',
   fromAccountId: (json['fromAccountId'] as num?)?.toInt(),
   fromAccountName: json['fromAccountName'] as String?,
   toAccountId: (json['toAccountId'] as num?)?.toInt(),
   toAccountName: json['toAccountName'] as String?,
-  amount: jsonToDouble(json['amount']),
-  transactionDate: DateTime.parse(json['transactionDate'] as String),
   status: json['status'] as String?,
   payee: json['payee'] as String?,
   categoryId: (json['categoryId'] as num?)?.toInt(),
@@ -36,14 +36,14 @@ _Transaction _$TransactionFromJson(Map<String, dynamic> json) => _Transaction(
 
 Map<String, dynamic> _$TransactionToJson(_Transaction instance) =>
     <String, dynamic>{
+      'amount': instance.amount,
+      'transactionDate': instance.transactionDate.toIso8601String(),
       'id': instance.id,
       'type': instance.type,
       'fromAccountId': instance.fromAccountId,
       'fromAccountName': instance.fromAccountName,
       'toAccountId': instance.toAccountId,
       'toAccountName': instance.toAccountName,
-      'amount': instance.amount,
-      'transactionDate': instance.transactionDate.toIso8601String(),
       'status': instance.status,
       'payee': instance.payee,
       'categoryId': instance.categoryId,

@@ -55,21 +55,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
   }
 
-  Future<void> _loadMore() async {
-    try {
-      await ref
-          .read(transactionsControllerProvider(filter: _filter).notifier)
-          .loadMore();
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.localizedMessage(L.of(context))),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    }
-  }
+  Future<void> _loadMore() => reportingFailure(
+    context,
+    () => ref
+        .read(transactionsControllerProvider(filter: _filter).notifier)
+        .loadMore(),
+  );
 
   void _onSearchChanged(String value) {
     _debounce?.cancel();

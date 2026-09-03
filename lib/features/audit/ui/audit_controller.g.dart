@@ -50,7 +50,7 @@ final class AuditControllerProvider
   }
 }
 
-String _$auditControllerHash() => r'd558a1fa756d4be46bbf8aa7d0835135df10ab00';
+String _$auditControllerHash() => r'8cb60bd3f21413f228aba1c0dc8dc0dbc44f26e5';
 
 final class AuditControllerFamily extends $Family
     with

@@ -7,6 +7,8 @@ import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/async_value_widget.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/core/widgets/empty_state.dart';
+import 'package:cuentimobile/core/widgets/entity_list_filter.dart';
+import 'package:cuentimobile/core/widgets/entity_list_header.dart';
 import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/core/widgets/privacy_blur.dart';
 import 'package:cuentimobile/core/widgets/skeleton_loader.dart';
@@ -34,11 +36,18 @@ class BudgetsScreen extends ConsumerWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: AsyncValueWidget<List<BudgetProgress>>(
-            value: progressAsync,
-            skeleton: SkeletonLoader.tiles(items: 4, height: 96),
-            data: (progress) => _BudgetsList(progress: progress),
-            onRetry: () => ref.invalidate(budgetsControllerProvider),
+          child: Column(
+            children: [
+              const _BudgetsHeader(),
+              Expanded(
+                child: AsyncValueWidget<List<BudgetProgress>>(
+                  value: progressAsync,
+                  skeleton: SkeletonLoader.tiles(items: 4, height: 96),
+                  data: (progress) => _BudgetsList(progress: progress),
+                  onRetry: () => ref.invalidate(budgetsControllerProvider),
+                ),
+              ),
+            ],
           ),
         ),
         Positioned(
@@ -58,6 +67,74 @@ class BudgetsScreen extends ConsumerWidget {
   }
 }
 
+/// The screen's key in the shared list-filter state.
+const _budgetsScreen = 'budgets';
+
+/// Sort chips for budgets. Declared here so the header and the list agree on
+/// them without either owning the other.
+List<SortOption<BudgetProgress>> _budgetSortOptions(L l) => [
+  SortOption(
+    id: 'category',
+    label: l.categoryLabel,
+    compare: (a, b) => (a.categoryName ?? '').toLowerCase().compareTo(
+      (b.categoryName ?? '').toLowerCase(),
+    ),
+  ),
+  SortOption(
+    id: 'spent',
+    label: l.budgetsSpent,
+    compare: (a, b) => a.spent.compareTo(b.spent),
+  ),
+  SortOption(
+    id: 'limit',
+    label: l.commonAmount,
+    compare: (a, b) => a.monthlyLimit.compareTo(b.monthlyLimit),
+  ),
+];
+
+class _BudgetsHeader extends ConsumerStatefulWidget {
+  const _BudgetsHeader();
+
+  @override
+  ConsumerState<_BudgetsHeader> createState() => _BudgetsHeaderState();
+}
+
+class _BudgetsHeaderState extends ConsumerState<_BudgetsHeader> {
+  final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.text = ref
+        .read(entityListFilterProvider(_budgetsScreen))
+        .query;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final filter = ref.watch(entityListFilterProvider(_budgetsScreen));
+    final filters = ref.read(
+      entityListFilterProvider(_budgetsScreen).notifier,
+    );
+
+    return EntityListHeader<BudgetProgress>(
+      searchController: _searchController,
+      searchHint: l.budgetsSearchHint,
+      onSearchChanged: filters.setQuery,
+      options: _budgetSortOptions(l),
+      selected: filter.sort,
+      onSortChanged: filters.setSort,
+    );
+  }
+}
+
 class _BudgetsList extends ConsumerWidget {
   const _BudgetsList({required this.progress});
 
@@ -65,26 +142,52 @@ class _BudgetsList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (progress.isEmpty) {
+    final l = L.of(context);
+    final filter = ref.watch(entityListFilterProvider(_budgetsScreen));
+    final options = _budgetSortOptions(l);
+
+    // Active budgets first; `where` preserves relative order so this stays
+    // stable without needing a custom comparator. A chosen sort runs inside
+    // each half, so an archived budget never jumps above a live one.
+    final matching = applySearchAndSort(
+      progress,
+      query: filter.query,
+      searchText: (p) => p.categoryName ?? '',
+      sort: sortOptionFor(options, filter.sort),
+      descending: filter.sort.descending,
+    );
+    final ordered = [
+      ...matching.where((p) => p.active),
+      ...matching.where((p) => !p.active),
+    ];
+
+    if (ordered.isEmpty) {
       return ListView(
         children: [
           const SizedBox(height: 80),
-          EmptyState(
-            icon: Icons.pie_chart,
-            message: L.of(context).budgetsEmpty,
-            actionLabel: L.of(context).budgetsAdd,
-            onAction: () =>
-                _openEditSheet(context, existing: null, allProgress: progress),
-          ),
+          if (progress.isEmpty)
+            EmptyState(
+              icon: Icons.pie_chart,
+              message: l.budgetsEmpty,
+              actionLabel: l.budgetsAdd,
+              onAction: () => _openEditSheet(
+                context,
+                existing: null,
+                allProgress: progress,
+              ),
+            )
+          else
+            EmptyState(
+              icon: Icons.pie_chart,
+              message: l.budgetsNoMatch,
+              actionLabel: l.commonClearFilters,
+              onAction: () => ref
+                  .read(entityListFilterProvider(_budgetsScreen).notifier)
+                  .clearQuery(),
+            ),
         ],
       );
     }
-
-    // Active budgets first; `where` preserves relative order so this stays
-    // stable without needing a custom comparator.
-    final actives = progress.where((p) => p.active).toList();
-    final inactives = progress.where((p) => !p.active).toList();
-    final ordered = [...actives, ...inactives];
 
     return RefreshIndicator(
       onRefresh: () {
@@ -112,18 +215,10 @@ class _BudgetsList extends ConsumerWidget {
     WidgetRef ref,
     BudgetProgress bp,
   ) async {
-    try {
-      await ref.read(budgetsControllerProvider.notifier).delete(bp.budgetId);
-    } on ApiException catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.localizedMessage(L.of(context))),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    }
+    await reportingFailure(
+      context,
+      () => ref.read(budgetsControllerProvider.notifier).delete(bp.budgetId),
+    );
   }
 }
 
@@ -414,11 +509,10 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
     } on ApiException catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.localizedMessage(L.of(context))),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+        showErrorSnack(
+          ScaffoldMessenger.of(context),
+          Theme.of(context).colorScheme,
+          e.localizedMessage(L.of(context)),
         );
       }
     }
@@ -432,24 +526,23 @@ class _BudgetEditSheetState extends ConsumerState<_BudgetEditSheet> {
       title: L.of(context).budgetsDeleteTitle,
       message: L.of(context).budgetsDeleteBody(existing.categoryName ?? ''),
     );
-    if (!confirmed) return;
+    if (!confirmed || !mounted) return;
 
     setState(() => _submitting = true);
-    try {
-      await ref
+    final navigator = Navigator.of(context);
+    final ok = await reportingFailure(
+      context,
+      () => ref
           .read(budgetsControllerProvider.notifier)
-          .delete(existing.budgetId);
-      if (mounted) Navigator.pop(context);
-    } on ApiException catch (e) {
-      if (mounted) {
-        setState(() => _submitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.localizedMessage(L.of(context))),
-            backgroundColor: Theme.of(context).colorScheme.error,
+          .delete(
+            existing.budgetId,
           ),
-        );
-      }
+    );
+    if (!mounted) return;
+    if (ok) {
+      navigator.pop();
+    } else {
+      setState(() => _submitting = false);
     }
   }
 }

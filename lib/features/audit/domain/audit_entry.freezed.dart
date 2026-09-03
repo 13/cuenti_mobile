@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuditEntry {
 
- int get id; int? get userId; String? get username; DateTime get timestamp; String? get entityType; int? get entityId; String? get action; String? get details;
+ int get id; DateTime get timestamp; int? get userId; String? get username; String? get entityType; int? get entityId; String? get action; String? get details;
 /// Create a copy of AuditEntry
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $AuditEntryCopyWith<AuditEntry> get copyWith => _$AuditEntryCopyWithImpl<AuditEn
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuditEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.username, username) || other.username == username)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.entityType, entityType) || other.entityType == entityType)&&(identical(other.entityId, entityId) || other.entityId == entityId)&&(identical(other.action, action) || other.action == action)&&(identical(other.details, details) || other.details == details));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuditEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.username, username) || other.username == username)&&(identical(other.entityType, entityType) || other.entityType == entityType)&&(identical(other.entityId, entityId) || other.entityId == entityId)&&(identical(other.action, action) || other.action == action)&&(identical(other.details, details) || other.details == details));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,userId,username,timestamp,entityType,entityId,action,details);
+int get hashCode => Object.hash(runtimeType,id,timestamp,userId,username,entityType,entityId,action,details);
 
 @override
 String toString() {
-  return 'AuditEntry(id: $id, userId: $userId, username: $username, timestamp: $timestamp, entityType: $entityType, entityId: $entityId, action: $action, details: $details)';
+  return 'AuditEntry(id: $id, timestamp: $timestamp, userId: $userId, username: $username, entityType: $entityType, entityId: $entityId, action: $action, details: $details)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $AuditEntryCopyWith<$Res>  {
   factory $AuditEntryCopyWith(AuditEntry value, $Res Function(AuditEntry) _then) = _$AuditEntryCopyWithImpl;
 @useResult
 $Res call({
- int id, int? userId, String? username, DateTime timestamp, String? entityType, int? entityId, String? action, String? details
+ int id, DateTime timestamp, int? userId, String? username, String? entityType, int? entityId, String? action, String? details
 });
 
 
@@ -65,13 +65,13 @@ class _$AuditEntryCopyWithImpl<$Res>
 
 /// Create a copy of AuditEntry
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = freezed,Object? username = freezed,Object? timestamp = null,Object? entityType = freezed,Object? entityId = freezed,Object? action = freezed,Object? details = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? timestamp = null,Object? userId = freezed,Object? username = freezed,Object? entityType = freezed,Object? entityId = freezed,Object? action = freezed,Object? details = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as int,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
+as DateTime,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as int?,username: freezed == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
-as String?,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
-as DateTime,entityType: freezed == entityType ? _self.entityType : entityType // ignore: cast_nullable_to_non_nullable
+as String?,entityType: freezed == entityType ? _self.entityType : entityType // ignore: cast_nullable_to_non_nullable
 as String?,entityId: freezed == entityId ? _self.entityId : entityId // ignore: cast_nullable_to_non_nullable
 as int?,action: freezed == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
 as String?,details: freezed == details ? _self.details : details // ignore: cast_nullable_to_non_nullable
@@ -160,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int? userId,  String? username,  DateTime timestamp,  String? entityType,  int? entityId,  String? action,  String? details)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  DateTime timestamp,  int? userId,  String? username,  String? entityType,  int? entityId,  String? action,  String? details)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuditEntry() when $default != null:
-return $default(_that.id,_that.userId,_that.username,_that.timestamp,_that.entityType,_that.entityId,_that.action,_that.details);case _:
+return $default(_that.id,_that.timestamp,_that.userId,_that.username,_that.entityType,_that.entityId,_that.action,_that.details);case _:
   return orElse();
 
 }
@@ -181,10 +181,10 @@ return $default(_that.id,_that.userId,_that.username,_that.timestamp,_that.entit
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int? userId,  String? username,  DateTime timestamp,  String? entityType,  int? entityId,  String? action,  String? details)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  DateTime timestamp,  int? userId,  String? username,  String? entityType,  int? entityId,  String? action,  String? details)  $default,) {final _that = this;
 switch (_that) {
 case _AuditEntry():
-return $default(_that.id,_that.userId,_that.username,_that.timestamp,_that.entityType,_that.entityId,_that.action,_that.details);case _:
+return $default(_that.id,_that.timestamp,_that.userId,_that.username,_that.entityType,_that.entityId,_that.action,_that.details);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +201,10 @@ return $default(_that.id,_that.userId,_that.username,_that.timestamp,_that.entit
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int? userId,  String? username,  DateTime timestamp,  String? entityType,  int? entityId,  String? action,  String? details)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  DateTime timestamp,  int? userId,  String? username,  String? entityType,  int? entityId,  String? action,  String? details)?  $default,) {final _that = this;
 switch (_that) {
 case _AuditEntry() when $default != null:
-return $default(_that.id,_that.userId,_that.username,_that.timestamp,_that.entityType,_that.entityId,_that.action,_that.details);case _:
+return $default(_that.id,_that.timestamp,_that.userId,_that.username,_that.entityType,_that.entityId,_that.action,_that.details);case _:
   return null;
 
 }
@@ -216,13 +216,13 @@ return $default(_that.id,_that.userId,_that.username,_that.timestamp,_that.entit
 @JsonSerializable()
 
 class _AuditEntry implements AuditEntry {
-  const _AuditEntry({required this.id, this.userId, this.username, required this.timestamp, this.entityType, this.entityId, this.action, this.details});
+  const _AuditEntry({required this.id, required this.timestamp, this.userId, this.username, this.entityType, this.entityId, this.action, this.details});
   factory _AuditEntry.fromJson(Map<String, dynamic> json) => _$AuditEntryFromJson(json);
 
 @override final  int id;
+@override final  DateTime timestamp;
 @override final  int? userId;
 @override final  String? username;
-@override final  DateTime timestamp;
 @override final  String? entityType;
 @override final  int? entityId;
 @override final  String? action;
@@ -241,16 +241,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuditEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.username, username) || other.username == username)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.entityType, entityType) || other.entityType == entityType)&&(identical(other.entityId, entityId) || other.entityId == entityId)&&(identical(other.action, action) || other.action == action)&&(identical(other.details, details) || other.details == details));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuditEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.username, username) || other.username == username)&&(identical(other.entityType, entityType) || other.entityType == entityType)&&(identical(other.entityId, entityId) || other.entityId == entityId)&&(identical(other.action, action) || other.action == action)&&(identical(other.details, details) || other.details == details));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,userId,username,timestamp,entityType,entityId,action,details);
+int get hashCode => Object.hash(runtimeType,id,timestamp,userId,username,entityType,entityId,action,details);
 
 @override
 String toString() {
-  return 'AuditEntry(id: $id, userId: $userId, username: $username, timestamp: $timestamp, entityType: $entityType, entityId: $entityId, action: $action, details: $details)';
+  return 'AuditEntry(id: $id, timestamp: $timestamp, userId: $userId, username: $username, entityType: $entityType, entityId: $entityId, action: $action, details: $details)';
 }
 
 
@@ -261,7 +261,7 @@ abstract mixin class _$AuditEntryCopyWith<$Res> implements $AuditEntryCopyWith<$
   factory _$AuditEntryCopyWith(_AuditEntry value, $Res Function(_AuditEntry) _then) = __$AuditEntryCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int? userId, String? username, DateTime timestamp, String? entityType, int? entityId, String? action, String? details
+ int id, DateTime timestamp, int? userId, String? username, String? entityType, int? entityId, String? action, String? details
 });
 
 
@@ -278,13 +278,13 @@ class __$AuditEntryCopyWithImpl<$Res>
 
 /// Create a copy of AuditEntry
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = freezed,Object? username = freezed,Object? timestamp = null,Object? entityType = freezed,Object? entityId = freezed,Object? action = freezed,Object? details = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? timestamp = null,Object? userId = freezed,Object? username = freezed,Object? entityType = freezed,Object? entityId = freezed,Object? action = freezed,Object? details = freezed,}) {
   return _then(_AuditEntry(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as int,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
+as DateTime,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as int?,username: freezed == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
-as String?,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
-as DateTime,entityType: freezed == entityType ? _self.entityType : entityType // ignore: cast_nullable_to_non_nullable
+as String?,entityType: freezed == entityType ? _self.entityType : entityType // ignore: cast_nullable_to_non_nullable
 as String?,entityId: freezed == entityId ? _self.entityId : entityId // ignore: cast_nullable_to_non_nullable
 as int?,action: freezed == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
 as String?,details: freezed == details ? _self.details : details // ignore: cast_nullable_to_non_nullable

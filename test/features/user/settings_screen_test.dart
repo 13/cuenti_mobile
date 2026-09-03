@@ -327,4 +327,14 @@ void main() {
       verifyNever(() => userRepo.updatePreferences(any()));
     });
   });
+
+  testWidgets('the profile labels are translated, not left in English', (
+    tester,
+  ) async {
+    await pumpSettings(tester, locale: const Locale('de'));
+
+    expect(find.text('Benutzername'), findsOneWidget);
+    expect(find.text('E-Mail'), findsOneWidget);
+    expect(find.text('Username'), findsNothing);
+  });
 }

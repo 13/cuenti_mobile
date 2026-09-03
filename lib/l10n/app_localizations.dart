@@ -2113,6 +2113,312 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Offline — figures from {when}'**
   String offlineBannerSince(String when);
+
+  /// No description provided for @accountsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search accounts...'**
+  String get accountsSearchHint;
+
+  /// No description provided for @accountsNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts match'**
+  String get accountsNoMatch;
+
+  /// No description provided for @payeesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search payees...'**
+  String get payeesSearchHint;
+
+  /// No description provided for @payeesNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No payees match'**
+  String get payeesNoMatch;
+
+  /// No description provided for @categoriesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search categories...'**
+  String get categoriesSearchHint;
+
+  /// No description provided for @categoriesNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories match'**
+  String get categoriesNoMatch;
+
+  /// No description provided for @tagsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search tags...'**
+  String get tagsSearchHint;
+
+  /// No description provided for @tagsNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags match'**
+  String get tagsNoMatch;
+
+  /// No description provided for @currenciesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search currencies...'**
+  String get currenciesSearchHint;
+
+  /// No description provided for @currenciesNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No currencies match'**
+  String get currenciesNoMatch;
+
+  /// No description provided for @assetsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search assets...'**
+  String get assetsSearchHint;
+
+  /// No description provided for @assetsNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No assets match'**
+  String get assetsNoMatch;
+
+  /// No description provided for @commonSortCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom order'**
+  String get commonSortCustom;
+
+  /// No description provided for @commonCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get commonCode;
+
+  /// No description provided for @commonSymbol.
+  ///
+  /// In en, this message translates to:
+  /// **'Symbol'**
+  String get commonSymbol;
+
+  /// No description provided for @commonPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get commonPrice;
+
+  /// No description provided for @accountTypeBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank'**
+  String get accountTypeBank;
+
+  /// No description provided for @accountTypeCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get accountTypeCash;
+
+  /// No description provided for @accountTypeAsset.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset'**
+  String get accountTypeAsset;
+
+  /// No description provided for @accountTypeCreditCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Card'**
+  String get accountTypeCreditCard;
+
+  /// No description provided for @accountTypeLiability.
+  ///
+  /// In en, this message translates to:
+  /// **'Liability'**
+  String get accountTypeLiability;
+
+  /// No description provided for @accountTypeCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Account'**
+  String get accountTypeCurrent;
+
+  /// No description provided for @accountTypeSavings.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings Account'**
+  String get accountTypeSavings;
+
+  /// No description provided for @assetTypeStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get assetTypeStock;
+
+  /// No description provided for @assetTypeEtf.
+  ///
+  /// In en, this message translates to:
+  /// **'ETF'**
+  String get assetTypeEtf;
+
+  /// No description provided for @assetTypeCrypto.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto'**
+  String get assetTypeCrypto;
+
+  /// No description provided for @paymentMethodCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get paymentMethodCash;
+
+  /// No description provided for @paymentMethodCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card'**
+  String get paymentMethodCard;
+
+  /// No description provided for @paymentMethodBankTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank Transfer'**
+  String get paymentMethodBankTransfer;
+
+  /// No description provided for @paymentMethodCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Cheque'**
+  String get paymentMethodCheck;
+
+  /// No description provided for @sortAscending.
+  ///
+  /// In en, this message translates to:
+  /// **'Ascending'**
+  String get sortAscending;
+
+  /// No description provided for @sortDescending.
+  ///
+  /// In en, this message translates to:
+  /// **'Descending'**
+  String get sortDescending;
+
+  /// No description provided for @recurrenceDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get recurrenceDaily;
+
+  /// No description provided for @recurrenceWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get recurrenceWeekly;
+
+  /// No description provided for @recurrenceBiWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Fortnightly'**
+  String get recurrenceBiWeekly;
+
+  /// No description provided for @recurrenceMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get recurrenceMonthly;
+
+  /// No description provided for @recurrenceMonthlyLastDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly (last day)'**
+  String get recurrenceMonthlyLastDay;
+
+  /// No description provided for @recurrenceYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get recurrenceYearly;
+
+  /// No description provided for @validationMinCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum {count} characters'**
+  String validationMinCharacters(int count);
+
+  /// No description provided for @validationInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email'**
+  String get validationInvalidEmail;
+
+  /// No description provided for @authPasswordsMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get authPasswordsMismatch;
+
+  /// No description provided for @aboutVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get aboutVersion;
+
+  /// No description provided for @aboutBuildNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Build Number'**
+  String get aboutBuildNumber;
+
+  /// No description provided for @aboutBuildDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Build Date'**
+  String get aboutBuildDate;
+
+  /// No description provided for @aboutBuildTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Build Time'**
+  String get aboutBuildTime;
+
+  /// No description provided for @scheduledSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search scheduled...'**
+  String get scheduledSearchHint;
+
+  /// No description provided for @scheduledNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No scheduled transactions match'**
+  String get scheduledNoMatch;
+
+  /// No description provided for @commonNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get commonNext;
+
+  /// No description provided for @budgetsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search budgets...'**
+  String get budgetsSearchHint;
+
+  /// No description provided for @budgetsNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No budgets match'**
+  String get budgetsNoMatch;
+
+  /// No description provided for @budgetsSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent'**
+  String get budgetsSpent;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

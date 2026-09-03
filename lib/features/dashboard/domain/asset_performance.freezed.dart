@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AssetPerformance {
 
- String get assetName; String get assetSymbol;@JsonKey(fromJson: jsonToDouble) double get totalUnits;@JsonKey(fromJson: jsonToDouble) double get totalCost;@JsonKey(fromJson: jsonToDouble) double get currentValue;@JsonKey(fromJson: jsonToDouble) double get currentPrice;@JsonKey(fromJson: jsonToDouble) double get gainLoss;@JsonKey(fromJson: jsonToDouble) double get gainLossPercent;
+@JsonKey(fromJson: jsonToDouble) double get totalUnits;@JsonKey(fromJson: jsonToDouble) double get totalCost;@JsonKey(fromJson: jsonToDouble) double get currentValue;@JsonKey(fromJson: jsonToDouble) double get currentPrice;@JsonKey(fromJson: jsonToDouble) double get gainLoss;@JsonKey(fromJson: jsonToDouble) double get gainLossPercent; String get assetName; String get assetSymbol;
 /// Create a copy of AssetPerformance
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $AssetPerformanceCopyWith<AssetPerformance> get copyWith => _$AssetPerformanceCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssetPerformance&&(identical(other.assetName, assetName) || other.assetName == assetName)&&(identical(other.assetSymbol, assetSymbol) || other.assetSymbol == assetSymbol)&&(identical(other.totalUnits, totalUnits) || other.totalUnits == totalUnits)&&(identical(other.totalCost, totalCost) || other.totalCost == totalCost)&&(identical(other.currentValue, currentValue) || other.currentValue == currentValue)&&(identical(other.currentPrice, currentPrice) || other.currentPrice == currentPrice)&&(identical(other.gainLoss, gainLoss) || other.gainLoss == gainLoss)&&(identical(other.gainLossPercent, gainLossPercent) || other.gainLossPercent == gainLossPercent));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssetPerformance&&(identical(other.totalUnits, totalUnits) || other.totalUnits == totalUnits)&&(identical(other.totalCost, totalCost) || other.totalCost == totalCost)&&(identical(other.currentValue, currentValue) || other.currentValue == currentValue)&&(identical(other.currentPrice, currentPrice) || other.currentPrice == currentPrice)&&(identical(other.gainLoss, gainLoss) || other.gainLoss == gainLoss)&&(identical(other.gainLossPercent, gainLossPercent) || other.gainLossPercent == gainLossPercent)&&(identical(other.assetName, assetName) || other.assetName == assetName)&&(identical(other.assetSymbol, assetSymbol) || other.assetSymbol == assetSymbol));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,assetName,assetSymbol,totalUnits,totalCost,currentValue,currentPrice,gainLoss,gainLossPercent);
+int get hashCode => Object.hash(runtimeType,totalUnits,totalCost,currentValue,currentPrice,gainLoss,gainLossPercent,assetName,assetSymbol);
 
 @override
 String toString() {
-  return 'AssetPerformance(assetName: $assetName, assetSymbol: $assetSymbol, totalUnits: $totalUnits, totalCost: $totalCost, currentValue: $currentValue, currentPrice: $currentPrice, gainLoss: $gainLoss, gainLossPercent: $gainLossPercent)';
+  return 'AssetPerformance(totalUnits: $totalUnits, totalCost: $totalCost, currentValue: $currentValue, currentPrice: $currentPrice, gainLoss: $gainLoss, gainLossPercent: $gainLossPercent, assetName: $assetName, assetSymbol: $assetSymbol)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $AssetPerformanceCopyWith<$Res>  {
   factory $AssetPerformanceCopyWith(AssetPerformance value, $Res Function(AssetPerformance) _then) = _$AssetPerformanceCopyWithImpl;
 @useResult
 $Res call({
- String assetName, String assetSymbol,@JsonKey(fromJson: jsonToDouble) double totalUnits,@JsonKey(fromJson: jsonToDouble) double totalCost,@JsonKey(fromJson: jsonToDouble) double currentValue,@JsonKey(fromJson: jsonToDouble) double currentPrice,@JsonKey(fromJson: jsonToDouble) double gainLoss,@JsonKey(fromJson: jsonToDouble) double gainLossPercent
+@JsonKey(fromJson: jsonToDouble) double totalUnits,@JsonKey(fromJson: jsonToDouble) double totalCost,@JsonKey(fromJson: jsonToDouble) double currentValue,@JsonKey(fromJson: jsonToDouble) double currentPrice,@JsonKey(fromJson: jsonToDouble) double gainLoss,@JsonKey(fromJson: jsonToDouble) double gainLossPercent, String assetName, String assetSymbol
 });
 
 
@@ -65,17 +65,17 @@ class _$AssetPerformanceCopyWithImpl<$Res>
 
 /// Create a copy of AssetPerformance
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? assetName = null,Object? assetSymbol = null,Object? totalUnits = null,Object? totalCost = null,Object? currentValue = null,Object? currentPrice = null,Object? gainLoss = null,Object? gainLossPercent = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? totalUnits = null,Object? totalCost = null,Object? currentValue = null,Object? currentPrice = null,Object? gainLoss = null,Object? gainLossPercent = null,Object? assetName = null,Object? assetSymbol = null,}) {
   return _then(_self.copyWith(
-assetName: null == assetName ? _self.assetName : assetName // ignore: cast_nullable_to_non_nullable
-as String,assetSymbol: null == assetSymbol ? _self.assetSymbol : assetSymbol // ignore: cast_nullable_to_non_nullable
-as String,totalUnits: null == totalUnits ? _self.totalUnits : totalUnits // ignore: cast_nullable_to_non_nullable
+totalUnits: null == totalUnits ? _self.totalUnits : totalUnits // ignore: cast_nullable_to_non_nullable
 as double,totalCost: null == totalCost ? _self.totalCost : totalCost // ignore: cast_nullable_to_non_nullable
 as double,currentValue: null == currentValue ? _self.currentValue : currentValue // ignore: cast_nullable_to_non_nullable
 as double,currentPrice: null == currentPrice ? _self.currentPrice : currentPrice // ignore: cast_nullable_to_non_nullable
 as double,gainLoss: null == gainLoss ? _self.gainLoss : gainLoss // ignore: cast_nullable_to_non_nullable
 as double,gainLossPercent: null == gainLossPercent ? _self.gainLossPercent : gainLossPercent // ignore: cast_nullable_to_non_nullable
-as double,
+as double,assetName: null == assetName ? _self.assetName : assetName // ignore: cast_nullable_to_non_nullable
+as String,assetSymbol: null == assetSymbol ? _self.assetSymbol : assetSymbol // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -160,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String assetName,  String assetSymbol, @JsonKey(fromJson: jsonToDouble)  double totalUnits, @JsonKey(fromJson: jsonToDouble)  double totalCost, @JsonKey(fromJson: jsonToDouble)  double currentValue, @JsonKey(fromJson: jsonToDouble)  double currentPrice, @JsonKey(fromJson: jsonToDouble)  double gainLoss, @JsonKey(fromJson: jsonToDouble)  double gainLossPercent)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: jsonToDouble)  double totalUnits, @JsonKey(fromJson: jsonToDouble)  double totalCost, @JsonKey(fromJson: jsonToDouble)  double currentValue, @JsonKey(fromJson: jsonToDouble)  double currentPrice, @JsonKey(fromJson: jsonToDouble)  double gainLoss, @JsonKey(fromJson: jsonToDouble)  double gainLossPercent,  String assetName,  String assetSymbol)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AssetPerformance() when $default != null:
-return $default(_that.assetName,_that.assetSymbol,_that.totalUnits,_that.totalCost,_that.currentValue,_that.currentPrice,_that.gainLoss,_that.gainLossPercent);case _:
+return $default(_that.totalUnits,_that.totalCost,_that.currentValue,_that.currentPrice,_that.gainLoss,_that.gainLossPercent,_that.assetName,_that.assetSymbol);case _:
   return orElse();
 
 }
@@ -181,10 +181,10 @@ return $default(_that.assetName,_that.assetSymbol,_that.totalUnits,_that.totalCo
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String assetName,  String assetSymbol, @JsonKey(fromJson: jsonToDouble)  double totalUnits, @JsonKey(fromJson: jsonToDouble)  double totalCost, @JsonKey(fromJson: jsonToDouble)  double currentValue, @JsonKey(fromJson: jsonToDouble)  double currentPrice, @JsonKey(fromJson: jsonToDouble)  double gainLoss, @JsonKey(fromJson: jsonToDouble)  double gainLossPercent)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: jsonToDouble)  double totalUnits, @JsonKey(fromJson: jsonToDouble)  double totalCost, @JsonKey(fromJson: jsonToDouble)  double currentValue, @JsonKey(fromJson: jsonToDouble)  double currentPrice, @JsonKey(fromJson: jsonToDouble)  double gainLoss, @JsonKey(fromJson: jsonToDouble)  double gainLossPercent,  String assetName,  String assetSymbol)  $default,) {final _that = this;
 switch (_that) {
 case _AssetPerformance():
-return $default(_that.assetName,_that.assetSymbol,_that.totalUnits,_that.totalCost,_that.currentValue,_that.currentPrice,_that.gainLoss,_that.gainLossPercent);case _:
+return $default(_that.totalUnits,_that.totalCost,_that.currentValue,_that.currentPrice,_that.gainLoss,_that.gainLossPercent,_that.assetName,_that.assetSymbol);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +201,10 @@ return $default(_that.assetName,_that.assetSymbol,_that.totalUnits,_that.totalCo
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String assetName,  String assetSymbol, @JsonKey(fromJson: jsonToDouble)  double totalUnits, @JsonKey(fromJson: jsonToDouble)  double totalCost, @JsonKey(fromJson: jsonToDouble)  double currentValue, @JsonKey(fromJson: jsonToDouble)  double currentPrice, @JsonKey(fromJson: jsonToDouble)  double gainLoss, @JsonKey(fromJson: jsonToDouble)  double gainLossPercent)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: jsonToDouble)  double totalUnits, @JsonKey(fromJson: jsonToDouble)  double totalCost, @JsonKey(fromJson: jsonToDouble)  double currentValue, @JsonKey(fromJson: jsonToDouble)  double currentPrice, @JsonKey(fromJson: jsonToDouble)  double gainLoss, @JsonKey(fromJson: jsonToDouble)  double gainLossPercent,  String assetName,  String assetSymbol)?  $default,) {final _that = this;
 switch (_that) {
 case _AssetPerformance() when $default != null:
-return $default(_that.assetName,_that.assetSymbol,_that.totalUnits,_that.totalCost,_that.currentValue,_that.currentPrice,_that.gainLoss,_that.gainLossPercent);case _:
+return $default(_that.totalUnits,_that.totalCost,_that.currentValue,_that.currentPrice,_that.gainLoss,_that.gainLossPercent,_that.assetName,_that.assetSymbol);case _:
   return null;
 
 }
@@ -216,17 +216,17 @@ return $default(_that.assetName,_that.assetSymbol,_that.totalUnits,_that.totalCo
 @JsonSerializable()
 
 class _AssetPerformance extends AssetPerformance {
-  const _AssetPerformance({this.assetName = '', this.assetSymbol = '', @JsonKey(fromJson: jsonToDouble) required this.totalUnits, @JsonKey(fromJson: jsonToDouble) required this.totalCost, @JsonKey(fromJson: jsonToDouble) required this.currentValue, @JsonKey(fromJson: jsonToDouble) required this.currentPrice, @JsonKey(fromJson: jsonToDouble) required this.gainLoss, @JsonKey(fromJson: jsonToDouble) required this.gainLossPercent}): super._();
+  const _AssetPerformance({@JsonKey(fromJson: jsonToDouble) required this.totalUnits, @JsonKey(fromJson: jsonToDouble) required this.totalCost, @JsonKey(fromJson: jsonToDouble) required this.currentValue, @JsonKey(fromJson: jsonToDouble) required this.currentPrice, @JsonKey(fromJson: jsonToDouble) required this.gainLoss, @JsonKey(fromJson: jsonToDouble) required this.gainLossPercent, this.assetName = '', this.assetSymbol = ''}): super._();
   factory _AssetPerformance.fromJson(Map<String, dynamic> json) => _$AssetPerformanceFromJson(json);
 
-@override@JsonKey() final  String assetName;
-@override@JsonKey() final  String assetSymbol;
 @override@JsonKey(fromJson: jsonToDouble) final  double totalUnits;
 @override@JsonKey(fromJson: jsonToDouble) final  double totalCost;
 @override@JsonKey(fromJson: jsonToDouble) final  double currentValue;
 @override@JsonKey(fromJson: jsonToDouble) final  double currentPrice;
 @override@JsonKey(fromJson: jsonToDouble) final  double gainLoss;
 @override@JsonKey(fromJson: jsonToDouble) final  double gainLossPercent;
+@override@JsonKey() final  String assetName;
+@override@JsonKey() final  String assetSymbol;
 
 /// Create a copy of AssetPerformance
 /// with the given fields replaced by the non-null parameter values.
@@ -241,16 +241,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AssetPerformance&&(identical(other.assetName, assetName) || other.assetName == assetName)&&(identical(other.assetSymbol, assetSymbol) || other.assetSymbol == assetSymbol)&&(identical(other.totalUnits, totalUnits) || other.totalUnits == totalUnits)&&(identical(other.totalCost, totalCost) || other.totalCost == totalCost)&&(identical(other.currentValue, currentValue) || other.currentValue == currentValue)&&(identical(other.currentPrice, currentPrice) || other.currentPrice == currentPrice)&&(identical(other.gainLoss, gainLoss) || other.gainLoss == gainLoss)&&(identical(other.gainLossPercent, gainLossPercent) || other.gainLossPercent == gainLossPercent));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AssetPerformance&&(identical(other.totalUnits, totalUnits) || other.totalUnits == totalUnits)&&(identical(other.totalCost, totalCost) || other.totalCost == totalCost)&&(identical(other.currentValue, currentValue) || other.currentValue == currentValue)&&(identical(other.currentPrice, currentPrice) || other.currentPrice == currentPrice)&&(identical(other.gainLoss, gainLoss) || other.gainLoss == gainLoss)&&(identical(other.gainLossPercent, gainLossPercent) || other.gainLossPercent == gainLossPercent)&&(identical(other.assetName, assetName) || other.assetName == assetName)&&(identical(other.assetSymbol, assetSymbol) || other.assetSymbol == assetSymbol));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,assetName,assetSymbol,totalUnits,totalCost,currentValue,currentPrice,gainLoss,gainLossPercent);
+int get hashCode => Object.hash(runtimeType,totalUnits,totalCost,currentValue,currentPrice,gainLoss,gainLossPercent,assetName,assetSymbol);
 
 @override
 String toString() {
-  return 'AssetPerformance(assetName: $assetName, assetSymbol: $assetSymbol, totalUnits: $totalUnits, totalCost: $totalCost, currentValue: $currentValue, currentPrice: $currentPrice, gainLoss: $gainLoss, gainLossPercent: $gainLossPercent)';
+  return 'AssetPerformance(totalUnits: $totalUnits, totalCost: $totalCost, currentValue: $currentValue, currentPrice: $currentPrice, gainLoss: $gainLoss, gainLossPercent: $gainLossPercent, assetName: $assetName, assetSymbol: $assetSymbol)';
 }
 
 
@@ -261,7 +261,7 @@ abstract mixin class _$AssetPerformanceCopyWith<$Res> implements $AssetPerforman
   factory _$AssetPerformanceCopyWith(_AssetPerformance value, $Res Function(_AssetPerformance) _then) = __$AssetPerformanceCopyWithImpl;
 @override @useResult
 $Res call({
- String assetName, String assetSymbol,@JsonKey(fromJson: jsonToDouble) double totalUnits,@JsonKey(fromJson: jsonToDouble) double totalCost,@JsonKey(fromJson: jsonToDouble) double currentValue,@JsonKey(fromJson: jsonToDouble) double currentPrice,@JsonKey(fromJson: jsonToDouble) double gainLoss,@JsonKey(fromJson: jsonToDouble) double gainLossPercent
+@JsonKey(fromJson: jsonToDouble) double totalUnits,@JsonKey(fromJson: jsonToDouble) double totalCost,@JsonKey(fromJson: jsonToDouble) double currentValue,@JsonKey(fromJson: jsonToDouble) double currentPrice,@JsonKey(fromJson: jsonToDouble) double gainLoss,@JsonKey(fromJson: jsonToDouble) double gainLossPercent, String assetName, String assetSymbol
 });
 
 
@@ -278,17 +278,17 @@ class __$AssetPerformanceCopyWithImpl<$Res>
 
 /// Create a copy of AssetPerformance
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? assetName = null,Object? assetSymbol = null,Object? totalUnits = null,Object? totalCost = null,Object? currentValue = null,Object? currentPrice = null,Object? gainLoss = null,Object? gainLossPercent = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? totalUnits = null,Object? totalCost = null,Object? currentValue = null,Object? currentPrice = null,Object? gainLoss = null,Object? gainLossPercent = null,Object? assetName = null,Object? assetSymbol = null,}) {
   return _then(_AssetPerformance(
-assetName: null == assetName ? _self.assetName : assetName // ignore: cast_nullable_to_non_nullable
-as String,assetSymbol: null == assetSymbol ? _self.assetSymbol : assetSymbol // ignore: cast_nullable_to_non_nullable
-as String,totalUnits: null == totalUnits ? _self.totalUnits : totalUnits // ignore: cast_nullable_to_non_nullable
+totalUnits: null == totalUnits ? _self.totalUnits : totalUnits // ignore: cast_nullable_to_non_nullable
 as double,totalCost: null == totalCost ? _self.totalCost : totalCost // ignore: cast_nullable_to_non_nullable
 as double,currentValue: null == currentValue ? _self.currentValue : currentValue // ignore: cast_nullable_to_non_nullable
 as double,currentPrice: null == currentPrice ? _self.currentPrice : currentPrice // ignore: cast_nullable_to_non_nullable
 as double,gainLoss: null == gainLoss ? _self.gainLoss : gainLoss // ignore: cast_nullable_to_non_nullable
 as double,gainLossPercent: null == gainLossPercent ? _self.gainLossPercent : gainLossPercent // ignore: cast_nullable_to_non_nullable
-as double,
+as double,assetName: null == assetName ? _self.assetName : assetName // ignore: cast_nullable_to_non_nullable
+as String,assetSymbol: null == assetSymbol ? _self.assetSymbol : assetSymbol // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

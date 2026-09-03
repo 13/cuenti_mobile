@@ -12,10 +12,18 @@ import 'package:cuentimobile/utils/number_format.dart';
 ///
 /// A null [currency] -- unknown code, or the list not loaded yet -- falls
 /// back to [formatNumber], which is exactly what every amount did before.
-String formatMoney(double value, Currency? currency) {
-  if (currency == null) return formatNumber(value);
+///
+/// [fractionDigits] overrides the currency's own count, for the figures that
+/// are not a sum of money in that currency: a fuel price per litre is quoted
+/// to a tenth of a cent, and rounding it to the currency's two digits would
+/// turn 1.859 into 1.86.
+String formatMoney(double value, Currency? currency, {int? fractionDigits}) {
+  if (currency == null) {
+    return formatNumber(value, decimals: fractionDigits ?? 2);
+  }
 
-  final digits = currency.fracDigits < 0 ? 0 : currency.fracDigits;
+  final requested = fractionDigits ?? currency.fracDigits;
+  final digits = requested < 0 ? 0 : requested;
   final fixed = value.abs().toStringAsFixed(digits);
   final parts = fixed.split('.');
   final grouped = _group(parts.first, currency.groupingChar);

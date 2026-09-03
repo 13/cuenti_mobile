@@ -26,6 +26,7 @@ Future<void> showEntityEditSheet({
   required Future<void> Function() onSave,
   required String successMessage,
   String? saveLabel,
+  bool Function()? canSave,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -36,6 +37,7 @@ Future<void> showEntityEditSheet({
       onSave: onSave,
       successMessage: successMessage,
       saveLabel: saveLabel,
+      canSave: canSave,
     ),
   );
 }
@@ -47,6 +49,7 @@ class _EntityEditSheet extends StatefulWidget {
     required this.onSave,
     required this.successMessage,
     this.saveLabel,
+    this.canSave,
   });
 
   final String title;
@@ -55,6 +58,11 @@ class _EntityEditSheet extends StatefulWidget {
   final Future<void> Function() onSave;
   final String successMessage;
   final String? saveLabel;
+
+  /// Asked on every rebuild whether the form is complete enough to send.
+  /// Null means always. A field that gates it has to call its `rebuild`, the
+  /// same way one that owns state does.
+  final bool Function()? canSave;
 
   @override
   State<_EntityEditSheet> createState() => _EntityEditSheetState();
@@ -122,7 +130,9 @@ class _EntityEditSheetState extends State<_EntityEditSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton(
-                    onPressed: _saving ? null : _save,
+                    onPressed: _saving || !(widget.canSave?.call() ?? true)
+                        ? null
+                        : _save,
                     child: _saving
                         ? const SizedBox(
                             height: 20,
