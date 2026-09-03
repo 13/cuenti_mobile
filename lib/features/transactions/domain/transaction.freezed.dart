@@ -16,7 +16,11 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Transaction {
 
-@JsonKey(fromJson: jsonToDouble) double get amount; DateTime get transactionDate; int? get id; String get type; int? get fromAccountId; String? get fromAccountName; int? get toAccountId; String? get toAccountName; String? get status; String? get payee; int? get categoryId; String? get categoryName; String? get memo; String? get tags; String? get number; String? get paymentMethod; int? get assetId; String? get assetName;@JsonKey(fromJson: jsonToDoubleN) double? get units; int get sortOrder; List<TransactionSplit> get splits;
+@JsonKey(fromJson: jsonToDouble) double get amount; DateTime get transactionDate; int? get id; String get type; int? get fromAccountId; String? get fromAccountName; int? get toAccountId; String? get toAccountName;/// Server-owned and read-only: every captured response has COMPLETED,
+/// `save` strips it alongside the other derived fields, and nothing
+/// shows it. Kept so a future value -- a pending or cleared state --
+/// arrives parsed rather than dropped on the floor.
+ String? get status; String? get payee; int? get categoryId; String? get categoryName; String? get memo; String? get tags; String? get number; String? get paymentMethod; int? get assetId; String? get assetName;@JsonKey(fromJson: jsonToDoubleN) double? get units; int get sortOrder; List<TransactionSplit> get splits;
 /// Create a copy of Transaction
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -246,6 +250,10 @@ class _Transaction extends Transaction {
 @override final  String? fromAccountName;
 @override final  int? toAccountId;
 @override final  String? toAccountName;
+/// Server-owned and read-only: every captured response has COMPLETED,
+/// `save` strips it alongside the other derived fields, and nothing
+/// shows it. Kept so a future value -- a pending or cleared state --
+/// arrives parsed rather than dropped on the floor.
 @override final  String? status;
 @override final  String? payee;
 @override final  int? categoryId;

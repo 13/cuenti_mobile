@@ -28,12 +28,24 @@ String assetTypeLabel(L l, String value) => switch (value) {
   _ => value,
 };
 
+/// Covers every entry of `kPaymentMethods`, which is the backend's own
+/// vocabulary. It was written against a five-value list that turned out to
+/// be a stale copy -- two of whose values, CARD and CHECK, the server has
+/// never sent -- so three of the twelve real methods were labelled and the
+/// rest showed as constants.
 String paymentMethodLabel(L l, String value) => switch (value) {
-  'CASH' => l.paymentMethodCash,
-  'CARD' => l.paymentMethodCard,
-  'BANK_TRANSFER' => l.paymentMethodBankTransfer,
-  'CHECK' => l.paymentMethodCheck,
   'NONE' => l.commonNone,
+  'CASH' => l.paymentMethodCash,
+  'DEBIT_CARD' => l.paymentMethodDebitCard,
+  'BANK_TRANSFER' => l.paymentMethodBankTransfer,
+  'STANDING_ORDER' => l.paymentMethodStandingOrder,
+  'ELECTRONIC_PAYMENT' => l.paymentMethodElectronic,
+  'FI_FEE' => l.paymentMethodBankFee,
+  'CARD_TRANSACTION' => l.paymentMethodCardTransaction,
+  'TRADE' => l.paymentMethodTrade,
+  'TRANSFER' => l.commonTransfer,
+  'REWARD' => l.paymentMethodReward,
+  'INTEREST' => l.paymentMethodInterest,
   _ => value,
 };
 

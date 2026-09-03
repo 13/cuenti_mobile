@@ -1,4 +1,5 @@
 import 'package:cuentimobile/core/enum_labels.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/l10n/app_localizations_de.dart';
 import 'package:cuentimobile/l10n/app_localizations_en.dart';
@@ -39,6 +40,27 @@ void main() {
 
     test('NONE reads as the same "None" the rest of the app uses', () {
       expect(paymentMethodLabel(en, 'NONE'), en.commonNone);
+    });
+
+    test('names TRADE, which this backend really sends -- four of the fifty '
+        'transactions in test/fixtures use it', () {
+      expect(paymentMethodLabel(en, 'TRADE'), 'Trade');
+      expect(paymentMethodLabel(de, 'TRADE'), 'Wertpapiergeschäft');
+    });
+
+    test('every method the app offers reads as words, not as the constant '
+        'underneath it', () {
+      // The label function was written against a five-value list that has
+      // since turned out to be the wrong one; this holds it to the list the
+      // app actually offers, whatever that grows into.
+      for (final method in kPaymentMethods) {
+        expect(
+          paymentMethodLabel(en, method),
+          isNot(method),
+          reason: '$method has no label',
+        );
+        expect(paymentMethodLabel(de, method), isNot(method));
+      }
     });
 
     test('hands back a method it does not know', () {

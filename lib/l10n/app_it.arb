@@ -178,7 +178,6 @@
   "dashboardAssetUnits": "{units} unità · {symbol}",
   "scheduledNextOn": "{pattern} · Prossima: {date}",
   "currenciesFormatSummary": "Simbolo {symbol} · {digits} decimali · {decimal} {grouping}",
-  "fuelLastReading": "ultimo: {value}",
   "a11yChartIncomeExpense": "Grafico: entrate e uscite",
   "a11yChartCashFlow": "Grafico: andamento del saldo",
   "a11yChartMonthlyCashFlow": "Grafico: andamento mensile",
@@ -363,9 +362,7 @@
   "assetTypeEtf": "ETF",
   "assetTypeCrypto": "Cripto",
   "paymentMethodCash": "Contanti",
-  "paymentMethodCard": "Carta",
   "paymentMethodBankTransfer": "Bonifico",
-  "paymentMethodCheck": "Assegno",
   "sortAscending": "Crescente",
   "sortDescending": "Decrescente",
   "recurrenceDaily": "Giornaliero",
@@ -387,5 +384,13 @@
   "budgetsSearchHint": "Cerca budget...",
   "budgetsNoMatch": "Nessun budget corrisponde",
   "budgetsSpent": "Speso",
-  "scheduledOverdue": "{count, plural, =1{1 in ritardo} other{{count} in ritardo}}"
+  "scheduledOverdue": "{count, plural, =1{1 in ritardo} other{{count} in ritardo}}",
+  "paymentMethodDebitCard": "Carta di debito",
+  "paymentMethodStandingOrder": "Ordine permanente",
+  "paymentMethodElectronic": "Pagamento elettronico",
+  "paymentMethodBankFee": "Spesa bancaria",
+  "paymentMethodCardTransaction": "Pagamento con carta",
+  "paymentMethodTrade": "Compravendita",
+  "paymentMethodReward": "Premio",
+  "paymentMethodInterest": "Interessi"
 }

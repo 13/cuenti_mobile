@@ -103,23 +103,11 @@
   "serverInsecureTitle": "Unencrypted connection",
   "@serverInsecureTitle": {},
   "serverInsecureBody": "{host} will be reached over http, so your password, your session and everything this app loads travel unencrypted. Anyone on the same network can read them. Use https unless you trust every device on this network.",
-  "@serverInsecureBody": {
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
+  "@serverInsecureBody": {"placeholders": {"host": {"type": "String"}}},
   "serverInsecureContinue": "Use http anyway",
   "@serverInsecureContinue": {},
   "serverUntrustedBody": "{host} presented a certificate no certificate authority vouches for. That is normal for a self-hosted Cuenti server, but it is also what an intercepted connection looks like. Trust it only if this fingerprint matches your server.",
-  "@serverUntrustedBody": {
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
+  "@serverUntrustedBody": {"placeholders": {"host": {"type": "String"}}},
   "serverChange": "Change Server",
   "@serverChange": {},
   "accountsEmpty": "No accounts yet",
@@ -207,13 +195,7 @@
   "categorySearchEmpty": "No matching categories",
   "@categorySearchEmpty": {},
   "categorySearchHint": "Search {what}",
-  "@categorySearchHint": {
-    "placeholders": {
-      "what": {
-        "type": "String"
-      }
-    }
-  },
+  "@categorySearchHint": {"placeholders": {"what": {"type": "String"}}},
   "txEmpty": "No transactions yet",
   "@txEmpty": {},
   "txNoMatch": "No transactions match",
@@ -243,16 +225,7 @@
   "txSplitNeedsCategory": "Each split needs a category",
   "@txSplitNeedsCategory": {},
   "txSplitSumMismatch": "Splits must sum to the amount: {sum} of {total}",
-  "@txSplitSumMismatch": {
-    "placeholders": {
-      "sum": {
-        "type": "String"
-      },
-      "total": {
-        "type": "String"
-      }
-    }
-  },
+  "@txSplitSumMismatch": {"placeholders": {"sum": {"type": "String"}, "total": {"type": "String"}}},
   "txRequired": "Required",
   "@txRequired": {},
   "txInvalidNumber": "Invalid number",
@@ -264,50 +237,17 @@
   "fuelFullTank": "Full tank",
   "@fuelFullTank": {},
   "fuelLastReading": "last: {value}",
-  "@fuelLastReading": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
+  "@fuelLastReading": {"placeholders": {"value": {"type": "String"}}},
   "fuelImplausibleLiters": "Implausible liters value",
   "@fuelImplausibleLiters": {},
   "fuelNotIncreasing": "Odometer is not higher than the last reading ({last})",
-  "@fuelNotIncreasing": {
-    "placeholders": {
-      "last": {
-        "type": "String"
-      }
-    }
-  },
+  "@fuelNotIncreasing": {"placeholders": {"last": {"type": "String"}}},
   "fuelLargeJump": "Very large jump since the last reading ({distance} km) — typo?",
-  "@fuelLargeJump": {
-    "placeholders": {
-      "distance": {
-        "type": "String"
-      }
-    }
-  },
+  "@fuelLargeJump": {"placeholders": {"distance": {"type": "String"}}},
   "fuelConsumption": "{distance} km since last, ~{consumption} L/100km",
-  "@fuelConsumption": {
-    "placeholders": {
-      "distance": {
-        "type": "String"
-      },
-      "consumption": {
-        "type": "String"
-      }
-    }
-  },
+  "@fuelConsumption": {"placeholders": {"distance": {"type": "String"}, "consumption": {"type": "String"}}},
   "fuelDistanceOnly": "{distance} km since last fill-up",
-  "@fuelDistanceOnly": {
-    "placeholders": {
-      "distance": {
-        "type": "String"
-      }
-    }
-  },
+  "@fuelDistanceOnly": {"placeholders": {"distance": {"type": "String"}}},
   "vehiclesChooseCategory": "Choose category",
   "@vehiclesChooseCategory": {},
   "vehiclesFuelCategory": "Fuel category",
@@ -411,52 +351,11 @@
   "scheduledLate": "(LATE!)",
   "@scheduledLate": {},
   "dashboardAssetUnits": "{units} units · {symbol}",
-  "@dashboardAssetUnits": {
-    "placeholders": {
-      "units": {
-        "type": "String"
-      },
-      "symbol": {
-        "type": "String"
-      }
-    }
-  },
+  "@dashboardAssetUnits": {"placeholders": {"units": {"type": "String"}, "symbol": {"type": "String"}}},
   "scheduledNextOn": "{pattern} · Next: {date}",
-  "@scheduledNextOn": {
-    "placeholders": {
-      "pattern": {
-        "type": "String"
-      },
-      "date": {
-        "type": "String"
-      }
-    }
-  },
+  "@scheduledNextOn": {"placeholders": {"pattern": {"type": "String"}, "date": {"type": "String"}}},
   "currenciesFormatSummary": "Symbol {symbol} · {digits} decimals · {decimal} {grouping}",
-  "@currenciesFormatSummary": {
-    "placeholders": {
-      "symbol": {
-        "type": "String"
-      },
-      "digits": {
-        "type": "String"
-      },
-      "decimal": {
-        "type": "String"
-      },
-      "grouping": {
-        "type": "String"
-      }
-    }
-  },
-  "fuelLastReading": "last: {value}",
-  "@fuelLastReading": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
+  "@currenciesFormatSummary": {"placeholders": {"symbol": {"type": "String"}, "digits": {"type": "String"}, "decimal": {"type": "String"}, "grouping": {"type": "String"}}},
   "a11yChartIncomeExpense": "Income versus expense chart",
   "@a11yChartIncomeExpense": {},
   "a11yChartCashFlow": "Net cash flow chart",
@@ -486,13 +385,7 @@
   "statsAllCategories": "All categories",
   "@statsAllCategories": {},
   "statsDirectAmount": "{name} (direct)",
-  "@statsDirectAmount": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@statsDirectAmount": {"placeholders": {"name": {"type": "String"}}},
   "updateAvailable": "Update available",
   "@updateAvailable": {},
   "updateUpToDate": "You're up to date",
@@ -544,13 +437,7 @@
   "settingsPasswordChanged": "Password changed",
   "@settingsPasswordChanged": {},
   "settingsConnectedTo": "Connected to: {url}",
-  "@settingsConnectedTo": {
-    "placeholders": {
-      "url": {
-        "type": "String"
-      }
-    }
-  },
+  "@settingsConnectedTo": {"placeholders": {"url": {"type": "String"}}},
   "settingsExportData": "Export data",
   "@settingsExportData": {},
   "settingsImportData": "Import data",
@@ -564,21 +451,9 @@
   "settingsImportComplete": "Import complete",
   "@settingsImportComplete": {},
   "settingsExportFailed": "Export failed: {error}",
-  "@settingsExportFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
+  "@settingsExportFailed": {"placeholders": {"error": {"type": "String"}}},
   "settingsImportFailed": "Import failed: {error}",
-  "@settingsImportFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
+  "@settingsImportFailed": {"placeholders": {"error": {"type": "String"}}},
   "settingsAdministration": "Administration",
   "@settingsAdministration": {},
   "settingsAdminPanel": "Admin Panel",
@@ -616,33 +491,15 @@
   "updateDownloadFailed": "Download failed",
   "@updateDownloadFailed": {},
   "updateReady": "{tag} is ready to install.",
-  "@updateReady": {
-    "placeholders": {
-      "tag": {
-        "type": "String"
-      }
-    }
-  },
+  "@updateReady": {"placeholders": {"tag": {"type": "String"}}},
   "settingsAutoUpdate": "Automatic update check",
   "@settingsAutoUpdate": {},
   "settingsAutoUpdateSubtitle": "Look for a new release on GitHub when the app opens",
   "@settingsAutoUpdateSubtitle": {},
   "commonError": "Error: {message}",
-  "@commonError": {
-    "placeholders": {
-      "message": {
-        "type": "String"
-      }
-    }
-  },
+  "@commonError": {"placeholders": {"message": {"type": "String"}}},
   "commonDeleteConfirm": "Delete \"{name}\"?",
-  "@commonDeleteConfirm": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@commonDeleteConfirm": {"placeholders": {"name": {"type": "String"}}},
   "commonRequired": "Required",
   "@commonRequired": {},
   "commonInvalidNumber": "Invalid number",
@@ -730,74 +587,25 @@
   "authUnlockReason": "Authenticate to unlock Cuenti",
   "@authUnlockReason": {},
   "authServerLine": "Server: {url}",
-  "@authServerLine": {
-    "placeholders": {
-      "url": {
-        "type": "String"
-      }
-    }
-  },
+  "@authServerLine": {"placeholders": {"url": {"type": "String"}}},
   "assetsNoPrice": "No price",
   "@assetsNoPrice": {},
   "assetsPriceRefreshed": "Price refreshed for {symbol}",
-  "@assetsPriceRefreshed": {
-    "placeholders": {
-      "symbol": {
-        "type": "String"
-      }
-    }
-  },
+  "@assetsPriceRefreshed": {"placeholders": {"symbol": {"type": "String"}}},
   "statsTransactionsInPeriod": "{count, plural, =0{No transactions in period} =1{1 transaction in period} other{{count} transactions in period}}",
-  "@statsTransactionsInPeriod": {
-    "placeholders": {
-      "count": {
-        "type": "num",
-        "format": "compact"
-      }
-    }
-  },
+  "@statsTransactionsInPeriod": {"placeholders": {"count": {"type": "num", "format": "compact"}}},
   "vehiclesCustomRange": "Custom range",
   "@vehiclesCustomRange": {},
   "scheduledDeleteBody": "Delete \"{name}\" recurring transaction?",
-  "@scheduledDeleteBody": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "@scheduledDeleteBody": {"placeholders": {"name": {"type": "String"}}},
   "budgetsDeleteBody": "Delete budget for \"{category}\"?",
-  "@budgetsDeleteBody": {
-    "placeholders": {
-      "category": {
-        "type": "String"
-      }
-    }
-  },
+  "@budgetsDeleteBody": {"placeholders": {"category": {"type": "String"}}},
   "settingsUsersCount": "Users ({count})",
-  "@settingsUsersCount": {
-    "placeholders": {
-      "count": {
-        "type": "String"
-      }
-    }
-  },
+  "@settingsUsersCount": {"placeholders": {"count": {"type": "String"}}},
   "settingsDeleteUserTitle": "Delete {username}?",
-  "@settingsDeleteUserTitle": {
-    "placeholders": {
-      "username": {
-        "type": "String"
-      }
-    }
-  },
+  "@settingsDeleteUserTitle": {"placeholders": {"username": {"type": "String"}}},
   "aboutCopyright": "© {year} Cuenti Team",
-  "@aboutCopyright": {
-    "placeholders": {
-      "year": {
-        "type": "String"
-      }
-    }
-  },
+  "@aboutCopyright": {"placeholders": {"year": {"type": "String"}}},
   "txFuelHint": "No km/liters entered — this entry will not appear in the vehicle report",
   "@txFuelHint": {},
   "errorNetwork": "Cannot connect to server",
@@ -811,13 +619,7 @@
   "errorInvalidRequest": "Invalid request",
   "@errorInvalidRequest": {},
   "errorServer": "Server error ({status})",
-  "@errorServer": {
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
-  },
+  "@errorServer": {"placeholders": {"status": {"type": "String"}}},
   "errorCertificate": "The server certificate is not trusted. Re-run Server Setup to check its fingerprint and trust it.",
   "@errorCertificate": {},
   "errorUnknown": "An error occurred",
@@ -867,13 +669,7 @@
   "settingsProfileSaved": "Profile saved",
   "@settingsProfileSaved": {},
   "offlineBannerSince": "Offline — figures from {when}",
-  "@offlineBannerSince": {
-    "placeholders": {
-      "when": {
-        "type": "String"
-      }
-    }
-  },
+  "@offlineBannerSince": {"placeholders": {"when": {"type": "String"}}},
   "accountsSearchHint": "Search accounts...",
   "@accountsSearchHint": {},
   "accountsNoMatch": "No accounts match",
@@ -928,12 +724,8 @@
   "@assetTypeCrypto": {},
   "paymentMethodCash": "Cash",
   "@paymentMethodCash": {},
-  "paymentMethodCard": "Card",
-  "@paymentMethodCard": {},
   "paymentMethodBankTransfer": "Bank Transfer",
   "@paymentMethodBankTransfer": {},
-  "paymentMethodCheck": "Cheque",
-  "@paymentMethodCheck": {},
   "sortAscending": "Ascending",
   "@sortAscending": {},
   "sortDescending": "Descending",
@@ -977,5 +769,21 @@
   "budgetsSpent": "Spent",
   "@budgetsSpent": {},
   "scheduledOverdue": "{count, plural, =1{1 overdue} other{{count} overdue}}",
-  "@scheduledOverdue": {"placeholders": {"count": {"type": "num"}}}
+  "@scheduledOverdue": {"placeholders": {"count": {"type": "num"}}},
+  "paymentMethodDebitCard": "Debit Card",
+  "@paymentMethodDebitCard": {},
+  "paymentMethodStandingOrder": "Standing Order",
+  "@paymentMethodStandingOrder": {},
+  "paymentMethodElectronic": "Electronic Payment",
+  "@paymentMethodElectronic": {},
+  "paymentMethodBankFee": "Bank Fee",
+  "@paymentMethodBankFee": {},
+  "paymentMethodCardTransaction": "Card Transaction",
+  "@paymentMethodCardTransaction": {},
+  "paymentMethodTrade": "Trade",
+  "@paymentMethodTrade": {},
+  "paymentMethodReward": "Reward",
+  "@paymentMethodReward": {},
+  "paymentMethodInterest": "Interest",
+  "@paymentMethodInterest": {}
 }

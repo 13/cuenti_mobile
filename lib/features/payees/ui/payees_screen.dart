@@ -15,12 +15,10 @@ import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/payees/domain/payee.dart';
 import 'package:cuentimobile/features/payees/ui/payees_controller.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-// Constants for payment methods
-const kPaymentMethods = ['CASH', 'CARD', 'BANK_TRANSFER', 'CHECK', 'NONE'];
 
 class PayeesScreen extends ConsumerStatefulWidget {
   const PayeesScreen({super.key});

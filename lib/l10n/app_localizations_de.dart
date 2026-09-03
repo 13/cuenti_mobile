@@ -1183,13 +1183,7 @@ class LDe extends L {
   String get paymentMethodCash => 'Bargeld';
 
   @override
-  String get paymentMethodCard => 'Karte';
-
-  @override
   String get paymentMethodBankTransfer => 'Überweisung';
-
-  @override
-  String get paymentMethodCheck => 'Scheck';
 
   @override
   String get sortAscending => 'Aufsteigend';
@@ -1266,4 +1260,28 @@ class LDe extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get paymentMethodDebitCard => 'Debitkarte';
+
+  @override
+  String get paymentMethodStandingOrder => 'Dauerauftrag';
+
+  @override
+  String get paymentMethodElectronic => 'Elektronische Zahlung';
+
+  @override
+  String get paymentMethodBankFee => 'Bankgebühr';
+
+  @override
+  String get paymentMethodCardTransaction => 'Kartenzahlung';
+
+  @override
+  String get paymentMethodTrade => 'Wertpapiergeschäft';
+
+  @override
+  String get paymentMethodReward => 'Bonus';
+
+  @override
+  String get paymentMethodInterest => 'Zinsen';
 }

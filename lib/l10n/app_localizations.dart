@@ -2276,23 +2276,11 @@ abstract class L {
   /// **'Cash'**
   String get paymentMethodCash;
 
-  /// No description provided for @paymentMethodCard.
-  ///
-  /// In en, this message translates to:
-  /// **'Card'**
-  String get paymentMethodCard;
-
   /// No description provided for @paymentMethodBankTransfer.
   ///
   /// In en, this message translates to:
   /// **'Bank Transfer'**
   String get paymentMethodBankTransfer;
-
-  /// No description provided for @paymentMethodCheck.
-  ///
-  /// In en, this message translates to:
-  /// **'Cheque'**
-  String get paymentMethodCheck;
 
   /// No description provided for @sortAscending.
   ///
@@ -2425,6 +2413,54 @@ abstract class L {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 overdue} other{{count} overdue}}'**
   String scheduledOverdue(num count);
+
+  /// No description provided for @paymentMethodDebitCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit Card'**
+  String get paymentMethodDebitCard;
+
+  /// No description provided for @paymentMethodStandingOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Standing Order'**
+  String get paymentMethodStandingOrder;
+
+  /// No description provided for @paymentMethodElectronic.
+  ///
+  /// In en, this message translates to:
+  /// **'Electronic Payment'**
+  String get paymentMethodElectronic;
+
+  /// No description provided for @paymentMethodBankFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank Fee'**
+  String get paymentMethodBankFee;
+
+  /// No description provided for @paymentMethodCardTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Card Transaction'**
+  String get paymentMethodCardTransaction;
+
+  /// No description provided for @paymentMethodTrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Trade'**
+  String get paymentMethodTrade;
+
+  /// No description provided for @paymentMethodReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward'**
+  String get paymentMethodReward;
+
+  /// No description provided for @paymentMethodInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest'**
+  String get paymentMethodInterest;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -1179,13 +1179,7 @@ class LEn extends L {
   String get paymentMethodCash => 'Cash';
 
   @override
-  String get paymentMethodCard => 'Card';
-
-  @override
   String get paymentMethodBankTransfer => 'Bank Transfer';
-
-  @override
-  String get paymentMethodCheck => 'Cheque';
 
   @override
   String get sortAscending => 'Ascending';
@@ -1262,4 +1256,28 @@ class LEn extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get paymentMethodDebitCard => 'Debit Card';
+
+  @override
+  String get paymentMethodStandingOrder => 'Standing Order';
+
+  @override
+  String get paymentMethodElectronic => 'Electronic Payment';
+
+  @override
+  String get paymentMethodBankFee => 'Bank Fee';
+
+  @override
+  String get paymentMethodCardTransaction => 'Card Transaction';
+
+  @override
+  String get paymentMethodTrade => 'Trade';
+
+  @override
+  String get paymentMethodReward => 'Reward';
+
+  @override
+  String get paymentMethodInterest => 'Interest';
 }

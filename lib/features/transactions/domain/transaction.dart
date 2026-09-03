@@ -33,6 +33,11 @@ abstract class Transaction with _$Transaction {
     String? fromAccountName,
     int? toAccountId,
     String? toAccountName,
+
+    /// Server-owned and read-only: every captured response has COMPLETED,
+    /// `save` strips it alongside the other derived fields, and nothing
+    /// shows it. Kept so a future value -- a pending or cleared state --
+    /// arrives parsed rather than dropped on the floor.
     String? status,
     String? payee,
     int? categoryId,

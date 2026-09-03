@@ -178,7 +178,6 @@
   "dashboardAssetUnits": "{units} Einheiten · {symbol}",
   "scheduledNextOn": "{pattern} · Nächste: {date}",
   "currenciesFormatSummary": "Symbol {symbol} · {digits} Nachkommastellen · {decimal} {grouping}",
-  "fuelLastReading": "zuletzt: {value}",
   "a11yChartIncomeExpense": "Diagramm: Einnahmen und Ausgaben",
   "a11yChartCashFlow": "Diagramm: Saldoentwicklung",
   "a11yChartMonthlyCashFlow": "Diagramm: monatlicher Verlauf",
@@ -363,9 +362,7 @@
   "assetTypeEtf": "ETF",
   "assetTypeCrypto": "Krypto",
   "paymentMethodCash": "Bargeld",
-  "paymentMethodCard": "Karte",
   "paymentMethodBankTransfer": "Überweisung",
-  "paymentMethodCheck": "Scheck",
   "sortAscending": "Aufsteigend",
   "sortDescending": "Absteigend",
   "recurrenceDaily": "Täglich",
@@ -387,5 +384,13 @@
   "budgetsSearchHint": "Budgets durchsuchen...",
   "budgetsNoMatch": "Keine Budgets gefunden",
   "budgetsSpent": "Ausgegeben",
-  "scheduledOverdue": "{count, plural, =1{1 überfällig} other{{count} überfällig}}"
+  "scheduledOverdue": "{count, plural, =1{1 überfällig} other{{count} überfällig}}",
+  "paymentMethodDebitCard": "Debitkarte",
+  "paymentMethodStandingOrder": "Dauerauftrag",
+  "paymentMethodElectronic": "Elektronische Zahlung",
+  "paymentMethodBankFee": "Bankgebühr",
+  "paymentMethodCardTransaction": "Kartenzahlung",
+  "paymentMethodTrade": "Wertpapiergeschäft",
+  "paymentMethodReward": "Bonus",
+  "paymentMethodInterest": "Zinsen"
 }

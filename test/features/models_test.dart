@@ -88,4 +88,11 @@ void main() {
     expect(u.isAdmin, true);
     expect(u.defaultVehicleCategoryId, 7);
   });
+
+  test('the payment methods the app offers include the ones this backend '
+      'actually sends', () {
+    // TRADE appears on four of the fifty transactions captured in
+    // test/fixtures/real_tx_envelope.json.
+    expect(kPaymentMethods, contains('TRADE'));
+  });
 }

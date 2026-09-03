@@ -1182,13 +1182,7 @@ class LIt extends L {
   String get paymentMethodCash => 'Contanti';
 
   @override
-  String get paymentMethodCard => 'Carta';
-
-  @override
   String get paymentMethodBankTransfer => 'Bonifico';
-
-  @override
-  String get paymentMethodCheck => 'Assegno';
 
   @override
   String get sortAscending => 'Crescente';
@@ -1265,4 +1259,28 @@ class LIt extends L {
     );
     return '$_temp0';
   }
+
+  @override
+  String get paymentMethodDebitCard => 'Carta di debito';
+
+  @override
+  String get paymentMethodStandingOrder => 'Ordine permanente';
+
+  @override
+  String get paymentMethodElectronic => 'Pagamento elettronico';
+
+  @override
+  String get paymentMethodBankFee => 'Spesa bancaria';
+
+  @override
+  String get paymentMethodCardTransaction => 'Pagamento con carta';
+
+  @override
+  String get paymentMethodTrade => 'Compravendita';
+
+  @override
+  String get paymentMethodReward => 'Premio';
+
+  @override
+  String get paymentMethodInterest => 'Interessi';
 }
