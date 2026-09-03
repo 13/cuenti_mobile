@@ -1,41 +1,27 @@
-## Geplant tells you when something is overdue
+## The category chart opens again
 
-A scheduled transaction that has come and gone used to sit there quietly
-until you went looking for it. The menu now carries a count of how many are
-past due, and the menu button itself carries a mark — so you can see there
-is something waiting without opening the drawer to check.
+Tapping a category on the Income or Expense tab was supposed to show what
+sits underneath it, and did nothing at all. The figures were right; the
+chart simply had no structure left to open, because the app was matching the
+amounts against the last part of a category's name (`Miete`) while the
+server names them in full (`Wohnen:Miete`). Nothing matched, so every
+category came back as though it had no subcategories.
 
-Two things deliberately do **not** count. A schedule you have switched off
-is not overdue: it was never going to post, and the only way to clear an
-alert about one would be to delete it. And something due **today** is due,
-not late — the app used to mark it overdue from midnight, which meant being
-nagged on the very morning a payment was expected. That marker on the list
-has been corrected to match.
+Tapping now drills in, the breadcrumb walks back out, and the arrow on a
+slice again means what it says. **If you have subcategories, expect the
+chart to look different: what were separate slices now group under their
+parent, and the parent opens.**
 
-## The fuel chart shows its readings
+This has been broken since 2.4.0.
 
-The consumption chart drew a line with nothing on it to say where a
-measurement actually was. Every fill-up now carries a point, and the dates
-along the bottom sit under those points rather than wherever the chart felt
-like putting one — previously a label could repeat the date of a fill-up
-under a stretch of line where there was no fill-up at all.
+## Payment methods you can actually use
 
-With a long history the dates thin out instead of piling on top of each
-other, and the first and last are always shown. Touching a point now tells
-you its date as well as its consumption, which is how you identify a
-reading once the labels have thinned.
+The payment method on a payee was offering five options, two of which —
+"Card" and "Cheque" — are not methods this server has, while the ten it
+does use were missing. That list now matches the one the transaction editor
+has always used.
 
-## The income and expense ring answers questions
-
-It was the one chart in the app you could not ask anything. Tap a segment
-and its name and figure appear in the middle of the ring; tap it again to
-put the ring back. With **privacy mode on the figure stays hidden**, the
-same as the labels on the ring itself.
-
-## Fixes
-
-- **Cuenti would not open for an account with no first name.** The menu
-  panel takes its initial from the first letter of your first name, and on a
-  profile that had none it failed outright, taking the whole screen with it.
-  If this was happening to you, it is fixed — and no longer depends on
-  filling that field in.
+All of them also read as words now. Debit card payments, standing orders,
+bank fees, securities trades and the rest were showing as the raw codes
+underneath them — `DEBIT_CARD`, `STANDING_ORDER`, `FI_FEE`,
+`TRADE` — in every language.
