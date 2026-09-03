@@ -319,13 +319,6 @@ jobs:
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
-        env:
-          # Node's global fetch (undici) does not honor NODE_EXTRA_CA_CERTS
-          # for TLS verification (confirmed locally), so the self-hosted
-          # Gitea instance's CA can't be trusted that way; disable cert
-          # verification only when not running on github.com, where the
-          # real API's cert is always publicly trusted.
-          NODE_TLS_REJECT_UNAUTHORIZED: ${{ github.server_url != 'https://github.com' && '0' || '1' }}
         with:
           body: ${{ steps.preamble.outputs.body }}
           generate_release_notes: ${{ github.server_url == 'https://github.com' }}
