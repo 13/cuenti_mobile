@@ -1,67 +1,41 @@
-## Search and sort, on the screens that hold lists
+## Geplant tells you when something is overdue
 
-Konten, Empfänger, Kategorien, Tags, Währungen and Anlagen each have a
-search box and a row of sort chips. Type to narrow the list; tap a chip to
-sort by it, tap it again to reverse. Searching matches in any order, so
-"spar giro" finds "Sparkasse Girokonto" without typing it in full, and it
-looks beyond the name — an account's bank, a payee's notes, an asset's
-ticker.
+A scheduled transaction that has come and gone used to sit there quietly
+until you went looking for it. The menu now carries a count of how many are
+past due, and the menu button itself carries a mark — so you can see there
+is something waiting without opening the drawer to check.
 
-Geplante Buchungen and Budgets have the same, sorted by when they are next
-due or by what they have spent.
+Two things deliberately do **not** count. A schedule you have switched off
+is not overdue: it was never going to post, and the only way to clear an
+alert about one would be to delete it. And something due **today** is due,
+not late — the app used to mark it overdue from midnight, which meant being
+nagged on the very morning a payment was expected. That marker on the list
+has been corrected to match.
 
-Konten keeps its drag-to-reorder under a "custom order" chip, which is where
-it starts. Dragging is switched off while a search or another sort is
-active, because the position you drop a row into would no longer describe
-the order being saved.
+## The fuel chart shows its readings
 
-What you searched for is remembered while you step into an account and back,
-and forgotten when you sign out.
+The consumption chart drew a line with nothing on it to say where a
+measurement actually was. Every fill-up now carries a point, and the dates
+along the bottom sit under those points rather than wherever the chart felt
+like putting one — previously a label could repeat the date of a fill-up
+under a stretch of line where there was no fill-up at all.
 
-## Screens that used to close on themselves
+With a long history the dates thin out instead of piling on top of each
+other, and the first and last are always shown. Touching a point now tells
+you its date as well as its consumption, which is how you identify a
+reading once the labels have thinned.
 
-Several forms threw away rather than opening, always for the same reason:
-the app was showing a fixed list of options and the server had sent a value
-that was not on it.
+## The income and expense ring answers questions
 
-- Editing a payee that had a default category
-- Adding an account before the currency list had loaded, or on a server with
-  no euro
-- Editing a transaction, payee, account or asset whose payment method or
-  type this version has not heard of
-
-Those all open now. An option Cuenti does not recognise is shown as the
-value the record actually holds, and you can pick something else.
-
-## Amounts and dates that follow your settings
-
-Asset prices and the fuel price per litre were written as plain numbers with
-a currency code after them, ignoring the currency's own separators. They now
-read like every other amount — and, importantly, **they are hidden along
-with everything else when privacy mode is on.** They were not before.
-
-Dates on assets, scheduled transactions and the audit log were always
-written day-first, whatever your language. They now follow it.
-
-## Words instead of the codes underneath them
-
-Payment methods, account and asset types, category types and recurrences
-were shown as the constants the server sends: `BANK_TRANSFER`,
-`CREDIT_CARD`, `EXPENSE`, `MONTHLY`. They are now written out, and
-translated.
+It was the one chart in the app you could not ask anything. Tap a segment
+and its name and figure appear in the middle of the ring; tap it again to
+put the ring back. With **privacy mode on the figure stays hidden**, the
+same as the labels on the ring itself.
 
 ## Fixes
 
-- **"Change server" in Settings did nothing.** It sent you to the dashboard
-  instead of the server screen. It works.
-- **The sign-up form answered in English** whatever language you had chosen
-  — every "required", "invalid email" and "passwords do not match".
-- **A sheet could stick on a spinner.** If saving failed in a way the app had
-  not anticipated, Save and Cancel both stayed disabled and the sheet could
-  not be closed. Failures now say so and let you try again.
-- **A category nested more than two deep was invisible**, and so could not be
-  edited or deleted. Anything the app cannot draw in its usual place is now
-  shown at the top level rather than skipped.
-- **A delete or a reorder could fail with nothing shown at all.** Errors
-  the app expected — offline, refused by the server — were always
-  reported; anything else went by in silence. Now nothing does.
+- **Cuenti would not open for an account with no first name.** The menu
+  panel takes its initial from the first letter of your first name, and on a
+  profile that had none it failed outright, taking the whole screen with it.
+  If this was happening to you, it is fixed — and no longer depends on
+  filling that field in.
