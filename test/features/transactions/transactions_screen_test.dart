@@ -11,6 +11,7 @@ import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/payees/data/payees_repository.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
@@ -65,6 +66,33 @@ class _FixedTransactionsController extends TransactionsController {
   }) async => _state;
 }
 
+/// Records WHICH drain a caller asked for.
+///
+/// The retry row must ask for [drainAgain], not [drain]: a pass already in
+/// flight read the outbox before this retry cleared the rejection and would
+/// skip the very entry the person tapped. Both members are real here rather
+/// than left to [noSuchMethod], so calling either is recorded instead of
+/// throwing.
+class _RecordingSync implements TransactionSync {
+  int drains = 0;
+  int drainAgains = 0;
+
+  @override
+  Future<int> drain() async {
+    drains++;
+    return 0;
+  }
+
+  @override
+  Future<int> drainAgain() async {
+    drainAgains++;
+    return 0;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
   setUpAll(() {
     registerFallbackValue(const TransactionFilter());
@@ -109,10 +137,12 @@ void main() {
   Future<void> pumpScreen(
     WidgetTester tester, {
     Directory? outboxDir,
+    TransactionSync? sync,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          if (sync != null) transactionSyncProvider.overrideWithValue(sync),
           transactionsRepositoryProvider.overrideWithValue(txRepo),
           accountsRepositoryProvider.overrideWithValue(accountsRepo),
           categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
@@ -499,6 +529,50 @@ void main() {
       expect(find.textContaining('Account is closed'), findsOneWidget);
       expect(find.text('Try again'), findsOneWidget);
       expect(find.text('Discard'), findsOneWidget);
+    });
+
+    testWidgets('Try again starts a pass that can see the cleared rejection, '
+        'not the one already running', (tester) async {
+      // The whole reason drainAgain exists. A pass in flight read the
+      // outbox before this tap cleared the rejection, so drain() would
+      // hand the tap that stale pass: the row would go from "Refused" to
+      // "Not sent yet" with no request ever made. Assert the row asks for
+      // the method that starts a fresh read -- and does NOT ask for the
+      // one that would join the stale pass.
+      await queue(tester, rejection: 'Account is closed');
+      final sync = _RecordingSync();
+      await pumpScreen(tester, outboxDir: outboxDir, sync: sync);
+
+      // _retry awaits the outbox's real (disk-backed) replace before it
+      // reaches the sync at all, so the tap and the wait for its effect
+      // both happen inside runAsync -- see the discard test below.
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Try again'));
+        for (
+          var i = 0;
+          i < 200 && sync.drains == 0 && sync.drainAgains == 0;
+          i++
+        ) {
+          await tester.pump(const Duration(milliseconds: 10));
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+        }
+      });
+      await tester.pumpAndSettle();
+
+      expect(
+        sync.drainAgains,
+        1,
+        reason: 'Try again must start a pass that reads the outbox again',
+      );
+      expect(
+        sync.drains,
+        0,
+        reason: 'drain() would hand this tap the pass that predates it',
+      );
+      // And the rejection really was cleared first, so the fresh pass has
+      // something to send: _drain skips an entry still marked rejected.
+      final entries = await TransactionOutbox(outboxDir).all();
+      expect(entries.single.rejection, isNull);
     });
 
     testWidgets('a refusal the server did not explain reads "Refused", not '
