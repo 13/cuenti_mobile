@@ -14,7 +14,12 @@ import 'package:path_provider/path_provider.dart';
 /// behind the app's back the way it may purge temp. Unlike that cache, what
 /// is in here is work the user did and nothing else has a copy of.
 class TransactionOutbox {
-  TransactionOutbox(this._directory);
+  TransactionOutbox(this._directory, {this.isFallback = false});
+
+  /// True when this store is the temp-directory fallback rather than the
+  /// real one, which means an empty queue is "could not be read", not
+  /// "nothing is waiting". The sign-out flow must not treat the two alike.
+  final bool isFallback;
 
   static Future<TransactionOutbox> open() async {
     final base = await getApplicationSupportDirectory();
@@ -45,7 +50,7 @@ class TransactionOutbox {
       debugPrint('TransactionOutbox: no app-support store ($e), using temp');
       final dir = Directory('${Directory.systemTemp.path}/cuenti_outbox')
         ..createSync(recursive: true);
-      return TransactionOutbox(dir);
+      return TransactionOutbox(dir, isFallback: true);
     }
   }
 

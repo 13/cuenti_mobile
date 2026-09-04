@@ -34,6 +34,10 @@ void main() {
         rejection: rejection,
       );
 
+  test('a store opened normally is not a fallback', () {
+    expect(TransactionOutbox(dir).isFallback, isFalse);
+  });
+
   test('an added entry comes back', () async {
     await outbox.add(entry('a'));
 

@@ -2539,6 +2539,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'{count} transactions have not reached the server. Signing out will discard them.'**
   String logoutPendingBody(int count);
+
+  /// No description provided for @logoutPendingUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Your unsent transactions could not be read. Signing out will discard anything still waiting.'**
+  String get logoutPendingUnknown;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

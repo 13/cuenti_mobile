@@ -1335,4 +1335,8 @@ class LIt extends L {
   String logoutPendingBody(int count) {
     return '$count operazioni non hanno raggiunto il server. Uscendo andranno perse.';
   }
+
+  @override
+  String get logoutPendingUnknown =>
+      'Non è stato possibile leggere le operazioni non inviate. Uscendo andrà perso tutto ciò che è ancora in attesa.';
 }

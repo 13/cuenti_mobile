@@ -25,13 +25,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Discarding it silently would lose data the user entered, so ask first,
 /// naming how much would be lost.
 Future<bool> confirmSignOut(BuildContext context, WidgetRef ref) async {
-  final pending = await ref.read(transactionOutboxProvider).all();
+  final outbox = ref.read(transactionOutboxProvider);
+  final pending = await outbox.all();
   if (!context.mounted) return false;
-  if (pending.isEmpty) return true;
+  // An empty fallback store means the real one could not be opened, not
+  // that nothing is waiting -- so it is exactly the case that must ask.
+  if (pending.isEmpty && !outbox.isFallback) return true;
   return showConfirmSheet(
     context,
     title: L.of(context).logoutPendingTitle,
-    message: L.of(context).logoutPendingBody(pending.length),
+    message: outbox.isFallback
+        ? L.of(context).logoutPendingUnknown
+        : L.of(context).logoutPendingBody(pending.length),
     confirmLabel: L.of(context).actionLogout,
   );
 }

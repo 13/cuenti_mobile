@@ -1332,4 +1332,8 @@ class LEn extends L {
   String logoutPendingBody(int count) {
     return '$count transactions have not reached the server. Signing out will discard them.';
   }
+
+  @override
+  String get logoutPendingUnknown =>
+      'Your unsent transactions could not be read. Signing out will discard anything still waiting.';
 }

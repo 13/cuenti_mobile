@@ -1336,4 +1336,8 @@ class LDe extends L {
   String logoutPendingBody(int count) {
     return '$count Buchungen haben den Server nicht erreicht. Beim Abmelden gehen sie verloren.';
   }
+
+  @override
+  String get logoutPendingUnknown =>
+      'Nicht gesendete Buchungen konnten nicht gelesen werden. Beim Abmelden geht alles noch Wartende verloren.';
 }

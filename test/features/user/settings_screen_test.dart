@@ -103,6 +103,7 @@ void main() {
     bool biometricEnabled = false,
     Completer<void>? logoutGate,
     Directory? outboxDir,
+    bool outboxIsFallback = false,
   }) async {
     tester.view.physicalSize = const Size(1000, 3000);
     tester.view.devicePixelRatio = 1.0;
@@ -133,7 +134,10 @@ void main() {
           currenciesRepositoryProvider.overrideWithValue(currenciesRepo),
           secureStorageProvider.overrideWithValue(storage),
           transactionOutboxProvider.overrideWithValue(
-            TransactionOutbox(outboxDir ?? defaultOutboxDir),
+            TransactionOutbox(
+              outboxDir ?? defaultOutboxDir,
+              isFallback: outboxIsFallback,
+            ),
           ),
         ],
         child: MaterialApp.router(
@@ -323,6 +327,27 @@ void main() {
 
       expect(find.text('Unsent transactions'), findsNothing);
       expect(auth.logoutCalls, 1);
+    });
+
+    testWidgets('a queue that could not be read is still asked about, even '
+        'though it looks empty', (tester) async {
+      // The fallback store is empty because the real one could not be
+      // opened -- not because there is nothing unsent. Signing out without
+      // asking would discard whatever the real store holds.
+      final auth = await pumpSettings(
+        tester,
+        outboxDir: outboxDir,
+        outboxIsFallback: true,
+      );
+
+      final logout = find.widgetWithText(OutlinedButton, 'Logout');
+      await tester.ensureVisible(logout);
+      await tester.pumpAndSettle();
+      await tester.tap(logout);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('could not be read'), findsOneWidget);
+      expect(auth.logoutCalls, 0);
     });
 
     testWidgets('confirming signs out and clears the outbox', (tester) async {
