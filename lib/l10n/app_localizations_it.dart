@@ -1266,7 +1266,7 @@ class LIt extends L {
   String get scheduledSearchHint => 'Cerca pianificate...';
 
   @override
-  String get scheduledNoMatch => 'Nessuna operazione pianificata corrisponde';
+  String get scheduledNoMatch => 'Nessun movimento pianificato corrisponde';
 
   @override
   String get commonNext => 'Prossima';
@@ -1329,19 +1329,19 @@ class LIt extends L {
   String get categoryCreateTopLevel => 'Nuova categoria principale';
 
   @override
-  String get logoutPendingTitle => 'Operazioni non inviate';
+  String get logoutPendingTitle => 'Movimenti non inviati';
 
   @override
   String logoutPendingBody(int count) {
-    return '$count operazioni non hanno raggiunto il server. Uscendo andranno perse.';
+    return '$count movimenti non hanno raggiunto il server. Uscendo andranno persi.';
   }
 
   @override
   String get logoutPendingUnknown =>
-      'Non è stato possibile leggere le operazioni non inviate. Rimarranno su questo dispositivo invece di essere scartate e potrebbero essere inviate più tardi.';
+      'Non è stato possibile leggere i movimenti non inviati. Rimarranno su questo dispositivo invece di essere scartati e potrebbero essere inviati più tardi.';
 
   @override
-  String get outboxForeignTitle => 'Operazioni non inviate di un altro account';
+  String get outboxForeignTitle => 'Movimenti non inviati di un altro account';
 
   @override
   String outboxForeignBody(int count) {
@@ -1349,16 +1349,16 @@ class LIt extends L {
       count,
       locale: localeName,
       other:
-          '$count operazioni non inviate sono state salvate con un altro account o un altro indirizzo del server e non verranno inviate. Accedendo con quell\'account o correggendo l\'indirizzo del server torneranno visibili, ma salvando un\'operazione qui verranno messe da parte.',
+          '$count movimenti non inviati sono stati salvati con un altro account o un altro indirizzo del server e non verranno inviati. Se accedi con quell\'account o correggi l\'indirizzo del server, torneranno visibili; se invece salvi prima un movimento qui, verranno messi da parte.',
       one:
-          '1 operazione non inviata è stata salvata con un altro account o un altro indirizzo del server e non verrà inviata. Accedendo con quell\'account o correggendo l\'indirizzo del server tornerà visibile, ma salvando un\'operazione qui verrà messa da parte.',
+          '1 movimento non inviato è stato salvato con un altro account o un altro indirizzo del server e non verrà inviato. Se accedi con quell\'account o correggi l\'indirizzo del server, tornerà visibile; se invece salvi prima un movimento qui, verrà messo da parte.',
     );
     return '$_temp0';
   }
 
   @override
   String get outboxUnknownTitle =>
-      'Operazioni non inviate di una versione precedente';
+      'Movimenti non inviati di una versione precedente';
 
   @override
   String outboxUnknownBody(int count, String account) {
@@ -1366,9 +1366,9 @@ class LIt extends L {
       count,
       locale: localeName,
       other:
-          '$count operazioni non inviate sono state salvate prima di questa versione e l\'app non può stabilire a chi appartengano. Inviarle come $account? Se salvi prima un\'operazione qui, verranno messe da parte.',
+          '$count movimenti non inviati sono stati salvati prima di questa versione e l\'app non può stabilire a chi appartengono. Inviarli come $account? Se salvi prima un movimento qui, verranno messi da parte.',
       one:
-          '1 operazione non inviata è stata salvata prima di questa versione e l\'app non può stabilire a chi appartiene. Inviarla come $account? Se salvi prima un\'operazione qui, verrà messa da parte.',
+          '1 movimento non inviato è stato salvato prima di questa versione e l\'app non può stabilire a chi appartiene. Inviarlo come $account? Se salvi prima un movimento qui, verrà messo da parte.',
     );
     return '$_temp0';
   }
