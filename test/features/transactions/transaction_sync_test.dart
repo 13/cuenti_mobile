@@ -1,4 +1,5 @@
 // test/features/transactions/transaction_sync_test.dart
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -371,6 +372,81 @@ void main() {
     await sync.drain();
 
     expect(sent, [true], reason: 'touched, so sent as touched');
+  });
+
+  group('drainAgain', () {
+    test(
+      'a retry during an in-flight drain still sends the entry',
+      () async {
+        // The first drain is made slow so the retry lands inside it, which
+        // is the case that fails: its snapshot was taken before the
+        // rejection was cleared, so joining it sends nothing.
+        final gate = Completer<void>();
+        var saves = 0;
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenAnswer((i) async {
+          saves++;
+          await gate.future;
+          return i.positionalArguments.first as Transaction;
+        });
+
+        await queue('slow-one');
+        final first = sync.drain();
+        await Future<void>.delayed(Duration.zero);
+
+        // Meanwhile the user clears a rejection and asks again.
+        await queue('retried', minute: 1);
+        final again = sync.drainAgain();
+
+        gate.complete();
+        await first;
+        await again;
+
+        expect(saves, 2, reason: 'the retried entry was sent, not skipped');
+        expect(await outbox.all(), isEmpty);
+      },
+    );
+
+    test(
+      'a burst of retries queues one follow-up run, not one per tap',
+      () async {
+        final gate = Completer<void>();
+        var runs = 0;
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenAnswer((i) async {
+          runs++;
+          await gate.future;
+          return i.positionalArguments.first as Transaction;
+        });
+
+        await queue('one');
+        final first = sync.drain();
+        await Future<void>.delayed(Duration.zero);
+
+        final a = sync.drainAgain();
+        final b = sync.drainAgain();
+        final c = sync.drainAgain();
+        expect(identical(a, b), isTrue, reason: 'one follow-up, shared');
+        expect(identical(b, c), isTrue);
+
+        gate.complete();
+        await Future.wait([first, a, b, c]);
+
+        expect(runs, 1, reason: 'nothing left to send on the follow-up run');
+      },
+    );
+
+    test('with nothing in flight it behaves exactly like drain', () async {
+      when(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
+      await queue('one');
+
+      expect(await sync.drainAgain(), 1);
+      expect(await outbox.all(), isEmpty);
+    });
   });
 }
 

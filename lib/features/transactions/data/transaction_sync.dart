@@ -47,6 +47,29 @@ class TransactionSync {
   Future<int> drain() =>
       _inFlight ??= _drain().whenComplete(() => _inFlight = null);
 
+  /// The follow-up run queued by [drainAgain], if one is waiting.
+  Future<int>? _queued;
+
+  /// Sends what is queued, starting a fresh pass if one is already running.
+  ///
+  /// A person tapping *Try again* has just changed the queue -- their
+  /// entry's rejection was cleared a moment ago. [drain] would hand them
+  /// the pass already in flight, and that pass read the outbox before the
+  /// change, so it would skip the very entry they asked about: the row
+  /// goes from "Refused" to "Not sent yet" with no request made. This
+  /// waits for the current pass and then reads the outbox again.
+  ///
+  /// At most one follow-up is queued, so a burst of taps cannot fan out
+  /// into a queue of passes -- they all share the one that will see all of
+  /// their changes anyway.
+  Future<int> drainAgain() {
+    final running = _inFlight;
+    if (running == null) return drain();
+    return _queued ??= running
+        .then((_) => drain())
+        .whenComplete(() => _queued = null);
+  }
+
   Future<int> _drain() async {
     var delivered = 0;
     for (final entry in await _outbox.all()) {

@@ -135,12 +135,16 @@ class TransactionTile extends ConsumerWidget {
   /// and the sync directly rather than going through the controller: this
   /// row already knows the filter its own list is keyed by, and
   /// invalidating that one provider is all a fresh merge needs.
+  ///
+  /// Uses `drainAgain` rather than `drain`: a pass already in flight read
+  /// the outbox before the rejection was cleared and would skip this
+  /// entry.
   Future<void> _retry(WidgetRef ref, PendingTransaction entry) async {
     await ref
         .read(transactionOutboxProvider)
         .replace(entry.copyWith(rejection: null));
     try {
-      await ref.read(transactionSyncProvider).drain();
+      await ref.read(transactionSyncProvider).drainAgain();
     } on Exception catch (_) {
       // Still queued and still shown as unsent, which is the truth. The
       // list is rebuilt either way: the rejection has been cleared, and
