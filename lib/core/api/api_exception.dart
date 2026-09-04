@@ -67,7 +67,9 @@ sealed class ApiException implements Exception {
   final String message;
 
   /// What the server itself said, when it said anything. Already in the
-  /// server's own language, so it is shown as-is rather than translated.
+  /// server's own language, so it is shown as-is rather than translated --
+  /// though [localizedMessage] may frame it inside a translated sentence
+  /// for [ValidationException] and [ServerException].
   final String? serverMessage;
 
   final int? statusCode;

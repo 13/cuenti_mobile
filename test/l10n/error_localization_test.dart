@@ -23,19 +23,6 @@ void main() {
     // Compares against invalidCredentialsMessage to tell a wrong password
     // from an expired session. It tests the value, it does not show it.
     'lib/features/auth/ui/auth_controller.dart',
-    // Stores the reason a queued transaction was refused, to show beside it
-    // later. `ApiException.fromDio` puts the server's own explanation in
-    // `message` -- it never sets `serverMessage`, so `localizedMessage`
-    // would replace the server's words with a generic fallback and throw
-    // away the only thing that tells the user what to fix. The drain has no
-    // BuildContext to localize with anyway. The UI quotes this string
-    // inside a translated label, so the frame around it is localized even
-    // when the server's own sentence is not.
-    // TODO(cuenti): a workaround, not a design choice -- it stands only because
-    // ApiException.fromDio never sets serverMessage or statusCode. Fixing
-    // that is an app-wide error-display change; this entry comes off the
-    // list with it.
-    'lib/features/transactions/data/transaction_sync.dart',
   };
 
   test('no UI code reads the English half of an exception', () {

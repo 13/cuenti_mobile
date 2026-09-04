@@ -2030,6 +2030,12 @@ abstract class L {
   /// **'Refused: {reason}'**
   String txPendingRejected(String reason);
 
+  /// No description provided for @txPendingRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'Refused'**
+  String get txPendingRefused;
+
   /// No description provided for @txSavedOnDevice.
   ///
   /// In en, this message translates to:

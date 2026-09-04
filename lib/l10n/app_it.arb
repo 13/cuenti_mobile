@@ -321,6 +321,7 @@
   "txDeleted": "Movimento eliminato",
   "txPendingNotSent": "Non ancora inviato",
   "txPendingRejected": "Rifiutato: {reason}",
+  "txPendingRefused": "Rifiutato",
   "txSavedOnDevice": "Salvato su questo dispositivo — verrà inviato quando ci sarà connessione",
   "txDiscardPending": "Scarta",
   "txRetryPending": "Riprova",

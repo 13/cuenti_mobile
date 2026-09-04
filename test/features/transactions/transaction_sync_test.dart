@@ -160,7 +160,12 @@ void main() {
       () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
     ).thenAnswer((i) async {
       calls++;
-      if (calls == 1) throw const ValidationException('Account is closed');
+      if (calls == 1) {
+        throw const ValidationException(
+          'Account is closed',
+          serverMessage: 'Account is closed',
+        );
+      }
       return i.positionalArguments.first as Transaction;
     });
     await queue('bad');
@@ -171,6 +176,38 @@ void main() {
     final left = await outbox.all();
     expect(left.single.localId, 'bad');
     expect(left.single.rejection, 'Account is closed');
+  });
+
+  test('a refusal stores the server own words, not the English half', () async {
+    when(
+      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+    ).thenThrow(
+      const ValidationException(
+        'Amount must be positive',
+        serverMessage: 'Amount must be positive',
+        statusCode: 422,
+      ),
+    );
+    await queue('a');
+
+    await sync.drain();
+
+    final all = await outbox.all();
+    expect(all.single.rejection, 'Amount must be positive');
+  });
+
+  test('a refusal with no server body stores an empty reason, and the '
+      'entry is still refused', () async {
+    when(
+      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+    ).thenThrow(const ValidationException('Invalid request'));
+    await queue('a');
+
+    await sync.drain();
+
+    final all = await outbox.all();
+    expect(all.single.rejection, '');
+    expect(all.single.isRejected, isTrue);
   });
 
   test('an entry already refused is not tried again on the next run', () async {

@@ -316,11 +316,13 @@ class TransactionTile extends ConsumerWidget {
                         Expanded(
                           child: Text(
                             entry.isRejected
-                                ? L
-                                      .of(context)
-                                      .txPendingRejected(
-                                        entry.rejection!,
-                                      )
+                                ? (entry.rejection!.isEmpty
+                                      ? L.of(context).txPendingRefused
+                                      : L
+                                            .of(context)
+                                            .txPendingRejected(
+                                              entry.rejection!,
+                                            ))
                                 : L.of(context).txPendingNotSent,
                             style: Theme.of(context).textTheme.labelSmall,
                           ),

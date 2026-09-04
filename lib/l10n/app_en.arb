@@ -642,6 +642,8 @@
   "@txPendingNotSent": {},
   "txPendingRejected": "Refused: {reason}",
   "@txPendingRejected": {"placeholders": {"reason": {"type": "String"}}},
+  "txPendingRefused": "Refused",
+  "@txPendingRefused": {},
   "txSavedOnDevice": "Saved on this device — it will send when there is a connection",
   "@txSavedOnDevice": {},
   "txDiscardPending": "Discard",

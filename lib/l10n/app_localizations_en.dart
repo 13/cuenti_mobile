@@ -1060,6 +1060,9 @@ class LEn extends L {
   }
 
   @override
+  String get txPendingRefused => 'Refused';
+
+  @override
   String get txSavedOnDevice =>
       'Saved on this device — it will send when there is a connection';
 

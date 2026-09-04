@@ -321,6 +321,7 @@
   "txDeleted": "Buchung gelöscht",
   "txPendingNotSent": "Noch nicht gesendet",
   "txPendingRejected": "Abgelehnt: {reason}",
+  "txPendingRefused": "Abgelehnt",
   "txSavedOnDevice": "Auf diesem Gerät gespeichert — wird gesendet, sobald eine Verbindung besteht",
   "txDiscardPending": "Verwerfen",
   "txRetryPending": "Erneut versuchen",

@@ -1064,6 +1064,9 @@ class LDe extends L {
   }
 
   @override
+  String get txPendingRefused => 'Abgelehnt';
+
+  @override
   String get txSavedOnDevice =>
       'Auf diesem Gerät gespeichert — wird gesendet, sobald eine Verbindung besteht';
 

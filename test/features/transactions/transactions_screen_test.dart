@@ -501,6 +501,19 @@ void main() {
       expect(find.text('Discard'), findsOneWidget);
     });
 
+    testWidgets('a refusal the server did not explain reads "Refused", not '
+        '"Refused: "', (tester) async {
+      // An empty reason is what the sync stores when the server refused
+      // without saying why. Framing it with txPendingRejected would render
+      // a dangling colon.
+      await queue(tester, rejection: '');
+
+      await pumpScreen(tester, outboxDir: outboxDir);
+
+      expect(find.text('Refused'), findsOneWidget);
+      expect(find.textContaining('Refused: '), findsNothing);
+    });
+
     testWidgets('discarding removes it from the queue and the list', (
       tester,
     ) async {

@@ -28,8 +28,10 @@ class TransactionSync {
   /// Only a [ValidationException] or a [ServerException] marks an entry
   /// refused: those mean the server answered and said no, and holding the
   /// entry back to retry a permanent refusal for ever helps nobody. That
-  /// one entry is marked with its reason and the run carries on -- one bad
-  /// entry must not hold up everything queued behind it.
+  /// one entry is marked with the server's own sentence -- [ApiException]'s
+  /// `serverMessage` -- to be quoted beside the row later; an empty string
+  /// means the server refused without saying why. The run carries on -- one
+  /// bad entry must not hold up everything queued behind it.
   ///
   /// Everything else ends the run untouched. A [NetworkException] is the
   /// obvious one: still offline. But an [UnknownApiException] means the
@@ -52,10 +54,14 @@ class TransactionSync {
       try {
         await _send(entry);
       } on ValidationException catch (e) {
-        await _record(() => _outbox.markRejected(entry.localId, e.message));
+        await _record(
+          () => _outbox.markRejected(entry.localId, e.serverMessage ?? ''),
+        );
         continue;
       } on ServerException catch (e) {
-        await _record(() => _outbox.markRejected(entry.localId, e.message));
+        await _record(
+          () => _outbox.markRejected(entry.localId, e.serverMessage ?? ''),
+        );
         continue;
       } on ApiException catch (_) {
         return delivered;

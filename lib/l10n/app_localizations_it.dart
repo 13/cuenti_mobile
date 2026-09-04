@@ -1063,6 +1063,9 @@ class LIt extends L {
   }
 
   @override
+  String get txPendingRefused => 'Rifiutato';
+
+  @override
   String get txSavedOnDevice =>
       'Salvato su questo dispositivo — verrà inviato quando ci sarà connessione';
 
