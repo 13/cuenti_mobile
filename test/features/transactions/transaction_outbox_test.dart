@@ -167,6 +167,23 @@ void main() {
     expect(await outbox.owner(), 'https://other.example#7');
   });
 
+  test(
+    'two concurrent claims of an unowned queue do not collide on the same '
+    'temp file: both writes land, and the owner afterwards is one of the '
+    'two values, not lost to a rename racing another rename',
+    () async {
+      await Future.wait([
+        outbox.setOwner('https://cuenti.muh#42'),
+        outbox.setOwner('https://cuenti.muh#7'),
+      ]);
+
+      expect(
+        await outbox.owner(),
+        anyOf('https://cuenti.muh#42', 'https://cuenti.muh#7'),
+      );
+    },
+  );
+
   // The owner file lives in the same directory as the entries and ends in
   // .json like they do. If all() tried to parse it, every read would log a
   // skip line and the file would be one bad refactor away from being

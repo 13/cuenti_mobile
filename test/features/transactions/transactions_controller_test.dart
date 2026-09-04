@@ -18,15 +18,21 @@ import 'package:mocktail/mocktail.dart';
 class MockTransactionsRepository extends Mock
     implements TransactionsRepository {}
 
-/// Hands back a settled, signed-in state synchronously, so tests that
-/// exercise `_enqueue`'s ownership claim don't kick off the real
-/// controller's startup work (a platform-channel token read, a live
-/// profile fetch) that a plain unit test has no business triggering.
-class _SignedInAuthController extends AuthController {
+/// Hands back a settled auth state synchronously, so tests that exercise
+/// `_enqueue`'s ownership claim don't kick off the real controller's
+/// startup work (a platform-channel token read, a live profile fetch) that
+/// a plain unit test has no business triggering.
+class _FakeAuthController extends AuthController {
+  _FakeAuthController(this._state);
+  final AuthState _state;
+
   @override
-  AuthState build() =>
-      const AuthState(user: UserProfile(id: 42, username: 'ben'));
+  AuthState build() => _state;
 }
+
+const _signedInAuthState = AuthState(
+  user: UserProfile(id: 42, username: 'ben'),
+);
 
 void main() {
   late MockTransactionsRepository repo;
@@ -391,18 +397,22 @@ void main() {
     });
     tearDown(() => outboxDir.deleteSync(recursive: true));
 
-    ProviderContainer containerWithOutbox() {
+    ProviderContainer containerWithOutbox({
+      AuthState auth = _signedInAuthState,
+    }) {
       final container = ProviderContainer(
         overrides: [
           transactionsRepositoryProvider.overrideWithValue(repo),
           transactionOutboxProvider.overrideWithValue(
             TransactionOutbox(outboxDir),
           ),
-          // _enqueue claims the queue for the signed-in account, so every
-          // test in this group needs one. Scoped to this helper rather than
-          // the file's top-level setUp: the tests above never queue a
-          // write, so they never need auth resolved.
-          authControllerProvider.overrideWith(_SignedInAuthController.new),
+          // _enqueue reads this to decide who to claim the queue for, so
+          // every test in this group needs one resolved. Scoped to this
+          // helper rather than the file's top-level setUp: the tests above
+          // never queue a write, so they never need auth resolved. Defaults
+          // signed in; a test can pass an unauthenticated state to check
+          // the no-claim path.
+          authControllerProvider.overrideWith(() => _FakeAuthController(auth)),
         ],
       );
       addTearDown(container.dispose);
@@ -1327,6 +1337,30 @@ void main() {
           await container.read(transactionOutboxProvider).owner(),
           'someone-else',
         );
+      },
+    );
+
+    test(
+      'saving offline with nobody signed in still queues the entry: '
+      'accountKeyFor has nobody to attribute the queue to, so the claim '
+      'no-ops, but the save itself must not be caught up in that',
+      () async {
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox(auth: const AuthState());
+        await container.read(transactionsControllerProvider().future);
+
+        final outcome = await container
+            .read(transactionsControllerProvider().notifier)
+            .save(
+              Transaction(amount: 12.34, transactionDate: DateTime(2026, 9, 4)),
+            );
+
+        expect(outcome, SaveOutcome.queued);
+        final outbox = container.read(transactionOutboxProvider);
+        expect((await outbox.all()).single.transaction.amount, 12.34);
+        expect(await outbox.owner(), isNull);
       },
     );
   });
