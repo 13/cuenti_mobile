@@ -222,7 +222,15 @@ class TransactionsController extends _$TransactionsController {
           (t.id == null ? PendingOperation.create : PendingOperation.update),
       transaction: t,
       queuedAt: existing?.queuedAt ?? DateTime.now(),
-      splitsTouched: splitsTouched,
+      // Sticky, like the operation above it. The dialog starts every edit
+      // at splitsTouched false -- it re-reads the splits from the
+      // transaction it was handed but has no memory of who put them there
+      // -- so taking the current call's flag alone would turn "these splits
+      // were deliberately managed offline" into "leave the splits alone"
+      // the moment the user reopened the entry to fix a typo. The
+      // repository strips the splits key under a false flag, so the splits
+      // would then never be sent at all.
+      splitsTouched: splitsTouched || (existing?.splitsTouched ?? false),
     );
     await outbox.add(entry);
   }

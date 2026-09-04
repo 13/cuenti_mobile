@@ -7,6 +7,7 @@ import 'package:cuentimobile/features/transactions/domain/pending_transaction.da
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction_split.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -449,6 +450,56 @@ void main() {
 
         final queued = await container.read(transactionOutboxProvider).all();
         expect(queued.single.splitsTouched, isTrue);
+      },
+    );
+
+    test(
+      're-editing a queued entry keeps the splits flag it was recorded '
+      'with: the dialog starts every edit at splitsTouched false, and the '
+      'payload still carries the splits',
+      () async {
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+        final notifier = container.read(
+          transactionsControllerProvider().notifier,
+        );
+
+        await notifier.save(
+          Transaction(
+            amount: 5,
+            transactionDate: DateTime(2026, 9, 4),
+            splits: const [TransactionSplit(amount: 5, categoryId: 3)],
+          ),
+          splitsTouched: true,
+        );
+        final localId = (await container.read(transactionOutboxProvider).all())
+            .single
+            .localId;
+
+        // Re-opening that entry and changing only the amount: the dialog
+        // re-initialises its splits from the transaction but starts the
+        // flag at false.
+        await notifier.save(
+          Transaction(
+            amount: 9,
+            transactionDate: DateTime(2026, 9, 4),
+            splits: const [TransactionSplit(amount: 9, categoryId: 3)],
+          ),
+          localId: localId,
+        );
+
+        final queued = await container.read(transactionOutboxProvider).all();
+        expect(queued.single.transaction.splits, hasLength(1));
+        expect(
+          queued.single.splitsTouched,
+          isTrue,
+          reason:
+              'the repository strips the splits key under a false flag, so '
+              'the split would never be sent at all',
+        );
       },
     );
 
