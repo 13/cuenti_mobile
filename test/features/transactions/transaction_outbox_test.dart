@@ -150,6 +150,54 @@ void main() {
     );
   });
 
+  test('a fresh store has no owner', () async {
+    expect(await outbox.owner(), isNull);
+  });
+
+  test('an owner survives being written and read back', () async {
+    await outbox.setOwner('https://cuenti.muh#42');
+
+    expect(await outbox.owner(), 'https://cuenti.muh#42');
+  });
+
+  test('setting an owner twice keeps the last one', () async {
+    await outbox.setOwner('https://cuenti.muh#42');
+    await outbox.setOwner('https://other.example#7');
+
+    expect(await outbox.owner(), 'https://other.example#7');
+  });
+
+  // The owner file lives in the same directory as the entries and ends in
+  // .json like they do. If all() tried to parse it, every read would log a
+  // skip line and the file would be one bad refactor away from being
+  // mistaken for a queued transaction.
+  test('the owner file is not mistaken for an entry', () async {
+    await outbox.setOwner('https://cuenti.muh#42');
+    await outbox.add(entry('local-1'));
+
+    final entries = await outbox.all();
+    expect(entries, hasLength(1));
+    expect(entries.single.localId, 'local-1');
+  });
+
+  test('clear() drops the owner along with the entries', () async {
+    await outbox.setOwner('https://cuenti.muh#42');
+
+    await outbox.clear();
+
+    expect(await outbox.owner(), isNull);
+  });
+
+  test(
+    'an unreadable owner file reads as unowned rather than throwing',
+    () async {
+      await outbox.setOwner('https://cuenti.muh#42');
+      File('${dir.path}/.owner.json').writeAsStringSync('{not json');
+
+      expect(await outbox.owner(), isNull);
+    },
+  );
+
   test('an entry whose localId contains / and .. round-trips: add(), all() '
       'returns it with that exact localId, remove() deletes it, and no file '
       'was created outside the outbox directory', () async {

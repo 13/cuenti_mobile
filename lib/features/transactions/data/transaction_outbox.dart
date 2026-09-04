@@ -62,6 +62,46 @@ class TransactionOutbox {
   File _fileFor(String localId) =>
       File('${_directory.path}/${_encodeFileName(localId)}.json');
 
+  /// Which account's queue this is.
+  ///
+  /// Named with a leading dot so it cannot collide with an entry: entry
+  /// filenames are base64url, an alphabet that can spell "owner", and a
+  /// dot is outside it. [all] skips dot-files for the same reason.
+  File get _ownerFile => File('${_directory.path}/.owner.json');
+
+  /// The account key this queue belongs to, or null when nothing has
+  /// claimed it -- a fresh queue, or one written before ownership existed.
+  ///
+  /// An unreadable file reads as unowned rather than throwing. Unowned is
+  /// the cautious answer: it makes the queue something to ask about, not
+  /// something to send.
+  Future<String?> owner() async {
+    if (!_ownerFile.existsSync()) return null;
+    try {
+      final decoded = jsonDecode(_ownerFile.readAsStringSync());
+      final account = decoded is Map<String, dynamic>
+          ? decoded['account']
+          : null;
+      return account is String && account.isNotEmpty ? account : null;
+      // A malformed owner file must read as unowned rather than crash the
+      // caller, so any failure here -- bad JSON, wrong shape -- is caught
+      // broadly rather than matched to one exception type.
+      // ignore: avoid_catches_without_on_clauses
+    } catch (e) {
+      debugPrint('TransactionOutbox: unreadable owner file: $e');
+      return null;
+    }
+  }
+
+  /// Claims this queue for [account]. Written the way entries are, so a
+  /// torn write cannot leave a half-file that reads as a different owner.
+  Future<void> setOwner(String account) async {
+    if (!_directory.existsSync()) await _directory.create(recursive: true);
+    final tempFile = File('${_ownerFile.path}.tmp');
+    await tempFile.writeAsString(jsonEncode({'account': account}));
+    await tempFile.rename(_ownerFile.path);
+  }
+
   Future<void> add(PendingTransaction entry) async {
     final file = _fileFor(entry.localId);
     final tempFile = File('${file.path}.tmp');
@@ -74,7 +114,9 @@ class TransactionOutbox {
     if (!_directory.existsSync()) return [];
     final entries = <PendingTransaction>[];
     for (final file in _directory.listSync().whereType<File>()) {
-      if (!file.path.endsWith('.json')) continue;
+      final name = file.uri.pathSegments.last;
+      // Dot-files are the store's own bookkeeping, not entries.
+      if (name.startsWith('.') || !name.endsWith('.json')) continue;
       try {
         entries.add(
           PendingTransaction.fromJson(
