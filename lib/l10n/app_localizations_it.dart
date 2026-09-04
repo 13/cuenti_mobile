@@ -1017,8 +1017,18 @@ class LIt extends L {
   String get errorInvalidRequest => 'Richiesta non valida';
 
   @override
+  String errorInvalidRequestDetail(String detail) {
+    return 'Richiesta non valida: $detail';
+  }
+
+  @override
   String errorServer(String status) {
     return 'Errore del server ($status)';
+  }
+
+  @override
+  String errorServerDetail(String status, String detail) {
+    return 'Errore del server ($status): $detail';
   }
 
   @override

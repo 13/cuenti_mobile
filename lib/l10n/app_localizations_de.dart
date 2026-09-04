@@ -1018,8 +1018,18 @@ class LDe extends L {
   String get errorInvalidRequest => 'Ungültige Anfrage';
 
   @override
+  String errorInvalidRequestDetail(String detail) {
+    return 'Ungültige Anfrage: $detail';
+  }
+
+  @override
   String errorServer(String status) {
     return 'Serverfehler ($status)';
+  }
+
+  @override
+  String errorServerDetail(String status, String detail) {
+    return 'Serverfehler ($status): $detail';
   }
 
   @override

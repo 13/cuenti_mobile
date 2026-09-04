@@ -704,9 +704,11 @@ void main() {
     await fillAndSave(tester);
 
     expect(
-      find.text('Account is closed'),
+      find.text('Server error (500): Account is closed'),
       findsOneWidget,
-      reason: 'a server that explained itself is quoted, not translated over',
+      reason:
+          'a server that explained itself is quoted inside the translated '
+          '"Server error (status):" frame',
     );
     expect(find.text('Transaction saved'), findsNothing);
   });

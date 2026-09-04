@@ -197,7 +197,7 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
       await tester.pumpAndSettle();
 
-      expect(find.text('View is in use'), findsOneWidget);
+      expect(find.text('Invalid request: View is in use'), findsOneWidget);
       expect(find.text('My groceries'), findsOneWidget);
     });
 

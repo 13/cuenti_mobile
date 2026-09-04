@@ -74,12 +74,16 @@ sealed class ApiException implements Exception {
 
   /// The message to put in front of the user.
   ///
-  /// A server that explained itself is quoted verbatim -- it knows why it
-  /// refused and this client does not. Only the fallbacks, written here, are
-  /// translated.
+  /// Where the server's own sentence tells the user something this client
+  /// cannot -- which field it rejected, which upstream is down -- it is
+  /// quoted inside a translated frame, so the words around it are in the
+  /// user's language even when the server's are not. Everything else is
+  /// translated outright: a 401's "Not authenticated" or a connection
+  /// failure adds nothing over the string written here, and 403 has a
+  /// specific one that is better than anything the server will say.
   String localizedMessage(L l) {
-    final fromServer = serverMessage;
-    if (fromServer != null && fromServer.isNotEmpty) return fromServer;
+    final detail = serverMessage;
+    final explained = detail != null && detail.isNotEmpty;
     return switch (this) {
       NetworkException() =>
         message == _certificateMessage ? l.errorCertificate : l.errorNetwork,
@@ -89,11 +93,13 @@ sealed class ApiException implements Exception {
         _ when statusCode == 403 => l.errorApiDisabled,
         _ => l.errorNotAuthenticated,
       },
-      ValidationException() => l.errorInvalidRequest,
-      ServerException() =>
-        statusCode == null
-            ? l.errorUnexpectedResponse
-            : l.errorServer('$statusCode'),
+      ValidationException() =>
+        explained ? l.errorInvalidRequestDetail(detail) : l.errorInvalidRequest,
+      ServerException() => switch (statusCode) {
+        null => l.errorUnexpectedResponse,
+        final status when explained => l.errorServerDetail('$status', detail),
+        final status => l.errorServer('$status'),
+      },
       UnknownApiException() => l.errorUnknown,
     };
   }

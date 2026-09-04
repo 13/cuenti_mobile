@@ -1958,11 +1958,23 @@ abstract class L {
   /// **'Invalid request'**
   String get errorInvalidRequest;
 
+  /// No description provided for @errorInvalidRequestDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid request: {detail}'**
+  String errorInvalidRequestDetail(String detail);
+
   /// No description provided for @errorServer.
   ///
   /// In en, this message translates to:
   /// **'Server error ({status})'**
   String errorServer(String status);
+
+  /// No description provided for @errorServerDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Server error ({status}): {detail}'**
+  String errorServerDetail(String status, String detail);
 
   /// No description provided for @errorCertificate.
   ///

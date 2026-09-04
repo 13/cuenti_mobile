@@ -1,4 +1,6 @@
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/l10n/app_localizations_de.dart';
+import 'package:cuentimobile/l10n/app_localizations_en.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -123,6 +125,80 @@ void main() {
       );
 
       expect(e, isA<UnknownApiException>());
+    });
+  });
+
+  group('localizedMessage', () {
+    final en = LEn();
+    final de = LDe();
+
+    test('a 4xx quotes the server inside a translated frame', () {
+      final e = ApiException.fromDio(
+        badResponse(422, {'error': 'Amount must be positive'}),
+      );
+
+      expect(
+        e.localizedMessage(en),
+        'Invalid request: Amount must be positive',
+      );
+      expect(
+        e.localizedMessage(de),
+        'Ungültige Anfrage: Amount must be positive',
+      );
+    });
+
+    test('a 4xx with no explanation keeps the plain translated string', () {
+      final e = ApiException.fromDio(badResponse(400, null));
+
+      expect(e.localizedMessage(en), 'Invalid request');
+      expect(e.localizedMessage(de), 'Ungültige Anfrage');
+    });
+
+    test('a 5xx names its status and quotes the server', () {
+      final e = ApiException.fromDio(badResponse(503, 'Upstream down'));
+
+      expect(e.localizedMessage(en), 'Server error (503): Upstream down');
+    });
+
+    // Dead before this change: statusCode was always null, so every 5xx
+    // took the "unexpected response" branch instead.
+    test('a 5xx with no explanation names its status', () {
+      final e = ApiException.fromDio(badResponse(500, null));
+
+      expect(e.localizedMessage(en), 'Server error (500)');
+    });
+
+    // Dead before this change: without statusCode, a switched-off API read
+    // as an expired session and sent the user after a password problem.
+    test('403 says the API is not enabled, not that you are signed out', () {
+      final e = ApiException.fromDio(badResponse(403, null));
+
+      expect(e.localizedMessage(en), 'API access is not enabled');
+    });
+
+    test('401 stays the translated string even when the server spoke', () {
+      final e = ApiException.fromDio(badResponse(401, 'JWT expired'));
+
+      expect(e.localizedMessage(en), 'Not authenticated');
+      expect(e.localizedMessage(de), 'Nicht angemeldet');
+    });
+
+    test('a network failure is translated, never quoted', () {
+      final e = ApiException.fromDio(
+        DioException(
+          requestOptions: RequestOptions(path: '/x'),
+          type: DioExceptionType.connectionError,
+        ),
+      );
+
+      expect(e.localizedMessage(de), 'Keine Verbindung zum Server');
+    });
+
+    test('the truncated body is what the user is shown', () {
+      final e = ApiException.fromDio(badResponse(400, 'y' * 5000));
+
+      expect(e.localizedMessage(en).length, lessThan(230));
+      expect(e.localizedMessage(en), endsWith('…'));
     });
   });
 }

@@ -119,8 +119,9 @@ void main() {
     when(
       () => repo.deleteUser(any()),
     ).thenThrow(
-      // serverMessage is the half that reaches the user: the server knows
-      // why it refused and this client does not.
+      // serverMessage is quoted inside the translated "Invalid request:"
+      // frame: the server knows why it refused and this client does not,
+      // but the words around it stay in the user's language.
       const ValidationException(
         'Invalid request',
         serverMessage: 'User owns transactions',
@@ -132,6 +133,9 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
     await tester.pumpAndSettle();
 
-    expect(find.text('User owns transactions'), findsOneWidget);
+    expect(
+      find.text('Invalid request: User owns transactions'),
+      findsOneWidget,
+    );
   });
 }

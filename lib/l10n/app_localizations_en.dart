@@ -1015,8 +1015,18 @@ class LEn extends L {
   String get errorInvalidRequest => 'Invalid request';
 
   @override
+  String errorInvalidRequestDetail(String detail) {
+    return 'Invalid request: $detail';
+  }
+
+  @override
   String errorServer(String status) {
     return 'Server error ($status)';
+  }
+
+  @override
+  String errorServerDetail(String status, String detail) {
+    return 'Server error ($status): $detail';
   }
 
   @override
