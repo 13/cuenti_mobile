@@ -157,12 +157,25 @@ class TransactionTile extends ConsumerWidget {
 
     // For a transaction the server has issued an id for, that id is the
     // stable link to its pending entry. An entry that has never reached the
-    // server has no id to match on -- but mergePending puts the pending
-    // entry's own Transaction object into the list verbatim, so identity is
-    // the link for those.
+    // server has no id to match on -- mergePending puts the pending entry's
+    // own Transaction object into the list verbatim, so identity is the
+    // primary link for those. But nothing enforces that the object stays
+    // the same one all the way to this row (a future .map, a copyWith, a
+    // separate re-read of pending) -- so freezed's field-for-field equality
+    // is a fallback, checked only across the whole list, and only once no
+    // entry matches by identity. Trying identity first everywhere (rather
+    // than "identical OR equal" per entry) matters when two unsent creates
+    // happen to be field-for-field equal (two identical purchases logged
+    // the same day): an equal-first search could hand this row the OTHER
+    // one's entry merely because it sorts earlier, which is exactly the
+    // wrong-match this two-pass order avoids -- as long as identity is
+    // intact for at least one of them. If identity were ALSO lost for a
+    // genuine duplicate, the two are indistinguishable by data alone; that
+    // residual case isn't handled here.
     PendingTransaction? pendingFor(Transaction t) => t.id != null
         ? pending.where((e) => e.transaction.id == t.id).firstOrNull
-        : pending.where((e) => identical(e.transaction, t)).firstOrNull;
+        : pending.where((e) => identical(e.transaction, t)).firstOrNull ??
+              pending.where((e) => e.transaction == t).firstOrNull;
 
     final entry = pendingFor(transaction);
 

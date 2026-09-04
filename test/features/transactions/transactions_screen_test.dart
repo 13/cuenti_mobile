@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
@@ -8,13 +9,16 @@ import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
+import 'package:cuentimobile/features/payees/data/payees_repository.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
+import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_screen.dart';
+import 'package:cuentimobile/features/transactions/ui/widgets/transaction_list_parts.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +32,8 @@ class MockTransactionsRepository extends Mock
 class MockAccountsRepository extends Mock implements AccountsRepository {}
 
 class MockCategoriesRepository extends Mock implements CategoriesRepository {}
+
+class MockPayeesRepository extends Mock implements PayeesRepository {}
 
 /// PrivacyMode reads this on every screen build; without an override it
 /// hits the real flutter_secure_storage plugin channel, which throws
@@ -44,12 +50,33 @@ class _MemoryStorage extends SecureStorage {
   Future<void> delete(String key) async => _data.remove(key);
 }
 
+/// Hands TransactionTile a fixed TransactionsState without going through
+/// getPage/outbox at all -- used only to construct a pending entry whose
+/// Transaction object is NOT the exact instance the row is built with (the
+/// case pendingFor's value-equality fallback exists for; the ordinary
+/// merge path can't produce it, since mergePending always places the
+/// pending entry's own object into items for a create).
+class _FixedTransactionsController extends TransactionsController {
+  _FixedTransactionsController(this._state);
+  final TransactionsState _state;
+  @override
+  Future<TransactionsState> build({
+    TransactionFilter filter = TransactionsController.defaultFilter,
+  }) async => _state;
+}
+
 void main() {
-  setUpAll(() => registerFallbackValue(const TransactionFilter()));
+  setUpAll(() {
+    registerFallbackValue(const TransactionFilter());
+    registerFallbackValue(
+      Transaction(amount: 0, transactionDate: DateTime(2026)),
+    );
+  });
 
   late MockTransactionsRepository txRepo;
   late MockAccountsRepository accountsRepo;
   late MockCategoriesRepository categoriesRepo;
+  late MockPayeesRepository payeesRepo;
 
   Transaction tx(int id, {DateTime? date}) => Transaction(
     id: id,
@@ -64,6 +91,7 @@ void main() {
     txRepo = MockTransactionsRepository();
     accountsRepo = MockAccountsRepository();
     categoriesRepo = MockCategoriesRepository();
+    payeesRepo = MockPayeesRepository();
     defaultOutboxDir = Directory.systemTemp.createTempSync(
       'transactions_screen_outbox',
     );
@@ -75,6 +103,7 @@ void main() {
     when(
       () => categoriesRepo.getAll(type: any(named: 'type')),
     ).thenAnswer((_) async => []);
+    when(() => payeesRepo.getAll()).thenAnswer((_) async => []);
   });
 
   Future<void> pumpScreen(
@@ -87,6 +116,7 @@ void main() {
           transactionsRepositoryProvider.overrideWithValue(txRepo),
           accountsRepositoryProvider.overrideWithValue(accountsRepo),
           categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
+          payeesRepositoryProvider.overrideWithValue(payeesRepo),
           secureStorageProvider.overrideWithValue(_MemoryStorage()),
           transactionOutboxProvider.overrideWithValue(
             TransactionOutbox(outboxDir ?? defaultOutboxDir),
@@ -511,5 +541,126 @@ void main() {
       expect(find.text('Aldi'), findsNothing);
       expect(await TransactionOutbox(outboxDir).all(), isEmpty);
     });
+
+    testWidgets(
+      'editing an unsent entry replaces its outbox entry instead of '
+      'queuing a second one',
+      (tester) async {
+        // fromAccountId set, or the EXPENSE dialog's "from account" picker
+        // fails its own validator and Save never gets past _formKey.validate.
+        await tester.runAsync(
+          () => TransactionOutbox(outboxDir).add(
+            PendingTransaction(
+              localId: 'local-1',
+              operation: PendingOperation.create,
+              transaction: Transaction(
+                amount: 12.34,
+                transactionDate: DateTime(2026, 9, 4),
+                payee: 'Aldi',
+                fromAccountId: 1,
+              ),
+              queuedAt: DateTime(2026, 9, 4, 10),
+            ),
+          ),
+        );
+        // Still offline for the resave, or a successful save would remove
+        // the entry outright rather than replace it -- either way tells
+        // us nothing about whether localId made it through.
+        when(
+          () => txRepo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+
+        await pumpScreen(tester, outboxDir: outboxDir);
+
+        await tester.tap(find.text('Aldi'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(TextFormField).first, '99,99');
+
+        final saveButton = find.widgetWithText(FilledButton, 'Save');
+        await tester.ensureVisible(saveButton);
+
+        // The Save button's onPressed awaits the outbox's real write, same
+        // reason queue() and the Discard flow above need runAsync.
+        await tester.runAsync(() async {
+          await tester.tap(saveButton);
+          for (
+            var i = 0;
+            i < 200 &&
+                !(await TransactionOutbox(
+                  outboxDir,
+                ).all()).any((e) => e.transaction.amount == 99.99);
+            i++
+          ) {
+            await Future<void>.delayed(const Duration(milliseconds: 5));
+          }
+        });
+        await tester.pumpAndSettle();
+
+        final entries = await TransactionOutbox(outboxDir).all();
+        // The bug this guards: passing no localId through the row and the
+        // dialog queues a SECOND entry beside the first instead of
+        // replacing it. Assert the count, not just that an edited entry
+        // exists.
+        expect(entries, hasLength(1));
+        expect(entries.single.localId, 'local-1');
+        expect(entries.single.transaction.amount, 99.99);
+      },
+    );
+
+    testWidgets(
+      'a pending transaction is still marked as not sent even when the '
+      'row is built with a value-equal but not identical instance',
+      (tester) async {
+        final queuedTransaction = Transaction(
+          amount: 12.34,
+          transactionDate: DateTime(2026, 9, 4),
+          payee: 'Aldi',
+        );
+        // Field-for-field equal to queuedTransaction, but a different
+        // object -- what a future .map() or copyWith() over items would
+        // hand the row instead of the pending entry's own instance.
+        final rowTransaction = Transaction.fromJson(queuedTransaction.toJson());
+        expect(identical(rowTransaction, queuedTransaction), isFalse);
+        expect(rowTransaction, queuedTransaction);
+
+        final state = TransactionsState(
+          items: [rowTransaction],
+          pending: [
+            PendingTransaction(
+              localId: 'local-1',
+              operation: PendingOperation.create,
+              transaction: queuedTransaction,
+              queuedAt: DateTime(2026, 9, 4, 10),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              transactionsControllerProvider().overrideWith(
+                () => _FixedTransactionsController(state),
+              ),
+            ],
+            child: MaterialApp(
+              localizationsDelegates: L.localizationsDelegates,
+              supportedLocales: L.supportedLocales,
+              theme: AppTheme.light(),
+              home: Scaffold(
+                body: TransactionTile(
+                  transaction: rowTransaction,
+                  filter: TransactionsController.defaultFilter,
+                  onDelete: (_) {},
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Not sent yet'), findsOneWidget);
+      },
+    );
   });
 }
