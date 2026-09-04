@@ -130,16 +130,20 @@ class TransactionsController extends _$TransactionsController {
     return true;
   }
 
+  /// The account signed in now, for attributing and claiming the queue.
+  /// Read fresh every time rather than cached: the signed-in account can
+  /// change between calls, and a stale key would claim or read the wrong
+  /// queue.
+  String? get _accountKey => accountKeyFor(
+    ref.read(apiClientProvider).baseUrl,
+    ref.read(authControllerProvider),
+  );
+
   /// The queued entries this account may see. Foreign or unclaimed queues
   /// read as empty -- they are somebody else's amounts and payees, so they
   /// are not merged into the list any more than they are sent.
-  Future<List<PendingTransaction>> _pending() => ownedEntries(
-    ref.read(transactionOutboxProvider),
-    accountKeyFor(
-      ref.read(apiClientProvider).baseUrl,
-      ref.read(authControllerProvider),
-    ),
-  );
+  Future<List<PendingTransaction>> _pending() =>
+      ownedEntries(ref.read(transactionOutboxProvider), _accountKey);
 
   @override
   Future<TransactionsState> build({
@@ -273,6 +277,10 @@ class TransactionsController extends _$TransactionsController {
     bool splitsTouched = false,
   }) async {
     final outbox = ref.read(transactionOutboxProvider);
+    // Before the lookup below, not after the add: the lookup has to see
+    // the queue it may be amending, and an entry written into somebody
+    // else's queue would be sealed away from the person who just typed it.
+    await claimForWriting(outbox, _accountKey);
     final existing = localId == null
         ? null
         : (await _pending()).where((e) => e.localId == localId).firstOrNull;
@@ -297,16 +305,6 @@ class TransactionsController extends _$TransactionsController {
       splitsTouched: splitsTouched || (existing?.splitsTouched ?? false),
     );
     await outbox.add(entry);
-    // Ownership starts mattering the moment there is something to own. An
-    // already-claimed queue keeps its claim: the first account to queue
-    // into it is the one it belongs to.
-    await claimIfUnowned(
-      outbox,
-      accountKeyFor(
-        ref.read(apiClientProvider).baseUrl,
-        ref.read(authControllerProvider),
-      ),
-    );
   }
 
   /// Drops a queued write the server has never seen, sending nothing.
@@ -351,6 +349,13 @@ class TransactionsController extends _$TransactionsController {
         ..invalidate(accountsControllerProvider);
       return SaveOutcome.sent;
     } on NetworkException catch (_) {
+      // _queuedIdFor below is a lookup of its own, made before _enqueue is
+      // even called -- Dart evaluates a call's arguments before the call
+      // runs, so _enqueue's own claimForWriting would resolve ownership
+      // too late to help it. Claiming here first, so the lookup sees the
+      // queue it is searching rather than a sealed one. Idempotent: once
+      // this has run, _enqueue's own call to it is a no-op.
+      await claimForWriting(ref.read(transactionOutboxProvider), _accountKey);
       await _enqueue(
         current.items
             .firstWhere(

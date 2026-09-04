@@ -93,3 +93,32 @@ Future<void> claimIfUnowned(
   if (await outbox.owner() != null) return;
   await outbox.setOwner(accountKey);
 }
+
+/// Makes the queue this account's before anything is written into it.
+///
+/// [claimIfUnowned] is not enough on its own, because it runs after the
+/// write and leaves two holes. A queue that is not ours must not be written
+/// into at all -- the entry would be sealed by [ownedEntries] and its own
+/// author would never see it again -- and the lookups that amend an
+/// existing entry have to see the queue they are amending, which a sealed
+/// read cannot.
+///
+/// A foreign queue is cleared rather than kept. It is already unsendable,
+/// its owner cannot be signed in while somebody else is, and that owner's
+/// own sign-out would have deleted it. Set against a user whose every
+/// offline save silently vanishes, losing an already-doomed queue is the
+/// better trade -- and the sheet that announced the foreign queue says
+/// plainly that saving will remove it.
+///
+/// With no current account key nothing is claimed and nothing is cleared:
+/// a queue we cannot attribute is not one we may take.
+Future<void> claimForWriting(
+  TransactionOutbox outbox,
+  String? accountKey,
+) async {
+  if (accountKey == null) return;
+  final owner = await outbox.owner();
+  if (owner == accountKey) return;
+  if (owner != null) await outbox.clear();
+  await outbox.setOwner(accountKey);
+}

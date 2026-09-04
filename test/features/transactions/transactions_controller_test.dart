@@ -1383,10 +1383,32 @@ void main() {
       },
     );
 
+    // Was "a second save does not re-claim an already owned queue": it
+    // asserted that saving as the signed-in account left a queue owned by
+    // 'someone-else' untouched -- the old claimIfUnowned semantics, where
+    // any existing owner (whoever it was) was left alone. Task 4b makes
+    // that the wrong answer on purpose: a foreign queue is now taken over
+    // rather than kept, so the entry just saved is not sealed away from
+    // the person who typed it. Rewritten below to assert the new
+    // behaviour, with a queued entry present so the takeover -- and the
+    // loss of what was there -- is actually observable.
     test(
-      'a second save does not re-claim an already owned queue',
+      'a save into a foreign queue takes the queue over, and the entry '
+      'just saved is visible to the account that saved it',
       () async {
-        await TransactionOutbox(outboxDir).setOwner('someone-else');
+        await TransactionOutbox(outboxDir).setOwner('account-a');
+        await TransactionOutbox(outboxDir).add(
+          PendingTransaction(
+            localId: 'local-theirs',
+            operation: PendingOperation.create,
+            transaction: Transaction(
+              amount: 1,
+              payee: 'Aldi',
+              transactionDate: DateTime(2026, 9),
+            ),
+            queuedAt: DateTime(2026, 9, 1, 10),
+          ),
+        );
         when(
           () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
         ).thenThrow(const NetworkException('Cannot connect to server'));
@@ -1399,12 +1421,184 @@ void main() {
               Transaction(amount: 12.34, transactionDate: DateTime(2026, 9, 4)),
             );
 
+        final outbox = container.read(transactionOutboxProvider);
+        final all = await outbox.all();
+        expect(all, hasLength(1));
+        expect(all.single.transaction.amount, 12.34);
+        expect(await outbox.owner(), _ourAccountKey);
         expect(
-          await container.read(transactionOutboxProvider).owner(),
-          'someone-else',
+          await ownedEntries(outbox, _ourAccountKey),
+          all,
+          reason: 'the point of the takeover: b can see what b just saved',
         );
       },
     );
+
+    // Task 4b: claimForWriting resolves the queue's ownership before
+    // _enqueue reads or writes it, instead of after -- see
+    // outbox_ownership.dart's doc comment on claimForWriting for why the
+    // old order (claim after add) leaves holes.
+    group("a write resolves the queue's ownership first", () {
+      test(
+        'an edit on an unclaimed queue keeps its sticky operation, '
+        'queuedAt and splitsTouched, instead of losing them to a lookup '
+        'that a sealed unclaimed queue fails',
+        () async {
+          final originalQueuedAt = DateTime(2026, 9, 1, 8);
+          await TransactionOutbox(outboxDir).add(
+            PendingTransaction(
+              localId: 'local-1',
+              operation: PendingOperation.update,
+              transaction: Transaction(
+                id: 1,
+                amount: 5,
+                transactionDate: DateTime(2026, 9, 4),
+              ),
+              queuedAt: originalQueuedAt,
+              splitsTouched: true,
+            ),
+          );
+          when(
+            () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+          ).thenThrow(const NetworkException('Cannot connect to server'));
+          final container = containerWithOutbox();
+          await container.read(transactionsControllerProvider().future);
+
+          await container
+              .read(transactionsControllerProvider().notifier)
+              .save(
+                Transaction(
+                  id: 1,
+                  amount: 9,
+                  transactionDate: DateTime(2026, 9, 4),
+                ),
+                localId: 'local-1',
+              );
+
+          final queued = await container.read(transactionOutboxProvider).all();
+          expect(queued, hasLength(1));
+          expect(queued.single.operation, PendingOperation.update);
+          expect(queued.single.queuedAt, originalQueuedAt);
+          expect(queued.single.splitsTouched, isTrue);
+        },
+      );
+
+      test(
+        'an offline delete of a row with a queued edit on an unclaimed '
+        'queue replaces that edit rather than adding a second entry '
+        'beside it',
+        () async {
+          await TransactionOutbox(outboxDir).add(
+            PendingTransaction(
+              localId: 'local-1',
+              operation: PendingOperation.update,
+              transaction: Transaction(
+                id: 1,
+                amount: 99,
+                transactionDate: DateTime(2026, 9),
+              ),
+              queuedAt: DateTime(2026, 9),
+            ),
+          );
+          when(() => repo.getPage()).thenAnswer(
+            (_) async => TransactionPage(
+              content: [
+                Transaction(
+                  id: 1,
+                  amount: 10,
+                  transactionDate: DateTime(2026, 9),
+                ),
+              ],
+              page: 0,
+              size: 50,
+              totalElements: 1,
+              totalPages: 1,
+            ),
+          );
+          when(
+            () => repo.delete(any()),
+          ).thenThrow(const NetworkException('Cannot connect to server'));
+          final container = containerWithOutbox();
+          await container.read(transactionsControllerProvider().future);
+
+          await container
+              .read(transactionsControllerProvider().notifier)
+              .delete(1);
+
+          final queued = await container.read(transactionOutboxProvider).all();
+          expect(queued, hasLength(1));
+          expect(queued.single.operation, PendingOperation.delete);
+        },
+      );
+
+      // The control test 4b's brief insists on: claimForWriting clears a
+      // foreign queue, and a clearing function needs a test proving it
+      // does not clear when it must not. Without the `owner == accountKey`
+      // early return, this fails alongside tests 1-3.
+      test('a queue already ours is not cleared by a second save', () async {
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+        final notifier = container.read(
+          transactionsControllerProvider().notifier,
+        );
+
+        await notifier.save(
+          Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)),
+        );
+        await notifier.save(
+          Transaction(amount: 6, transactionDate: DateTime(2026, 9, 5)),
+        );
+
+        final queued = await container.read(transactionOutboxProvider).all();
+        expect(queued, hasLength(2));
+        expect(queued.map((e) => e.transaction.amount).toSet(), {5, 6});
+      });
+
+      test(
+        'signed out, saving onto a foreign queue claims and clears '
+        'nothing: a queue we cannot attribute is not one we may take',
+        () async {
+          await TransactionOutbox(outboxDir).setOwner('account-a');
+          await TransactionOutbox(outboxDir).add(
+            PendingTransaction(
+              localId: 'local-theirs',
+              operation: PendingOperation.create,
+              transaction: Transaction(
+                amount: 1,
+                payee: 'Aldi',
+                transactionDate: DateTime(2026, 9),
+              ),
+              queuedAt: DateTime(2026, 9, 1, 10),
+            ),
+          );
+          when(
+            () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+          ).thenThrow(const NetworkException('Cannot connect to server'));
+          final container = containerWithOutbox(auth: const AuthState());
+          await container.read(transactionsControllerProvider().future);
+
+          await container
+              .read(transactionsControllerProvider().notifier)
+              .save(
+                Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)),
+              );
+
+          final outbox = container.read(transactionOutboxProvider);
+          final all = await outbox.all();
+          expect(
+            all.map((e) => e.localId),
+            contains('local-theirs'),
+            reason:
+                'nobody signed in means nothing may be claimed, so the '
+                'foreign entry must survive untouched',
+          );
+          expect(await outbox.owner(), 'account-a');
+        },
+      );
+    });
 
     test(
       'saving offline with nobody signed in still queues the entry: '
