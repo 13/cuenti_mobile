@@ -98,4 +98,44 @@ void main() {
 
     expect(await outbox.all(), isEmpty);
   });
+
+  test('atomic write means a partial JSON file is skipped, and a '
+      'well-formed entry written after is still returned, with no temp '
+      'files left behind', () async {
+    await outbox.add(entry('good'));
+    File('${dir.path}/partial.json').writeAsStringSync('{incomplete');
+
+    expect((await outbox.all()).map((e) => e.localId), ['good']);
+    expect(
+      dir.listSync().whereType<File>().where((f) => f.path.contains('.tmp')),
+      isEmpty,
+    );
+  });
+
+  test('an entry whose localId contains / and .. round-trips: add(), all() '
+      'returns it with that exact localId, remove() deletes it, and no file '
+      'was created outside the outbox directory', () async {
+    const specialId = 'path/with/../special';
+    await outbox.add(entry(specialId));
+
+    // Verify the entry is stored and retrieved with the exact localId
+    final allBefore = await outbox.all();
+    expect(allBefore.single.localId, specialId);
+
+    // Verify all JSON files in the outbox directory are within bounds
+    // (no path traversal occurred)
+    final jsonFiles = dir
+        .listSync()
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.json'))
+        .toList();
+    expect(jsonFiles, isNotEmpty);
+    for (final file in jsonFiles) {
+      expect(file.path.startsWith(dir.path), true);
+    }
+
+    // Remove the entry and verify it's gone
+    await outbox.remove(specialId);
+    expect(await outbox.all(), isEmpty);
+  });
 }

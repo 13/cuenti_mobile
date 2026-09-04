@@ -23,10 +23,18 @@ class TransactionOutbox {
 
   final Directory _directory;
 
-  File _fileFor(String localId) => File('${_directory.path}/$localId.json');
+  String _encodeFileName(String localId) =>
+      base64Url.encode(utf8.encode(localId)).replaceAll('=', '');
 
-  Future<void> add(PendingTransaction entry) async =>
-      _fileFor(entry.localId).writeAsString(jsonEncode(entry.toJson()));
+  File _fileFor(String localId) =>
+      File('${_directory.path}/${_encodeFileName(localId)}.json');
+
+  Future<void> add(PendingTransaction entry) async {
+    final file = _fileFor(entry.localId);
+    final tempFile = File('${file.path}.tmp');
+    await tempFile.writeAsString(jsonEncode(entry.toJson()));
+    await tempFile.rename(file.path);
+  }
 
   /// Oldest first, so entries send in the order they were made.
   Future<List<PendingTransaction>> all() async {
