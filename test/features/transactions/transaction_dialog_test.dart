@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
@@ -8,6 +10,7 @@ import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/payees/data/payees_repository.dart';
 import 'package:cuentimobile/features/payees/domain/payee.dart';
 import 'package:cuentimobile/features/payees/ui/payee_picker_field.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
@@ -43,12 +46,15 @@ void main() {
   late MockAccountsRepository accountsRepo;
   late MockCategoriesRepository categoriesRepo;
   late MockPayeesRepository payeesRepo;
+  late Directory outboxDir;
 
   setUp(() {
     txRepo = MockTransactionsRepository();
     accountsRepo = MockAccountsRepository();
     categoriesRepo = MockCategoriesRepository();
     payeesRepo = MockPayeesRepository();
+    outboxDir = Directory.systemTemp.createTempSync('tx_dialog_outbox');
+    addTearDown(() => outboxDir.deleteSync(recursive: true));
     when(() => payeesRepo.getAll()).thenAnswer((_) async => []);
     when(() => payeesRepo.save(any())).thenAnswer(
       (i) async => i.positionalArguments.first as Payee,
@@ -86,6 +92,9 @@ void main() {
           accountsRepositoryProvider.overrideWithValue(accountsRepo),
           categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
           payeesRepositoryProvider.overrideWithValue(payeesRepo),
+          transactionOutboxProvider.overrideWithValue(
+            TransactionOutbox(outboxDir),
+          ),
         ],
         child: MaterialApp(
           locale: locale,
@@ -528,6 +537,9 @@ void main() {
           accountsRepositoryProvider.overrideWithValue(accountsRepo),
           categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
           payeesRepositoryProvider.overrideWithValue(payeesRepo),
+          transactionOutboxProvider.overrideWithValue(
+            TransactionOutbox(outboxDir),
+          ),
         ],
         child: MaterialApp(
           locale: locale,

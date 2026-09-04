@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TransactionsState {
 
- List<Transaction> get items; int get nextPage; bool get hasMore; bool get loadingMore; TransactionFilter get filter;
+ List<Transaction> get items; int get nextPage; bool get hasMore; bool get loadingMore; TransactionFilter get filter;/// Writes the server has not taken yet. The [items] above already
+/// reflect them; this is here so the UI can mark the rows.
+ List<PendingTransaction> get pending;
 /// Create a copy of TransactionsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +29,20 @@ $TransactionsStateCopyWith<TransactionsState> get copyWith => _$TransactionsStat
 @override
 bool operator ==(Object other) {
   final _this = this as TransactionsState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TransactionsState&&const DeepCollectionEquality().equals(other.items, _this.items)&&(identical(other.nextPage, _this.nextPage) || other.nextPage == _this.nextPage)&&(identical(other.hasMore, _this.hasMore) || other.hasMore == _this.hasMore)&&(identical(other.loadingMore, _this.loadingMore) || other.loadingMore == _this.loadingMore)&&(identical(other.filter, _this.filter) || other.filter == _this.filter));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TransactionsState&&const DeepCollectionEquality().equals(other.items, _this.items)&&(identical(other.nextPage, _this.nextPage) || other.nextPage == _this.nextPage)&&(identical(other.hasMore, _this.hasMore) || other.hasMore == _this.hasMore)&&(identical(other.loadingMore, _this.loadingMore) || other.loadingMore == _this.loadingMore)&&(identical(other.filter, _this.filter) || other.filter == _this.filter)&&const DeepCollectionEquality().equals(other.pending, _this.pending));
 }
 
 
 @override
 int get hashCode {
   final _this = this as TransactionsState;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.items),_this.nextPage,_this.hasMore,_this.loadingMore,_this.filter);
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.items),_this.nextPage,_this.hasMore,_this.loadingMore,_this.filter,const DeepCollectionEquality().hash(_this.pending));
 }
 
 @override
 String toString() {
   final _this = this as TransactionsState;
-  return 'TransactionsState(items: ${_this.items}, nextPage: ${_this.nextPage}, hasMore: ${_this.hasMore}, loadingMore: ${_this.loadingMore}, filter: ${_this.filter})';
+  return 'TransactionsState(items: ${_this.items}, nextPage: ${_this.nextPage}, hasMore: ${_this.hasMore}, loadingMore: ${_this.loadingMore}, filter: ${_this.filter}, pending: ${_this.pending})';
 }
 
 
@@ -51,7 +53,7 @@ abstract mixin class $TransactionsStateCopyWith<$Res>  {
   factory $TransactionsStateCopyWith(TransactionsState value, $Res Function(TransactionsState) _then) = _$TransactionsStateCopyWithImpl;
 @useResult
 $Res call({
- List<Transaction> items, int nextPage, bool hasMore, bool loadingMore, TransactionFilter filter
+ List<Transaction> items, int nextPage, bool hasMore, bool loadingMore, TransactionFilter filter, List<PendingTransaction> pending
 });
 
 
@@ -68,14 +70,15 @@ class _$TransactionsStateCopyWithImpl<$Res>
 
 /// Create a copy of TransactionsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? nextPage = null,Object? hasMore = null,Object? loadingMore = null,Object? filter = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? nextPage = null,Object? hasMore = null,Object? loadingMore = null,Object? filter = null,Object? pending = null,}) {
   return _then(TransactionsState(
 items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<Transaction>,nextPage: null == nextPage ? _self.nextPage : nextPage // ignore: cast_nullable_to_non_nullable
 as int,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
 as bool,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
 as bool,filter: null == filter ? _self.filter : filter // ignore: cast_nullable_to_non_nullable
-as TransactionFilter,
+as TransactionFilter,pending: null == pending ? _self.pending : pending // ignore: cast_nullable_to_non_nullable
+as List<PendingTransaction>,
   ));
 }
 /// Create a copy of TransactionsState
@@ -169,10 +172,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Transaction> items,  int nextPage,  bool hasMore,  bool loadingMore,  TransactionFilter filter)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Transaction> items,  int nextPage,  bool hasMore,  bool loadingMore,  TransactionFilter filter,  List<PendingTransaction> pending)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TransactionsState() when $default != null:
-return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that.filter);case _:
+return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that.filter,_that.pending);case _:
   return orElse();
 
 }
@@ -190,10 +193,10 @@ return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Transaction> items,  int nextPage,  bool hasMore,  bool loadingMore,  TransactionFilter filter)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Transaction> items,  int nextPage,  bool hasMore,  bool loadingMore,  TransactionFilter filter,  List<PendingTransaction> pending)  $default,) {final _that = this;
 switch (_that) {
 case _TransactionsState():
-return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that.filter);case _:
+return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that.filter,_that.pending);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -210,10 +213,10 @@ return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Transaction> items,  int nextPage,  bool hasMore,  bool loadingMore,  TransactionFilter filter)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Transaction> items,  int nextPage,  bool hasMore,  bool loadingMore,  TransactionFilter filter,  List<PendingTransaction> pending)?  $default,) {final _that = this;
 switch (_that) {
 case _TransactionsState() when $default != null:
-return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that.filter);case _:
+return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that.filter,_that.pending);case _:
   return null;
 
 }
@@ -225,7 +228,7 @@ return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that
 
 
 class _TransactionsState implements TransactionsState {
-  const _TransactionsState({ List<Transaction> items = const [], this.nextPage = 0, this.hasMore = true, this.loadingMore = false, this.filter = const TransactionFilter()}): _items = items;
+  const _TransactionsState({ List<Transaction> items = const [], this.nextPage = 0, this.hasMore = true, this.loadingMore = false, this.filter = const TransactionFilter(),  List<PendingTransaction> pending = const []}): _items = items,_pending = pending;
   
 
  final  List<Transaction> _items;
@@ -239,6 +242,17 @@ class _TransactionsState implements TransactionsState {
 @override@JsonKey() final  bool hasMore;
 @override@JsonKey() final  bool loadingMore;
 @override@JsonKey() final  TransactionFilter filter;
+/// Writes the server has not taken yet. The [items] above already
+/// reflect them; this is here so the UI can mark the rows.
+ final  List<PendingTransaction> _pending;
+/// Writes the server has not taken yet. The [items] above already
+/// reflect them; this is here so the UI can mark the rows.
+@override@JsonKey() List<PendingTransaction> get pending {
+  if (_pending is EqualUnmodifiableListView) return _pending;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_pending);
+}
+
 
 /// Create a copy of TransactionsState
 /// with the given fields replaced by the non-null parameter values.
@@ -250,18 +264,18 @@ _$TransactionsStateCopyWith<_TransactionsState> get copyWith => __$TransactionsS
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TransactionsState&&const DeepCollectionEquality().equals(other.items, _items)&&(identical(other.nextPage, nextPage) || other.nextPage == nextPage)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.filter, filter) || other.filter == filter));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TransactionsState&&const DeepCollectionEquality().equals(other.items, _items)&&(identical(other.nextPage, nextPage) || other.nextPage == nextPage)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.filter, filter) || other.filter == filter)&&const DeepCollectionEquality().equals(other.pending, _pending));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),nextPage,hasMore,loadingMore,filter);
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),nextPage,hasMore,loadingMore,filter,const DeepCollectionEquality().hash(_pending));
 }
 
 @override
 String toString() {
-    return 'TransactionsState(items: $items, nextPage: $nextPage, hasMore: $hasMore, loadingMore: $loadingMore, filter: $filter)';
+    return 'TransactionsState(items: $items, nextPage: $nextPage, hasMore: $hasMore, loadingMore: $loadingMore, filter: $filter, pending: $pending)';
 }
 
 
@@ -272,7 +286,7 @@ abstract mixin class _$TransactionsStateCopyWith<$Res> implements $TransactionsS
   factory _$TransactionsStateCopyWith(_TransactionsState value, $Res Function(_TransactionsState) _then) = __$TransactionsStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<Transaction> items, int nextPage, bool hasMore, bool loadingMore, TransactionFilter filter
+ List<Transaction> items, int nextPage, bool hasMore, bool loadingMore, TransactionFilter filter, List<PendingTransaction> pending
 });
 
 
@@ -289,14 +303,15 @@ class __$TransactionsStateCopyWithImpl<$Res>
 
 /// Create a copy of TransactionsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? nextPage = null,Object? hasMore = null,Object? loadingMore = null,Object? filter = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? nextPage = null,Object? hasMore = null,Object? loadingMore = null,Object? filter = null,Object? pending = null,}) {
   return _then(_TransactionsState(
 items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
 as List<Transaction>,nextPage: null == nextPage ? _self.nextPage : nextPage // ignore: cast_nullable_to_non_nullable
 as int,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
 as bool,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
 as bool,filter: null == filter ? _self.filter : filter // ignore: cast_nullable_to_non_nullable
-as TransactionFilter,
+as TransactionFilter,pending: null == pending ? _self._pending : pending // ignore: cast_nullable_to_non_nullable
+as List<PendingTransaction>,
   ));
 }
 

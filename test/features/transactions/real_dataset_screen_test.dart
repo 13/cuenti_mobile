@@ -5,6 +5,7 @@ import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
@@ -30,6 +31,10 @@ void main() {
   setUpAll(() => registerFallbackValue(const TransactionFilter()));
 
   testWidgets('renders full real dataset without exceptions', (tester) async {
+    final outboxDir = Directory.systemTemp.createTempSync(
+      'real_dataset_outbox',
+    );
+    addTearDown(() => outboxDir.deleteSync(recursive: true));
     final raw = File(
       'test/fixtures/real_tx_envelope.json',
     ).readAsStringSync();
@@ -60,6 +65,9 @@ void main() {
           transactionsRepositoryProvider.overrideWithValue(txRepo),
           accountsRepositoryProvider.overrideWithValue(accountsRepo),
           categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
+          transactionOutboxProvider.overrideWithValue(
+            TransactionOutbox(outboxDir),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: L.localizationsDelegates,

@@ -18,6 +18,7 @@ class MockTransactionsRepository extends Mock
 void main() {
   late MockTransactionsRepository repo;
   late ProviderContainer container;
+  late Directory defaultOutboxDir;
 
   Transaction tx(int id) => Transaction(
     id: id,
@@ -29,16 +30,28 @@ void main() {
     registerFallbackValue(
       Transaction(amount: 0, transactionDate: DateTime(2026)),
     );
+    registerFallbackValue(const TransactionFilter());
   });
 
   setUp(() {
     repo = MockTransactionsRepository();
+    // build()/loadMore() now read the outbox on every page fetch to merge
+    // pending writes in, so every test needs one -- an empty directory
+    // behaves as an empty outbox and leaves the pre-existing tests' server
+    // data untouched aside from the date sort mergePending always applies.
+    defaultOutboxDir = Directory.systemTemp.createTempSync(
+      'ctrl_outbox_default',
+    );
     container = ProviderContainer(
       overrides: [
         transactionsRepositoryProvider.overrideWithValue(repo),
+        transactionOutboxProvider.overrideWithValue(
+          TransactionOutbox(defaultOutboxDir),
+        ),
       ],
     );
     addTearDown(container.dispose);
+    addTearDown(() => defaultOutboxDir.deleteSync(recursive: true));
   });
 
   test(
@@ -58,7 +71,9 @@ void main() {
         transactionsControllerProvider().future,
       );
 
-      expect(state.items, [tx(1), tx(2)]);
+      // mergePending sorts every merged page by date, newest first, so
+      // the server's own order does not determine the result.
+      expect(state.items, [tx(2), tx(1)]);
       expect(state.nextPage, 1);
       expect(state.hasMore, isTrue);
     },
@@ -104,7 +119,8 @@ void main() {
     await container.read(transactionsControllerProvider().notifier).loadMore();
 
     final state = container.read(transactionsControllerProvider()).value!;
-    expect(state.items, [tx(1), tx(2)]);
+    // Newest first: mergePending re-sorts the whole merged page by date.
+    expect(state.items, [tx(2), tx(1)]);
     expect(state.hasMore, isFalse);
     expect(state.loadingMore, isFalse);
   });
@@ -139,7 +155,8 @@ void main() {
           .loadMore();
 
       final state = container.read(transactionsControllerProvider()).value!;
-      expect(state.items, [tx(1), tx(2), tx(3)]);
+      // Newest first: mergePending re-sorts the whole merged page by date.
+      expect(state.items, [tx(3), tx(2), tx(1)]);
       expect(state.items.map((t) => t.id).toSet().length, state.items.length);
     },
   );
@@ -171,14 +188,15 @@ void main() {
       final built = await container.read(
         transactionsControllerProvider().future,
       );
-      expect(built.items, [tx(1), tx(2)]);
+      // Newest first: mergePending re-sorts the whole merged page by date.
+      expect(built.items, [tx(2), tx(1)]);
 
       await container
           .read(transactionsControllerProvider().notifier)
           .loadMore();
 
       final state = container.read(transactionsControllerProvider()).value!;
-      expect(state.items, [tx(1), tx(2), tx(3)]);
+      expect(state.items, [tx(3), tx(2), tx(1)]);
       expect(state.items.map((t) => t.id).toSet().length, state.items.length);
     },
   );
@@ -217,9 +235,10 @@ void main() {
       container.read(transactionsControllerProvider().notifier).delete(1),
       throwsA(isA<ServerException>()),
     );
+    // Newest first: mergePending re-sorts the whole merged page by date.
     expect(container.read(transactionsControllerProvider()).value!.items, [
-      tx(1),
       tx(2),
+      tx(1),
     ]);
   });
 
@@ -580,6 +599,379 @@ void main() {
         expect(queued, hasLength(1));
         expect(queued.single.transaction.id, 7);
         expect(queued.single.operation, PendingOperation.delete);
+      },
+    );
+
+    test('a queued create appears in the list, in date order', () async {
+      when(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+      when(
+        () => repo.getPage(
+          page: any(named: 'page'),
+          size: any(named: 'size'),
+          filter: any(named: 'filter'),
+        ),
+      ).thenAnswer(
+        (_) async => TransactionPage(
+          content: [
+            Transaction(
+              id: 1,
+              amount: 10,
+              transactionDate: DateTime(2026, 9),
+            ),
+          ],
+          page: 0,
+          size: 50,
+          totalElements: 1,
+          totalPages: 1,
+        ),
+      );
+      final container = containerWithOutbox();
+      await container.read(transactionsControllerProvider().future);
+
+      await container
+          .read(transactionsControllerProvider().notifier)
+          .save(Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)));
+
+      final state = container.read(transactionsControllerProvider()).value!;
+      expect(state.items.map((t) => t.amount), [5, 10]);
+      expect(state.pending, hasLength(1));
+    });
+
+    test('deleting a row that already has an edit queued replaces it, so '
+        'the server is not sent an update and then a delete', () async {
+      when(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+      when(
+        () => repo.delete(any()),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+      when(
+        () => repo.getPage(
+          page: any(named: 'page'),
+          size: any(named: 'size'),
+          filter: any(named: 'filter'),
+        ),
+      ).thenAnswer(
+        (_) async => TransactionPage(
+          content: [
+            Transaction(
+              id: 1,
+              amount: 10,
+              transactionDate: DateTime(2026, 9),
+            ),
+          ],
+          page: 0,
+          size: 50,
+          totalElements: 1,
+          totalPages: 1,
+        ),
+      );
+      final container = containerWithOutbox();
+      await container.read(transactionsControllerProvider().future);
+      final notifier = container.read(
+        transactionsControllerProvider().notifier,
+      );
+
+      await notifier.save(
+        Transaction(id: 1, amount: 99, transactionDate: DateTime(2026, 9)),
+      );
+      await notifier.delete(1);
+
+      final queued = await container.read(transactionOutboxProvider).all();
+      expect(queued, hasLength(1));
+      expect(queued.single.operation, PendingOperation.delete);
+    });
+
+    test('a queued delete hides the row it removes', () async {
+      when(
+        () => repo.delete(any()),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+      when(
+        () => repo.getPage(
+          page: any(named: 'page'),
+          size: any(named: 'size'),
+          filter: any(named: 'filter'),
+        ),
+      ).thenAnswer(
+        (_) async => TransactionPage(
+          content: [
+            Transaction(
+              id: 1,
+              amount: 10,
+              transactionDate: DateTime(2026, 9),
+            ),
+          ],
+          page: 0,
+          size: 50,
+          totalElements: 1,
+          totalPages: 1,
+        ),
+      );
+      final container = containerWithOutbox();
+      await container.read(transactionsControllerProvider().future);
+
+      await container.read(transactionsControllerProvider().notifier).delete(1);
+
+      expect(
+        container.read(transactionsControllerProvider()).value!.items,
+        isEmpty,
+      );
+    });
+
+    test(
+      'a delete queued in an earlier session hides its row on a fresh '
+      'build, not only through the optimistic removal delete() itself does',
+      () async {
+        // delete() removes the row from state immediately regardless of
+        // mergePending, so that path alone can't prove the merge excludes
+        // deleted rows. Queuing the delete directly and building fresh --
+        // the way the app starts up with an outbox left over from before --
+        // isolates mergePending's own contribution.
+        when(() => repo.getPage()).thenAnswer(
+          (_) async => TransactionPage(
+            content: [
+              Transaction(
+                id: 1,
+                amount: 10,
+                transactionDate: DateTime(2026, 9),
+              ),
+            ],
+            page: 0,
+            size: 50,
+            totalElements: 1,
+            totalPages: 1,
+          ),
+        );
+        // Written before the container exists: containerWithOutbox() starts
+        // build() the moment it listens, so writing through the provider
+        // afterwards would race that first read of the outbox.
+        await TransactionOutbox(outboxDir).add(
+          PendingTransaction(
+            localId: 'local-predelete-1',
+            operation: PendingOperation.delete,
+            transaction: Transaction(
+              id: 1,
+              amount: 10,
+              transactionDate: DateTime(2026, 9),
+            ),
+            queuedAt: DateTime(2026, 9, 2),
+          ),
+        );
+        final container = containerWithOutbox();
+
+        final state = await container.read(
+          transactionsControllerProvider().future,
+        );
+
+        expect(state.items, isEmpty);
+        expect(state.pending, hasLength(1));
+      },
+    );
+
+    test(
+      'a queued create is placed by date, not merely appended or prepended',
+      () async {
+        // Three orderings would each look plausible from a bug and must be
+        // told apart: append puts the queued row last, prepend puts it
+        // first, and only true date order puts it in the middle here.
+        when(() => repo.getPage()).thenAnswer(
+          (_) async => TransactionPage(
+            content: [
+              Transaction(
+                id: 1,
+                amount: 100,
+                transactionDate: DateTime(2026, 9, 10),
+              ),
+              Transaction(
+                id: 2,
+                amount: 200,
+                transactionDate: DateTime(2026, 9),
+              ),
+            ],
+            page: 0,
+            size: 50,
+            totalElements: 2,
+            totalPages: 1,
+          ),
+        );
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+
+        await container
+            .read(transactionsControllerProvider().notifier)
+            .save(
+              Transaction(amount: 50, transactionDate: DateTime(2026, 9, 5)),
+            );
+
+        final state = container.read(transactionsControllerProvider()).value!;
+        expect(state.items.map((t) => t.amount), [100, 50, 200]);
+      },
+    );
+
+    test(
+      'a queued update overlays the server row with the queued values',
+      () async {
+        when(() => repo.getPage()).thenAnswer(
+          (_) async => TransactionPage(
+            content: [
+              Transaction(
+                id: 1,
+                amount: 10,
+                transactionDate: DateTime(2026, 9),
+              ),
+            ],
+            page: 0,
+            size: 50,
+            totalElements: 1,
+            totalPages: 1,
+          ),
+        );
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+
+        await container
+            .read(transactionsControllerProvider().notifier)
+            .save(
+              Transaction(
+                id: 1,
+                amount: 999,
+                transactionDate: DateTime(2026, 9),
+              ),
+            );
+
+        final state = container.read(transactionsControllerProvider()).value!;
+        // The row is still the server's (same id, still just one row) but
+        // carries the value the user queued, not the value the server had.
+        expect(state.items, hasLength(1));
+        expect(state.items.single.amount, 999);
+      },
+    );
+
+    test(
+      'a refresh (a fresh build, not the save that queued the write) still '
+      'shows a pending write',
+      () async {
+        when(() => repo.getPage()).thenAnswer(
+          (_) async => TransactionPage(
+            content: [
+              Transaction(
+                id: 1,
+                amount: 10,
+                transactionDate: DateTime(2026, 9),
+              ),
+            ],
+            page: 0,
+            size: 50,
+            totalElements: 1,
+            totalPages: 1,
+          ),
+        );
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+        expect(
+          container.read(transactionsControllerProvider()).value!.items,
+          hasLength(1),
+        );
+
+        // Queued directly, bypassing save(), so this exercises the rebuild
+        // path on its own rather than the invalidateSelf inside save().
+        await container
+            .read(transactionOutboxProvider)
+            .add(
+              PendingTransaction(
+                localId: 'local-refresh-1',
+                operation: PendingOperation.create,
+                transaction: Transaction(
+                  amount: 42,
+                  transactionDate: DateTime(2026, 9, 3),
+                ),
+                queuedAt: DateTime(2026, 9, 3),
+              ),
+            );
+
+        container.invalidate(transactionsControllerProvider());
+        final refreshed = await container.read(
+          transactionsControllerProvider().future,
+        );
+
+        expect(refreshed.items.map((t) => t.amount), [42, 10]);
+        expect(refreshed.pending, hasLength(1));
+      },
+    );
+
+    test(
+      'loadMore folds in a pending write too, without duplicating it',
+      () async {
+        when(() => repo.getPage()).thenAnswer(
+          (_) async => TransactionPage(
+            content: [
+              Transaction(
+                id: 1,
+                amount: 100,
+                transactionDate: DateTime(2026, 9, 20),
+              ),
+            ],
+            page: 0,
+            size: 50,
+            totalElements: 2,
+            totalPages: 2,
+          ),
+        );
+        when(() => repo.getPage(page: 1)).thenAnswer(
+          (_) async => TransactionPage(
+            content: [
+              Transaction(
+                id: 2,
+                amount: 50,
+                transactionDate: DateTime(2026, 9, 10),
+              ),
+            ],
+            page: 1,
+            size: 50,
+            totalElements: 2,
+            totalPages: 2,
+          ),
+        );
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+
+        // Queued directly so it is already reflected before loadMore runs.
+        await container
+            .read(transactionOutboxProvider)
+            .add(
+              PendingTransaction(
+                localId: 'local-loadmore-1',
+                operation: PendingOperation.create,
+                transaction: Transaction(
+                  amount: 77,
+                  transactionDate: DateTime(2026, 9, 15),
+                ),
+                queuedAt: DateTime(2026, 9, 15),
+              ),
+            );
+        container.invalidate(transactionsControllerProvider());
+        await container.read(transactionsControllerProvider().future);
+
+        await container
+            .read(transactionsControllerProvider().notifier)
+            .loadMore();
+
+        final state = container.read(transactionsControllerProvider()).value!;
+        expect(state.items.map((t) => t.amount), [100, 77, 50]);
+        // The pending create must appear exactly once, not once from the
+        // page it was already folded into and again from the outbox.
+        expect(
+          state.items.where((t) => t.amount == 77),
+          hasLength(1),
+        );
       },
     );
   });

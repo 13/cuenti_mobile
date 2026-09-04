@@ -23,6 +23,10 @@ abstract class TransactionsState with _$TransactionsState {
     @Default(true) bool hasMore,
     @Default(false) bool loadingMore,
     @Default(TransactionFilter()) TransactionFilter filter,
+
+    /// Writes the server has not taken yet. The [items] above already
+    /// reflect them; this is here so the UI can mark the rows.
+    @Default([]) List<PendingTransaction> pending,
   }) = _TransactionsState;
 }
 
@@ -48,6 +52,32 @@ class TransactionsController extends _$TransactionsController {
     ];
   }
 
+  /// Folds the outbox into a server page: queued creates take their place
+  /// by date, queued updates replace the row they edit, and queued deletes
+  /// take theirs away. Without this an entry made offline would vanish the
+  /// moment it was saved, which reads as losing it.
+  static List<Transaction> mergePending(
+    List<Transaction> fromServer,
+    List<PendingTransaction> pending,
+  ) {
+    final deleted = {
+      for (final e in pending)
+        if (e.operation == PendingOperation.delete) e.transaction.id,
+    };
+    final updates = {
+      for (final e in pending)
+        if (e.operation == PendingOperation.update)
+          e.transaction.id!: e.transaction,
+    };
+    final merged = [
+      for (final t in fromServer)
+        if (!deleted.contains(t.id)) updates[t.id] ?? t,
+      for (final e in pending)
+        if (e.operation == PendingOperation.create) e.transaction,
+    ]..sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
+    return merged;
+  }
+
   @override
   Future<TransactionsState> build({
     TransactionFilter filter = defaultFilter,
@@ -55,11 +85,13 @@ class TransactionsController extends _$TransactionsController {
     final page = await ref
         .read(transactionsRepositoryProvider)
         .getPage(filter: filter);
+    final pending = await ref.read(transactionOutboxProvider).all();
     return TransactionsState(
-      items: _dedupeById(page.content),
+      items: mergePending(_dedupeById(page.content), pending),
       nextPage: 1,
       hasMore: page.totalPages > 1,
       filter: filter,
+      pending: pending,
     );
   }
 
@@ -71,12 +103,21 @@ class TransactionsController extends _$TransactionsController {
       final page = await ref
           .read(transactionsRepositoryProvider)
           .getPage(filter: current.filter, page: current.nextPage);
+      final pending = await ref.read(transactionOutboxProvider).all();
+      // current.items already carries pending creates merged in (they have
+      // no server id); dropping those before adding the new page and
+      // remerging keeps mergePending from doubling them up.
+      final fromServerSoFar = current.items.where((t) => t.id != null).toList();
       state = AsyncData(
         current.copyWith(
-          items: _dedupeById([...current.items, ...page.content]),
+          items: mergePending(
+            _dedupeById([...fromServerSoFar, ...page.content]),
+            pending,
+          ),
           nextPage: current.nextPage + 1,
           hasMore: current.nextPage + 1 < page.totalPages,
           loadingMore: false,
+          pending: pending,
         ),
       );
     } catch (_) {

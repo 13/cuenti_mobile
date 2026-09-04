@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
@@ -5,6 +7,7 @@ import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
 import 'package:cuentimobile/features/scheduled/data/scheduled_repository.dart';
 import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
 import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
@@ -24,6 +27,7 @@ void main() {
   late MockAccountsRepository accountsRepo;
   late MockTransactionsRepository transactionsRepo;
   late ProviderContainer container;
+  late Directory outboxDir;
 
   final st1 = ScheduledTransaction(
     id: 1,
@@ -42,14 +46,19 @@ void main() {
     repo = MockScheduledRepository();
     accountsRepo = MockAccountsRepository();
     transactionsRepo = MockTransactionsRepository();
+    outboxDir = Directory.systemTemp.createTempSync('scheduled_ctrl_outbox');
     container = ProviderContainer(
       overrides: [
         scheduledRepositoryProvider.overrideWithValue(repo),
         accountsRepositoryProvider.overrideWithValue(accountsRepo),
         transactionsRepositoryProvider.overrideWithValue(transactionsRepo),
+        transactionOutboxProvider.overrideWithValue(
+          TransactionOutbox(outboxDir),
+        ),
       ],
     );
     addTearDown(container.dispose);
+    addTearDown(() => outboxDir.deleteSync(recursive: true));
   });
 
   test('build loads scheduled transactions', () async {

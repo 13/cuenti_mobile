@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
@@ -37,12 +40,15 @@ void main() {
   late MockAccountsRepository accountsRepo;
   late MockCategoriesRepository categoriesRepo;
   late MockVehiclesRepository vehiclesRepo;
+  late Directory outboxDir;
 
   setUp(() {
     txRepo = MockTransactionsRepository();
     accountsRepo = MockAccountsRepository();
     categoriesRepo = MockCategoriesRepository();
     vehiclesRepo = MockVehiclesRepository();
+    outboxDir = Directory.systemTemp.createTempSync('fuel_dialog_outbox');
+    addTearDown(() => outboxDir.deleteSync(recursive: true));
 
     when(
       () => accountsRepo.getAll(),
@@ -99,6 +105,9 @@ void main() {
           accountsRepositoryProvider.overrideWithValue(accountsRepo),
           categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
           vehiclesRepositoryProvider.overrideWithValue(vehiclesRepo),
+          transactionOutboxProvider.overrideWithValue(
+            TransactionOutbox(outboxDir),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: L.localizationsDelegates,

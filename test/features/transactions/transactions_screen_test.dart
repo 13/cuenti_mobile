@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
@@ -37,10 +40,16 @@ void main() {
     transactionDate: date ?? DateTime(2026),
   );
 
+  late Directory outboxDir;
+
   setUp(() {
     txRepo = MockTransactionsRepository();
     accountsRepo = MockAccountsRepository();
     categoriesRepo = MockCategoriesRepository();
+    outboxDir = Directory.systemTemp.createTempSync(
+      'transactions_screen_outbox',
+    );
+    addTearDown(() => outboxDir.deleteSync(recursive: true));
 
     when(
       () => accountsRepo.getAll(),
@@ -57,6 +66,9 @@ void main() {
           transactionsRepositoryProvider.overrideWithValue(txRepo),
           accountsRepositoryProvider.overrideWithValue(accountsRepo),
           categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
+          transactionOutboxProvider.overrideWithValue(
+            TransactionOutbox(outboxDir),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: L.localizationsDelegates,
@@ -72,11 +84,19 @@ void main() {
   testWidgets('renders first page and loads more on scroll to bottom', (
     tester,
   ) async {
+    // mergePending sorts the whole page by date, newest first -- give each
+    // row a distinct date, newer for the lower id, so id 1 stays on top
+    // instead of landing wherever an unstable sort of 60 equal dates
+    // happens to put it.
+    DateTime dateFor(int id) => DateTime(2026).add(Duration(days: 1000 - id));
     when(
       () => txRepo.getPage(),
     ).thenAnswer(
       (_) async => TransactionPage(
-        content: List.generate(50, (i) => tx(i + 1)),
+        content: List.generate(
+          50,
+          (i) => tx(i + 1, date: dateFor(i + 1)),
+        ),
         page: 0,
         size: 50,
         totalElements: 60,
@@ -87,7 +107,10 @@ void main() {
       () => txRepo.getPage(page: 1),
     ).thenAnswer(
       (_) async => TransactionPage(
-        content: List.generate(10, (i) => tx(51 + i)),
+        content: List.generate(
+          10,
+          (i) => tx(51 + i, date: dateFor(51 + i)),
+        ),
         page: 1,
         size: 50,
         totalElements: 60,
