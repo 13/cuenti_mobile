@@ -7,6 +7,7 @@ import 'package:cuentimobile/core/widgets/refresh_all.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/auth/ui/sign_out.dart';
 import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
+import 'package:cuentimobile/features/transactions/ui/outbox_claim_prompt.dart';
 import 'package:cuentimobile/features/transactions/ui/outbox_drain.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
@@ -297,6 +298,9 @@ class ShellScreen extends ConsumerWidget {
               stale: offlineCache.stale,
               onReconnect: () => drainOutbox(ref),
             ),
+          // Asks, once, about a queue that is not this account's. Draws
+          // nothing.
+          const _OutboxClaimCheck(),
           Expanded(child: child),
         ],
       ),
@@ -369,6 +373,45 @@ class ShellScreen extends ConsumerWidget {
         context.go(path);
       },
     );
+  }
+}
+
+/// Asks about a queue belonging to another account, once per sign-in.
+///
+/// Here rather than in AuthController -- where the spec put it -- because
+/// it needs a BuildContext to show a sheet, and the controller has none.
+/// ShellScreen is the first screen behind the router's signed-in redirect,
+/// so it is reached by a fresh login and by a restored session alike: the
+/// two arrivals the check has to cover, and no others.
+///
+/// Gated on `initialized` as well as on a user, for the reason main.dart's
+/// startup drain is: `ApiClient.init()` is what sets the base URL, and the
+/// account key is built from it. Asked earlier, a user signed in to their
+/// own self-hosted server would be asked about their own queue, because
+/// the key would still name the default server.
+class _OutboxClaimCheck extends ConsumerStatefulWidget {
+  const _OutboxClaimCheck();
+
+  @override
+  ConsumerState<_OutboxClaimCheck> createState() => _OutboxClaimCheckState();
+}
+
+class _OutboxClaimCheckState extends ConsumerState<_OutboxClaimCheck> {
+  /// Same shape as main.dart's `_startupDrainAsked`. Without it every
+  /// rebuild of the shell -- a privacy toggle, an overdue count arriving --
+  /// would re-run the check and stack a second sheet on the first.
+  bool _asked = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = ref.watch(authControllerProvider);
+    if (!_asked && auth.initialized && auth.user != null) {
+      _asked = true;
+      // Not awaited: nothing about drawing this frame should wait on a
+      // disk read, and the sheet opens on its own when it is ready.
+      unawaited(promptForForeignOutbox(context, ref));
+    }
+    return const SizedBox.shrink();
   }
 }
 

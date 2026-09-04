@@ -4,11 +4,20 @@ import 'package:flutter/material.dart';
 /// Shows a bottom sheet asking the user to confirm a (typically
 /// destructive) action. Returns `true` when the user confirms, `false`
 /// (or `null`, treated as `false`) otherwise.
+///
+/// [isDestructive] defaults to true because almost every caller is a
+/// deletion, and it paints the confirm button in the error colour. A sheet
+/// whose confirm button is the *safe* answer -- the outbox claim prompt's
+/// "Send as this account", where cancelling is what discards work -- passes
+/// false, so the red is not sitting on the button nobody should hesitate
+/// over.
 Future<bool> showConfirmSheet(
   BuildContext context, {
   required String title,
   String? message,
   String? confirmLabel,
+  String? cancelLabel,
+  bool isDestructive = true,
 }) async {
   final result = await showModalBottomSheet<bool>(
     context: context,
@@ -31,16 +40,18 @@ Future<bool> showConfirmSheet(
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(false),
-                    child: Text(L.of(context).commonCancel),
+                    child: Text(cancelLabel ?? L.of(context).commonCancel),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: colorScheme.error,
-                      foregroundColor: colorScheme.onError,
-                    ),
+                    style: isDestructive
+                        ? FilledButton.styleFrom(
+                            backgroundColor: colorScheme.error,
+                            foregroundColor: colorScheme.onError,
+                          )
+                        : null,
                     onPressed: () => Navigator.of(context).pop(true),
                     child: Text(confirmLabel ?? L.of(context).commonDelete),
                   ),

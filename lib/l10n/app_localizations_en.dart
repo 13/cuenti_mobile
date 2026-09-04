@@ -1336,4 +1336,27 @@ class LEn extends L {
   @override
   String get logoutPendingUnknown =>
       'Your unsent transactions could not be read. They will stay on this device rather than being discarded, and may be sent later.';
+
+  @override
+  String get outboxForeignTitle => 'Unsent transactions from another account';
+
+  @override
+  String outboxForeignBody(int count) {
+    return '$count unsent transactions were saved under a different account or server address, so they will not be sent. Signing in as that account, or correcting the server address, brings them back — but saving a transaction here will set them aside first.';
+  }
+
+  @override
+  String get outboxUnknownTitle =>
+      'Unsent transactions from an earlier version';
+
+  @override
+  String outboxUnknownBody(int count, String account) {
+    return '$count unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as $account, or discard them?';
+  }
+
+  @override
+  String get outboxKeep => 'Keep';
+
+  @override
+  String get outboxSendAsThisAccount => 'Send as this account';
 }

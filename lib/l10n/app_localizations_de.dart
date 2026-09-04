@@ -1340,4 +1340,28 @@ class LDe extends L {
   @override
   String get logoutPendingUnknown =>
       'Nicht gesendete Buchungen konnten nicht gelesen werden. Sie bleiben auf diesem Gerät, statt verworfen zu werden, und werden möglicherweise später gesendet.';
+
+  @override
+  String get outboxForeignTitle =>
+      'Nicht gesendete Buchungen eines anderen Kontos';
+
+  @override
+  String outboxForeignBody(int count) {
+    return '$count nicht gesendete Buchungen wurden unter einem anderen Konto oder einer anderen Serveradresse gespeichert und werden nicht gesendet. Wer sich wieder mit diesem Konto anmeldet oder die Serveradresse korrigiert, sieht sie wieder — beim nächsten Speichern hier werden sie jedoch beiseitegelegt.';
+  }
+
+  @override
+  String get outboxUnknownTitle =>
+      'Nicht gesendete Buchungen aus einer früheren Version';
+
+  @override
+  String outboxUnknownBody(int count, String account) {
+    return '$count nicht gesendete Buchungen wurden vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehören. Als $account senden oder verwerfen?';
+  }
+
+  @override
+  String get outboxKeep => 'Behalten';
+
+  @override
+  String get outboxSendAsThisAccount => 'Als dieses Konto senden';
 }

@@ -2545,6 +2545,42 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Your unsent transactions could not be read. They will stay on this device rather than being discarded, and may be sent later.'**
   String get logoutPendingUnknown;
+
+  /// No description provided for @outboxForeignTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsent transactions from another account'**
+  String get outboxForeignTitle;
+
+  /// No description provided for @outboxForeignBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unsent transactions were saved under a different account or server address, so they will not be sent. Signing in as that account, or correcting the server address, brings them back — but saving a transaction here will set them aside first.'**
+  String outboxForeignBody(int count);
+
+  /// No description provided for @outboxUnknownTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsent transactions from an earlier version'**
+  String get outboxUnknownTitle;
+
+  /// No description provided for @outboxUnknownBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as {account}, or discard them?'**
+  String outboxUnknownBody(int count, String account);
+
+  /// No description provided for @outboxKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep'**
+  String get outboxKeep;
+
+  /// No description provided for @outboxSendAsThisAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Send as this account'**
+  String get outboxSendAsThisAccount;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -1339,4 +1339,27 @@ class LIt extends L {
   @override
   String get logoutPendingUnknown =>
       'Non è stato possibile leggere le operazioni non inviate. Rimarranno su questo dispositivo invece di essere scartate e potrebbero essere inviate più tardi.';
+
+  @override
+  String get outboxForeignTitle => 'Operazioni non inviate di un altro account';
+
+  @override
+  String outboxForeignBody(int count) {
+    return '$count operazioni non inviate sono state salvate con un altro account o un altro indirizzo del server e non verranno inviate. Accedendo con quell\'account o correggendo l\'indirizzo del server torneranno visibili, ma salvando un\'operazione qui verranno messe da parte.';
+  }
+
+  @override
+  String get outboxUnknownTitle =>
+      'Operazioni non inviate di una versione precedente';
+
+  @override
+  String outboxUnknownBody(int count, String account) {
+    return '$count operazioni non inviate sono state salvate prima di questa versione e l\'app non può stabilire a chi appartengano. Inviarle come $account o scartarle?';
+  }
+
+  @override
+  String get outboxKeep => 'Mantieni';
+
+  @override
+  String get outboxSendAsThisAccount => 'Invia come questo account';
 }

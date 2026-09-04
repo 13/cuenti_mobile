@@ -64,6 +64,14 @@ class _FakeAuthController extends AuthController {
   _FakeAuthController(this._state, {this.logoutGate});
   final AuthState _state;
 
+  /// Pushes a new state, the way a profile refresh does mid-session.
+  /// Anything watching the whole AuthState rebuilds on it.
+  ///
+  /// A method rather than a setter because a setter would want a matching
+  /// getter (avoid_setters_without_getters) that nothing here would call.
+  // ignore: use_setters_to_change_properties
+  void emit(AuthState next) => state = next;
+
   /// When set, [logout] blocks on this until the test completes it, so a
   /// test can observe what the UI does while the sign-out is still running.
   final Completer<void>? logoutGate;
@@ -333,6 +341,104 @@ void main() {
 
       expect(auth.logoutCalls, 1);
       expect(await TransactionOutbox(outboxDir).all(), isEmpty);
+    });
+  });
+
+  group("the queue that is not this account's", () {
+    late Directory outboxDir;
+
+    setUp(
+      () => outboxDir = Directory.systemTemp.createTempSync('shell_claim_ob'),
+    );
+    tearDown(() {
+      // The discard path deletes and recreates the directory; a test that
+      // took it leaves nothing to remove.
+      if (outboxDir.existsSync()) outboxDir.deleteSync(recursive: true);
+    });
+
+    /// Signed in, and past `ApiClient.init()` -- which is what settles the
+    /// base URL the account key is built from.
+    const signedIn = AuthState(
+      user: UserProfile(
+        id: 2,
+        username: 'demo',
+        email: 'd@x',
+        firstName: 'Demo',
+      ),
+      initialized: true,
+    );
+
+    const foreignTitle = 'Unsent transactions from another account';
+
+    Future<void> queueOwnedBy(WidgetTester tester, String owner) =>
+        tester.runAsync(() async {
+          final outbox = TransactionOutbox(outboxDir);
+          await outbox.add(
+            PendingTransaction(
+              localId: 'local-1',
+              operation: PendingOperation.create,
+              transaction: Transaction(
+                amount: 12.34,
+                transactionDate: DateTime(2026, 9, 4),
+              ),
+              queuedAt: DateTime(2026, 9, 4, 10),
+            ),
+          );
+          await outbox.setOwner(owner);
+        });
+
+    testWidgets('the shell asks about it on arrival, since ShellScreen is '
+        'where both a fresh login and a restored session land', (
+      tester,
+    ) async {
+      await queueOwnedBy(tester, '${ApiClient.defaultServerUrl}#99');
+
+      await pumpShell(
+        tester,
+        controller: _FakeAuthController(signedIn),
+        outboxDir: outboxDir,
+      );
+
+      expect(find.text(foreignTitle), findsOneWidget);
+    });
+
+    testWidgets('it is asked once, not again every time the auth state '
+        'changes underneath the shell', (tester) async {
+      await queueOwnedBy(tester, '${ApiClient.defaultServerUrl}#99');
+      final auth = _FakeAuthController(signedIn);
+
+      await pumpShell(tester, controller: auth, outboxDir: outboxDir);
+      expect(find.text(foreignTitle), findsOneWidget);
+
+      // A profile refresh, an arriving flag -- anything that re-emits the
+      // auth state while the sheet is still up.
+      auth.emit(
+        signedIn.copyWith(user: signedIn.user!.copyWith(firstName: 'Ada')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(foreignTitle),
+        findsOneWidget,
+        reason:
+            'a second sheet stacked on the first asks the same question '
+            'twice and buries the answer to the first',
+      );
+    });
+
+    testWidgets("this account's own queue is not asked about", (tester) async {
+      await queueOwnedBy(
+        tester,
+        accountKeyFor(ApiClient.defaultServerUrl, signedIn)!,
+      );
+
+      await pumpShell(
+        tester,
+        controller: _FakeAuthController(signedIn),
+        outboxDir: outboxDir,
+      );
+
+      expect(find.text(foreignTitle), findsNothing);
     });
   });
 

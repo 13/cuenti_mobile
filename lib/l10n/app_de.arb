@@ -406,5 +406,11 @@
   "categoryCreateTopLevel": "Neue Hauptkategorie",
   "logoutPendingTitle": "Nicht gesendete Buchungen",
   "logoutPendingBody": "{count} Buchungen haben den Server nicht erreicht. Beim Abmelden gehen sie verloren.",
-  "logoutPendingUnknown": "Nicht gesendete Buchungen konnten nicht gelesen werden. Sie bleiben auf diesem Gerät, statt verworfen zu werden, und werden möglicherweise später gesendet."
+  "logoutPendingUnknown": "Nicht gesendete Buchungen konnten nicht gelesen werden. Sie bleiben auf diesem Gerät, statt verworfen zu werden, und werden möglicherweise später gesendet.",
+  "outboxForeignTitle": "Nicht gesendete Buchungen eines anderen Kontos",
+  "outboxForeignBody": "{count} nicht gesendete Buchungen wurden unter einem anderen Konto oder einer anderen Serveradresse gespeichert und werden nicht gesendet. Wer sich wieder mit diesem Konto anmeldet oder die Serveradresse korrigiert, sieht sie wieder — beim nächsten Speichern hier werden sie jedoch beiseitegelegt.",
+  "outboxUnknownTitle": "Nicht gesendete Buchungen aus einer früheren Version",
+  "outboxUnknownBody": "{count} nicht gesendete Buchungen wurden vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehören. Als {account} senden oder verwerfen?",
+  "outboxKeep": "Behalten",
+  "outboxSendAsThisAccount": "Als dieses Konto senden"
 }
