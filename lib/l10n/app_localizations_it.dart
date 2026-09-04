@@ -1345,7 +1345,15 @@ class LIt extends L {
 
   @override
   String outboxForeignBody(int count) {
-    return '$count operazioni non inviate sono state salvate con un altro account o un altro indirizzo del server e non verranno inviate. Accedendo con quell\'account o correggendo l\'indirizzo del server torneranno visibili, ma salvando un\'operazione qui verranno messe da parte.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count operazioni non inviate sono state salvate con un altro account o un altro indirizzo del server e non verranno inviate. Accedendo con quell\'account o correggendo l\'indirizzo del server torneranno visibili, ma salvando un\'operazione qui verranno messe da parte.',
+      one:
+          '1 operazione non inviata è stata salvata con un altro account o un altro indirizzo del server e non verrà inviata. Accedendo con quell\'account o correggendo l\'indirizzo del server tornerà visibile, ma salvando un\'operazione qui verrà messa da parte.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1354,7 +1362,15 @@ class LIt extends L {
 
   @override
   String outboxUnknownBody(int count, String account) {
-    return '$count operazioni non inviate sono state salvate prima di questa versione e l\'app non può stabilire a chi appartengano. Inviarle come $account o scartarle?';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count operazioni non inviate sono state salvate prima di questa versione e l\'app non può stabilire a chi appartengano. Inviarle come $account?',
+      one:
+          '1 operazione non inviata è stata salvata prima di questa versione e l\'app non può stabilire a chi appartiene. Inviarla come $account?',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1362,4 +1378,7 @@ class LIt extends L {
 
   @override
   String get outboxSendAsThisAccount => 'Invia come questo account';
+
+  @override
+  String get outboxNotNow => 'Non ora';
 }

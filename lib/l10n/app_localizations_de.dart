@@ -1347,7 +1347,15 @@ class LDe extends L {
 
   @override
   String outboxForeignBody(int count) {
-    return '$count nicht gesendete Buchungen wurden unter einem anderen Konto oder einer anderen Serveradresse gespeichert und werden nicht gesendet. Wer sich wieder mit diesem Konto anmeldet oder die Serveradresse korrigiert, sieht sie wieder — beim nächsten Speichern hier werden sie jedoch beiseitegelegt.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count nicht gesendete Buchungen wurden unter einem anderen Konto oder einer anderen Serveradresse gespeichert und werden nicht gesendet. Wer sich wieder mit jenem Konto anmeldet oder die Serveradresse korrigiert, sieht sie wieder — beim nächsten Speichern hier werden sie jedoch beiseitegelegt.',
+      one:
+          '1 nicht gesendete Buchung wurde unter einem anderen Konto oder einer anderen Serveradresse gespeichert und wird nicht gesendet. Wer sich wieder mit jenem Konto anmeldet oder die Serveradresse korrigiert, sieht sie wieder — beim nächsten Speichern hier wird sie jedoch beiseitegelegt.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1356,7 +1364,15 @@ class LDe extends L {
 
   @override
   String outboxUnknownBody(int count, String account) {
-    return '$count nicht gesendete Buchungen wurden vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehören. Als $account senden oder verwerfen?';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count nicht gesendete Buchungen wurden vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehören. Als $account senden?',
+      one:
+          '1 nicht gesendete Buchung wurde vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehört. Als $account senden?',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1364,4 +1380,7 @@ class LDe extends L {
 
   @override
   String get outboxSendAsThisAccount => 'Als dieses Konto senden';
+
+  @override
+  String get outboxNotNow => 'Jetzt nicht';
 }

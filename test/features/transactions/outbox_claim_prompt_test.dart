@@ -111,6 +111,20 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Gives the real clock long enough that a disk write started by the
+  /// last interaction would have finished. Used to prove one did *not*
+  /// happen: without it the assertion would pass merely because nothing
+  /// had had time to run yet.
+  Future<void> settleOutsideTheFakeClock(WidgetTester tester) async {
+    await tester.runAsync(() async {
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 10));
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+    });
+    await tester.pumpAndSettle();
+  }
+
   /// Taps a sheet button whose handler writes to disk, and waits for that
   /// write outside the fake clock.
   Future<void> tapAndWait(
@@ -131,14 +145,17 @@ void main() {
   testWidgets('a foreign queue is named, and discarding empties it', (
     tester,
   ) async {
-    await tester.runAsync(() => queue('local-1', owner: keyFor(1)));
+    await tester.runAsync(() async {
+      await queue('local-1');
+      await queue('local-2', owner: keyFor(1));
+    });
     await pumpHost(tester, userId: 2);
 
     expect(
       find.text('Unsent transactions from another account'),
       findsOneWidget,
     );
-    expect(find.textContaining('1 unsent transactions'), findsOneWidget);
+    expect(find.textContaining('2 unsent transactions were'), findsOneWidget);
 
     await tapAndWait(
       tester,
@@ -197,7 +214,7 @@ void main() {
       find.text('Unsent transactions from an earlier version'),
       findsOneWidget,
     );
-    expect(find.textContaining(keyFor(2)), findsOneWidget);
+    expect(find.textContaining('demo'), findsOneWidget);
 
     await tapAndWait(
       tester,
@@ -229,20 +246,133 @@ void main() {
     );
   });
 
-  testWidgets('declining to adopt an unclaimed queue discards it', (
+  testWidgets('declining to adopt an unclaimed queue writes nothing -- it '
+      'is not offered as a discard', (tester) async {
+    await tester.runAsync(() => queue('local-1'));
+    await pumpHost(tester, userId: 2);
+
+    expect(find.widgetWithText(OutlinedButton, 'Discard'), findsNothing);
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Not now'));
+    await settleOutsideTheFakeClock(tester);
+
+    expect(await outbox.all(), hasLength(1));
+    expect(await outbox.owner(), isNull);
+  });
+
+  // A modal sheet is dismissible by a scrim tap, a drag or the back
+  // button, and showConfirmSheet reports all three as a cancel -- so
+  // whatever cancel does is what an accidental brush of the screen does.
+  // On this branch that must be nothing at all: an implicit discard of
+  // work the user has never been shown is the failure the sheet exists to
+  // prevent.
+  testWidgets('dismissing the upgrade sheet leaves the queue intact', (
     tester,
   ) async {
     await tester.runAsync(() => queue('local-1'));
     await pumpHost(tester, userId: 2);
 
-    await tapAndWait(
-      tester,
-      find.widgetWithText(OutlinedButton, 'Discard'),
-      () async => (await outbox.all()).isEmpty,
+    expect(
+      find.text('Unsent transactions from an earlier version'),
+      findsOneWidget,
     );
 
-    expect(await outbox.all(), isEmpty);
+    // The scrim, well above the sheet at the bottom of the screen.
+    await tester.tapAt(const Offset(20, 20));
+    await settleOutsideTheFakeClock(tester);
+
+    expect(
+      find.text('Unsent transactions from an earlier version'),
+      findsNothing,
+      reason: 'the tap has to have actually dismissed the sheet',
+    );
+    expect(await outbox.all(), hasLength(1));
     expect(await outbox.owner(), isNull);
+  });
+
+  group('the count reads as a sentence, singular or plural', () {
+    testWidgets('one foreign entry is one transaction', (tester) async {
+      await tester.runAsync(() => queue('local-1', owner: keyFor(1)));
+      await pumpHost(tester, userId: 2);
+
+      expect(
+        find.textContaining('1 unsent transaction was'),
+        findsOneWidget,
+        reason: '"1 unsent transactions were" is not a sentence',
+      );
+    });
+
+    testWidgets('one unclaimed entry is one transaction', (tester) async {
+      await tester.runAsync(() => queue('local-1'));
+      await pumpHost(tester, userId: 2);
+
+      expect(find.textContaining('1 unsent transaction was'), findsOneWidget);
+    });
+
+    testWidgets('two unclaimed entries are transactions', (tester) async {
+      await tester.runAsync(() async {
+        await queue('local-1');
+        await queue('local-2');
+      });
+      await pumpHost(tester, userId: 2);
+
+      expect(find.textContaining('2 unsent transactions were'), findsOneWidget);
+    });
+  });
+
+  group('who the queue would be sent as', () {
+    testWidgets('the sheet names the person, not the storage key', (
+      tester,
+    ) async {
+      await tester.runAsync(() => queue('local-1'));
+      await pumpHost(tester, userId: 2);
+
+      expect(find.textContaining('Send it as demo?'), findsOneWidget);
+      expect(
+        find.textContaining(keyFor(2)),
+        findsNothing,
+        reason:
+            'https://cuenti.muh#2 asks the user to accept an identity claim '
+            'written as a URL and a database id they have never been shown',
+      );
+    });
+
+    test('the default server is left out, since it distinguishes nobody', () {
+      expect(
+        accountDisplayName(
+          ApiClient.defaultServerUrl,
+          const AuthState(user: UserProfile(id: 2, username: 'demo')),
+        ),
+        'demo',
+      );
+    });
+
+    test('another server is named, since there it is part of who you are', () {
+      expect(
+        accountDisplayName(
+          'https://books.example',
+          const AuthState(user: UserProfile(id: 2, username: 'demo')),
+        ),
+        'demo (books.example)',
+      );
+    });
+
+    test('a profile with no username falls back to the id', () {
+      expect(
+        accountDisplayName(
+          ApiClient.defaultServerUrl,
+          const AuthState(user: UserProfile(id: 2)),
+        ),
+        '2',
+      );
+    });
+
+    test('nobody signed in has no name, the way they have no key', () {
+      expect(
+        accountDisplayName(ApiClient.defaultServerUrl, const AuthState()),
+        isNull,
+      );
+    });
   });
 
   testWidgets('our own queue asks nothing', (tester) async {

@@ -816,14 +816,16 @@
   "@logoutPendingUnknown": {},
   "outboxForeignTitle": "Unsent transactions from another account",
   "@outboxForeignTitle": {},
-  "outboxForeignBody": "{count} unsent transactions were saved under a different account or server address, so they will not be sent. Signing in as that account, or correcting the server address, brings them back — but saving a transaction here will set them aside first.",
+  "outboxForeignBody": "{count, plural, =1{1 unsent transaction was saved under a different account or server address, so it will not be sent. Signing in as that account, or correcting the server address, brings it back — but saving a transaction here will set it aside first.} other{{count} unsent transactions were saved under a different account or server address, so they will not be sent. Signing in as that account, or correcting the server address, brings them back — but saving a transaction here will set them aside first.}}",
   "@outboxForeignBody": {"placeholders": {"count": {"type": "int"}}},
   "outboxUnknownTitle": "Unsent transactions from an earlier version",
   "@outboxUnknownTitle": {},
-  "outboxUnknownBody": "{count} unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as {account}, or discard them?",
+  "outboxUnknownBody": "{count, plural, =1{1 unsent transaction was saved before this version, so this app cannot tell whose it is. Send it as {account}?} other{{count} unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as {account}?}}",
   "@outboxUnknownBody": {"placeholders": {"count": {"type": "int"}, "account": {"type": "String"}}},
   "outboxKeep": "Keep",
   "@outboxKeep": {},
   "outboxSendAsThisAccount": "Send as this account",
-  "@outboxSendAsThisAccount": {}
+  "@outboxSendAsThisAccount": {},
+  "outboxNotNow": "Not now",
+  "@outboxNotNow": {}
 }

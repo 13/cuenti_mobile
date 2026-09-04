@@ -408,9 +408,10 @@
   "logoutPendingBody": "{count} operazioni non hanno raggiunto il server. Uscendo andranno perse.",
   "logoutPendingUnknown": "Non è stato possibile leggere le operazioni non inviate. Rimarranno su questo dispositivo invece di essere scartate e potrebbero essere inviate più tardi.",
   "outboxForeignTitle": "Operazioni non inviate di un altro account",
-  "outboxForeignBody": "{count} operazioni non inviate sono state salvate con un altro account o un altro indirizzo del server e non verranno inviate. Accedendo con quell'account o correggendo l'indirizzo del server torneranno visibili, ma salvando un'operazione qui verranno messe da parte.",
+  "outboxForeignBody": "{count, plural, =1{1 operazione non inviata è stata salvata con un altro account o un altro indirizzo del server e non verrà inviata. Accedendo con quell'account o correggendo l'indirizzo del server tornerà visibile, ma salvando un'operazione qui verrà messa da parte.} other{{count} operazioni non inviate sono state salvate con un altro account o un altro indirizzo del server e non verranno inviate. Accedendo con quell'account o correggendo l'indirizzo del server torneranno visibili, ma salvando un'operazione qui verranno messe da parte.}}",
   "outboxUnknownTitle": "Operazioni non inviate di una versione precedente",
-  "outboxUnknownBody": "{count} operazioni non inviate sono state salvate prima di questa versione e l'app non può stabilire a chi appartengano. Inviarle come {account} o scartarle?",
+  "outboxUnknownBody": "{count, plural, =1{1 operazione non inviata è stata salvata prima di questa versione e l'app non può stabilire a chi appartiene. Inviarla come {account}?} other{{count} operazioni non inviate sono state salvate prima di questa versione e l'app non può stabilire a chi appartengano. Inviarle come {account}?}}",
   "outboxKeep": "Mantieni",
-  "outboxSendAsThisAccount": "Invia come questo account"
+  "outboxSendAsThisAccount": "Invia come questo account",
+  "outboxNotNow": "Non ora"
 }

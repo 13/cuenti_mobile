@@ -2555,7 +2555,7 @@ abstract class L {
   /// No description provided for @outboxForeignBody.
   ///
   /// In en, this message translates to:
-  /// **'{count} unsent transactions were saved under a different account or server address, so they will not be sent. Signing in as that account, or correcting the server address, brings them back — but saving a transaction here will set them aside first.'**
+  /// **'{count, plural, =1{1 unsent transaction was saved under a different account or server address, so it will not be sent. Signing in as that account, or correcting the server address, brings it back — but saving a transaction here will set it aside first.} other{{count} unsent transactions were saved under a different account or server address, so they will not be sent. Signing in as that account, or correcting the server address, brings them back — but saving a transaction here will set them aside first.}}'**
   String outboxForeignBody(int count);
 
   /// No description provided for @outboxUnknownTitle.
@@ -2567,7 +2567,7 @@ abstract class L {
   /// No description provided for @outboxUnknownBody.
   ///
   /// In en, this message translates to:
-  /// **'{count} unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as {account}, or discard them?'**
+  /// **'{count, plural, =1{1 unsent transaction was saved before this version, so this app cannot tell whose it is. Send it as {account}?} other{{count} unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as {account}?}}'**
   String outboxUnknownBody(int count, String account);
 
   /// No description provided for @outboxKeep.
@@ -2581,6 +2581,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Send as this account'**
   String get outboxSendAsThisAccount;
+
+  /// No description provided for @outboxNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get outboxNotNow;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

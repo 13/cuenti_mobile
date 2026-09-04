@@ -1342,7 +1342,15 @@ class LEn extends L {
 
   @override
   String outboxForeignBody(int count) {
-    return '$count unsent transactions were saved under a different account or server address, so they will not be sent. Signing in as that account, or correcting the server address, brings them back — but saving a transaction here will set them aside first.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count unsent transactions were saved under a different account or server address, so they will not be sent. Signing in as that account, or correcting the server address, brings them back — but saving a transaction here will set them aside first.',
+      one:
+          '1 unsent transaction was saved under a different account or server address, so it will not be sent. Signing in as that account, or correcting the server address, brings it back — but saving a transaction here will set it aside first.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1351,7 +1359,15 @@ class LEn extends L {
 
   @override
   String outboxUnknownBody(int count, String account) {
-    return '$count unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as $account, or discard them?';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as $account?',
+      one:
+          '1 unsent transaction was saved before this version, so this app cannot tell whose it is. Send it as $account?',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1359,4 +1375,7 @@ class LEn extends L {
 
   @override
   String get outboxSendAsThisAccount => 'Send as this account';
+
+  @override
+  String get outboxNotNow => 'Not now';
 }
