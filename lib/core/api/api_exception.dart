@@ -17,14 +17,23 @@ sealed class ApiException implements Exception {
       case DioExceptionType.badResponse:
         final status = e.response?.statusCode ?? 0;
         final body = e.response?.data;
+        // Dio only JSON-decodes JSON mime types, so a misconfigured
+        // reverse proxy's text/html error page arrives here as a plain
+        // String. Truncating one bounds its length but not its content: a
+        // snackbar of raw markup and literal newlines is worse than the
+        // plain "Server error (502)" it displaces. A body that opens with
+        // `<` is a page, not a sentence, and there is nothing in it worth
+        // putting in front of anyone. Trimmed first, so a body that is
+        // only blank lines is no explanation either.
+        final text = body is String ? body.trim() : null;
         final raw = switch (body) {
           {'error': final String msg} when msg.isNotEmpty => msg,
-          final String s when s.isNotEmpty => s,
+          String() when text!.isNotEmpty && !text.startsWith('<') => text,
           _ => null,
         };
-        // This string is shown to a user now, and a misconfigured reverse
-        // proxy answers with an entire HTML page. Cut it here, once, so
-        // every consumer gets the same rule.
+        // This string is shown to a user now, and a plain-text body can
+        // still run to a whole stack trace. Cut it here, once, so every
+        // consumer gets the same rule.
         final serverMessage =
             raw == null || raw.length <= maxServerMessageLength
             ? raw
@@ -125,7 +134,7 @@ const _certificateMessage =
     'check its fingerprint and trust it.';
 
 /// How much of the server's own explanation is worth putting in front of a
-/// user. A body long enough to matter is an HTML error page, not a sentence.
+/// user. A sentence this long is not one anyone reads off a snackbar.
 const maxServerMessageLength = 200;
 
 final class NetworkException extends ApiException {

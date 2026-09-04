@@ -77,8 +77,40 @@ void main() {
       expect(e.statusCode, 401);
     });
 
-    // A misconfigured reverse proxy answers with a whole HTML page. That
-    // string is about to be shown to a user inside a snackbar.
+    // A reverse proxy's error page is not an explanation. Dio only
+    // JSON-decodes JSON mime types, so a text/html body arrives here as a
+    // plain String and would otherwise be quoted verbatim -- markup and
+    // literal newlines, six wrapped lines of a four-second snackbar.
+    test('an HTML error page is not an explanation', () {
+      const page =
+          '<html>\n<head><title>502 Bad Gateway</title></head>\n'
+          '<body>\n<center><h1>502 Bad Gateway</h1></center>\n'
+          '<hr><center>nginx</center>\n</body>\n</html>\n';
+
+      final e = ApiException.fromDio(badResponse(502, page));
+
+      expect(e.serverMessage, isNull);
+      expect(e.message, 'Server error (502)');
+      expect(e.localizedMessage(LEn()), 'Server error (502)');
+    });
+
+    // Leading blank lines are as common in a proxy body as markup, and an
+    // all-whitespace one would otherwise read as "the server explained
+    // itself" and frame nothing.
+    test('a whitespace-only body is not an explanation', () {
+      final e = ApiException.fromDio(badResponse(500, '  \n  '));
+
+      expect(e.serverMessage, isNull);
+    });
+
+    test('a string body is quoted without its surrounding whitespace', () {
+      final e = ApiException.fromDio(badResponse(400, '\n Missing account \n'));
+
+      expect(e.serverMessage, 'Missing account');
+    });
+
+    // Still capped: a plain-text stack trace is a sentence by this rule
+    // and still far too long to put in a snackbar.
     test('an overlong body is truncated', () {
       final e = ApiException.fromDio(badResponse(400, 'x' * 5000));
 
