@@ -498,6 +498,48 @@ void main() {
     });
     tearDown(() => outboxDir.deleteSync(recursive: true));
 
+    /// Waits, from inside [WidgetTester.runAsync], until [done] holds.
+    ///
+    /// These waits are on real disk I/O started by a tapped handler.
+    /// `pumpAndSettle` only tracks scheduled frames, so it cannot see one;
+    /// the wait has to be a poll of the real thing, and it has to be
+    /// bounded or a regression that stops the write would hang the suite
+    /// instead of failing it.
+    ///
+    /// A wall-clock deadline rather than a fixed iteration count: 200
+    /// turns of a 5ms delay is about a second of real time, and a second
+    /// is not much of a budget for two disk operations on a loaded CI
+    /// box. When it ran out, the loop gave up silently and the failure
+    /// surfaced lines later as `pumpAndSettle timed out`, which names
+    /// nothing. Twenty seconds, and a failure that says what it was
+    /// waiting for.
+    Future<void> waitFor(
+      WidgetTester tester,
+      String what,
+      Future<bool> Function() done, {
+      Duration timeout = const Duration(seconds: 20),
+    }) async {
+      final deadline = DateTime.now().add(timeout);
+      while (!await done()) {
+        if (DateTime.now().isAfter(deadline)) {
+          fail('timed out after ${timeout.inSeconds}s waiting for: $what');
+        }
+        await tester.pump(const Duration(milliseconds: 10));
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+    }
+
+    /// [waitFor], against what is actually on disk in the outbox.
+    Future<void> waitForOutbox(
+      WidgetTester tester,
+      String what,
+      bool Function(List<PendingTransaction>) done,
+    ) => waitFor(
+      tester,
+      what,
+      () async => done(await TransactionOutbox(outboxDir).all()),
+    );
+
     // TransactionOutbox does real disk I/O, which the widget-test clock
     // (AutomatedTestWidgetsFlutterBinding runs the body inside FakeAsync)
     // never lets complete on its own -- awaiting it directly here, or from
@@ -583,14 +625,11 @@ void main() {
       // both happen inside runAsync -- see the discard test below.
       await tester.runAsync(() async {
         await tester.tap(find.text('Try again'));
-        for (
-          var i = 0;
-          i < 200 && sync.drains == 0 && sync.drainAgains == 0;
-          i++
-        ) {
-          await tester.pump(const Duration(milliseconds: 10));
-          await Future<void>.delayed(const Duration(milliseconds: 5));
-        }
+        await waitFor(
+          tester,
+          'the retry to reach the sync',
+          () async => sync.drains > 0 || sync.drainAgains > 0,
+        );
       });
       await tester.pumpAndSettle();
 
@@ -655,23 +694,16 @@ void main() {
       // rather than a pump.
       await tester.runAsync(() async {
         await tester.tap(find.text('Discard'));
-        // Bounded: a real regression that stops removing the entry must
-        // fail this test, not hang the suite.
-        for (
-          var i = 0;
-          i < 200 && (await TransactionOutbox(outboxDir).all()).isNotEmpty;
-          i++
-        ) {
-          await Future<void>.delayed(const Duration(milliseconds: 5));
-        }
-        for (
-          var i = 0;
-          i < 100 && find.text('Aldi').evaluate().isNotEmpty;
-          i++
-        ) {
-          await tester.pump(const Duration(milliseconds: 10));
-          await Future<void>.delayed(const Duration(milliseconds: 5));
-        }
+        await waitForOutbox(
+          tester,
+          'the discarded entry to leave the queue',
+          (entries) => entries.isEmpty,
+        );
+        await waitFor(
+          tester,
+          'the discarded row to leave the list',
+          () async => find.text('Aldi').evaluate().isEmpty,
+        );
       });
       await tester.pumpAndSettle();
 
@@ -695,21 +727,16 @@ void main() {
         // effect both happen inside runAsync -- see the discard test above.
         await tester.runAsync(() async {
           await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
-          for (
-            var i = 0;
-            i < 200 && (await TransactionOutbox(outboxDir).all()).isNotEmpty;
-            i++
-          ) {
-            await Future<void>.delayed(const Duration(milliseconds: 5));
-          }
-          for (
-            var i = 0;
-            i < 100 && find.text('Aldi').evaluate().isNotEmpty;
-            i++
-          ) {
-            await tester.pump(const Duration(milliseconds: 10));
-            await Future<void>.delayed(const Duration(milliseconds: 5));
-          }
+          await waitForOutbox(
+            tester,
+            'the swiped-away entry to leave the queue',
+            (entries) => entries.isEmpty,
+          );
+          await waitFor(
+            tester,
+            'the swiped-away row to leave the list',
+            () async => find.text('Aldi').evaluate().isEmpty,
+          );
         });
         await tester.pumpAndSettle();
 
@@ -773,16 +800,11 @@ void main() {
         // reason queue() and the Discard flow above need runAsync.
         await tester.runAsync(() async {
           await tester.tap(saveButton);
-          for (
-            var i = 0;
-            i < 200 &&
-                !(await TransactionOutbox(
-                  outboxDir,
-                ).all()).any((e) => e.transaction.amount == 99.99);
-            i++
-          ) {
-            await Future<void>.delayed(const Duration(milliseconds: 5));
-          }
+          await waitForOutbox(
+            tester,
+            'the edited amount to reach the outbox',
+            (entries) => entries.any((e) => e.transaction.amount == 99.99),
+          );
         });
         await tester.pumpAndSettle();
 
