@@ -4,6 +4,7 @@ import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
+import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/scheduled/data/scheduled_repository.dart';
 import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
 import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
@@ -11,6 +12,7 @@ import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart'
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
+import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -21,6 +23,19 @@ class MockAccountsRepository extends Mock implements AccountsRepository {}
 
 class MockTransactionsRepository extends Mock
     implements TransactionsRepository {}
+
+/// Hands back a settled auth state synchronously. The transactions
+/// controller this test invalidates reads the auth state on every build,
+/// to know whose queue it may merge -- without an override that builds the
+/// real controller, whose init() then fails on the uninitialized binding
+/// and prints the failure into the test output.
+class _FakeAuthController extends AuthController {
+  _FakeAuthController(this._state);
+  final AuthState _state;
+
+  @override
+  AuthState build() => _state;
+}
 
 void main() {
   late MockScheduledRepository repo;
@@ -54,6 +69,11 @@ void main() {
         transactionsRepositoryProvider.overrideWithValue(transactionsRepo),
         transactionOutboxProvider.overrideWithValue(
           TransactionOutbox(outboxDir),
+        ),
+        authControllerProvider.overrideWith(
+          () => _FakeAuthController(
+            const AuthState(user: UserProfile(id: 42, username: 'ben')),
+          ),
         ),
       ],
     );
