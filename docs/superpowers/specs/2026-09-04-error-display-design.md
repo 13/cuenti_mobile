@@ -90,6 +90,16 @@ every consumer — the UI and the outbox's stored rejection reason — benefits
 from one rule. This also closes a minor parked during the offline branch
 (an unbounded refusal reason rendered inside a row).
 
+> **Amended by the final review: truncation was the wrong answer for the
+> case that motivated it.** Cutting an HTML error page to 200 characters
+> bounds its length but not its content — the user still gets raw markup and
+> literal newlines wrapped over six lines of a four-second snackbar, which is
+> worse than the plain `Server error (502)` it displaces. A string body that
+> opens with `<` is a page, not a sentence, and is dropped outright
+> (`serverMessage == null`); the body is trimmed first, so an all-whitespace
+> one is dropped too. The 200-character cap stays, now justified by what it
+> actually bounds: a long plain-text body such as a stack trace.
+
 **New l10n keys**, in `app_en.arb`, `app_de.arb` and `app_it.arb`:
 
 | Key | en | de | it |
@@ -109,6 +119,25 @@ Track 3 adds one more, for the unreadable-queue case described there:
 | Key | en | de | it |
 |---|---|---|---|
 | `logoutPendingUnknown` | `Your unsent transactions could not be read. Signing out will discard anything still waiting.` | `Nicht gesendete Buchungen konnten nicht gelesen werden. Beim Abmelden geht alles noch Wartende verloren.` | `Non è stato possibile leggere le operazioni non inviate. Uscendo andrà perso tutto ciò che è ancora in attesa.` |
+
+> **Superseded twice — the shipped wording is not the one above.** Ruling R7
+> found the original text false: sign-out clears the store it was *given*,
+> and the store it is given when the real one cannot be opened is the empty
+> fallback, so nothing "still waiting" is discarded at all. The text became
+> `Your unsent transactions could not be read. They will stay on this device
+> rather than being discarded, and may be sent later.` (de: `… Sie bleiben
+> auf diesem Gerät, statt verworfen zu werden, und werden möglicherweise
+> später gesendet.`; it: `… Rimarranno su questo dispositivo invece di essere
+> scartate e potrebbero essere inviate più tardi.` — *scartate*, not
+> *eliminate*, to agree with the *Scarta* button the user is looking at).
+>
+> The final review then found that R7 had only considered an *empty*
+> fallback store. The fallback directory is a stable path, so a session that
+> starts in fallback queues into it and signs out with entries that really
+> are discarded. `confirmSignOut` therefore chooses on both facts, not on
+> `isFallback` alone: `logoutPendingUnknown` only when the store is a
+> fallback **and** empty, `logoutPendingBody(count)` otherwise. No new
+> string; the honest count came back for the case that has one.
 
 **Retiring the allow-list entry.** `transaction_sync.dart` sits on the l10n
 guard's allow-list only because this bug forced it to store `e.message`. With

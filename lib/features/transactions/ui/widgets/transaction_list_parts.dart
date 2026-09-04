@@ -215,6 +215,17 @@ class TransactionTile extends ConsumerWidget {
       if (accountName != null && accountName.isNotEmpty) accountName,
     ];
 
+    // What the pending row says, when there is a pending entry at all: a
+    // refusal the server explained, a refusal it did not, or an entry
+    // still on its way. Hoisted out of the tree below, where it read as a
+    // three-level nested ternary inside a `Text`.
+    final pendingLabel = switch (entry) {
+      null => null,
+      final e when !e.isRejected => L.of(context).txPendingNotSent,
+      final e when e.rejection!.isEmpty => L.of(context).txPendingRefused,
+      final e => L.of(context).txPendingRejected(e.rejection!),
+    };
+
     final colorScheme = Theme.of(context).colorScheme;
     final editColor = context.cuentiColors.transfer;
 
@@ -319,16 +330,17 @@ class TransactionTile extends ConsumerWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            entry.isRejected
-                                ? (entry.rejection!.isEmpty
-                                      ? L.of(context).txPendingRefused
-                                      : L
-                                            .of(context)
-                                            .txPendingRejected(
-                                              entry.rejection!,
-                                            ))
-                                : L.of(context).txPendingNotSent,
+                            // Non-null exactly when `entry` is.
+                            pendingLabel!,
                             style: Theme.of(context).textTheme.labelSmall,
+                            // Capped like both of its siblings in this
+                            // subtitle: a 200-character server reason plus
+                            // the "Refused: " frame wraps to ten lines in
+                            // this narrow Expanded, next to two buttons,
+                            // and the row grows several times the height
+                            // of the ones around it.
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (entry.isRejected) ...[

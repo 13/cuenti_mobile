@@ -531,6 +531,40 @@ void main() {
         expect(calls, 2, reason: 'the entry that failed was tried again');
       },
     );
+
+    test(
+      'a queued follow-up still runs when the pass it waited on threw an '
+      'Error rather than an Exception',
+      () async {
+        // Same contract as the test above, for the other half of the
+        // hierarchy. `on Exception` let an Error propagate out of the
+        // await and skipped the `return drain()` below it, so the retry
+        // the person asked for silently never ran.
+        var calls = 0;
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenAnswer((i) async {
+          calls++;
+          if (calls == 1) throw StateError('boom');
+          return i.positionalArguments.first as Transaction;
+        });
+
+        await queue('a');
+        final first = sync.drain();
+        final second = sync.drainAgain();
+
+        await expectLater(first, throwsA(isA<StateError>()));
+        expect(
+          await second,
+          1,
+          reason:
+              'the follow-up ran and delivered the retried entry despite '
+              'the pass it waited on throwing an Error',
+        );
+        expect(await outbox.all(), isEmpty);
+        expect(calls, 2, reason: 'the entry that failed was tried again');
+      },
+    );
   });
 }
 

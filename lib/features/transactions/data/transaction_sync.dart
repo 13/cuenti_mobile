@@ -76,15 +76,19 @@ class TransactionSync {
   Future<int> _drainAfter(Future<int> running) async {
     try {
       await running;
-    } on Exception catch (_) {
+    } on Object catch (_) {
       // The pass we waited on failed. That is not this retry's answer --
       // it read the outbox before this retry's change, so try regardless.
+      // `Object` rather than `Exception`: an `Error` propagating from here
+      // would skip the `return drain()` below and the retry the person
+      // asked for would silently never run.
     } finally {
       // Released before the fresh pass starts, not after it finishes: a
       // retry tapped while that pass is running must queue its own
       // follow-up rather than join one that has already read the outbox.
-      // The `finally` also means a thrown `Error` (not just an `Exception`)
-      // still releases the slot instead of wedging it shut forever.
+      // In a `finally` rather than after the `try`, so the slot is
+      // released on every path out of the await no matter what the catch
+      // above is ever narrowed to -- never wedged shut forever.
       _queued = null;
     }
     return drain();

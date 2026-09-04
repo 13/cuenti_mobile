@@ -190,6 +190,36 @@ void main() {
       final e = ApiException.fromDio(badResponse(503, 'Upstream down'));
 
       expect(e.localizedMessage(en), 'Server error (503): Upstream down');
+      // The frame is translated even though what it quotes is not: that is
+      // the whole point of framing rather than showing the body bare.
+      expect(e.localizedMessage(de), 'Serverfehler (503): Upstream down');
+    });
+
+    // A refused certificate must not read as an ordinary connection
+    // failure: the answer to it is Server Setup, not "try again later".
+    // That distinction rests entirely on the _certificateMessage constant,
+    // which nothing else asserted.
+    test('a refused certificate points at Server Setup, translated', () {
+      final e = ApiException.fromDio(
+        DioException(
+          requestOptions: RequestOptions(path: '/x'),
+          type: DioExceptionType.badCertificate,
+        ),
+      );
+
+      expect(e, isA<NetworkException>());
+      expect(
+        e.localizedMessage(en),
+        'The server certificate is not trusted. Re-run Server Setup to '
+        'check its fingerprint and trust it.',
+      );
+      expect(
+        e.localizedMessage(de),
+        'Dem Serverzertifikat wird nicht vertraut. Führen Sie die '
+        'Servereinrichtung erneut aus, um den Fingerabdruck zu prüfen und '
+        'ihm zu vertrauen.',
+      );
+      expect(e.localizedMessage(de), isNot(de.errorNetwork));
     });
 
     // Dead before this change: statusCode was always null, so every 5xx

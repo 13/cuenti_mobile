@@ -103,9 +103,13 @@ class _CuentiAppState extends ConsumerState<CuentiApp> {
     // can actually be sent.
     //
     // Held until the client knows its server: a drain composed before
-    // ApiClient.init() would go out against the default baseUrl in
-    // api_client.dart and be refused, and a refused entry is never retried
-    // automatically.
+    // ApiClient.init() would address the default baseUrl in
+    // api_client.dart. Wasted rather than harmful -- an unreachable host
+    // raises a NetworkException, which ends the run with nothing marked,
+    // and a host that answers 401 raises an UnauthorizedException, which
+    // transaction_sync.dart explicitly declines to record as a refusal --
+    // but nothing would reach the real server either, and the queue would
+    // sit untouched until something asked for another drain.
     ref.listen(authControllerProvider.select((s) => s.initialized), (
       _,
       initialized,

@@ -406,5 +406,5 @@
   "categoryCreateTopLevel": "Nuova categoria principale",
   "logoutPendingTitle": "Operazioni non inviate",
   "logoutPendingBody": "{count} operazioni non hanno raggiunto il server. Uscendo andranno perse.",
-  "logoutPendingUnknown": "Non è stato possibile leggere le operazioni non inviate. Rimarranno su questo dispositivo invece di essere eliminate e potrebbero essere inviate più tardi."
+  "logoutPendingUnknown": "Non è stato possibile leggere le operazioni non inviate. Rimarranno su questo dispositivo invece di essere scartate e potrebbero essere inviate più tardi."
 }

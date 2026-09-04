@@ -575,6 +575,21 @@ void main() {
       expect(entries.single.rejection, isNull);
     });
 
+    testWidgets('a long refusal is capped, not left to wrap the row to ten '
+        'lines', (tester) async {
+      // maxServerMessageLength is 200, so this is the longest reason the
+      // sync can ever store. Beside two TextButtons in a narrow Expanded
+      // it wraps to ten or more lines, a row several times the height of
+      // its neighbours -- which is why both of this Text's siblings in the
+      // same subtitle are capped.
+      await queue(tester, rejection: 'x' * 200);
+      await pumpScreen(tester, outboxDir: outboxDir);
+
+      final reason = tester.widget<Text>(find.textContaining('x' * 200));
+      expect(reason.maxLines, 2);
+      expect(reason.overflow, TextOverflow.ellipsis);
+    });
+
     testWidgets('a refusal the server did not explain reads "Refused", not '
         '"Refused: "', (tester) async {
       // An empty reason is what the sync stores when the server refused
