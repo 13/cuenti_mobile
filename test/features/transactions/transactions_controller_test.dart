@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
+import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
@@ -20,6 +24,12 @@ void main() {
     amount: 10,
     transactionDate: DateTime(2026, 1, id),
   );
+
+  setUpAll(() {
+    registerFallbackValue(
+      Transaction(amount: 0, transactionDate: DateTime(2026)),
+    );
+  });
 
   setUp(() {
     repo = MockTransactionsRepository();
@@ -279,5 +289,224 @@ void main() {
     expect(stateB.items, [tx(2)]);
     verify(() => repo.getPage(filter: filterA)).called(1);
     verify(() => repo.getPage(filter: filterB)).called(1);
+  });
+
+  group('saving without a connection', () {
+    late Directory outboxDir;
+
+    setUp(() {
+      outboxDir = Directory.systemTemp.createTempSync('ctrl_outbox');
+      when(() => repo.getPage()).thenAnswer(
+        (_) async => const TransactionPage(
+          content: [],
+          page: 0,
+          size: 50,
+          totalElements: 0,
+          totalPages: 1,
+        ),
+      );
+    });
+    tearDown(() => outboxDir.deleteSync(recursive: true));
+
+    ProviderContainer containerWithOutbox() {
+      final container = ProviderContainer(
+        overrides: [
+          transactionsRepositoryProvider.overrideWithValue(repo),
+          transactionOutboxProvider.overrideWithValue(
+            TransactionOutbox(outboxDir),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      // Mirrors a widget's ref.watch: without a listener, the autoDispose
+      // provider can be torn down between the real file-I/O awaits inside
+      // save()/_enqueue(), which then throws when it tries to invalidate
+      // itself.
+      container.listen(transactionsControllerProvider(), (_, _) {});
+      return container;
+    }
+
+    test('a connection failure queues the transaction and says so', () async {
+      when(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+      final container = containerWithOutbox();
+      await container.read(transactionsControllerProvider().future);
+
+      final outcome = await container
+          .read(transactionsControllerProvider().notifier)
+          .save(Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)));
+
+      expect(outcome, SaveOutcome.queued);
+      final queued = await container.read(transactionOutboxProvider).all();
+      expect(queued.single.transaction.amount, 5);
+      expect(queued.single.operation, PendingOperation.create);
+    });
+
+    test(
+      'a server refusal is not queued: the server answered, so deferring '
+      'the bad news helps nobody',
+      () async {
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const ValidationException('Amount is required'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+
+        await expectLater(
+          container
+              .read(transactionsControllerProvider().notifier)
+              .save(
+                Transaction(amount: 0, transactionDate: DateTime(2026, 9, 4)),
+              ),
+          throwsA(isA<ValidationException>()),
+        );
+        expect(await container.read(transactionOutboxProvider).all(), isEmpty);
+      },
+    );
+
+    test('a successful save queues nothing', () async {
+      when(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
+      final container = containerWithOutbox();
+      await container.read(transactionsControllerProvider().future);
+
+      final outcome = await container
+          .read(transactionsControllerProvider().notifier)
+          .save(Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)));
+
+      expect(outcome, SaveOutcome.sent);
+      expect(await container.read(transactionOutboxProvider).all(), isEmpty);
+    });
+
+    test(
+      'editing something still queued rewrites that entry rather than '
+      'queueing an update against a transaction the server never saw',
+      () async {
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+        final notifier = container.read(
+          transactionsControllerProvider().notifier,
+        );
+
+        await notifier.save(
+          Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)),
+        );
+        final localId = (await container.read(transactionOutboxProvider).all())
+            .single
+            .localId;
+        await notifier.save(
+          Transaction(amount: 9, transactionDate: DateTime(2026, 9, 4)),
+          localId: localId,
+        );
+
+        final queued = await container.read(transactionOutboxProvider).all();
+        expect(queued, hasLength(1));
+        expect(queued.single.transaction.amount, 9);
+        expect(queued.single.operation, PendingOperation.create);
+      },
+    );
+
+    test(
+      'a queued edit that touched splits records that, not the default',
+      () async {
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+        final notifier = container.read(
+          transactionsControllerProvider().notifier,
+        );
+
+        await notifier.save(
+          Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)),
+          splitsTouched: true,
+        );
+
+        final queued = await container.read(transactionOutboxProvider).all();
+        expect(queued.single.splitsTouched, isTrue);
+      },
+    );
+
+    test(
+      'a queued edit that did not touch splits records that too',
+      () async {
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+        final notifier = container.read(
+          transactionsControllerProvider().notifier,
+        );
+
+        await notifier.save(
+          Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)),
+        );
+
+        final queued = await container.read(transactionOutboxProvider).all();
+        expect(queued.single.splitsTouched, isFalse);
+      },
+    );
+
+    test(
+      'two saves in quick succession leave two entries, not one colliding '
+      'on the same local id',
+      () async {
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+        final notifier = container.read(
+          transactionsControllerProvider().notifier,
+        );
+
+        await Future.wait([
+          notifier.save(
+            Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)),
+          ),
+          notifier.save(
+            Transaction(amount: 6, transactionDate: DateTime(2026, 9, 4)),
+          ),
+        ]);
+
+        final queued = await container.read(transactionOutboxProvider).all();
+        expect(queued, hasLength(2));
+        expect(queued.map((e) => e.localId).toSet(), hasLength(2));
+        expect(queued.map((e) => e.transaction.amount).toSet(), {5, 6});
+      },
+    );
+
+    test('a connection failure on delete queues the delete', () async {
+      when(() => repo.getPage()).thenAnswer(
+        (_) async => TransactionPage(
+          content: [tx(1)],
+          page: 0,
+          size: 50,
+          totalElements: 1,
+          totalPages: 1,
+        ),
+      );
+      when(() => repo.delete(1)).thenThrow(
+        const NetworkException('Cannot connect to server'),
+      );
+      final container = containerWithOutbox();
+      await container.read(transactionsControllerProvider().future);
+
+      final outcome = await container
+          .read(transactionsControllerProvider().notifier)
+          .delete(1);
+
+      expect(outcome, SaveOutcome.queued);
+      final queued = await container.read(transactionOutboxProvider).all();
+      expect(queued.single.operation, PendingOperation.delete);
+      expect(queued.single.transaction.id, 1);
+    });
   });
 }
