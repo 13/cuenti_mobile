@@ -805,6 +805,23 @@ void main() {
             'the edited amount to reach the outbox',
             (entries) => entries.any((e) => e.transaction.amount == 99.99),
           );
+          // And then for the sheet that started it to close, which is the
+          // part that made this test flaky. The write landing is not the
+          // end of the save: the sheet shows a progress indicator while
+          // its own await is outstanding, and leaving runAsync there
+          // strands that indicator on screen, spinning on real I/O that a
+          // fake clock will never complete. pumpAndSettle then cannot
+          // settle -- caught in the act: transient=1, spinner=1, sheet=1
+          // -- and reports a timeout with no hint of where it came from.
+          // The two waits above in this file already wait for their row
+          // to go, which is why they never showed this.
+          await waitFor(
+            tester,
+            'the save sheet to finish and close',
+            () async =>
+                find.byType(CircularProgressIndicator).evaluate().isEmpty &&
+                find.widgetWithText(FilledButton, 'Save').evaluate().isEmpty,
+          );
         });
         await tester.pumpAndSettle();
 
