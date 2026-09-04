@@ -974,5 +974,58 @@ void main() {
         );
       },
     );
+
+    test(
+      'a queued save returns even though the list cannot refresh: offline, '
+      'the page fetch a self-invalidation triggers fails too',
+      () async {
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+        // Reads are offline as well now. That is the only state an offline
+        // save can actually happen in, and the one where waiting on a
+        // rebuild waits forever.
+        when(() => repo.getPage()).thenThrow(
+          const NetworkException('Cannot connect to server'),
+        );
+
+        final outcome = await container
+            .read(transactionsControllerProvider().notifier)
+            .save(
+              Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)),
+            )
+            .timeout(const Duration(seconds: 3));
+
+        expect(outcome, SaveOutcome.queued);
+      },
+    );
+
+    test(
+      'a queued save is folded into the list from the outbox, without a '
+      'page fetch that would fail anyway',
+      () async {
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+        when(() => repo.getPage()).thenThrow(
+          const NetworkException('Cannot connect to server'),
+        );
+
+        await container
+            .read(transactionsControllerProvider().notifier)
+            .save(
+              Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)),
+            )
+            .timeout(const Duration(seconds: 3));
+
+        final state = container.read(transactionsControllerProvider()).value!;
+        expect(state.pending, hasLength(1));
+        expect(state.items.map((t) => t.amount), [5]);
+      },
+    );
   });
 }

@@ -150,10 +150,34 @@ class TransactionsController extends _$TransactionsController {
       // delivers the bad news when the entry has been forgotten.
     } on NetworkException catch (_) {
       await _enqueue(t, localId: localId, splitsTouched: splitsTouched);
-      ref.invalidateSelf();
-      await future;
+      // Deliberately NOT invalidateSelf(): build() fetches a page, and the
+      // connection that just refused this write will refuse that too. The
+      // provider would sit in AsyncLoading (Riverpod retries a failed async
+      // build with backoff), `future` would never complete, and the sheet
+      // would hang with the entry safely on disk and the user told nothing.
+      // The outbox is the only thing that changed, so fold it in directly.
+      await _remergeFromOutbox();
       return SaveOutcome.queued;
     }
+  }
+
+  /// Re-folds the outbox into the rows already on screen, without going
+  /// back to the server. Used on the paths that only changed the queue --
+  /// offline, a page fetch is exactly what cannot succeed.
+  Future<void> _remergeFromOutbox() async {
+    final current = state.value;
+    if (current == null) return;
+    final pending = await ref.read(transactionOutboxProvider).all();
+    // Rows without an id are pending creates already merged in; dropping
+    // them before remerging keeps mergePending from doubling them up, the
+    // same bookkeeping loadMore does.
+    final fromServer = current.items.where((t) => t.id != null).toList();
+    state = AsyncData(
+      current.copyWith(
+        items: mergePending(fromServer, pending),
+        pending: pending,
+      ),
+    );
   }
 
   /// The queued entry already standing for the server transaction [id], if
@@ -229,6 +253,9 @@ class TransactionsController extends _$TransactionsController {
         localId: await _queuedIdFor(id),
         operation: PendingOperation.delete,
       );
+      // Same reasoning as save()'s queued branch: only the queue changed,
+      // and offline a page fetch is what cannot answer.
+      await _remergeFromOutbox();
       return SaveOutcome.queued;
     } catch (_) {
       state = AsyncData(current);

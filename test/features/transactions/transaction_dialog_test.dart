@@ -711,6 +711,69 @@ void main() {
     expect(find.text('Transaction saved'), findsNothing);
   });
 
+  testWidgets(
+    'saving without a connection says it was saved on this device, rather '
+    'than reporting an error -- and the sheet closes instead of hanging',
+    (tester) async {
+      when(() => txRepo.save(any())).thenThrow(
+        const NetworkException('Cannot connect to server'),
+      );
+
+      await pumpDialogInSheet(tester);
+      // Reads are down by the time the save is tried, which is the only
+      // state an offline save actually happens in: nothing on this path
+      // may wait on a page fetch.
+      when(() => txRepo.getPage()).thenThrow(
+        const NetworkException('Cannot connect to server'),
+      );
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Amount'),
+        '12,34',
+      );
+      await setPayee(tester, 'Baker');
+      await tester.tap(find.byType(DropdownButtonFormField<int>).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Giro').last);
+      await tester.pumpAndSettle();
+      final saveButton = find.widgetWithText(FilledButton, 'Save');
+      await tester.ensureVisible(saveButton);
+      await tester.pumpAndSettle();
+
+      // Queueing writes a file, and real dart:io callbacks never get a turn
+      // inside the fake clock a widget test runs under -- so the tap and
+      // the wait for the write both happen in runAsync, as the pending-row
+      // tests in transactions_screen_test do.
+      await tester.runAsync(() async {
+        await tester.tap(saveButton);
+        for (
+          var i = 0;
+          i < 200 && (await TransactionOutbox(outboxDir).all()).isEmpty;
+          i++
+        ) {
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+        }
+        // The rest of the queued path (re-reading the outbox for the merge)
+        // is real I/O too.
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+      });
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Saved on this device \u2014 it will send when there is a connection',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Transaction saved'), findsNothing);
+      expect(
+        find.byType(TransactionDialog),
+        findsNothing,
+        reason: 'the sheet closes: save() returned rather than hanging',
+      );
+    },
+  );
+
   testWidgets('the confirmation is in the chosen language', (tester) async {
     when(() => txRepo.save(any())).thenAnswer(
       (invocation) async =>
