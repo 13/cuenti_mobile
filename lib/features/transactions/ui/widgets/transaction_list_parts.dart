@@ -245,10 +245,25 @@ class TransactionTile extends ConsumerWidget {
             title: L.of(context).txDeleteTitle,
             message: L.of(context).commonUndoWarning,
           );
-          if (confirmed && transaction.id != null) {
+          if (!confirmed) return false;
+          if (transaction.id != null) {
             onDelete(transaction.id!);
+            return true;
           }
-          return confirmed;
+          // A create the server has never seen: no id to delete by, so
+          // deleting it means taking it out of the queue. Dismissing the
+          // row without doing that left the entry to be POSTed on the next
+          // drain -- the user watched the row vanish and got the
+          // transaction anyway.
+          if (entry != null) {
+            await ref
+                .read(transactionsControllerProvider(filter: filter).notifier)
+                .discardPending(entry.localId);
+            return true;
+          }
+          // Nothing was actually deleted; don't pretend the row went
+          // anywhere.
+          return false;
         }
         unawaited(
           showTransactionDialog(

@@ -235,6 +235,17 @@ class TransactionsController extends _$TransactionsController {
     await outbox.add(entry);
   }
 
+  /// Drops a queued write the server has never seen, sending nothing.
+  ///
+  /// The spec's "deleting a queued create removes it from the queue
+  /// outright, with no request ever made": there is no id to ask the server
+  /// to delete, and leaving the entry queued would send, on the next drain,
+  /// exactly the transaction the user just confirmed getting rid of.
+  Future<void> discardPending(String localId) async {
+    await ref.read(transactionOutboxProvider).remove(localId);
+    await _remergeFromOutbox();
+  }
+
   Future<SaveOutcome> delete(int id) async {
     final current = state.value;
     if (current == null) return SaveOutcome.sent;

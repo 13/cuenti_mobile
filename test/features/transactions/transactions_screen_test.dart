@@ -543,6 +543,55 @@ void main() {
     });
 
     testWidgets(
+      'swiping away an unsent create takes it out of the queue, so the next '
+      'drain does not send what the user just deleted',
+      (tester) async {
+        await queue(tester);
+        await pumpScreen(tester, outboxDir: outboxDir);
+
+        await tester.drag(find.byType(Dismissible), const Offset(-500, 0));
+        await tester.pumpAndSettle();
+        expect(find.text('Delete transaction?'), findsOneWidget);
+
+        // Confirming runs the outbox's real (disk-backed) remove from
+        // inside the sheet's handler, so the tap and the wait for its
+        // effect both happen inside runAsync -- see the discard test above.
+        await tester.runAsync(() async {
+          await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+          for (
+            var i = 0;
+            i < 200 && (await TransactionOutbox(outboxDir).all()).isNotEmpty;
+            i++
+          ) {
+            await Future<void>.delayed(const Duration(milliseconds: 5));
+          }
+          for (
+            var i = 0;
+            i < 100 && find.text('Aldi').evaluate().isNotEmpty;
+            i++
+          ) {
+            await tester.pump(const Duration(milliseconds: 10));
+            await Future<void>.delayed(const Duration(milliseconds: 5));
+          }
+        });
+        await tester.pumpAndSettle();
+
+        expect(find.text('Aldi'), findsNothing);
+        expect(
+          await TransactionOutbox(outboxDir).all(),
+          isEmpty,
+          reason:
+              'the row vanished, but the entry would still have been POSTed '
+              'on the next drain',
+        );
+        verifyNever(() => txRepo.delete(any()));
+        verifyNever(
+          () => txRepo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        );
+      },
+    );
+
+    testWidgets(
       'editing an unsent entry replaces its outbox entry instead of '
       'queuing a second one',
       (tester) async {
