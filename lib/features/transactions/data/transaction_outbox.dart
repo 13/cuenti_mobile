@@ -64,9 +64,9 @@ class TransactionOutbox {
 
   /// Which account's queue this is.
   ///
-  /// Named with a leading dot so it cannot collide with an entry: entry
-  /// filenames are base64url, an alphabet that can spell "owner", and a
-  /// dot is outside it. [all] skips dot-files for the same reason.
+  /// Named with a leading dot so [all] skips it as bookkeeping rather than
+  /// parsing it as a `PendingTransaction` and logging a skip line on every
+  /// read.
   File get _ownerFile => File('${_directory.path}/.owner.json');
 
   /// The account key this queue belongs to, or null when nothing has

@@ -5,12 +5,11 @@ import 'package:flutter/material.dart';
 /// destructive) action. Returns `true` when the user confirms, `false`
 /// (or `null`, treated as `false`) otherwise.
 ///
-/// [isDestructive] defaults to true because almost every caller is a
-/// deletion, and it paints the confirm button in the error colour. A sheet
-/// whose confirm button is the *safe* answer -- the outbox claim prompt's
-/// "Send as this account", where cancelling is what discards work -- passes
-/// false, so the red is not sitting on the button nobody should hesitate
-/// over.
+/// [isDestructive] defaults to true because almost every caller's confirm
+/// action is a deletion, and it paints the confirm button in the error
+/// colour this app reserves for destruction. A caller whose confirm action
+/// is constructive instead -- the outbox claim prompt's "Send as this
+/// account" -- passes false, so it is not painted in that red.
 Future<bool> showConfirmSheet(
   BuildContext context, {
   required String title,
