@@ -41,11 +41,11 @@ jobs:
       - name: Verify generated code is current
         run: |
           flutter gen-l10n
-          dart run build_runner build --delete-conflicting-outputs
+          dart run build_runner build
           if ! git diff --quiet; then
             echo "::error::Generated files are out of date. Run:"
             echo "::error::  flutter gen-l10n"
-            echo "::error::  dart run build_runner build --delete-conflicting-outputs"
+            echo "::error::  dart run build_runner build"
             echo "::error::and commit the result. Changed:"
             git diff --name-only | sed 's/^/  /'
             exit 1

@@ -22,7 +22,7 @@
 - Lints: `very_good_analysis` via `analysis_options.yaml`; targeted `// ignore:` allowed only on generated-code friction, each with a reason.
 - **Deviation from spec, decided at planning:** error surfacing uses call-site `try { … } on ApiException catch (e)` + snackbar (context is at hand) instead of the spec's `ref.listen` global listener — same user-visible behavior, less indirection. The spec's `ref.listen` sentence is superseded.
 - **Deviation from spec, decided at planning:** go_router stays on string routes (current `router.dart` pattern). `go_router_builder` typed routes add codegen churn to every screen for zero user-visible gain in this phase; revisit in Phase 3 when screens are rewritten anyway. The spec's "typed routes" line is superseded by this paragraph.
-- Commands: run from `/home/ben/repo/cuenti_mobile`. Codegen: `dart run build_runner build --delete-conflicting-outputs`. Tests: `flutter test`. Analyze: `flutter analyze`.
+- Commands: run from `/home/ben/repo/cuenti_mobile`. Codegen: `dart run build_runner build`. Tests: `flutter test`. Analyze: `flutter analyze`.
 - Commit messages end with `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`.
 
 ## File Structure (target)
@@ -562,7 +562,7 @@ Expected: FAIL — imports unresolved.
 
 Follow the `Account` template above for each model, transcribing every field/default from `lib/models/models.dart` (lines 1-593) 1:1, plus the interface additions listed above. `ScheduledTransaction.enabled` default true; `Currency` defaults (`decimalChar: ','`, `fracDigits: 2`, `groupingChar: '.'`); `UserProfile` defaults (`defaultCurrency: 'EUR'`, `darkMode: true`, `locale: 'de-DE'`, `apiEnabled: false`, `roles: const {}` — use `@Default(<String>{}) Set<String> roles`).
 
-Then: `dart run build_runner build --delete-conflicting-outputs`
+Then: `dart run build_runner build`
 Expected: `.freezed.dart` + `.g.dart` generated for all 14 files, no errors.
 
 - [ ] **Step 4: Run tests + analyze**

@@ -17,7 +17,7 @@
 - `ApiException.message` keeps its role: "English, for logs and tests." Nothing in this plan changes what it holds or adds a UI reader of it.
 - `test/l10n/error_localization_test.dart` bans `\b(?:e|error|err|exception)\.message\b` anywhere under `lib/features` or `lib/screens`. Code you write in those trees must not match that regex.
 - Italian calls a transaction *movimento* (masculine); adjectives agreeing with it are masculine.
-- After any change touching a `@freezed` or `@riverpod` file, run `dart run build_runner build --delete-conflicting-outputs`. CI fails on stale generated output.
+- After any change touching a `@freezed` or `@riverpod` file, run `dart run build_runner build`. CI fails on stale generated output.
 - Run with `export PATH="$HOME/flutter/bin:$PATH"`. Full gate: `flutter analyze`, `dart format --output=none --set-exit-if-changed lib test integration_test tool`, `flutter test`, `dart run tool/check_coverage.dart 80`.
 - Baseline at the start of this plan: 1035 tests passing, coverage 87.9%.
 - Run test commands in the FOREGROUND with a generous timeout. Do not background them.
@@ -1017,7 +1017,7 @@ git commit -m "fix: three corrections around sign-out, delete and startup"
 
 - [ ] **Step 1: Regenerate anything generated**
 
-Run: `export PATH="$HOME/flutter/bin:$PATH" && dart run build_runner build --delete-conflicting-outputs && flutter gen-l10n`
+Run: `export PATH="$HOME/flutter/bin:$PATH" && dart run build_runner build && flutter gen-l10n`
 
 Commit any generated churn on its own so it does not hide inside a behaviour change:
 

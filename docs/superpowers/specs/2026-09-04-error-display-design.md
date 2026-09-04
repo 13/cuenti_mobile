@@ -263,7 +263,7 @@ Each is small, independent, and currently harmless-but-wrong.
   `app_it.arb`, then `flutter gen-l10n`. `test/l10n/translations_test.dart`
   enforces parity.
 - After touching a `@freezed` or `@riverpod` file, run
-  `dart run build_runner build --delete-conflicting-outputs`.
+  `dart run build_runner build`.
 - Full gate: `flutter analyze`, `dart format --output=none
   --set-exit-if-changed lib test integration_test tool`, `flutter test`,
   `dart run tool/check_coverage.dart 80`. Baseline is 1035 tests passing.

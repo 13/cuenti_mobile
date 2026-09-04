@@ -19,7 +19,7 @@
 - Gates at every task end: `flutter test --file-reporter json:/tmp/t.json` all green (baseline 125), `flutter analyze --no-fatal-infos` exit 0 no new warnings, `flutter build apk --debug`.
 - Functional parity discipline: when touching existing files (dialog, shell, settings, transactions bar), inventory interactive elements before/after; no dropped handlers.
 - Commits end with `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`; clean tree at task end.
-- Commands: flutter at `/home/ben/fvm/versions/stable/bin/flutter`, wrap in `bash -c`; codegen `dart run build_runner build --delete-conflicting-outputs`.
+- Commands: flutter at `/home/ben/fvm/versions/stable/bin/flutter`, wrap in `bash -c`; codegen `dart run build_runner build`.
 
 ## File Structure (new)
 

@@ -14,7 +14,7 @@ Spec: `docs/superpowers/specs/2026-08-27-remembered-login-design.md`
 
 - Run all commands from `/home/ben/repo/cuenti_mobile`.
 - Flutter binary: `~/fvm/versions/stable/bin/flutter` (not on PATH). Dart: `~/fvm/versions/stable/bin/dart`.
-- Codegen after editing `auth_controller.dart` state: `~/fvm/versions/stable/bin/dart run build_runner build --delete-conflicting-outputs`.
+- Codegen after editing `auth_controller.dart` state: `~/fvm/versions/stable/bin/dart run build_runner build`.
 - Tests: `~/fvm/versions/stable/bin/flutter test <path>`. Analyze: `~/fvm/versions/stable/bin/flutter analyze`.
 - Storage keys exactly: `saved_username`, `saved_password`.
 - Error strings exactly: `'No saved credentials'`, `'Saved password no longer valid'`.
@@ -309,7 +309,7 @@ Update `logout`:
 
 - [ ] **Step 4: Regenerate freezed/riverpod code**
 
-Run: `~/fvm/versions/stable/bin/dart run build_runner build --delete-conflicting-outputs`
+Run: `~/fvm/versions/stable/bin/dart run build_runner build`
 Expected: `Succeeded after ...` and `auth_controller.freezed.dart` now contains `savedUsername` / `hasSavedPassword`.
 
 Note: `git status` at session start showed pre-existing uncommitted changes to `audit_controller.g.dart` and `transactions_controller.g.dart`; build_runner may touch them again. Leave them out of this feature's commits unless the diff is only the generator re-emitting the same content.

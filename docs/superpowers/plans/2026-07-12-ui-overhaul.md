@@ -358,7 +358,7 @@ Seed retirement:
 
 - [ ] **Step 5: Codegen + gates**
 
-`dart run build_runner build --delete-conflicting-outputs`; run theme test → PASS; full `flutter test` (some auth-controller tests may reference colorSchemeSeed — update them); analyze; debug build.
+`dart run build_runner build`; run theme test → PASS; full `flutter test` (some auth-controller tests may reference colorSchemeSeed — update them); analyze; debug build.
 
 - [ ] **Step 6: Commit** `feat(theme): fixed brand palette, Manrope, CuentiColors tokens; retire color-seed picker`
 

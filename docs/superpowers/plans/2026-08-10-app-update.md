@@ -269,7 +269,7 @@ abstract class AppRelease with _$AppRelease {
 }
 ```
 
-Run: `~/fvm/versions/stable/bin/flutter pub run build_runner build --delete-conflicting-outputs`
+Run: `~/fvm/versions/stable/bin/flutter pub run build_runner build`
 Expected: generates `app_release.freezed.dart` and `app_release.g.dart`.
 
 - [ ] **Step 4: Write the repository**

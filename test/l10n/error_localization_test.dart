@@ -23,13 +23,17 @@ void main() {
     // Compares against invalidCredentialsMessage to tell a wrong password
     // from an expired session. It tests the value, it does not show it.
     'lib/features/auth/ui/auth_controller.dart',
+    // Reads `e.message` off a DioException, not an ApiException -- it is
+    // the code that turns the former into the latter, so there is no
+    // localized half to prefer yet.
+    'lib/core/api/api_exception.dart',
   };
 
   test('no UI code reads the English half of an exception', () {
     final offenders = <String>[];
     final banned = RegExp(r'\b(?:e|error|err|exception)\.message\b');
 
-    for (final dir in ['lib/features', 'lib/screens']) {
+    for (final dir in ['lib/core', 'lib/features', 'lib/screens']) {
       for (final file in Directory(dir).listSync(recursive: true)) {
         if (file is! File || !file.path.endsWith('.dart')) continue;
         if (file.path.endsWith('.g.dart') ||

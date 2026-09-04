@@ -19,7 +19,7 @@
 - **Nothing entered is discarded without the user seeing it.** This governs rejection handling and logout.
 - **Storage lives in `getApplicationSupportDirectory()`**, one JSON file per entry, mirroring `ResponseCache`.
 - Every new user-facing string goes in `lib/l10n/app_en.arb`, `app_de.arb` and `app_it.arb`; run `flutter gen-l10n`. `test/l10n/translations_test.dart` enforces parity and will fail otherwise.
-- After any change touching a `@freezed` or `@riverpod` file, run `dart run build_runner build --delete-conflicting-outputs`. CI fails on stale generated output.
+- After any change touching a `@freezed` or `@riverpod` file, run `dart run build_runner build`. CI fails on stale generated output.
 - Run with `export PATH="$HOME/flutter/bin:$PATH"`. Full gate: `flutter analyze`, `dart format --output=none --set-exit-if-changed lib test integration_test tool`, `flutter test`, `dart run tool/check_coverage.dart 80`.
 
 ---
@@ -134,7 +134,7 @@ abstract class PendingTransaction with _$PendingTransaction {
 
 - [ ] **Step 4: Generate and run**
 
-Run: `export PATH="$HOME/flutter/bin:$PATH" && dart run build_runner build --delete-conflicting-outputs && flutter test test/features/transactions/pending_transaction_test.dart`
+Run: `export PATH="$HOME/flutter/bin:$PATH" && dart run build_runner build && flutter test test/features/transactions/pending_transaction_test.dart`
 Expected: PASS, 2 tests
 
 - [ ] **Step 5: Commit**
@@ -824,7 +824,7 @@ import 'package:cuentimobile/features/transactions/domain/pending_transaction.da
 
 - [ ] **Step 4: Generate, run**
 
-Run: `export PATH="$HOME/flutter/bin:$PATH" && dart run build_runner build --delete-conflicting-outputs && flutter test test/features/transactions/transactions_controller_test.dart`
+Run: `export PATH="$HOME/flutter/bin:$PATH" && dart run build_runner build && flutter test test/features/transactions/transactions_controller_test.dart`
 Expected: PASS, including the 4 new tests
 
 - [ ] **Step 5: Commit**
@@ -1555,7 +1555,7 @@ git commit -m "fix(auth): signing out asks before discarding unsent transactions
 
 ```bash
 export PATH="$HOME/flutter/bin:$PATH"
-dart run build_runner build --delete-conflicting-outputs
+dart run build_runner build
 flutter gen-l10n
 dart format lib test
 flutter analyze
