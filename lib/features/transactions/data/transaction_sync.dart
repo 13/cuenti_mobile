@@ -60,14 +60,34 @@ class TransactionSync {
   /// waits for the current pass and then reads the outbox again.
   ///
   /// At most one follow-up is queued, so a burst of taps cannot fan out
-  /// into a queue of passes -- they all share the one that will see all of
-  /// their changes anyway.
+  /// into a queue of passes -- they share the one that will see every
+  /// change made before that follow-up starts. A tap that lands only once
+  /// the follow-up is already running is too late for it -- the follow-up
+  /// already read the outbox -- so it queues a fresh one of its own rather
+  /// than joining a pass that cannot see it.
   Future<int> drainAgain() {
     final running = _inFlight;
     if (running == null) return drain();
-    return _queued ??= running
-        .then((_) => drain())
-        .whenComplete(() => _queued = null);
+    return _queued ??= _drainAfter(running);
+  }
+
+  /// The body of the follow-up [drainAgain] queues: wait for [running],
+  /// then start a genuinely new pass.
+  Future<int> _drainAfter(Future<int> running) async {
+    try {
+      await running;
+    } on Exception catch (_) {
+      // The pass we waited on failed. That is not this retry's answer --
+      // it read the outbox before this retry's change, so try regardless.
+    } finally {
+      // Released before the fresh pass starts, not after it finishes: a
+      // retry tapped while that pass is running must queue its own
+      // follow-up rather than join one that has already read the outbox.
+      // The `finally` also means a thrown `Error` (not just an `Exception`)
+      // still releases the slot instead of wedging it shut forever.
+      _queued = null;
+    }
+    return drain();
   }
 
   Future<int> _drain() async {

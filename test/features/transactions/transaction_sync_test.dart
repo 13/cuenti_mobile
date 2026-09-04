@@ -447,6 +447,90 @@ void main() {
       expect(await sync.drainAgain(), 1);
       expect(await outbox.all(), isEmpty);
     });
+
+    test(
+      'a retry tapped while the queued follow-up is itself running gets a '
+      'fresh pass, not the one already reading a stale outbox',
+      () async {
+        // Three sends, each released independently, and a "started" signal
+        // per send so the test can wait for exactly the right moment
+        // instead of guessing how many microtasks a real disk write takes.
+        final started = List.generate(3, (_) => Completer<void>());
+        final release = List.generate(3, (_) => Completer<void>());
+        var calls = 0;
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenAnswer((i) async {
+          final index = calls;
+          calls++;
+          started[index].complete();
+          await release[index].future;
+          return i.positionalArguments.first as Transaction;
+        });
+
+        await queue('a');
+        final first = sync.drain();
+        await started[0].future; // the initial pass is sending 'a'
+
+        await queue('b', minute: 1);
+        final second = sync.drainAgain(); // queued behind `first`
+
+        release[0].complete(); // let the initial pass finish sending 'a'
+        await started[1].future; // the follow-up pass is now sending 'b'
+
+        // A third tap lands while the follow-up itself is running -- the
+        // case F1 named. It must not join `second`: that pass already read
+        // the outbox and cannot see what this tap is about to queue.
+        await queue('c', minute: 2);
+        final third = sync.drainAgain();
+
+        expect(
+          identical(second, third),
+          isFalse,
+          reason: 'a retry during the follow-up must start its own fresh pass',
+        );
+
+        release[1].complete(); // let the follow-up finish sending 'b'
+        release[2].complete(); // let the fresh pass send 'c' once it starts
+
+        await Future.wait([first, second, third]);
+
+        expect(calls, 3, reason: 'a, b and c all reached the repository');
+        expect(await outbox.all(), isEmpty);
+      },
+    );
+
+    test(
+      'a queued follow-up still runs even when the pass it waited on threw',
+      () async {
+        var calls = 0;
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenAnswer((i) async {
+          calls++;
+          if (calls == 1) throw Exception('boom');
+          return i.positionalArguments.first as Transaction;
+        });
+
+        await queue('a');
+        final first = sync.drain();
+        // No gate needed: drain() (and _drain()'s first await) has not
+        // progressed past its own synchronous prelude yet, so `_inFlight`
+        // is already memoised and this joins the same run `first` did.
+        final second = sync.drainAgain();
+
+        await expectLater(first, throwsA(isA<Exception>()));
+        expect(
+          await second,
+          1,
+          reason:
+              'the follow-up ran and delivered the retried entry despite '
+              'the pass it waited on throwing',
+        );
+        expect(await outbox.all(), isEmpty);
+        expect(calls, 2, reason: 'the entry that failed was tried again');
+      },
+    );
   });
 }
 
