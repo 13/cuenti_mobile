@@ -310,6 +310,15 @@ void main() {
         overrides: [
           transactionsRepositoryProvider.overrideWithValue(repo),
           transactionOutboxProvider.overrideWithValue(outbox),
+          // Its own container, so it needs the auth override the file's
+          // setUp makes: delete() reaches the outbox through _queuedIdFor,
+          // which reads the auth state to know whose queue it may look in.
+          // Without this the real controller is built and its init() fails
+          // on the uninitialized binding -- caught, but printed into the
+          // test output.
+          authControllerProvider.overrideWith(
+            () => _FakeAuthController(_signedInAuthState),
+          ),
         ],
       );
       addTearDown(brokenContainer.dispose);
@@ -430,12 +439,13 @@ void main() {
           transactionOutboxProvider.overrideWithValue(
             TransactionOutbox(outboxDir),
           ),
-          // _enqueue reads this to decide who to claim the queue for, so
-          // every test in this group needs one resolved. Scoped to this
-          // helper rather than the file's top-level setUp: the tests above
-          // never queue a write, so they never need auth resolved. Defaults
-          // signed in; a test can pass an unauthenticated state to check
-          // the no-claim path.
+          // Overridden here as well as in the file's setUp, because this
+          // helper builds its own container: _enqueue reads this to decide
+          // who to claim the queue for, and every read of the outbox reads
+          // it to decide whose queue may be seen. Named as a parameter
+          // rather than fixed, which the setUp's copy cannot do -- it
+          // defaults signed in, and a test passes an unauthenticated state
+          // to check the no-claim path.
           authControllerProvider.overrideWith(() => _FakeAuthController(auth)),
         ],
       );
