@@ -166,6 +166,48 @@ class TransactionOutbox {
     await _directory.delete(recursive: true);
     await _directory.create(recursive: true);
   }
+
+  /// Distinguishes concurrent [sideline] calls' subdirectories from one
+  /// another, the same way [_setOwnerSeq] does for [setOwner]. Incremented
+  /// synchronously so two calls in the same microsecond still land in
+  /// different subdirectories.
+  static int _sidelineSeq = 0;
+
+  /// Moves every current entry, and the owner file, into a fresh
+  /// subdirectory instead of deleting them.
+  ///
+  /// `claimForWriting` (outbox_ownership.dart) calls this on a queue it
+  /// cannot attribute to the account making the write, before claiming the
+  /// queue for that account. The entries are not worthless just because
+  /// they cannot be attributed right now -- the account they belong to may
+  /// sign back in, or a mistyped server URL may get corrected -- so they
+  /// are set aside rather than destroyed.
+  ///
+  /// [all] lists files and skips directories, and [owner] only reads
+  /// `.owner.json` in this directory, so a sidelined queue reads as empty
+  /// and unowned for free -- the subdirectory is invisible to every normal
+  /// read without any extra guard in either method.
+  ///
+  /// The subdirectory name starts with a dot, so it cannot collide with an
+  /// entry (entry filenames are base64url, an alphabet outside the dot)
+  /// or with the owner file (`.owner.json` is a fixed, different name),
+  /// and it carries the moment of the sideline plus a counter, so repeated
+  /// takeovers each land in their own subdirectory instead of overwriting
+  /// the last one.
+  Future<void> sideline() async {
+    if (!_directory.existsSync()) return;
+    final files = _directory.listSync().whereType<File>().toList();
+    if (files.isEmpty) return;
+    final target = Directory(
+      '${_directory.path}/.sidelined-'
+      '${DateTime.now().microsecondsSinceEpoch}-${_sidelineSeq++}',
+    );
+    await target.create(recursive: true);
+    for (final file in files) {
+      final name = file.uri.pathSegments.last;
+      await file.rename('${target.path}/$name');
+    }
+  }
 }
 
 /// Overridden at app start with [TransactionOutbox.open], the way the API

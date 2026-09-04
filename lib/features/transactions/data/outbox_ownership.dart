@@ -103,22 +103,54 @@ Future<void> claimIfUnowned(
 /// existing entry have to see the queue they are amending, which a sealed
 /// read cannot.
 ///
-/// A foreign queue is cleared rather than kept. It is already unsendable,
-/// its owner cannot be signed in while somebody else is, and that owner's
-/// own sign-out would have deleted it. Set against a user whose every
-/// offline save silently vanishes, losing an already-doomed queue is the
-/// better trade -- and the sheet that announced the foreign queue says
-/// plainly that saving will remove it.
+/// A foreign queue is set aside rather than kept -- [TransactionOutbox.
+/// sideline] moves it out of every normal read's way instead of deleting
+/// it. Not because it is worthless: it cannot be attributed to the account
+/// making this write, and that is the only thing wrong with it. Its real
+/// owner may sign back in and match the same key again, or a mistyped
+/// server URL may get corrected back to the one that queue belongs to --
+/// both ordinary enough that destroying the entries outright, on the
+/// strength of a guess about who could never come back for them, would be
+/// the wrong trade. Setting them aside gets the same result a write into
+/// them needs -- they stop being read, sent or shown -- without it.
 ///
-/// With no current account key nothing is claimed and nothing is cleared:
-/// a queue we cannot attribute is not one we may take.
+/// With no current account key nothing is claimed and nothing is set
+/// aside: a queue we cannot attribute is not one we may take.
+///
+/// Calls against the same [outbox] are serialized: two writes racing each
+/// other (`_enqueue` resolves ownership on every one) could otherwise both
+/// read the queue as foreign and both try to sideline it, and an
+/// interleaved pair of sideline moves can throw or silently drop whichever
+/// write landed in between -- the same shape of race [TransactionOutbox.
+/// setOwner]'s own doc comment names for concurrent claims, just with a
+/// directory move standing in for a file rename.
 Future<void> claimForWriting(
+  TransactionOutbox outbox,
+  String? accountKey,
+) {
+  final previous = (_claimChains[outbox] ?? Future<void>.value())
+      // A failed call must not wedge every call after it: only its own
+      // caller needs to see its error, not the next unrelated write.
+      .catchError((_) {});
+  final resolved = previous.then((_) => _resolveOwnership(outbox, accountKey));
+  _claimChains[outbox] = resolved.catchError((_) {});
+  return resolved;
+}
+
+/// One chain per outbox instance, so two writes against different queues
+/// (different accounts overridden in different tests, say) never wait on
+/// each other. An [Expando] rather than a [Map] so it holds no reference
+/// of its own -- a [TransactionOutbox] that is otherwise garbage can still
+/// be collected.
+final Expando<Future<void>> _claimChains = Expando<Future<void>>();
+
+Future<void> _resolveOwnership(
   TransactionOutbox outbox,
   String? accountKey,
 ) async {
   if (accountKey == null) return;
   final owner = await outbox.owner();
   if (owner == accountKey) return;
-  if (owner != null) await outbox.clear();
+  if (owner != null) await outbox.sideline();
   await outbox.setOwner(accountKey);
 }

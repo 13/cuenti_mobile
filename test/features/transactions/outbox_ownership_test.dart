@@ -170,4 +170,80 @@ void main() {
       expect(await outbox.owner(), isNull);
     });
   });
+
+  // Only the two behaviours the fix round for Task 4b (F1/F2) added:
+  // that a foreign queue is set aside rather than destroyed, and that
+  // concurrent claims of one do not corrupt it. claimForWriting's other
+  // branches (already ours, unowned, no account key) are exercised
+  // through transactions_controller_test.dart's ownership tests; a full
+  // direct unit group here is deferred to the broad review.
+  group('claimForWriting', () {
+    test(
+      'a foreign queue is set aside, not destroyed: its entries stay on '
+      'disk after another account claims the queue for a write',
+      () async {
+        await queue('local-a');
+        await outbox.setOwner('key-a');
+
+        await claimForWriting(outbox, 'key-b');
+        // The write claimForWriting exists to make room for -- mirroring
+        // what _enqueue does right after resolving ownership.
+        await queue('local-b');
+
+        expect(
+          (await outbox.all()).map((e) => e.localId),
+          ['local-b'],
+          reason: "b's own entry is the only one a normal read returns",
+        );
+
+        final sidelined = dir.listSync().whereType<Directory>().toList();
+        expect(
+          sidelined,
+          hasLength(1),
+          reason: 'exactly one subdirectory, not a deleted queue',
+        );
+        final sidelinedNames = sidelined.single
+            .listSync()
+            .whereType<File>()
+            .map((f) => f.uri.pathSegments.last)
+            .toList();
+        expect(
+          sidelinedNames,
+          hasLength(2),
+          reason: "local-a's entry plus the old owner file, both spared",
+        );
+        expect(
+          sidelinedNames,
+          contains('.owner.json'),
+          reason:
+              'key-a is still recoverable from the file, not just '
+              'the entry',
+        );
+      },
+    );
+
+    // Mirrors transaction_outbox_test.dart's 'two concurrent claims of an
+    // unowned queue do not collide on the same temp file': same shape
+    // (Future.wait of two calls against one target), applied to
+    // claimForWriting's sideline-then-claim sequence instead of
+    // setOwner's rename. Before serializing the calls, an interleaved
+    // pair of sideline() moves could throw (the second finds nothing left
+    // to move) or silently drop whichever call's work landed in between.
+    test(
+      'two concurrent claims of a foreign queue do not throw and leave a '
+      'coherent queue',
+      () async {
+        await queue('local-a');
+        await outbox.setOwner('key-a');
+
+        await Future.wait([
+          claimForWriting(outbox, 'key-b'),
+          claimForWriting(outbox, 'key-b'),
+        ]);
+
+        expect(await outbox.owner(), 'key-b');
+        expect(await outbox.all(), isEmpty);
+      },
+    );
+  });
 }
