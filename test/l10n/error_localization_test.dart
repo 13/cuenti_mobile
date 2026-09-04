@@ -31,6 +31,10 @@ void main() {
     // BuildContext to localize with anyway. The UI quotes this string
     // inside a translated label, so the frame around it is localized even
     // when the server's own sentence is not.
+    // TODO(cuenti): a workaround, not a design choice -- it stands only because
+    // ApiException.fromDio never sets serverMessage or statusCode. Fixing
+    // that is an app-wide error-display change; this entry comes off the
+    // list with it.
     'lib/features/transactions/data/transaction_sync.dart',
   };
 
