@@ -1368,9 +1368,9 @@ class LDe extends L {
       count,
       locale: localeName,
       other:
-          '$count nicht gesendete Buchungen wurden vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehören. Als $account senden?',
+          '$count nicht gesendete Buchungen wurden vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehören. Als $account senden? Wird hier vorher etwas gespeichert, werden sie beiseitegelegt.',
       one:
-          '1 nicht gesendete Buchung wurde vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehört. Als $account senden?',
+          '1 nicht gesendete Buchung wurde vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehört. Als $account senden? Wird hier vorher etwas gespeichert, wird sie beiseitegelegt.',
     );
     return '$_temp0';
   }

@@ -67,18 +67,16 @@ String? accountDisplayName(String baseUrl, AuthState auth) {
 ///  * An unowned queue can only have come from a version before ownership
 ///    existed, so adopting it is the safe answer and is styled as such.
 ///
-/// Declining the foreign-queue question changes nothing on disk: a kept
-/// foreign queue is still set aside by the next save (`claimForWriting`),
-/// not deleted.
+/// Declining either question changes nothing on disk, and neither kind of
+/// queue is adopted behind the user's back afterwards: `claimForWriting`
+/// sets aside any queue this account has not claimed -- foreign or unowned
+/// alike -- on the next save. So this sheet is the only way a queue
+/// becomes yours, which is what makes "declining leaves the queue sealed
+/// rather than sent" true as the spec states it.
 ///
-/// Declining the unowned-queue question is not permanent the same way.
-/// "Not now" leaves the queue unowned, and `claimForWriting` adopts an
-/// unowned queue wholesale on the very next offline save -- there is no
-/// third state to sideline it into instead. That is the intended default:
-/// an unowned queue can only have come from this device, pre-upgrade, so
-/// adopting it on write is the likely-correct answer, and sidelining it
-/// like a foreign queue would strand exactly the entries this sheet exists
-/// to rescue.
+/// The cost is real and is the reason the wording says so: a pre-upgrade
+/// user who declines and then saves something offline stops seeing their
+/// old entries. They are set aside, not destroyed -- and they were asked.
 Future<void> promptForForeignOutbox(BuildContext context, WidgetRef ref) async {
   final outbox = ref.read(transactionOutboxProvider);
   final baseUrl = ref.read(apiClientProvider).baseUrl;

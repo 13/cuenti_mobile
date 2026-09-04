@@ -147,6 +147,19 @@ void main() {
 
       expect(await claimStateOf(outbox, null), OutboxClaim.foreign);
     });
+
+    // Somebody claimed this queue and we cannot tell who. That is not the
+    // same as nobody having claimed it, and it must not read as the
+    // gentler of the two: the upgrade sheet would offer to adopt a queue
+    // that may be another account's.
+    test('a queue whose owner file will not parse reads as foreign', () async {
+      await queue('local-1');
+      await outbox.setOwner('key-a');
+      File('${dir.path}/.owner.json').writeAsStringSync('{not json');
+
+      expect(await claimStateOf(outbox, 'key-a'), OutboxClaim.foreign);
+      expect(await ownedEntries(outbox, 'key-a'), isEmpty);
+    });
   });
 
   group('claimIfUnowned', () {
@@ -171,12 +184,9 @@ void main() {
     });
   });
 
-  // Only the two behaviours the fix round for Task 4b (F1/F2) added:
-  // that a foreign queue is set aside rather than destroyed, and that
-  // concurrent claims of one do not corrupt it. claimForWriting's other
-  // branches (already ours, unowned, no account key) are exercised
-  // through transactions_controller_test.dart's ownership tests; a full
-  // direct unit group here is deferred to the broad review.
+  // One rule, stated once: a queue this account has not claimed is never
+  // written into and never taken. Foreign, unowned and unattributable all
+  // end at the same answer -- set aside -- and only the sheet adopts.
   group('claimForWriting', () {
     test(
       'a foreign queue is set aside, not destroyed: its entries stay on '
@@ -221,6 +231,75 @@ void main() {
         );
       },
     );
+
+    // The composition I1 and I2 close together. An unowned queue used to
+    // be adopted wholesale by the next write -- so an interrupted
+    // sideline, a corrupt owner file, or a user who tapped "Not now"
+    // handed one account's entries to another the moment that other
+    // account saved anything. The sheet is now the only way a queue
+    // becomes yours.
+    test(
+      'an unowned queue is set aside by a write, not adopted by it',
+      () async {
+        await queue('local-theirs');
+
+        await claimForWriting(outbox, 'key-b');
+        await queue('local-b');
+
+        expect(
+          (await ownedEntries(outbox, 'key-b')).map((e) => e.localId),
+          ['local-b'],
+          reason: 'b sees what b saved, and nothing it did not claim',
+        );
+        expect(
+          dir.listSync().whereType<Directory>(),
+          hasLength(1),
+          reason: 'set aside, not destroyed',
+        );
+      },
+    );
+
+    test('a queue whose owner file will not parse is set aside too', () async {
+      await queue('local-theirs');
+      await outbox.setOwner('key-a');
+      File('${dir.path}/.owner.json').writeAsStringSync('{not json');
+
+      await claimForWriting(outbox, 'key-b');
+
+      expect(await outbox.all(), isEmpty);
+      expect(await outbox.owner(), 'key-b');
+      expect(dir.listSync().whereType<Directory>(), hasLength(1));
+    });
+
+    // The other half: a queue that is genuinely fresh costs nothing and
+    // leaves no empty subdirectory behind.
+    test('an empty queue is claimed without a subdirectory', () async {
+      await claimForWriting(outbox, 'key-b');
+
+      expect(await outbox.owner(), 'key-b');
+      expect(dir.listSync().whereType<Directory>(), isEmpty);
+    });
+
+    test('a queue already ours is left exactly as it is', () async {
+      await queue('local-a');
+      await outbox.setOwner('key-a');
+
+      await claimForWriting(outbox, 'key-a');
+
+      expect((await outbox.all()).map((e) => e.localId), ['local-a']);
+      expect(dir.listSync().whereType<Directory>(), isEmpty);
+    });
+
+    test('with nobody signed in nothing is claimed and nothing set '
+        'aside', () async {
+      await queue('local-a');
+      await outbox.setOwner('key-a');
+
+      await claimForWriting(outbox, null);
+
+      expect(await outbox.owner(), 'key-a');
+      expect(await outbox.all(), hasLength(1));
+    });
 
     // Mirrors transaction_outbox_test.dart's 'two concurrent claims of an
     // unowned queue do not collide on the same temp file': same shape

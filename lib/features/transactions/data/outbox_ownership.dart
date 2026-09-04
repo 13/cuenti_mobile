@@ -53,7 +53,8 @@ String? accountKeyFor(String baseUrl, AuthState auth) {
 /// now" is exactly the wrong guess in the two cases this feature exists
 /// for -- a stale store the fallback left behind, and a queue kept across
 /// an expired session. Adopting is a decision for the person to make (the
-/// sheet asks); until they answer, nothing goes out and nothing is shown.
+/// sheet asks); until they answer, nothing goes out and nothing is shown,
+/// and a write into the queue sets it aside rather than taking it.
 Future<List<PendingTransaction>> ownedEntries(
   TransactionOutbox outbox,
   String? accountKey,
@@ -96,14 +97,27 @@ Future<void> claimIfUnowned(
 
 /// Makes the queue this account's before anything is written into it.
 ///
-/// [claimIfUnowned] is not enough on its own, because it runs after the
-/// write and leaves two holes. A queue that is not ours must not be written
-/// into at all -- the entry would be sealed by [ownedEntries] and its own
-/// author would never see it again -- and the lookups that amend an
-/// existing entry have to see the queue they are amending, which a sealed
-/// read cannot.
+/// Resolving ownership after the write instead would leave two holes. A
+/// queue that is not ours must not be written into at all -- the entry
+/// would be sealed by [ownedEntries] and its own author would never see it
+/// again -- and the lookups that amend an existing entry have to see the
+/// queue they are amending, which a sealed read cannot.
 ///
-/// A foreign queue is set aside rather than kept -- [TransactionOutbox.
+/// **A queue this account has not claimed is never taken.** Foreign,
+/// unowned, and claimed-by-somebody-we-cannot-read all get the same
+/// answer: set aside, then claim the empty queue that is left. Unowned
+/// used to be adopted here, on the argument that it can only have come
+/// from this device before ownership existed. It can also come from an
+/// interrupted [TransactionOutbox.sideline], from an owner file that went
+/// bad, and from a person who was shown the upgrade sheet and declined --
+/// and in that last case the spec's promise ("declining leaves the queue
+/// sealed rather than sent") was not kept: the next offline save adopted
+/// everything. Adoption is now the sheet's alone, which costs a
+/// pre-upgrade user who declines and then saves the sight of their old
+/// entries -- on disk, in a subdirectory, not destroyed -- and buys the
+/// rule being true as stated.
+///
+/// A queue that is not ours is set aside rather than kept -- [TransactionOutbox.
 /// sideline] moves it out of every normal read's way instead of deleting
 /// it. Not because it is worthless: it cannot be attributed to the account
 /// making this write, and that is the only thing wrong with it. Its real
@@ -149,8 +163,11 @@ Future<void> _resolveOwnership(
   String? accountKey,
 ) async {
   if (accountKey == null) return;
-  final owner = await outbox.owner();
-  if (owner == accountKey) return;
-  if (owner != null) await outbox.sideline();
+  if (await outbox.owner() == accountKey) return;
+  // Whatever it was -- somebody else's, nobody's, or a claim we cannot
+  // read -- it is not ours, so it is set aside rather than taken. An empty
+  // queue has nothing to move, so a first write costs one directory
+  // listing and leaves no subdirectory behind.
+  await outbox.sideline();
   await outbox.setOwner(accountKey);
 }

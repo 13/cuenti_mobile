@@ -211,15 +211,128 @@ void main() {
     expect(await outbox.owner(), isNull);
   });
 
+  // Was 'an unreadable owner file reads as unowned rather than throwing',
+  // asserting isNull. Unowned is the weaker of the two answers -- it is the
+  // one claimForWriting adopts on the next write -- so a file we cannot
+  // parse must not read as it. It still must not throw.
   test(
-    'an unreadable owner file reads as unowned rather than throwing',
+    'an unreadable owner file reads as unattributable, not as unowned',
     () async {
       await outbox.setOwner('https://cuenti.muh#42');
       File('${dir.path}/.owner.json').writeAsStringSync('{not json');
 
-      expect(await outbox.owner(), isNull);
+      expect(await outbox.owner(), TransactionOutbox.unattributableOwner);
+      expect(
+        await outbox.owner(),
+        isNotNull,
+        reason: 'null is the one answer that would let the next write take it',
+      );
     },
   );
+
+  test('an owner file naming no account is unattributable too', () async {
+    File('${dir.path}/.owner.json').writeAsStringSync('{"account": ""}');
+
+    expect(await outbox.owner(), TransactionOutbox.unattributableOwner);
+  });
+
+  test('the sentinel cannot be mistaken for an account key', () {
+    expect(
+      TransactionOutbox.unattributableOwner.contains('#'),
+      isFalse,
+      reason: 'every account key is "<baseUrl>#<identity>"',
+    );
+  });
+
+  group('sideline', () {
+    // The owner file has to be the LAST thing that moves. If it went first
+    // -- listSync() order is the filesystem's, not ours -- a process killed
+    // mid-sideline would leave a subset of A's entries in the root with no
+    // owner file beside them: a queue that reads as unowned, which is the
+    // one state this feature must never invent by accident.
+    /// Sidelines [store] while watching its directory, and reports every
+    /// moment the root held entries with no owner file beside them --
+    /// the state an interruption there would freeze. `sideline` awaits a
+    /// real rename per file, so this sampler runs about once between each
+    /// of them.
+    Future<List<int>> tornMomentsDuringSideline(
+      TransactionOutbox store,
+      Directory storeDir,
+    ) async {
+      final torn = <int>[];
+      var samples = 0;
+      var finished = false;
+      final moving = store.sideline().whenComplete(() => finished = true);
+      while (!finished) {
+        final names = storeDir
+            .listSync()
+            .whereType<File>()
+            .map((f) => f.uri.pathSegments.last)
+            .toList();
+        samples++;
+        if (names.isNotEmpty && !names.contains('.owner.json')) {
+          torn.add(names.length);
+        }
+        await Future<void>.delayed(Duration.zero);
+      }
+      await moving;
+      expect(samples, greaterThan(2), reason: 'the move must be observable');
+      return torn;
+    }
+
+    // Both creation orders, because the directory order sideline() reads
+    // is the filesystem's and not ours -- on this machine's /tmp it comes
+    // back reverse-insertion, so which of the two is dangerous depends on
+    // a detail no test should depend on. Under the fix neither is.
+    for (final ownerFirst in [true, false]) {
+      test(
+        'never leaves entries behind without their owner file '
+        '(owner file written ${ownerFirst ? 'before' : 'after'} the entries)',
+        () async {
+          if (ownerFirst) await outbox.setOwner('https://cuenti.muh#42');
+          for (var i = 0; i < 60; i++) {
+            await outbox.add(entry('local-$i'));
+          }
+          if (!ownerFirst) await outbox.setOwner('https://cuenti.muh#42');
+
+          final torn = await tornMomentsDuringSideline(outbox, dir);
+
+          expect(
+            torn,
+            isEmpty,
+            reason:
+                'saw the root holding entries with no owner file beside '
+                'them (${torn.length} moments) -- an interruption at any '
+                'of them leaves an unowned queue, which the next write '
+                'used to adopt',
+          );
+        },
+      );
+    }
+
+    test(
+      'an interrupted sideline still reads as somebody has claimed it',
+      () async {
+        // What that ordering buys, stated as the invariant that matters: the
+        // owner file outlives every entry it describes, so the queue stays
+        // attributable however far the move got.
+        await outbox.setOwner('https://cuenti.muh#42');
+        await outbox.add(entry('local-1'));
+        await outbox.add(entry('local-2'));
+        final partial = Directory('${dir.path}/.sidelined-partial')
+          ..createSync();
+        // One entry moved, the owner file not yet: exactly where a kill
+        // lands under the fixed ordering.
+        final moved = dir.listSync().whereType<File>().firstWhere(
+          (f) => !f.uri.pathSegments.last.startsWith('.'),
+        );
+        moved.renameSync('${partial.path}/${moved.uri.pathSegments.last}');
+
+        expect(await outbox.owner(), 'https://cuenti.muh#42');
+        expect(await outbox.all(), hasLength(1));
+      },
+    );
+  });
 
   test('an entry whose localId contains / and .. round-trips: add(), all() '
       'returns it with that exact localId, remove() deletes it, and no file '

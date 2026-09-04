@@ -410,7 +410,7 @@
   "outboxForeignTitle": "Nicht gesendete Buchungen eines anderen Kontos",
   "outboxForeignBody": "{count, plural, =1{1 nicht gesendete Buchung wurde unter einem anderen Konto oder einer anderen Serveradresse gespeichert und wird nicht gesendet. Wer sich wieder mit jenem Konto anmeldet oder die Serveradresse korrigiert, sieht sie wieder — beim nächsten Speichern hier wird sie jedoch beiseitegelegt.} other{{count} nicht gesendete Buchungen wurden unter einem anderen Konto oder einer anderen Serveradresse gespeichert und werden nicht gesendet. Wer sich wieder mit jenem Konto anmeldet oder die Serveradresse korrigiert, sieht sie wieder — beim nächsten Speichern hier werden sie jedoch beiseitegelegt.}}",
   "outboxUnknownTitle": "Nicht gesendete Buchungen aus einer früheren Version",
-  "outboxUnknownBody": "{count, plural, =1{1 nicht gesendete Buchung wurde vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehört. Als {account} senden?} other{{count} nicht gesendete Buchungen wurden vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehören. Als {account} senden?}}",
+  "outboxUnknownBody": "{count, plural, =1{1 nicht gesendete Buchung wurde vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehört. Als {account} senden? Wird hier vorher etwas gespeichert, wird sie beiseitegelegt.} other{{count} nicht gesendete Buchungen wurden vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehören. Als {account} senden? Wird hier vorher etwas gespeichert, werden sie beiseitegelegt.}}",
   "outboxKeep": "Behalten",
   "outboxSendAsThisAccount": "Als dieses Konto senden",
   "outboxNotNow": "Jetzt nicht"

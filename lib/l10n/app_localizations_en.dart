@@ -1363,9 +1363,9 @@ class LEn extends L {
       count,
       locale: localeName,
       other:
-          '$count unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as $account?',
+          '$count unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as $account? If you save a transaction here first, they will be set aside.',
       one:
-          '1 unsent transaction was saved before this version, so this app cannot tell whose it is. Send it as $account?',
+          '1 unsent transaction was saved before this version, so this app cannot tell whose it is. Send it as $account? If you save a transaction here first, it will be set aside.',
     );
     return '$_temp0';
   }

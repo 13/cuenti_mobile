@@ -1439,12 +1439,23 @@ void main() {
     // outbox_ownership.dart's doc comment on claimForWriting for why the
     // old order (claim after add) leaves holes.
     group("a write resolves the queue's ownership first", () {
+      // Was 'an edit on an unclaimed queue keeps its sticky operation,
+      // queuedAt and splitsTouched, instead of losing them to a lookup
+      // that a sealed unclaimed queue fails' -- it queued the entry with
+      // no owner. An unclaimed queue is now set aside by the write rather
+      // than adopted by it (see the test below), so on that premise the
+      // lookup is *meant* to find nothing and the sticky fields are meant
+      // to be lost. The behaviour this test is about -- the lookup runs
+      // against a queue it can actually read, because ownership was
+      // resolved first -- is unchanged on the queue where it matters, so
+      // the premise moves to a queue that is ours.
       test(
-        'an edit on an unclaimed queue keeps its sticky operation, '
-        'queuedAt and splitsTouched, instead of losing them to a lookup '
-        'that a sealed unclaimed queue fails',
+        'an edit on our own queue keeps its sticky operation, queuedAt and '
+        'splitsTouched, instead of losing them to a lookup made before '
+        'ownership was resolved',
         () async {
           final originalQueuedAt = DateTime(2026, 9, 1, 8);
+          await TransactionOutbox(outboxDir).setOwner(_ourAccountKey);
           await TransactionOutbox(outboxDir).add(
             PendingTransaction(
               localId: 'local-1',
@@ -1483,11 +1494,16 @@ void main() {
         },
       );
 
+      // Was 'on an unclaimed queue', for the same reason as the test
+      // above: with the queue unclaimed this now passes because the old
+      // edit is set aside, not because the delete replaced it -- which is
+      // not what the sentence claims. On a queue that is ours it is the
+      // replacement being tested again.
       test(
-        'an offline delete of a row with a queued edit on an unclaimed '
-        'queue replaces that edit rather than adding a second entry '
-        'beside it',
+        'an offline delete of a row with a queued edit on our own queue '
+        'replaces that edit rather than adding a second entry beside it',
         () async {
+          await TransactionOutbox(outboxDir).setOwner(_ourAccountKey);
           await TransactionOutbox(outboxDir).add(
             PendingTransaction(
               localId: 'local-1',
@@ -1556,6 +1572,61 @@ void main() {
         expect(queued, hasLength(2));
         expect(queued.map((e) => e.transaction.amount).toSet(), {5, 6});
       });
+
+      // The whole point of I1, end to end through the real save path: the
+      // upgrade sheet was shown, the user tapped "Not now" (which writes
+      // nothing at all, so the queue is still unowned here), and then they
+      // saved something offline. The old entries must not go out under
+      // this account's name.
+      test(
+        'declining the upgrade sheet and then saving offline sets the old '
+        'entries aside instead of adopting them',
+        () async {
+          await TransactionOutbox(outboxDir).add(
+            PendingTransaction(
+              localId: 'local-before-the-upgrade',
+              operation: PendingOperation.create,
+              transaction: Transaction(
+                amount: 1,
+                payee: 'Aldi',
+                transactionDate: DateTime(2026, 9),
+              ),
+              queuedAt: DateTime(2026, 9, 1, 10),
+            ),
+          );
+          when(
+            () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+          ).thenThrow(const NetworkException('Cannot connect to server'));
+          final container = containerWithOutbox();
+          await container.read(transactionsControllerProvider().future);
+
+          await container
+              .read(transactionsControllerProvider().notifier)
+              .save(
+                Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)),
+              );
+
+          final outbox = container.read(transactionOutboxProvider);
+          expect(
+            (await ownedEntries(outbox, _ourAccountKey)).map(
+              (e) => e.transaction.amount,
+            ),
+            [5],
+            reason:
+                'the entry this account typed, and not one it never '
+                'claimed -- an unowned queue may belong to anybody',
+          );
+          expect(
+            outboxDir
+                .listSync()
+                .whereType<Directory>()
+                .expand((d) => d.listSync())
+                .whereType<File>(),
+            isNotEmpty,
+            reason: 'set aside on disk, not destroyed',
+          );
+        },
+      );
 
       test(
         'signed out, saving onto a foreign queue claims and clears '

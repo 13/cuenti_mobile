@@ -1366,9 +1366,9 @@ class LIt extends L {
       count,
       locale: localeName,
       other:
-          '$count operazioni non inviate sono state salvate prima di questa versione e l\'app non può stabilire a chi appartengano. Inviarle come $account?',
+          '$count operazioni non inviate sono state salvate prima di questa versione e l\'app non può stabilire a chi appartengano. Inviarle come $account? Se salvi prima un\'operazione qui, verranno messe da parte.',
       one:
-          '1 operazione non inviata è stata salvata prima di questa versione e l\'app non può stabilire a chi appartiene. Inviarla come $account?',
+          '1 operazione non inviata è stata salvata prima di questa versione e l\'app non può stabilire a chi appartiene. Inviarla come $account? Se salvi prima un\'operazione qui, verrà messa da parte.',
     );
     return '$_temp0';
   }

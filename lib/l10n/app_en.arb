@@ -820,7 +820,7 @@
   "@outboxForeignBody": {"placeholders": {"count": {"type": "int"}}},
   "outboxUnknownTitle": "Unsent transactions from an earlier version",
   "@outboxUnknownTitle": {},
-  "outboxUnknownBody": "{count, plural, =1{1 unsent transaction was saved before this version, so this app cannot tell whose it is. Send it as {account}?} other{{count} unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as {account}?}}",
+  "outboxUnknownBody": "{count, plural, =1{1 unsent transaction was saved before this version, so this app cannot tell whose it is. Send it as {account}? If you save a transaction here first, it will be set aside.} other{{count} unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as {account}? If you save a transaction here first, they will be set aside.}}",
   "@outboxUnknownBody": {"placeholders": {"count": {"type": "int"}, "account": {"type": "String"}}},
   "outboxKeep": "Keep",
   "@outboxKeep": {},

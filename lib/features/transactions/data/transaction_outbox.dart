@@ -69,12 +69,26 @@ class TransactionOutbox {
   /// read.
   File get _ownerFile => File('${_directory.path}/.owner.json');
 
+  /// The owner of a queue somebody has claimed and we cannot attribute:
+  /// an owner file that will not parse, or one that names no account.
+  ///
+  /// Null -- "nobody has ever claimed this" -- is the weakest answer the
+  /// store can give, and the only one the upgrade sheet offers to adopt.
+  /// A file we cannot read does not mean that: it means somebody claimed
+  /// this queue and the evidence of who is damaged, which is exactly when
+  /// guessing "the account signed in now" is most expensive. So it reads
+  /// as an owner -- just one no account key can ever equal, since every
+  /// key is `<baseUrl>#<identity>` and this is neither. Every caller that
+  /// compares an owner against the current key (`ownedEntries`,
+  /// `claimStateOf` and `claimForWriting`, all in outbox_ownership.dart)
+  /// then treats it as foreign with no special case of its own.
+  static const unattributableOwner = 'unattributable';
+
   /// The account key this queue belongs to, or null when nothing has
   /// claimed it -- a fresh queue, or one written before ownership existed.
   ///
-  /// An unreadable file reads as unowned rather than throwing. Unowned is
-  /// the cautious answer: it makes the queue something to ask about, not
-  /// something to send.
+  /// An unreadable file reads as [unattributableOwner] rather than
+  /// throwing, and never as unowned.
   Future<String?> owner() async {
     if (!_ownerFile.existsSync()) return null;
     try {
@@ -82,14 +96,16 @@ class TransactionOutbox {
       final account = decoded is Map<String, dynamic>
           ? decoded['account']
           : null;
-      return account is String && account.isNotEmpty ? account : null;
-      // A malformed owner file must read as unowned rather than crash the
+      if (account is String && account.isNotEmpty) return account;
+      debugPrint('TransactionOutbox: owner file names no account');
+      return unattributableOwner;
+      // A malformed owner file must be answered rather than crash the
       // caller, so any failure here -- bad JSON, wrong shape -- is caught
       // broadly rather than matched to one exception type.
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       debugPrint('TransactionOutbox: unreadable owner file: $e');
-      return null;
+      return unattributableOwner;
     }
   }
 
@@ -194,9 +210,24 @@ class TransactionOutbox {
   /// and it carries the moment of the sideline plus a counter, so repeated
   /// takeovers each land in their own subdirectory instead of overwriting
   /// the last one.
+  ///
+  /// The owner file moves **last**, which is the only ordering that is
+  /// safe to interrupt. `listSync()` returns the filesystem's order, so
+  /// left alone the owner file moves somewhere in the middle: a process
+  /// killed there -- or a rename that fails -- would leave a subset of the
+  /// old owner's entries in the root with nothing saying whose they are,
+  /// and an unowned queue is the one state this feature must never invent
+  /// by accident. Moving it last means an interruption leaves the queue
+  /// still attributed to its old owner, and the next `claimForWriting`
+  /// sidelines the remainder into a second subdirectory: idempotent, and
+  /// wrong in nobody's favour.
   Future<void> sideline() async {
     if (!_directory.existsSync()) return;
-    final files = _directory.listSync().whereType<File>().toList();
+    final present = _directory.listSync().whereType<File>().toList();
+    final files = [
+      ...present.where((f) => f.path != _ownerFile.path),
+      ...present.where((f) => f.path == _ownerFile.path),
+    ];
     if (files.isEmpty) return;
     final target = Directory(
       '${_directory.path}/.sidelined-'

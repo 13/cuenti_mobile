@@ -2567,7 +2567,7 @@ abstract class L {
   /// No description provided for @outboxUnknownBody.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 unsent transaction was saved before this version, so this app cannot tell whose it is. Send it as {account}?} other{{count} unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as {account}?}}'**
+  /// **'{count, plural, =1{1 unsent transaction was saved before this version, so this app cannot tell whose it is. Send it as {account}? If you save a transaction here first, it will be set aside.} other{{count} unsent transactions were saved before this version, so this app cannot tell whose they are. Send them as {account}? If you save a transaction here first, they will be set aside.}}'**
   String outboxUnknownBody(int count, String account);
 
   /// No description provided for @outboxKeep.
