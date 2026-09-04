@@ -4,6 +4,7 @@ import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/transactions/data/outbox_ownership.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
+import 'package:cuentimobile/features/transactions/ui/outbox_drain.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -121,7 +122,17 @@ Future<void> promptForForeignOutbox(BuildContext context, WidgetRef ref) async {
         // the other fourteen callers of this sheet use for deletion.
         isDestructive: false,
       );
-      if (adopt) await outbox.setOwner(accountKey);
+      if (adopt) {
+        await outbox.setOwner(accountKey);
+        // The button says "Send as this account", so something has to
+        // send. The app-start drain ran long before this sheet was
+        // answered, and nothing else is waiting on the answer, so without
+        // this the entries sit unsent until an unrelated gesture -- a
+        // reconnect, a pull-to-refresh, a per-row retry -- happens to
+        // trigger one. drainOutbox invalidates the list itself if
+        // anything is delivered.
+        drainOutbox(ref);
+      }
     case OutboxClaim.empty:
     case OutboxClaim.ours:
       return;

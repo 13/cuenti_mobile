@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cuentimobile/core/api/api_client.dart';
+import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/transactions/data/outbox_ownership.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
+import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/ui/outbox_claim_prompt.dart';
@@ -13,6 +15,10 @@ import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockTransactionsRepository extends Mock
+    implements TransactionsRepository {}
 
 /// Supplies an already-initialized auth state synchronously, bypassing the
 /// real controller's async `_init()` -- the same shape shell_screen_test
@@ -50,10 +56,21 @@ class _HostState extends ConsumerState<_Host> {
 void main() {
   late Directory dir;
   late TransactionOutbox outbox;
+  late MockTransactionsRepository repo;
+
+  setUpAll(
+    () => registerFallbackValue(
+      Transaction(amount: 0, transactionDate: DateTime(2026)),
+    ),
+  );
 
   setUp(() {
     dir = Directory.systemTemp.createTempSync('claim_prompt');
     outbox = TransactionOutbox(dir);
+    repo = MockTransactionsRepository();
+    when(
+      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+    ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
   });
 
   tearDown(() {
@@ -92,6 +109,7 @@ void main() {
       ProviderScope(
         overrides: [
           transactionOutboxProvider.overrideWithValue(outbox),
+          transactionsRepositoryProvider.overrideWithValue(repo),
           authControllerProvider.overrideWith(
             () => _FakeAuthController(
               AuthState(
@@ -207,6 +225,14 @@ void main() {
   });
 
   testWidgets('an unclaimed queue offers to adopt it', (tester) async {
+    // Still offline, so the drain that now follows the adoption leaves
+    // the entry where it is: this test is about the queue becoming ours
+    // and staying visible, and a successful send would empty it before
+    // the assertion could see it. That the adoption sends at all is the
+    // next test.
+    when(
+      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+    ).thenThrow(const NetworkException('Cannot connect to server'));
     await tester.runAsync(() => queue('local-1'));
     await pumpHost(tester, userId: 2);
 
@@ -224,6 +250,30 @@ void main() {
 
     expect(await outbox.owner(), keyFor(2));
     expect(await ownedEntries(outbox, keyFor(2)), hasLength(1));
+  });
+
+  // The button says "Send as this account". Claiming the queue and
+  // stopping there sends nothing: the app-start drain ran long before the
+  // sheet was answered, so the entries would sit unsent until some
+  // unrelated gesture triggered a drain.
+  testWidgets('adopting an unclaimed queue actually sends it', (tester) async {
+    await tester.runAsync(() => queue('local-1'));
+    await pumpHost(tester, userId: 2);
+
+    await tapAndWait(
+      tester,
+      find.widgetWithText(FilledButton, 'Send as this account'),
+      () async => (await outbox.all()).isEmpty,
+    );
+
+    verify(
+      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+    ).called(1);
+    expect(
+      await outbox.all(),
+      isEmpty,
+      reason: 'a delivered entry leaves the queue',
+    );
   });
 
   testWidgets('adopting an unclaimed queue is not dressed up as a '
