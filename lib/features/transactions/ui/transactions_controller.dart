@@ -59,6 +59,7 @@ class TransactionsController extends _$TransactionsController {
   static List<Transaction> mergePending(
     List<Transaction> fromServer,
     List<PendingTransaction> pending,
+    TransactionFilter filter,
   ) {
     final deleted = {
       for (final e in pending)
@@ -73,9 +74,56 @@ class TransactionsController extends _$TransactionsController {
       for (final t in fromServer)
         if (!deleted.contains(t.id)) updates[t.id] ?? t,
       for (final e in pending)
-        if (e.operation == PendingOperation.create) e.transaction,
+        if (e.operation == PendingOperation.create &&
+            matchesFilter(e.transaction, filter))
+          e.transaction,
     ]..sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
     return merged;
+  }
+
+  /// Whether a queued create belongs in a list showing [filter].
+  ///
+  /// Only creates need asking about: an update overlays a server row that
+  /// already matched, and a delete only takes one away. Without this a
+  /// pending create appeared under every filter and every search -- a row
+  /// that plainly does not match what the list says it is showing, which
+  /// on the search screen reads as a broken search.
+  ///
+  /// Matched here rather than at the server for the obvious reason: the
+  /// server has never seen this transaction. Where the two could disagree
+  /// it is on [TransactionFilter.search], which is taken here as a
+  /// case-insensitive substring of the payee or the memo -- narrower than
+  /// the server may be, and narrow in the safe direction: an entry hidden
+  /// from a search is still on the list with no search at all, still
+  /// marked unsent, and still in the sign-out warning.
+  static bool matchesFilter(Transaction t, TransactionFilter filter) {
+    if (filter.accountId != null &&
+        t.fromAccountId != filter.accountId &&
+        t.toAccountId != filter.accountId) {
+      return false;
+    }
+    if (filter.type != null && t.type != filter.type) return false;
+    if (filter.categoryId != null && t.categoryId != filter.categoryId) {
+      return false;
+    }
+    // start/end are date-only on the wire, so the comparison is too --
+    // an entry made at 18:00 is inside a range ending that same day.
+    DateTime dayOf(DateTime d) => DateTime(d.year, d.month, d.day);
+    final day = dayOf(t.transactionDate);
+    final start = filter.start;
+    if (start != null && day.isBefore(dayOf(start))) return false;
+    final end = filter.end;
+    if (end != null && day.isAfter(dayOf(end))) return false;
+    final search = filter.search;
+    if (search != null && search.isNotEmpty) {
+      final needle = search.toLowerCase();
+      final found = [
+        t.payee,
+        t.memo,
+      ].whereType<String>().any((s) => s.toLowerCase().contains(needle));
+      if (!found) return false;
+    }
+    return true;
   }
 
   @override
@@ -87,7 +135,7 @@ class TransactionsController extends _$TransactionsController {
         .getPage(filter: filter);
     final pending = await ref.read(transactionOutboxProvider).all();
     return TransactionsState(
-      items: mergePending(_dedupeById(page.content), pending),
+      items: mergePending(_dedupeById(page.content), pending, filter),
       nextPage: 1,
       hasMore: page.totalPages > 1,
       filter: filter,
@@ -113,6 +161,7 @@ class TransactionsController extends _$TransactionsController {
           items: mergePending(
             _dedupeById([...fromServerSoFar, ...page.content]),
             pending,
+            current.filter,
           ),
           nextPage: current.nextPage + 1,
           hasMore: current.nextPage + 1 < page.totalPages,
@@ -174,7 +223,7 @@ class TransactionsController extends _$TransactionsController {
     final fromServer = current.items.where((t) => t.id != null).toList();
     state = AsyncData(
       current.copyWith(
-        items: mergePending(fromServer, pending),
+        items: mergePending(fromServer, pending, current.filter),
         pending: pending,
       ),
     );
@@ -254,6 +303,16 @@ class TransactionsController extends _$TransactionsController {
     );
     try {
       await ref.read(transactionsRepositoryProvider).delete(id);
+      // An edit of this row may still be queued from an offline spell.
+      // Left there, the next drain PUTs a transaction the server no longer
+      // has, takes a 404 and marks the entry refused -- and mergePending
+      // only overlays updates onto rows the server still returns, so that
+      // entry could never be shown, retried or discarded again. Its one
+      // remaining effect would be a phantom in the sign-out warning.
+      final queued = await _queuedIdFor(id);
+      if (queued != null) {
+        await ref.read(transactionOutboxProvider).remove(queued);
+      }
       ref
         ..invalidateSelf()
         ..invalidate(accountsControllerProvider);

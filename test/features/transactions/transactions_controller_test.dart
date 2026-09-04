@@ -653,6 +653,144 @@ void main() {
       },
     );
 
+    test(
+      'a delete that reaches the server clears the edit still queued for '
+      'that row, which would otherwise PUT a transaction that is gone',
+      () async {
+        when(() => repo.getPage()).thenAnswer(
+          (_) async => TransactionPage(
+            content: [tx(7)],
+            page: 0,
+            size: 50,
+            totalElements: 1,
+            totalPages: 1,
+          ),
+        );
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+        final notifier = container.read(
+          transactionsControllerProvider().notifier,
+        );
+
+        await notifier.save(
+          Transaction(id: 7, amount: 9, transactionDate: DateTime(2026, 9, 4)),
+        );
+        expect(
+          await container.read(transactionOutboxProvider).all(),
+          hasLength(1),
+        );
+
+        // The connection is back, and the row is deleted outright.
+        when(() => repo.delete(7)).thenAnswer((_) async {});
+        expect(await notifier.delete(7), SaveOutcome.sent);
+
+        expect(
+          await container.read(transactionOutboxProvider).all(),
+          isEmpty,
+          reason:
+              'that entry would be PUT to a deleted id, take a 404 and be '
+              'marked refused -- and mergePending can never show it, since '
+              'it only overlays updates onto rows the server still has',
+        );
+      },
+    );
+
+    test(
+      'a pending create that does not match the active filter stays out of '
+      'the list: a filtered list showing rows that do not match it is a lie '
+      'about the data',
+      () async {
+        const filter = TransactionFilter(accountId: 999, search: 'zzz');
+        when(() => repo.getPage(filter: filter)).thenAnswer(
+          (_) async => const TransactionPage(
+            content: [],
+            page: 0,
+            size: 50,
+            totalElements: 0,
+            totalPages: 1,
+          ),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            transactionsRepositoryProvider.overrideWithValue(repo),
+            transactionOutboxProvider.overrideWithValue(
+              TransactionOutbox(outboxDir),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+        await container
+            .read(transactionOutboxProvider)
+            .add(
+              PendingTransaction(
+                localId: 'local-1',
+                operation: PendingOperation.create,
+                transaction: Transaction(
+                  amount: 5,
+                  fromAccountId: 1,
+                  payee: 'Aldi',
+                  transactionDate: DateTime(2026, 9, 4),
+                ),
+                queuedAt: DateTime(2026, 9, 4, 10),
+              ),
+            );
+
+        final state = await container.read(
+          transactionsControllerProvider(filter: filter).future,
+        );
+
+        expect(state.items, isEmpty);
+      },
+    );
+
+    test('a pending create the filter does match is still shown, so an '
+        'entry made offline is not lost behind the account it belongs '
+        'to', () async {
+      const filter = TransactionFilter(accountId: 1);
+      when(() => repo.getPage(filter: filter)).thenAnswer(
+        (_) async => const TransactionPage(
+          content: [],
+          page: 0,
+          size: 50,
+          totalElements: 0,
+          totalPages: 1,
+        ),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          transactionsRepositoryProvider.overrideWithValue(repo),
+          transactionOutboxProvider.overrideWithValue(
+            TransactionOutbox(outboxDir),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container
+          .read(transactionOutboxProvider)
+          .add(
+            PendingTransaction(
+              localId: 'local-1',
+              operation: PendingOperation.create,
+              transaction: Transaction(
+                amount: 5,
+                fromAccountId: 1,
+                payee: 'Aldi',
+                transactionDate: DateTime(2026, 9, 4),
+              ),
+              queuedAt: DateTime(2026, 9, 4, 10),
+            ),
+          );
+
+      final state = await container.read(
+        transactionsControllerProvider(filter: filter).future,
+      );
+
+      expect(state.items.single.payee, 'Aldi');
+    });
+
     test('a queued create appears in the list, in date order', () async {
       when(
         () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
