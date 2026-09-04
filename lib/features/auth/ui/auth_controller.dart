@@ -128,6 +128,11 @@ class AuthController extends _$AuthController {
   /// session expired, the user did not ask to be forgotten, and making them
   /// retype everything would be a worse answer than the one they get by
   /// signing in again.
+  ///
+  /// It keeps the outbox too, deliberately. The sign-out flow clears it
+  /// (having asked first) because a different account may sign in next; an
+  /// expired session is the same person and the same account, and the
+  /// queued writes are still theirs to send once they are back in.
   Future<void> _handleSessionExpired() async {
     // Several requests can fail at once, and a signed-out state must not be
     // re-cleared while the login screen is already up.

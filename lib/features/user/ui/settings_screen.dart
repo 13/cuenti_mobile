@@ -1,6 +1,5 @@
-import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
-import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
+import 'package:cuentimobile/features/auth/ui/sign_out.dart';
 import 'package:cuentimobile/features/user/ui/widgets/data_section.dart';
 import 'package:cuentimobile/features/user/ui/widgets/settings_sections.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
@@ -65,30 +64,11 @@ class _LogoutButton extends ConsumerWidget {
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: () async {
-          // The outbox holds writes the server has never seen -- unlike the
-          // response cache, which is only a copy of something the server
-          // already has. Discarding it silently would lose data the user
-          // entered, so ask first, naming how much would be lost.
-          final outbox = ref.read(transactionOutboxProvider);
-          final pending = await outbox.all();
-          if (!context.mounted) return;
-          if (pending.isNotEmpty) {
-            final confirmed = await showConfirmSheet(
-              context,
-              title: L.of(context).logoutPendingTitle,
-              message: L.of(context).logoutPendingBody(pending.length),
-              confirmLabel: L.of(context).actionLogout,
-            );
-            if (!confirmed) return;
-            if (!context.mounted) return;
-          }
-
-          // Land on the login screen only once the token and the saved
-          // credentials are actually gone, so a fresh sign-in cannot race
-          // the wipe.
+          // Captured before the gap, and the flow itself is shared with the
+          // drawer's Logout: see sign_out.dart.
           final router = GoRouter.of(context);
-          if (pending.isNotEmpty) await outbox.clear();
-          await ref.read(authControllerProvider.notifier).logout();
+          if (!await confirmSignOut(context, ref)) return;
+          await signOut(ref);
           router.go('/login');
         },
         icon: const Icon(Icons.logout),

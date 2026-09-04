@@ -5,6 +5,7 @@ import 'package:cuentimobile/core/privacy/privacy_mode.dart';
 import 'package:cuentimobile/core/widgets/offline_banner.dart';
 import 'package:cuentimobile/core/widgets/refresh_all.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/auth/ui/sign_out.dart';
 import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
@@ -219,8 +220,13 @@ class ShellScreen extends ConsumerWidget {
                 // tears this ListTile's context down, so it cannot route
                 // once the sign-out completes.
                 final router = GoRouter.of(context);
+                // Asked while the drawer is still up, because the question
+                // needs a mounted context; the same flow the settings
+                // screen runs (sign_out.dart).
+                if (!await confirmSignOut(context, ref)) return;
+                if (!context.mounted) return;
                 Navigator.pop(context);
-                await ref.read(authControllerProvider.notifier).logout();
+                await signOut(ref);
                 router.go('/login');
               },
             ),

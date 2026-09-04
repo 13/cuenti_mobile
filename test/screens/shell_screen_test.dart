@@ -9,7 +9,10 @@ import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/scheduled/data/scheduled_repository.dart';
 import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
+import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/screens/shell_screen.dart';
@@ -22,6 +25,21 @@ import 'package:mocktail/mocktail.dart';
 import 'package:riverpod/misc.dart' show Override;
 
 class _MockScheduledRepository extends Mock implements ScheduledRepository {}
+
+/// PrivacyMode reads this on every shell build; without an override it hits
+/// the real flutter_secure_storage plugin channel, which throws
+/// MissingPluginException the moment anything (runAsync, in the logout
+/// group below) actually lets that pending real call run.
+class _MemoryStorage extends SecureStorage {
+  _MemoryStorage() : super();
+  final Map<String, String> _data = {};
+  @override
+  Future<String?> read(String key) async => _data[key];
+  @override
+  Future<void> write(String key, String value) async => _data[key] = value;
+  @override
+  Future<void> delete(String key) async => _data.remove(key);
+}
 
 /// Records how many times [drain] is asked for, without touching the
 /// outbox or the network -- these tests are about *when* a drain is
@@ -83,7 +101,11 @@ void main() {
     _FakeAuthController? controller,
     List<Override> overrides = const [],
     OfflineCacheInterceptor? offlineCache,
+    Directory? outboxDir,
   }) async {
+    final dir =
+        outboxDir ?? Directory.systemTemp.createTempSync('shell_outbox');
+    if (outboxDir == null) addTearDown(() => dir.deleteSync(recursive: true));
     final router = GoRouter(
       initialLocation: '/dashboard',
       routes: [
@@ -106,6 +128,8 @@ void main() {
       ProviderScope(
         overrides: [
           scheduledRepositoryProvider.overrideWithValue(scheduledRepo),
+          transactionOutboxProvider.overrideWithValue(TransactionOutbox(dir)),
+          secureStorageProvider.overrideWithValue(_MemoryStorage()),
           authControllerProvider.overrideWith(
             () =>
                 controller ??
@@ -198,6 +222,107 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('login page'), findsOneWidget);
+  });
+
+  group("the drawer's Logout, with unsent transactions", () {
+    late Directory outboxDir;
+
+    setUp(
+      () => outboxDir = Directory.systemTemp.createTempSync('shell_logout_ob'),
+    );
+    tearDown(() => outboxDir.deleteSync(recursive: true));
+
+    /// TransactionOutbox.add does real disk I/O, which the widget-test
+    /// clock never lets complete on its own; runAsync steps outside it.
+    Future<void> queueOne(WidgetTester tester) => tester.runAsync(
+      () => TransactionOutbox(outboxDir).add(
+        PendingTransaction(
+          localId: 'local-1',
+          operation: PendingOperation.create,
+          transaction: Transaction(
+            amount: 12.34,
+            transactionDate: DateTime(2026, 9, 4),
+          ),
+          queuedAt: DateTime(2026, 9, 4, 10),
+        ),
+      ),
+    );
+
+    Future<_FakeAuthController> openDrawerAndTapLogout(
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final auth = _FakeAuthController(
+        const AuthState(
+          user: UserProfile(username: 'demo', email: 'd@x', firstName: 'Demo'),
+        ),
+      );
+      await pumpShell(tester, controller: auth, outboxDir: outboxDir);
+      await tester.tap(find.byTooltip('Open navigation menu'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Logout'));
+      await tester.pumpAndSettle();
+      return auth;
+    }
+
+    testWidgets('asks first, naming how many would be lost', (tester) async {
+      await queueOne(tester);
+
+      final auth = await openDrawerAndTapLogout(tester);
+
+      expect(find.text('Unsent transactions'), findsOneWidget);
+      expect(
+        auth.logoutCalls,
+        0,
+        reason:
+            'the queue would otherwise survive into the next account, and '
+            "that session's drain would post it into their books",
+      );
+    });
+
+    testWidgets('cancelling leaves the queue and the session alone', (
+      tester,
+    ) async {
+      await queueOne(tester);
+
+      final auth = await openDrawerAndTapLogout(tester);
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(auth.logoutCalls, 0);
+      expect(find.text('login page'), findsNothing);
+      // all() is synchronous inside, unlike add()/clear().
+      expect(await TransactionOutbox(outboxDir).all(), hasLength(1));
+    });
+
+    testWidgets('an empty queue signs out without asking', (tester) async {
+      final auth = await openDrawerAndTapLogout(tester);
+
+      expect(find.text('Unsent transactions'), findsNothing);
+      expect(auth.logoutCalls, 1);
+    });
+
+    testWidgets('confirming signs out and clears the queue', (tester) async {
+      await queueOne(tester);
+      final auth = await openDrawerAndTapLogout(tester);
+
+      // clear() and logout() both run from inside the sheet's handler, so
+      // the tap and the wait for its effect happen inside runAsync.
+      await tester.runAsync(() async {
+        await tester.tap(find.widgetWithText(FilledButton, 'Logout'));
+        for (var i = 0; i < 200 && auth.logoutCalls == 0; i++) {
+          await tester.pump(const Duration(milliseconds: 10));
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+        }
+      });
+      await tester.pumpAndSettle();
+
+      expect(auth.logoutCalls, 1);
+      expect(await TransactionOutbox(outboxDir).all(), isEmpty);
+    });
   });
 
   group('the overdue badge on Geplant', () {
