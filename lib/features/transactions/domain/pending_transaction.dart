@@ -34,6 +34,12 @@ abstract class PendingTransaction with _$PendingTransaction {
     /// The server's own words, once it has refused this entry. Null while
     /// the entry is merely waiting.
     String? rejection,
+
+    /// Whether the edit that produced this entry managed splits itself.
+    /// Replayed verbatim: the repository treats an empty list under a true
+    /// flag as "remove them all", so guessing this wrong destroys splits the
+    /// user never touched.
+    @Default(false) bool splitsTouched,
   }) = _PendingTransaction;
 
   const PendingTransaction._();

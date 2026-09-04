@@ -15,6 +15,7 @@ _PendingTransaction _$PendingTransactionFromJson(Map<String, dynamic> json) =>
       ),
       queuedAt: DateTime.parse(json['queuedAt'] as String),
       rejection: json['rejection'] as String?,
+      splitsTouched: json['splitsTouched'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$PendingTransactionToJson(_PendingTransaction instance) =>
@@ -24,6 +25,7 @@ Map<String, dynamic> _$PendingTransactionToJson(_PendingTransaction instance) =>
       'transaction': _transactionToJson(instance.transaction),
       'queuedAt': instance.queuedAt.toIso8601String(),
       'rejection': instance.rejection,
+      'splitsTouched': instance.splitsTouched,
     };
 
 const _$PendingOperationEnumMap = {

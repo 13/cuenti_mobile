@@ -18,7 +18,11 @@ mixin _$PendingTransaction {
 
  String get localId; PendingOperation get operation;@JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson) Transaction get transaction; DateTime get queuedAt;/// The server's own words, once it has refused this entry. Null while
 /// the entry is merely waiting.
- String? get rejection;
+ String? get rejection;/// Whether the edit that produced this entry managed splits itself.
+/// Replayed verbatim: the repository treats an empty list under a true
+/// flag as "remove them all", so guessing this wrong destroys splits the
+/// user never touched.
+ bool get splitsTouched;
 /// Create a copy of PendingTransaction
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -32,20 +36,20 @@ $PendingTransactionCopyWith<PendingTransaction> get copyWith => _$PendingTransac
 @override
 bool operator ==(Object other) {
   final _this = this as PendingTransaction;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PendingTransaction&&(identical(other.localId, _this.localId) || other.localId == _this.localId)&&(identical(other.operation, _this.operation) || other.operation == _this.operation)&&(identical(other.transaction, _this.transaction) || other.transaction == _this.transaction)&&(identical(other.queuedAt, _this.queuedAt) || other.queuedAt == _this.queuedAt)&&(identical(other.rejection, _this.rejection) || other.rejection == _this.rejection));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PendingTransaction&&(identical(other.localId, _this.localId) || other.localId == _this.localId)&&(identical(other.operation, _this.operation) || other.operation == _this.operation)&&(identical(other.transaction, _this.transaction) || other.transaction == _this.transaction)&&(identical(other.queuedAt, _this.queuedAt) || other.queuedAt == _this.queuedAt)&&(identical(other.rejection, _this.rejection) || other.rejection == _this.rejection)&&(identical(other.splitsTouched, _this.splitsTouched) || other.splitsTouched == _this.splitsTouched));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as PendingTransaction;
-  return Object.hash(runtimeType,_this.localId,_this.operation,_this.transaction,_this.queuedAt,_this.rejection);
+  return Object.hash(runtimeType,_this.localId,_this.operation,_this.transaction,_this.queuedAt,_this.rejection,_this.splitsTouched);
 }
 
 @override
 String toString() {
   final _this = this as PendingTransaction;
-  return 'PendingTransaction(localId: ${_this.localId}, operation: ${_this.operation}, transaction: ${_this.transaction}, queuedAt: ${_this.queuedAt}, rejection: ${_this.rejection})';
+  return 'PendingTransaction(localId: ${_this.localId}, operation: ${_this.operation}, transaction: ${_this.transaction}, queuedAt: ${_this.queuedAt}, rejection: ${_this.rejection}, splitsTouched: ${_this.splitsTouched})';
 }
 
 
@@ -56,7 +60,7 @@ abstract mixin class $PendingTransactionCopyWith<$Res>  {
   factory $PendingTransactionCopyWith(PendingTransaction value, $Res Function(PendingTransaction) _then) = _$PendingTransactionCopyWithImpl;
 @useResult
 $Res call({
- String localId, PendingOperation operation,@JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson) Transaction transaction, DateTime queuedAt, String? rejection
+ String localId, PendingOperation operation,@JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson) Transaction transaction, DateTime queuedAt, String? rejection, bool splitsTouched
 });
 
 
@@ -73,14 +77,15 @@ class _$PendingTransactionCopyWithImpl<$Res>
 
 /// Create a copy of PendingTransaction
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? localId = null,Object? operation = null,Object? transaction = null,Object? queuedAt = null,Object? rejection = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? localId = null,Object? operation = null,Object? transaction = null,Object? queuedAt = null,Object? rejection = freezed,Object? splitsTouched = null,}) {
   return _then(PendingTransaction(
 localId: null == localId ? _self.localId : localId // ignore: cast_nullable_to_non_nullable
 as String,operation: null == operation ? _self.operation : operation // ignore: cast_nullable_to_non_nullable
 as PendingOperation,transaction: null == transaction ? _self.transaction : transaction // ignore: cast_nullable_to_non_nullable
 as Transaction,queuedAt: null == queuedAt ? _self.queuedAt : queuedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,rejection: freezed == rejection ? _self.rejection : rejection // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,splitsTouched: null == splitsTouched ? _self.splitsTouched : splitsTouched // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of PendingTransaction
@@ -174,10 +179,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String localId,  PendingOperation operation, @JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson)  Transaction transaction,  DateTime queuedAt,  String? rejection)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String localId,  PendingOperation operation, @JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson)  Transaction transaction,  DateTime queuedAt,  String? rejection,  bool splitsTouched)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PendingTransaction() when $default != null:
-return $default(_that.localId,_that.operation,_that.transaction,_that.queuedAt,_that.rejection);case _:
+return $default(_that.localId,_that.operation,_that.transaction,_that.queuedAt,_that.rejection,_that.splitsTouched);case _:
   return orElse();
 
 }
@@ -195,10 +200,10 @@ return $default(_that.localId,_that.operation,_that.transaction,_that.queuedAt,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String localId,  PendingOperation operation, @JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson)  Transaction transaction,  DateTime queuedAt,  String? rejection)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String localId,  PendingOperation operation, @JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson)  Transaction transaction,  DateTime queuedAt,  String? rejection,  bool splitsTouched)  $default,) {final _that = this;
 switch (_that) {
 case _PendingTransaction():
-return $default(_that.localId,_that.operation,_that.transaction,_that.queuedAt,_that.rejection);case _:
+return $default(_that.localId,_that.operation,_that.transaction,_that.queuedAt,_that.rejection,_that.splitsTouched);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -215,10 +220,10 @@ return $default(_that.localId,_that.operation,_that.transaction,_that.queuedAt,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String localId,  PendingOperation operation, @JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson)  Transaction transaction,  DateTime queuedAt,  String? rejection)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String localId,  PendingOperation operation, @JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson)  Transaction transaction,  DateTime queuedAt,  String? rejection,  bool splitsTouched)?  $default,) {final _that = this;
 switch (_that) {
 case _PendingTransaction() when $default != null:
-return $default(_that.localId,_that.operation,_that.transaction,_that.queuedAt,_that.rejection);case _:
+return $default(_that.localId,_that.operation,_that.transaction,_that.queuedAt,_that.rejection,_that.splitsTouched);case _:
   return null;
 
 }
@@ -230,7 +235,7 @@ return $default(_that.localId,_that.operation,_that.transaction,_that.queuedAt,_
 @JsonSerializable()
 
 class _PendingTransaction extends PendingTransaction {
-  const _PendingTransaction({required this.localId, required this.operation, @JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson) required this.transaction, required this.queuedAt, this.rejection}): super._();
+  const _PendingTransaction({required this.localId, required this.operation, @JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson) required this.transaction, required this.queuedAt, this.rejection, this.splitsTouched = false}): super._();
   factory _PendingTransaction.fromJson(Map<String, dynamic> json) => _$PendingTransactionFromJson(json);
 
 @override final  String localId;
@@ -240,6 +245,11 @@ class _PendingTransaction extends PendingTransaction {
 /// The server's own words, once it has refused this entry. Null while
 /// the entry is merely waiting.
 @override final  String? rejection;
+/// Whether the edit that produced this entry managed splits itself.
+/// Replayed verbatim: the repository treats an empty list under a true
+/// flag as "remove them all", so guessing this wrong destroys splits the
+/// user never touched.
+@override@JsonKey() final  bool splitsTouched;
 
 /// Create a copy of PendingTransaction
 /// with the given fields replaced by the non-null parameter values.
@@ -254,18 +264,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PendingTransaction&&(identical(other.localId, localId) || other.localId == localId)&&(identical(other.operation, operation) || other.operation == operation)&&(identical(other.transaction, transaction) || other.transaction == transaction)&&(identical(other.queuedAt, queuedAt) || other.queuedAt == queuedAt)&&(identical(other.rejection, rejection) || other.rejection == rejection));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PendingTransaction&&(identical(other.localId, localId) || other.localId == localId)&&(identical(other.operation, operation) || other.operation == operation)&&(identical(other.transaction, transaction) || other.transaction == transaction)&&(identical(other.queuedAt, queuedAt) || other.queuedAt == queuedAt)&&(identical(other.rejection, rejection) || other.rejection == rejection)&&(identical(other.splitsTouched, splitsTouched) || other.splitsTouched == splitsTouched));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,localId,operation,transaction,queuedAt,rejection);
+    return Object.hash(runtimeType,localId,operation,transaction,queuedAt,rejection,splitsTouched);
 }
 
 @override
 String toString() {
-    return 'PendingTransaction(localId: $localId, operation: $operation, transaction: $transaction, queuedAt: $queuedAt, rejection: $rejection)';
+    return 'PendingTransaction(localId: $localId, operation: $operation, transaction: $transaction, queuedAt: $queuedAt, rejection: $rejection, splitsTouched: $splitsTouched)';
 }
 
 
@@ -276,7 +286,7 @@ abstract mixin class _$PendingTransactionCopyWith<$Res> implements $PendingTrans
   factory _$PendingTransactionCopyWith(_PendingTransaction value, $Res Function(_PendingTransaction) _then) = __$PendingTransactionCopyWithImpl;
 @override @useResult
 $Res call({
- String localId, PendingOperation operation,@JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson) Transaction transaction, DateTime queuedAt, String? rejection
+ String localId, PendingOperation operation,@JsonKey(toJson: _transactionToJson, fromJson: _transactionFromJson) Transaction transaction, DateTime queuedAt, String? rejection, bool splitsTouched
 });
 
 
@@ -293,14 +303,15 @@ class __$PendingTransactionCopyWithImpl<$Res>
 
 /// Create a copy of PendingTransaction
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? localId = null,Object? operation = null,Object? transaction = null,Object? queuedAt = null,Object? rejection = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? localId = null,Object? operation = null,Object? transaction = null,Object? queuedAt = null,Object? rejection = freezed,Object? splitsTouched = null,}) {
   return _then(_PendingTransaction(
 localId: null == localId ? _self.localId : localId // ignore: cast_nullable_to_non_nullable
 as String,operation: null == operation ? _self.operation : operation // ignore: cast_nullable_to_non_nullable
 as PendingOperation,transaction: null == transaction ? _self.transaction : transaction // ignore: cast_nullable_to_non_nullable
 as Transaction,queuedAt: null == queuedAt ? _self.queuedAt : queuedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,rejection: freezed == rejection ? _self.rejection : rejection // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,splitsTouched: null == splitsTouched ? _self.splitsTouched : splitsTouched // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
