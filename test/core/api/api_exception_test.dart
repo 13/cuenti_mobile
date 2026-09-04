@@ -22,6 +22,7 @@ void main() {
       );
 
       expect(e, isA<ValidationException>());
+      expect(e.message, 'Amount must be positive');
       expect(e.serverMessage, 'Amount must be positive');
       expect(e.statusCode, 422);
     });
@@ -29,6 +30,7 @@ void main() {
     test('a bare string body is taken as the explanation too', () {
       final e = ApiException.fromDio(badResponse(400, 'Missing account'));
 
+      expect(e.message, 'Missing account');
       expect(e.serverMessage, 'Missing account');
       expect(e.statusCode, 400);
     });
@@ -43,6 +45,15 @@ void main() {
 
     test('an empty string body is not an explanation', () {
       final e = ApiException.fromDio(badResponse(400, ''));
+
+      expect(e.serverMessage, isNull);
+    });
+
+    // Without the `msg.isNotEmpty` guard on the JSON branch, an empty
+    // string would read as "the server explained itself" -- an empty
+    // frame quoting nothing.
+    test('a JSON body with an empty error string is not an explanation', () {
+      final e = ApiException.fromDio(badResponse(400, {'error': ''}));
 
       expect(e.serverMessage, isNull);
     });
@@ -88,8 +99,30 @@ void main() {
       );
 
       expect(e, isA<NetworkException>());
+      expect(e.message, 'Cannot connect to server');
       expect(e.serverMessage, isNull);
       expect(e.statusCode, isNull);
+    });
+  });
+
+  group('fromDio maps exception types', () {
+    test('a timeout maps to NetworkException', () {
+      final e = ApiException.fromDio(
+        DioException(
+          requestOptions: RequestOptions(path: '/x'),
+          type: DioExceptionType.receiveTimeout,
+        ),
+      );
+
+      expect(e, isA<NetworkException>());
+    });
+
+    test('cancel/unknown maps to UnknownApiException', () {
+      final e = ApiException.fromDio(
+        DioException(requestOptions: RequestOptions(path: '/x')),
+      );
+
+      expect(e, isA<UnknownApiException>());
     });
   });
 }
