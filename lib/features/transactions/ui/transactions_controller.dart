@@ -1,5 +1,8 @@
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
+import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/transactions/data/outbox_ownership.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
@@ -283,6 +286,16 @@ class TransactionsController extends _$TransactionsController {
       splitsTouched: splitsTouched || (existing?.splitsTouched ?? false),
     );
     await outbox.add(entry);
+    // Ownership starts mattering the moment there is something to own. An
+    // already-claimed queue keeps its claim: the first account to queue
+    // into it is the one it belongs to.
+    await claimIfUnowned(
+      outbox,
+      accountKeyFor(
+        ref.read(apiClientProvider).baseUrl,
+        ref.read(authControllerProvider),
+      ),
+    );
   }
 
   /// Drops a queued write the server has never seen, sending nothing.

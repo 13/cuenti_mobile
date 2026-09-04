@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
@@ -9,12 +10,23 @@ import 'package:cuentimobile/features/transactions/domain/transaction_filter.dar
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_split.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
+import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockTransactionsRepository extends Mock
     implements TransactionsRepository {}
+
+/// Hands back a settled, signed-in state synchronously, so tests that
+/// exercise `_enqueue`'s ownership claim don't kick off the real
+/// controller's startup work (a platform-channel token read, a live
+/// profile fetch) that a plain unit test has no business triggering.
+class _SignedInAuthController extends AuthController {
+  @override
+  AuthState build() =>
+      const AuthState(user: UserProfile(id: 42, username: 'ben'));
+}
 
 void main() {
   late MockTransactionsRepository repo;
@@ -386,6 +398,11 @@ void main() {
           transactionOutboxProvider.overrideWithValue(
             TransactionOutbox(outboxDir),
           ),
+          // _enqueue claims the queue for the signed-in account, so every
+          // test in this group needs one. Scoped to this helper rather than
+          // the file's top-level setUp: the tests above never queue a
+          // write, so they never need auth resolved.
+          authControllerProvider.overrideWith(_SignedInAuthController.new),
         ],
       );
       addTearDown(container.dispose);
@@ -1265,6 +1282,51 @@ void main() {
         final state = container.read(transactionsControllerProvider()).value!;
         expect(state.pending, hasLength(1));
         expect(state.items.map((t) => t.amount), [5]);
+      },
+    );
+
+    test(
+      'queueing a save claims the queue for the signed-in account',
+      () async {
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+
+        await container
+            .read(transactionsControllerProvider().notifier)
+            .save(
+              Transaction(amount: 12.34, transactionDate: DateTime(2026, 9, 4)),
+            );
+
+        expect(
+          await container.read(transactionOutboxProvider).owner(),
+          isNotNull,
+        );
+      },
+    );
+
+    test(
+      'a second save does not re-claim an already owned queue',
+      () async {
+        await TransactionOutbox(outboxDir).setOwner('someone-else');
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+
+        await container
+            .read(transactionsControllerProvider().notifier)
+            .save(
+              Transaction(amount: 12.34, transactionDate: DateTime(2026, 9, 4)),
+            );
+
+        expect(
+          await container.read(transactionOutboxProvider).owner(),
+          'someone-else',
+        );
       },
     );
   });

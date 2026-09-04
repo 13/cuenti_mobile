@@ -93,11 +93,21 @@ class TransactionOutbox {
     }
   }
 
+  /// Distinguishes concurrent [setOwner] calls' temp files from one
+  /// another. `_enqueue` claims the queue on every write, so two saves
+  /// fired together (`Future.wait`) can both find the queue unclaimed and
+  /// both race to claim it; a shared temp filename would let the second
+  /// call's write stomp the first's before its rename runs. Incremented
+  /// synchronously, before either call's first `await`, so Dart's
+  /// single-threaded event loop can never interleave two calls onto the
+  /// same value.
+  static int _setOwnerSeq = 0;
+
   /// Claims this queue for [account]. Written the way entries are, so a
   /// torn write cannot leave a half-file that reads as a different owner.
   Future<void> setOwner(String account) async {
     if (!_directory.existsSync()) await _directory.create(recursive: true);
-    final tempFile = File('${_ownerFile.path}.tmp');
+    final tempFile = File('${_ownerFile.path}.${_setOwnerSeq++}.tmp');
     await tempFile.writeAsString(jsonEncode({'account': account}));
     await tempFile.rename(_ownerFile.path);
   }
