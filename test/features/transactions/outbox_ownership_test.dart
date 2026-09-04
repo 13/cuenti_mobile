@@ -162,28 +162,13 @@ void main() {
     });
   });
 
-  group('claimIfUnowned', () {
-    test('claims a queue with no owner', () async {
-      await claimIfUnowned(outbox, 'key-a');
-
-      expect(await outbox.owner(), 'key-a');
-    });
-
-    test('leaves an existing owner alone', () async {
-      await outbox.setOwner('key-a');
-
-      await claimIfUnowned(outbox, 'key-b');
-
-      expect(await outbox.owner(), 'key-a');
-    });
-
-    test('does nothing when nobody is signed in', () async {
-      await claimIfUnowned(outbox, null);
-
-      expect(await outbox.owner(), isNull);
-    });
-  });
-
+  // Was preceded by a `claimIfUnowned` group. That function had no caller
+  // left in lib -- claimForWriting superseded it -- while holding the
+  // only direct unit tests of anything in this file's write path, so its
+  // three cases now sit below against the function that actually runs:
+  // an empty queue is claimed, a queue already ours is left alone, and
+  // nobody signed in claims nothing.
+  //
   // One rule, stated once: a queue this account has not claimed is never
   // written into and never taken. Foreign, unowned and unattributable all
   // end at the same answer -- set aside -- and only the sheet adopts.

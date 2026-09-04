@@ -203,6 +203,32 @@ void main() {
     expect(logged.where((l) => l.contains('owner.json')), isEmpty);
   });
 
+  test('discardEntries drops the entries and the owner file', () async {
+    await outbox.setOwner('https://cuenti.muh#42');
+    await outbox.add(entry('a'));
+
+    await outbox.discardEntries();
+
+    expect(await outbox.all(), isEmpty);
+    expect(await outbox.owner(), isNull);
+  });
+
+  test('discardEntries leaves a sidelined queue where it is', () async {
+    await outbox.setOwner('https://cuenti.muh#42');
+    await outbox.add(entry('a'));
+    await outbox.sideline();
+    await outbox.add(entry('b'));
+
+    await outbox.discardEntries();
+
+    expect(await outbox.all(), isEmpty);
+    expect(
+      dir.listSync().whereType<Directory>().single.listSync(),
+      hasLength(2),
+      reason: "the earlier owner's entry and owner file, both untouched",
+    );
+  });
+
   test('clear() drops the owner along with the entries', () async {
     await outbox.setOwner('https://cuenti.muh#42');
 

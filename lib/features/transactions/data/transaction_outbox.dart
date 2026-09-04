@@ -183,6 +183,22 @@ class TransactionOutbox {
     await _directory.create(recursive: true);
   }
 
+  /// Deletes the entries the queue is currently holding, and the owner
+  /// file that says whose they are -- and nothing else.
+  ///
+  /// [clear] is recursive, so it also takes any `.sidelined-...`
+  /// subdirectory with it: entries that were never in the count the
+  /// caller showed the user before asking. The foreign-queue sheet counts
+  /// the root entries and offers to discard them, so it must destroy
+  /// exactly those; sign-out keeps [clear], because "sign out and get rid
+  /// of my unsent work" does mean all of it.
+  Future<void> discardEntries() async {
+    if (!_directory.existsSync()) return;
+    for (final file in _directory.listSync().whereType<File>()) {
+      await file.delete();
+    }
+  }
+
   /// Distinguishes concurrent [sideline] calls' subdirectories from one
   /// another, the same way [_setOwnerSeq] does for [setOwner]. Incremented
   /// synchronously so two calls in the same microsecond still land in

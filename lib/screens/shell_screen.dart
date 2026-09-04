@@ -409,7 +409,18 @@ class _OutboxClaimCheckState extends ConsumerState<_OutboxClaimCheck> {
       _asked = true;
       // Not awaited: nothing about drawing this frame should wait on a
       // disk read, and the sheet opens on its own when it is ready.
-      unawaited(promptForForeignOutbox(context, ref));
+      //
+      // Caught rather than left to the zone: everything this does is
+      // disk I/O (a claim, a discard), the user has no feedback either
+      // way, and nothing behind it depends on it -- the queue stays
+      // sealed by ownedEntries whether the sheet is answered or never
+      // appears at all. An unhandled async error would be a crash report
+      // in exchange for nothing.
+      unawaited(
+        promptForForeignOutbox(context, ref).catchError((Object e) {
+          debugPrint('ShellScreen: the outbox claim prompt failed: $e');
+        }),
+      );
     }
     return const SizedBox.shrink();
   }

@@ -5,14 +5,18 @@ import 'dart:typed_data';
 
 import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
+import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/transactions/data/outbox_ownership.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
+import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -668,6 +672,93 @@ void main() {
       },
     );
   });
+
+  // Every other test in this file builds TransactionSync by hand, with a
+  // hand-written account-key callback -- so the wiring in the provider,
+  //
+  //   () => accountKeyFor(ref.read(apiClientProvider).baseUrl,
+  //                       ref.read(authControllerProvider))
+  //
+  // was never built by anything. If it read the wrong provider, or
+  // captured a key instead of reading one per pass, the entire drain-side
+  // guard would be inert and every test above would still be green.
+  // These two build the real provider: one proves it seals, the other
+  // that it does not seal everything, which is the half a wrong-but-
+  // non-null key would still pass.
+  group('the provider that wires the account key in', () {
+    ProviderContainer containerSignedInAs(int userId) {
+      final container = ProviderContainer(
+        overrides: [
+          transactionOutboxProvider.overrideWithValue(outbox),
+          transactionsRepositoryProvider.overrideWithValue(repo),
+          // So no test reaches for the platform's real keystore. The API
+          // client itself is the real one, which is the point: its
+          // baseUrl is half of the key under test.
+          secureStorageProvider.overrideWithValue(_MemoryStorage()),
+          authControllerProvider.overrideWith(
+            () => _FakeAuthController(
+              AuthState(
+                user: UserProfile(id: userId, username: 'demo'),
+                initialized: true,
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      return container;
+    }
+
+    test('a foreign queue is not drained through it', () async {
+      await queue('local-1');
+      await outbox.setOwner('https://cuenti.muh#1');
+
+      final sent = await containerSignedInAs(2)
+          .read(
+            transactionSyncProvider,
+          )
+          .drain();
+
+      expect(sent, 0);
+      verifyNever(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      );
+      expect(await outbox.all(), hasLength(1), reason: 'left, not deleted');
+    });
+
+    test('and our own queue is', () async {
+      when(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
+      await queue('local-1');
+      await outbox.setOwner('https://cuenti.muh#2');
+
+      final sent = await containerSignedInAs(2)
+          .read(
+            transactionSyncProvider,
+          )
+          .drain();
+
+      expect(
+        sent,
+        1,
+        reason:
+            'the key the provider builds has to be the one _enqueue '
+            'claims a queue under, not merely some non-null string',
+      );
+    });
+  });
+}
+
+/// Hands back a settled auth state synchronously, so building the sync
+/// provider does not start the real controller's platform-channel token
+/// read and profile fetch.
+class _FakeAuthController extends AuthController {
+  _FakeAuthController(this._state);
+  final AuthState _state;
+
+  @override
+  AuthState build() => _state;
 }
 
 /// An outbox whose post-send bookkeeping always fails.

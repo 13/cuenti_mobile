@@ -85,16 +85,6 @@ Future<OutboxClaim> claimStateOf(
   return OutboxClaim.foreign;
 }
 
-/// Claims the queue for the current account when nothing has claimed it.
-Future<void> claimIfUnowned(
-  TransactionOutbox outbox,
-  String? accountKey,
-) async {
-  if (accountKey == null) return;
-  if (await outbox.owner() != null) return;
-  await outbox.setOwner(accountKey);
-}
-
 /// Makes the queue this account's before anything is written into it.
 ///
 /// Resolving ownership after the write instead would leave two holes. A

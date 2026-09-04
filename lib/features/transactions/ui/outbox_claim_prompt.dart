@@ -105,7 +105,10 @@ Future<void> promptForForeignOutbox(BuildContext context, WidgetRef ref) async {
         confirmLabel: l.txDiscardPending,
         cancelLabel: l.outboxKeep,
       );
-      if (discard) await outbox.clear();
+      // Not clear(): that is recursive, and would take any earlier
+      // sidelined queue with it -- entries this sheet never counted and
+      // never showed. The user is answering about the ones in the count.
+      if (discard) await outbox.discardEntries();
     case OutboxClaim.unowned:
       final adopt = await showConfirmSheet(
         context,

@@ -184,6 +184,36 @@ void main() {
     expect(await outbox.all(), isEmpty);
   });
 
+  // The count in the message is of the root entries. A recursive clear()
+  // would also destroy anything an earlier takeover set aside -- work
+  // this sheet neither counted nor showed, discarded by a button the
+  // user pressed about something else.
+  testWidgets('discarding a foreign queue destroys what it counted, and '
+      'not what it never showed', (tester) async {
+    late Directory sidelined;
+    await tester.runAsync(() async {
+      await queue('local-1', owner: keyFor(1));
+      sidelined = Directory('${dir.path}/.sidelined-earlier')..createSync();
+      File('${sidelined.path}/set-aside.json').writeAsStringSync('{}');
+    });
+    await pumpHost(tester, userId: 2);
+
+    expect(find.textContaining('1 unsent transaction was'), findsOneWidget);
+
+    await tapAndWait(
+      tester,
+      find.widgetWithText(FilledButton, 'Discard'),
+      () async => (await outbox.all()).isEmpty,
+    );
+
+    expect(await outbox.all(), isEmpty);
+    expect(
+      sidelined.listSync().whereType<File>(),
+      hasLength(1),
+      reason: 'the sheet counted one entry, so it may destroy one entry',
+    );
+  });
+
   testWidgets('keeping a foreign queue leaves it, still sealed', (
     tester,
   ) async {
