@@ -17,23 +17,44 @@ sealed class ApiException implements Exception {
       case DioExceptionType.badResponse:
         final status = e.response?.statusCode ?? 0;
         final body = e.response?.data;
-        final serverMessage = switch (body) {
-          {'error': final String msg} => msg,
+        final raw = switch (body) {
+          {'error': final String msg} when msg.isNotEmpty => msg,
           final String s when s.isNotEmpty => s,
           _ => null,
         };
+        // This string is shown to a user now, and a misconfigured reverse
+        // proxy answers with an entire HTML page. Cut it here, once, so
+        // every consumer gets the same rule.
+        final serverMessage =
+            raw == null || raw.length <= maxServerMessageLength
+            ? raw
+            : '${raw.substring(0, maxServerMessageLength)}…';
         if (status == 401) {
-          return UnauthorizedException(serverMessage ?? 'Not authenticated');
+          return UnauthorizedException(
+            serverMessage ?? 'Not authenticated',
+            serverMessage: serverMessage,
+            statusCode: status,
+          );
         }
         if (status == 403) {
           return UnauthorizedException(
             serverMessage ?? 'API access is not enabled',
+            serverMessage: serverMessage,
+            statusCode: status,
           );
         }
         if (status >= 400 && status < 500) {
-          return ValidationException(serverMessage ?? 'Invalid request');
+          return ValidationException(
+            serverMessage ?? 'Invalid request',
+            serverMessage: serverMessage,
+            statusCode: status,
+          );
         }
-        return ServerException(serverMessage ?? 'Server error ($status)');
+        return ServerException(
+          serverMessage ?? 'Server error ($status)',
+          serverMessage: serverMessage,
+          statusCode: status,
+        );
       case DioExceptionType.badCertificate:
         return const NetworkException(_certificateMessage);
       case DioExceptionType.cancel:
@@ -94,6 +115,10 @@ const invalidCredentialsMessage = 'Invalid username or password';
 const _certificateMessage =
     'The server certificate is not trusted. Re-run Server Setup to '
     'check its fingerprint and trust it.';
+
+/// How much of the server's own explanation is worth putting in front of a
+/// user. A body long enough to matter is an HTML error page, not a sentence.
+const maxServerMessageLength = 200;
 
 final class NetworkException extends ApiException {
   const NetworkException(
