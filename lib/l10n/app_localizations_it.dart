@@ -1314,4 +1314,12 @@ class LIt extends L {
 
   @override
   String get categoryCreateTopLevel => 'Nuova categoria principale';
+
+  @override
+  String get logoutPendingTitle => 'Operazioni non inviate';
+
+  @override
+  String logoutPendingBody(int count) {
+    return '$count operazioni non hanno raggiunto il server. Uscendo andranno perse.';
+  }
 }

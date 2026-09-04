@@ -152,6 +152,8 @@ class ApiClient {
     // Signing out must not leave the previous account's figures on disk for
     // the next one to be shown offline.
     await offlineCache?.cache.clear();
+    // The outbox is cleared by the sign-out flow, which asks first: unlike
+    // the cache, it holds work the server has never seen.
   }
 
   Future<bool> hasToken() async {

@@ -2509,6 +2509,18 @@ abstract class L {
   /// In en, this message translates to:
   /// **'New top-level category'**
   String get categoryCreateTopLevel;
+
+  /// No description provided for @logoutPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsent transactions'**
+  String get logoutPendingTitle;
+
+  /// No description provided for @logoutPendingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} transactions have not reached the server. Signing out will discard them.'**
+  String logoutPendingBody(int count);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

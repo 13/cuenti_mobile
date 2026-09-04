@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/currencies/data/currencies_repository.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
+import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
+import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/user/data/user_repository.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/features/user/ui/settings_screen.dart';
@@ -64,6 +68,7 @@ void main() {
   late MockUserRepository userRepo;
   late MockCurrenciesRepository currenciesRepo;
   late _MemoryStorage storage;
+  late Directory defaultOutboxDir;
 
   const user = UserProfile(
     id: 1,
@@ -79,6 +84,10 @@ void main() {
     userRepo = MockUserRepository();
     currenciesRepo = MockCurrenciesRepository();
     storage = _MemoryStorage();
+    defaultOutboxDir = Directory.systemTemp.createTempSync(
+      'settings_screen_outbox',
+    );
+    addTearDown(() => defaultOutboxDir.deleteSync(recursive: true));
     when(() => currenciesRepo.getAll()).thenAnswer((_) async => []);
     when(
       () => userRepo.updatePreferences(any()),
@@ -93,6 +102,7 @@ void main() {
     UserProfile? profile = user,
     bool biometricEnabled = false,
     Completer<void>? logoutGate,
+    Directory? outboxDir,
   }) async {
     tester.view.physicalSize = const Size(1000, 3000);
     tester.view.devicePixelRatio = 1.0;
@@ -122,6 +132,9 @@ void main() {
           userRepositoryProvider.overrideWithValue(userRepo),
           currenciesRepositoryProvider.overrideWithValue(currenciesRepo),
           secureStorageProvider.overrideWithValue(storage),
+          transactionOutboxProvider.overrideWithValue(
+            TransactionOutbox(outboxDir ?? defaultOutboxDir),
+          ),
         ],
         child: MaterialApp.router(
           locale: locale,
@@ -238,6 +251,110 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('login page'), findsOneWidget);
+  });
+
+  group('signing out with unsent transactions', () {
+    late Directory outboxDir;
+
+    setUp(() => outboxDir = Directory.systemTemp.createTempSync('logout_ob'));
+    tearDown(() => outboxDir.deleteSync(recursive: true));
+
+    Future<void> queueOne() => TransactionOutbox(outboxDir).add(
+      PendingTransaction(
+        localId: 'local-1',
+        operation: PendingOperation.create,
+        transaction: Transaction(
+          amount: 12.34,
+          transactionDate: DateTime(2026, 9, 4),
+        ),
+        queuedAt: DateTime(2026, 9, 4, 10),
+      ),
+    );
+
+    testWidgets('asks first, naming how many would be lost', (tester) async {
+      // TransactionOutbox does real disk I/O, which the widget-test clock
+      // (AutomatedTestWidgetsFlutterBinding runs the body inside FakeAsync)
+      // never lets complete on its own -- awaiting it directly hangs
+      // forever. runAsync steps outside that fake clock for the real
+      // operation, matching the pattern transactions_screen_test.dart uses
+      // for the same store.
+      await tester.runAsync(queueOne);
+      await pumpSettings(tester, outboxDir: outboxDir);
+
+      final logout = find.widgetWithText(OutlinedButton, 'Logout');
+      await tester.ensureVisible(logout);
+      await tester.pumpAndSettle();
+      await tester.tap(logout);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unsent transactions'), findsOneWidget);
+      expect(find.textContaining('1'), findsWidgets);
+    });
+
+    testWidgets('cancelling leaves the queue and the session alone', (
+      tester,
+    ) async {
+      await tester.runAsync(queueOne);
+      final auth = await pumpSettings(tester, outboxDir: outboxDir);
+
+      final logout = find.widgetWithText(OutlinedButton, 'Logout');
+      await tester.ensureVisible(logout);
+      await tester.pumpAndSettle();
+      await tester.tap(logout);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(auth.logoutCalls, 0);
+      // TransactionOutbox.all() only does synchronous file I/O internally,
+      // so unlike add()/clear() it resolves fine without runAsync -- the
+      // same reason transactions_screen_test.dart reads it bare too.
+      expect(await TransactionOutbox(outboxDir).all(), hasLength(1));
+    });
+
+    testWidgets('an empty queue signs out without asking', (tester) async {
+      final auth = await pumpSettings(tester, outboxDir: outboxDir);
+
+      final logout = find.widgetWithText(OutlinedButton, 'Logout');
+      await tester.ensureVisible(logout);
+      await tester.pumpAndSettle();
+      await tester.tap(logout);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unsent transactions'), findsNothing);
+      expect(auth.logoutCalls, 1);
+    });
+
+    testWidgets('confirming signs out and clears the outbox', (tester) async {
+      await tester.runAsync(queueOne);
+      final auth = await pumpSettings(tester, outboxDir: outboxDir);
+
+      final logout = find.widgetWithText(OutlinedButton, 'Logout');
+      await tester.ensureVisible(logout);
+      await tester.pumpAndSettle();
+      await tester.tap(logout);
+      await tester.pumpAndSettle();
+
+      // Confirming triggers the outbox's real clear() and then logout()
+      // from inside the button's handler -- same reason the tap and the
+      // wait for its effect both have to happen inside runAsync;
+      // pumpAndSettle only tracks scheduled frames, not this unrelated
+      // real I/O. Polling logoutCalls rather than the outbox itself
+      // avoids racing this loop's own reads against clear()'s
+      // delete-then-recreate, and only flips once clear() -- which
+      // sequences before logout() in the handler -- has already run.
+      await tester.runAsync(() async {
+        await tester.tap(find.widgetWithText(FilledButton, 'Logout'));
+        for (var i = 0; i < 200 && auth.logoutCalls == 0; i++) {
+          await tester.pump(const Duration(milliseconds: 10));
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+        }
+      });
+      await tester.pumpAndSettle();
+
+      expect(auth.logoutCalls, 1);
+      expect(await TransactionOutbox(outboxDir).all(), isEmpty);
+    });
   });
 
   testWidgets('the whole screen renders in German', (tester) async {

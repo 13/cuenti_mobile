@@ -1315,4 +1315,12 @@ class LDe extends L {
 
   @override
   String get categoryCreateTopLevel => 'Neue Hauptkategorie';
+
+  @override
+  String get logoutPendingTitle => 'Nicht gesendete Buchungen';
+
+  @override
+  String logoutPendingBody(int count) {
+    return '$count Buchungen haben den Server nicht erreicht. Beim Abmelden gehen sie verloren.';
+  }
 }

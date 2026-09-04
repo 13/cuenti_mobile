@@ -400,5 +400,7 @@
   "paymentMethodInterest": "Zinsen",
   "categoryCreate": "„{name}“ anlegen",
   "categoryCreateUnder": "unter {parent}",
-  "categoryCreateTopLevel": "Neue Hauptkategorie"
+  "categoryCreateTopLevel": "Neue Hauptkategorie",
+  "logoutPendingTitle": "Nicht gesendete Buchungen",
+  "logoutPendingBody": "{count} Buchungen haben den Server nicht erreicht. Beim Abmelden gehen sie verloren."
 }

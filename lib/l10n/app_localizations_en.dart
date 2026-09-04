@@ -1311,4 +1311,12 @@ class LEn extends L {
 
   @override
   String get categoryCreateTopLevel => 'New top-level category';
+
+  @override
+  String get logoutPendingTitle => 'Unsent transactions';
+
+  @override
+  String logoutPendingBody(int count) {
+    return '$count transactions have not reached the server. Signing out will discard them.';
+  }
 }

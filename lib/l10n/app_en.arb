@@ -801,5 +801,9 @@
   "categoryCreateUnder": "under {parent}",
   "@categoryCreateUnder": {"placeholders": {"parent": {"type": "String"}}},
   "categoryCreateTopLevel": "New top-level category",
-  "@categoryCreateTopLevel": {}
+  "@categoryCreateTopLevel": {},
+  "logoutPendingTitle": "Unsent transactions",
+  "@logoutPendingTitle": {},
+  "logoutPendingBody": "{count} transactions have not reached the server. Signing out will discard them.",
+  "@logoutPendingBody": {"placeholders": {"count": {"type": "int"}}}
 }
