@@ -6,7 +6,9 @@ import 'package:cuentimobile/core/widgets/offline_banner.dart';
 import 'package:cuentimobile/core/widgets/refresh_all.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -282,6 +284,14 @@ class ShellScreen extends ConsumerWidget {
               stale: offlineCache.stale,
               since: offlineCache.staleSince,
             ),
+          // The banner already knows when the connection came back; that
+          // edge is the moment to send what was made while it was gone.
+          if (offlineCache != null)
+            _OutboxDrainOnReconnect(
+              stale: offlineCache.stale,
+              onReconnect: () =>
+                  unawaited(ref.read(transactionSyncProvider).drain()),
+            ),
           Expanded(child: child),
         ],
       ),
@@ -355,4 +365,63 @@ class ShellScreen extends ConsumerWidget {
       },
     );
   }
+}
+
+/// Fires [onReconnect] exactly on the moment [stale] goes from true to
+/// false, never merely because it currently reads false.
+///
+/// A [ValueListenableBuilder] would call its builder on every rebuild this
+/// widget's ancestor happens to go through -- including the very first one,
+/// where [stale] already reads false because nothing has gone offline yet --
+/// so a naive "call it when not stale" builder would drain on mount and on
+/// any unrelated shell rebuild, not just on reconnection. This widget
+/// listens to the notifier directly instead, so [onReconnect] runs only
+/// from an actual notification carrying that transition, never from a
+/// build.
+class _OutboxDrainOnReconnect extends StatefulWidget {
+  const _OutboxDrainOnReconnect({
+    required this.stale,
+    required this.onReconnect,
+  });
+
+  final ValueListenable<bool> stale;
+  final VoidCallback onReconnect;
+
+  @override
+  State<_OutboxDrainOnReconnect> createState() =>
+      _OutboxDrainOnReconnectState();
+}
+
+class _OutboxDrainOnReconnectState extends State<_OutboxDrainOnReconnect> {
+  late bool _wasStale = widget.stale.value;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.stale.addListener(_onStaleChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _OutboxDrainOnReconnect oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.stale != widget.stale) {
+      oldWidget.stale.removeListener(_onStaleChanged);
+      widget.stale.addListener(_onStaleChanged);
+    }
+  }
+
+  void _onStaleChanged() {
+    final isStale = widget.stale.value;
+    if (_wasStale && !isStale) widget.onReconnect();
+    _wasStale = isStale;
+  }
+
+  @override
+  void dispose() {
+    widget.stale.removeListener(_onStaleChanged);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }

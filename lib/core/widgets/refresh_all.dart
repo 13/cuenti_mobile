@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
 import 'package:cuentimobile/features/assets/ui/assets_controller.dart';
 import 'package:cuentimobile/features/audit/ui/audit_controller.dart';
@@ -10,6 +12,7 @@ import 'package:cuentimobile/features/payees/ui/payees_controller.dart';
 import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
 import 'package:cuentimobile/features/statistics/ui/statistics_controller.dart';
 import 'package:cuentimobile/features/tags/ui/tags_controller.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
 import 'package:cuentimobile/features/vehicles/ui/vehicles_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,4 +44,8 @@ void invalidateAllData(WidgetRef ref) {
     ..invalidate(forecastProvider)
     ..invalidate(vehicleReportProvider)
     ..invalidate(auditControllerProvider);
+  // Not a data provider to invalidate -- an action to run. "Refresh"
+  // means "get me up to date", and an entry still sitting in the outbox is
+  // part of that.
+  unawaited(ref.read(transactionSyncProvider).drain());
 }

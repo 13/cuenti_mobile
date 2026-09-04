@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/auth/ui/app_lock_observer.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/l10n/locale_resolution.dart';
 import 'package:cuentimobile/router.dart';
@@ -12,7 +16,16 @@ import 'package:go_router/go_router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initLocales();
-  runApp(const ProviderScope(child: CuentiApp()));
+  // Opened here, the way ApiClient's ResponseCache is: it needs an await a
+  // provider's constructor cannot do inline, so the real store is handed in
+  // as an override rather than built lazily inside the provider tree.
+  final outbox = await TransactionOutbox.open();
+  runApp(
+    ProviderScope(
+      overrides: [transactionOutboxProvider.overrideWithValue(outbox)],
+      child: const CuentiApp(),
+    ),
+  );
 }
 
 class CuentiApp extends ConsumerStatefulWidget {
@@ -44,6 +57,10 @@ class _CuentiAppState extends ConsumerState<CuentiApp> {
     // effect of building is the kind of thing that works until a rebuild
     // happens at an awkward moment.
     applyLocale(_localeTagOf(ref.read(authControllerProvider)));
+    // Whatever the outbox is already holding from a previous run gets a
+    // send attempt now. Not awaited: a drain talks to the network, and
+    // nothing about showing the first frame should wait on that.
+    unawaited(ref.read(transactionSyncProvider).drain());
   }
 
   static String _localeTagOf(AuthState auth) =>

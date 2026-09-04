@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/certificate_pins.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/main.dart';
 import 'package:cuentimobile/utils/number_format.dart';
@@ -36,6 +39,42 @@ class _FakeAuthController extends AuthController {
   AuthState build() => _state;
 }
 
+/// CuentiApp.initState asks for a drain on every mount; a real
+/// TransactionSync needs a real (disk-backed) TransactionOutbox, which
+/// these tests have no reason to open. Nothing here is about the outbox.
+class _NoopSync implements TransactionSync {
+  @override
+  Future<int> drain() async => 0;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Counts how many times the app asked it to drain, without touching the
+/// outbox or the network.
+class _RecordingSync implements TransactionSync {
+  int drains = 0;
+
+  @override
+  Future<int> drain() async {
+    drains++;
+    return 0;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// A drain that never completes, so a test can prove the app-start call is
+/// not awaited before the first frame.
+class _NeverEndingSync implements TransactionSync {
+  @override
+  Future<int> drain() => Completer<int>().future;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
   late _MockAuthRepository repo;
   late ApiClient client;
@@ -62,6 +101,7 @@ void main() {
           authRepositoryProvider.overrideWithValue(repo),
           apiClientProvider.overrideWithValue(client),
           secureStorageProvider.overrideWithValue(_MemoryStorage()),
+          transactionSyncProvider.overrideWithValue(_NoopSync()),
         ],
         child: const CuentiApp(),
       ),
@@ -151,6 +191,55 @@ void main() {
 
     expect(find.byType(CuentiApp), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sends whatever the outbox is holding as soon as the app '
+      'starts', (tester) async {
+    final sync = _RecordingSync();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            () => _FakeAuthController(const AuthState()),
+          ),
+          authRepositoryProvider.overrideWithValue(repo),
+          apiClientProvider.overrideWithValue(client),
+          secureStorageProvider.overrideWithValue(_MemoryStorage()),
+          transactionSyncProvider.overrideWithValue(sync),
+        ],
+        child: const CuentiApp(),
+      ),
+    );
+    await tester.pump();
+
+    expect(sync.drains, 1);
+  });
+
+  testWidgets("the app-start drain doesn't hold up the first frame -- a "
+      'drain that never resolves must not stop CuentiApp from rendering', (
+    tester,
+  ) async {
+    final sync = _NeverEndingSync();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            () => _FakeAuthController(const AuthState()),
+          ),
+          authRepositoryProvider.overrideWithValue(repo),
+          apiClientProvider.overrideWithValue(client),
+          secureStorageProvider.overrideWithValue(_MemoryStorage()),
+          transactionSyncProvider.overrideWithValue(sync),
+        ],
+        child: const CuentiApp(),
+      ),
+    );
+    // A single pump is enough to produce the first frame. If `main.dart`
+    // ever awaited drain() before building the app, this pump would hang
+    // rather than complete, because sync.drain() never resolves.
+    await tester.pump();
+
+    expect(find.byType(MaterialApp), findsOneWidget);
   });
 
   tearDown(() async {

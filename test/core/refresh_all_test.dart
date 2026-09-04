@@ -5,12 +5,28 @@ import 'package:cuentimobile/core/widgets/refresh_all.dart';
 import 'package:cuentimobile/features/tags/data/tags_repository.dart';
 import 'package:cuentimobile/features/tags/domain/tag.dart';
 import 'package:cuentimobile/features/tags/ui/tags_controller.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockTagsRepository extends Mock implements TagsRepository {}
+
+/// Counts how many times invalidateAllData asked it to drain, without
+/// touching the outbox or the network.
+class _RecordingSync implements TransactionSync {
+  int drains = 0;
+
+  @override
+  Future<int> drain() async {
+    drains++;
+    return 0;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 /// `invalidateAllData` is a hand-written list of providers. Nothing links it
 /// to the providers that exist, so adding a feature and forgetting this file
@@ -36,6 +52,9 @@ void main() {
     // Invalidating it as well would recompute a count whose input has not
     // been refetched yet.
     'overdueScheduledCountProvider',
+    // Not a data provider to invalidate -- an action to run. refresh_all.dart
+    // drains it directly.
+    'transactionSyncProvider',
   };
 
   /// `xControllerProvider` for `class XController`, `fooProvider` for a
@@ -117,7 +136,10 @@ void main() {
     late WidgetRef captured;
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [tagsRepositoryProvider.overrideWithValue(repo)],
+        overrides: [
+          tagsRepositoryProvider.overrideWithValue(repo),
+          transactionSyncProvider.overrideWithValue(_RecordingSync()),
+        ],
         child: MaterialApp(
           theme: AppTheme.light(),
           home: Consumer(
@@ -138,5 +160,41 @@ void main() {
 
     expect(calls, 2, reason: 'the watched provider refetched');
     expect(tester.takeException(), isNull);
+  });
+
+  /// A manual refresh means "get me up to date" -- an entry still sitting
+  /// unsent in the outbox is as much a part of that as any stale list.
+  testWidgets('a manual refresh also tries to send the outbox', (
+    tester,
+  ) async {
+    final repo = _MockTagsRepository();
+    when(repo.getAll).thenAnswer((_) async => const []);
+    final sync = _RecordingSync();
+
+    late WidgetRef captured;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tagsRepositoryProvider.overrideWithValue(repo),
+          transactionSyncProvider.overrideWithValue(sync),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: Consumer(
+            builder: (context, ref, _) {
+              captured = ref;
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(sync.drains, 0);
+
+    invalidateAllData(captured);
+    await tester.pumpAndSettle();
+
+    expect(sync.drains, 1);
   });
 }

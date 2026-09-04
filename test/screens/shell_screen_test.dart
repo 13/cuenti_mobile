@@ -1,18 +1,43 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:cuentimobile/core/api/api_client.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/core/api/offline_cache_interceptor.dart';
+import 'package:cuentimobile/core/api/response_cache.dart';
+import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/scheduled/data/scheduled_repository.dart';
 import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/screens/shell_screen.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:riverpod/misc.dart' show Override;
 
 class _MockScheduledRepository extends Mock implements ScheduledRepository {}
+
+/// Records how many times [drain] is asked for, without touching the
+/// outbox or the network -- these tests are about *when* a drain is
+/// triggered, not what it does.
+class _RecordingSync implements TransactionSync {
+  int drains = 0;
+
+  @override
+  Future<int> drain() async {
+    drains++;
+    return 0;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 /// Supplies an already-initialized auth state synchronously, bypassing the
 /// real controller's async `_init()`.
@@ -56,6 +81,8 @@ void main() {
   Future<void> pumpShell(
     WidgetTester tester, {
     _FakeAuthController? controller,
+    List<Override> overrides = const [],
+    OfflineCacheInterceptor? offlineCache,
   }) async {
     final router = GoRouter(
       initialLocation: '/dashboard',
@@ -92,6 +119,15 @@ void main() {
                   ),
                 ),
           ),
+          if (offlineCache != null)
+            apiClientProvider.overrideWithValue(
+              ApiClient(
+                const SecureStorage(),
+                dioOverride: Dio(),
+                offlineCache: offlineCache,
+              ),
+            ),
+          ...overrides,
         ],
         child: MaterialApp.router(
           localizationsDelegates: L.localizationsDelegates,
@@ -296,6 +332,69 @@ void main() {
       );
 
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('sending the outbox when the connection returns', () {
+    testWidgets('the queue is sent when the connection comes back', (
+      tester,
+    ) async {
+      final sync = _RecordingSync();
+      final interceptor = OfflineCacheInterceptor(
+        ResponseCache(Directory.systemTemp.createTempSync('shell_cache')),
+      );
+      await pumpShell(
+        tester,
+        overrides: [transactionSyncProvider.overrideWithValue(sync)],
+        offlineCache: interceptor,
+      );
+
+      interceptor.stale.value = true;
+      await tester.pump();
+      final before = sync.drains;
+
+      interceptor.stale.value = false;
+      await tester.pumpAndSettle();
+
+      expect(sync.drains, before + 1);
+    });
+
+    testWidgets('a connection that stays down does not drain on every '
+        'frame', (tester) async {
+      final sync = _RecordingSync();
+      final interceptor = OfflineCacheInterceptor(
+        ResponseCache(Directory.systemTemp.createTempSync('shell_cache2')),
+      );
+      await pumpShell(
+        tester,
+        overrides: [transactionSyncProvider.overrideWithValue(sync)],
+        offlineCache: interceptor,
+      );
+
+      interceptor.stale.value = true;
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      expect(sync.drains, 0);
+    });
+
+    testWidgets('going online for the first time, with no prior offline '
+        'spell, drains nothing -- only an actual reconnection does', (
+      tester,
+    ) async {
+      final sync = _RecordingSync();
+      final interceptor = OfflineCacheInterceptor(
+        ResponseCache(Directory.systemTemp.createTempSync('shell_cache3')),
+      );
+
+      await pumpShell(
+        tester,
+        overrides: [transactionSyncProvider.overrideWithValue(sync)],
+        offlineCache: interceptor,
+      );
+
+      expect(sync.drains, 0);
     });
   });
 }
