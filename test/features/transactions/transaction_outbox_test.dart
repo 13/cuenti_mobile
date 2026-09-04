@@ -7,6 +7,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  // The outbox reaches for a platform channel in open(); the binding has to
+  // exist for that call to fail the way it would on a device without one,
+  // rather than for lack of a binding.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late Directory dir;
   late TransactionOutbox outbox;
 
@@ -104,6 +109,20 @@ void main() {
     await outbox.all();
 
     expect(logged.where((l) => l.contains('broken.json')), hasLength(1));
+  });
+
+  test('openOrFallback still gives a working store when there is no '
+      'platform channel to ask for one -- a crash there would be a crash '
+      'before the first frame', () async {
+    // No plugin mock is registered here, so getApplicationSupportDirectory
+    // throws MissingPluginException: the "no platform channels at all"
+    // case the fallback exists for.
+    final fallback = await TransactionOutbox.openOrFallback();
+    addTearDown(fallback.clear);
+
+    await fallback.add(entry('a'));
+
+    expect((await fallback.all()).map((e) => e.localId), ['a']);
   });
 
   test('clearing empties it', () async {

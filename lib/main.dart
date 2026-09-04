@@ -18,8 +18,10 @@ Future<void> main() async {
   await initLocales();
   // Opened here, the way ApiClient's ResponseCache is: it needs an await a
   // provider's constructor cannot do inline, so the real store is handed in
-  // as an override rather than built lazily inside the provider tree.
-  final outbox = await TransactionOutbox.open();
+  // as an override rather than built lazily inside the provider tree. Not
+  // open(): nothing about the first frame should hang or crash on a
+  // platform channel, so a store that cannot be opened degrades instead.
+  final outbox = await TransactionOutbox.openOrFallback();
   runApp(
     ProviderScope(
       overrides: [transactionOutboxProvider.overrideWithValue(outbox)],

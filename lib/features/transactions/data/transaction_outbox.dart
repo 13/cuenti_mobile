@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -20,6 +21,32 @@ class TransactionOutbox {
     final dir = Directory('${base.path}/transaction_outbox');
     if (!dir.existsSync()) await dir.create(recursive: true);
     return TransactionOutbox(dir);
+  }
+
+  /// [open], or a store that still works when it cannot be had.
+  ///
+  /// Every consumer of the transactions list needs an outbox, so it has to
+  /// exist before the provider tree is handed one -- but [open] needs a
+  /// platform channel, and ApiClient refuses to await ResponseCache.open()
+  /// at startup for exactly that reason: an unusual host or a test binding
+  /// can leave a channel that never answers. Unguarded, a
+  /// getApplicationSupportDirectory() failure meant a crash before the
+  /// first frame and a hung channel meant a permanently blank screen.
+  ///
+  /// The fallback is the same store over a directory in the system temp
+  /// area, which dart:io can give us with no channel at all. The OS may
+  /// purge it between runs, so a queue kept there is less durable than the
+  /// real one -- but the queue still works for this session, and the app
+  /// starts.
+  static Future<TransactionOutbox> openOrFallback() async {
+    try {
+      return await open().timeout(const Duration(seconds: 5));
+    } on Exception catch (e) {
+      debugPrint('TransactionOutbox: no app-support store ($e), using temp');
+      final dir = Directory('${Directory.systemTemp.path}/cuenti_outbox')
+        ..createSync(recursive: true);
+      return TransactionOutbox(dir);
+    }
   }
 
   final Directory _directory;
