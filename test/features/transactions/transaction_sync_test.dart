@@ -62,6 +62,29 @@ void main() {
     expect(await outbox.all(), isEmpty);
   });
 
+  test(
+    'two drains running at once send one queued entry exactly once',
+    () async {
+      var saves = 0;
+      when(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      ).thenAnswer((i) async {
+        saves++;
+        // A real send is not instant, and the overlap is the whole point:
+        // reconnect-then-pull-to-refresh is an ordinary gesture.
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        return i.positionalArguments.first as Transaction;
+      });
+      await queue('a');
+
+      final counts = await Future.wait([sync.drain(), sync.drain()]);
+
+      expect(saves, 1, reason: 'a duplicate on the server, invisible here');
+      expect(await outbox.all(), isEmpty);
+      expect(counts, [1, 1]);
+    },
+  );
+
   test('a delete entry is sent as a delete', () async {
     when(() => repo.delete(any())).thenAnswer((_) async {});
     await queue('a', operation: PendingOperation.delete, transactionId: 7);

@@ -22,7 +22,21 @@ class TransactionSync {
   /// An entry already carrying a rejection is left alone. It is waiting for
   /// a person to fix or discard it, and retrying it would overwrite the
   /// reason they have not read yet.
-  Future<int> drain() async {
+  /// The run currently in progress, if any.
+  ///
+  /// Four things ask for a drain -- app start, the connection returning,
+  /// a manual refresh, and a per-row retry -- and all four fire and forget.
+  /// Reconnect-then-pull-to-refresh is an ordinary gesture, and two runs
+  /// overlapping sent every queued entry twice: a duplicate on the server,
+  /// invisible from the outbox, which is empty afterwards either way.
+  /// Memoising the in-flight future is the single-flight guard
+  /// `AuthController._initFuture` already uses for the same reason.
+  Future<int>? _inFlight;
+
+  Future<int> drain() =>
+      _inFlight ??= _drain().whenComplete(() => _inFlight = null);
+
+  Future<int> _drain() async {
     var delivered = 0;
     for (final entry in await _outbox.all()) {
       if (entry.isRejected) continue;
