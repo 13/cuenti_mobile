@@ -13,7 +13,7 @@ part of 'transactions_controller.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$TransactionsState {
+mixin _$TransactionsState implements DiagnosticableTreeMixin {
 
  List<Transaction> get items; int get nextPage; bool get hasMore; bool get loadingMore; TransactionFilter get filter;/// Writes the server has not taken yet. The [items] above already
 /// reflect them; this is here so the UI can mark the rows.
@@ -25,6 +25,13 @@ mixin _$TransactionsState {
 $TransactionsStateCopyWith<TransactionsState> get copyWith => _$TransactionsStateCopyWithImpl<TransactionsState>(this as TransactionsState, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  final _this = this as TransactionsState;
+  properties
+    ..add(DiagnosticsProperty('type', 'TransactionsState'))
+    ..add(DiagnosticsProperty('items', _this.items))..add(DiagnosticsProperty('nextPage', _this.nextPage))..add(DiagnosticsProperty('hasMore', _this.hasMore))..add(DiagnosticsProperty('loadingMore', _this.loadingMore))..add(DiagnosticsProperty('filter', _this.filter))..add(DiagnosticsProperty('pending', _this.pending));
+}
 
 @override
 bool operator ==(Object other) {
@@ -40,7 +47,7 @@ int get hashCode {
 }
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   final _this = this as TransactionsState;
   return 'TransactionsState(items: ${_this.items}, nextPage: ${_this.nextPage}, hasMore: ${_this.hasMore}, loadingMore: ${_this.loadingMore}, filter: ${_this.filter}, pending: ${_this.pending})';
 }
@@ -227,7 +234,7 @@ return $default(_that.items,_that.nextPage,_that.hasMore,_that.loadingMore,_that
 /// @nodoc
 
 
-class _TransactionsState implements TransactionsState {
+class _TransactionsState with DiagnosticableTreeMixin implements TransactionsState {
   const _TransactionsState({ List<Transaction> items = const [], this.nextPage = 0, this.hasMore = true, this.loadingMore = false, this.filter = const TransactionFilter(),  List<PendingTransaction> pending = const []}): _items = items,_pending = pending;
   
 
@@ -261,6 +268,12 @@ class _TransactionsState implements TransactionsState {
 _$TransactionsStateCopyWith<_TransactionsState> get copyWith => __$TransactionsStateCopyWithImpl<_TransactionsState>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+    ..add(DiagnosticsProperty('type', 'TransactionsState'))
+    ..add(DiagnosticsProperty('items', items))..add(DiagnosticsProperty('nextPage', nextPage))..add(DiagnosticsProperty('hasMore', hasMore))..add(DiagnosticsProperty('loadingMore', loadingMore))..add(DiagnosticsProperty('filter', filter))..add(DiagnosticsProperty('pending', pending));
+}
 
 @override
 bool operator ==(Object other) {
@@ -274,7 +287,7 @@ int get hashCode {
 }
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
     return 'TransactionsState(items: $items, nextPage: $nextPage, hasMore: $hasMore, loadingMore: $loadingMore, filter: $filter, pending: $pending)';
 }
 

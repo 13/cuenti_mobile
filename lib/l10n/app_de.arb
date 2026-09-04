@@ -406,5 +406,5 @@
   "categoryCreateTopLevel": "Neue Hauptkategorie",
   "logoutPendingTitle": "Nicht gesendete Buchungen",
   "logoutPendingBody": "{count} Buchungen haben den Server nicht erreicht. Beim Abmelden gehen sie verloren.",
-  "logoutPendingUnknown": "Nicht gesendete Buchungen konnten nicht gelesen werden. Beim Abmelden geht alles noch Wartende verloren."
+  "logoutPendingUnknown": "Nicht gesendete Buchungen konnten nicht gelesen werden. Sie bleiben auf diesem Gerät, statt verworfen zu werden, und werden möglicherweise später gesendet."
 }

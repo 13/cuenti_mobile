@@ -2543,7 +2543,7 @@ abstract class L {
   /// No description provided for @logoutPendingUnknown.
   ///
   /// In en, this message translates to:
-  /// **'Your unsent transactions could not be read. Signing out will discard anything still waiting.'**
+  /// **'Your unsent transactions could not be read. They will stay on this device rather than being discarded, and may be sent later.'**
   String get logoutPendingUnknown;
 }
 

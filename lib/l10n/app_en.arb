@@ -812,6 +812,6 @@
   "@logoutPendingTitle": {},
   "logoutPendingBody": "{count} transactions have not reached the server. Signing out will discard them.",
   "@logoutPendingBody": {"placeholders": {"count": {"type": "int"}}},
-  "logoutPendingUnknown": "Your unsent transactions could not be read. Signing out will discard anything still waiting.",
+  "logoutPendingUnknown": "Your unsent transactions could not be read. They will stay on this device rather than being discarded, and may be sent later.",
   "@logoutPendingUnknown": {}
 }

@@ -28,6 +28,11 @@ class ApiClient {
           // "unknown", not as "offline", and reads as the server refusing
           // rather than never having been asked. init() refines this to
           // whatever server the user has configured.
+          //
+          // A non-empty default so a request composed before init() cannot
+          // go nowhere. Nothing composes one today -- main.dart gates the
+          // startup drain on auth being initialised -- and if that gate is
+          // ever loosened, this default is what such a request would reach.
           baseUrl: '$defaultServerUrl/api',
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 30),

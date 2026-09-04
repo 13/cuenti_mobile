@@ -1338,5 +1338,5 @@ class LIt extends L {
 
   @override
   String get logoutPendingUnknown =>
-      'Non è stato possibile leggere le operazioni non inviate. Uscendo andrà perso tutto ciò che è ancora in attesa.';
+      'Non è stato possibile leggere le operazioni non inviate. Rimarranno su questo dispositivo invece di essere eliminate e potrebbero essere inviate più tardi.';
 }

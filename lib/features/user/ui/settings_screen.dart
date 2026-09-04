@@ -68,6 +68,7 @@ class _LogoutButton extends ConsumerWidget {
           // drawer's Logout: see sign_out.dart.
           final router = GoRouter.of(context);
           if (!await confirmSignOut(context, ref)) return;
+          if (!context.mounted) return;
           await signOut(ref);
           router.go('/login');
         },

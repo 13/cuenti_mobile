@@ -101,6 +101,11 @@ class _CuentiAppState extends ConsumerState<CuentiApp> {
     ref.listen(authControllerProvider, (_, _) => _refreshNotifier.refresh());
     // The moment the API client is configured is the moment a queued write
     // can actually be sent.
+    //
+    // Held until the client knows its server: a drain composed before
+    // ApiClient.init() would go out against the default baseUrl in
+    // api_client.dart and be refused, and a refused entry is never retried
+    // automatically.
     ref.listen(authControllerProvider.select((s) => s.initialized), (
       _,
       initialized,

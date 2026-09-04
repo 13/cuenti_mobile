@@ -7,6 +7,7 @@ import 'package:cuentimobile/core/widgets/entity_list_filter.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -37,7 +38,14 @@ abstract class AuthState with _$AuthState {
 class AuthController extends _$AuthController {
   @override
   AuthState build() {
-    unawaited(Future.microtask(init));
+    // A throw here used to vanish into an unhandled async error. `init()`
+    // sets `initialized`, which gates the app-start outbox drain, so a
+    // silent failure here is a startup that quietly never syncs.
+    unawaited(
+      Future.microtask(init).catchError((Object e, StackTrace s) {
+        debugPrint('AuthController: init failed: $e\n$s');
+      }),
+    );
     return const AuthState();
   }
 

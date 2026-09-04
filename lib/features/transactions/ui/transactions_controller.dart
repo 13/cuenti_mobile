@@ -5,6 +5,7 @@ import 'package:cuentimobile/features/transactions/data/transactions_repository.
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -309,9 +310,17 @@ class TransactionsController extends _$TransactionsController {
       // only overlays updates onto rows the server still returns, so that
       // entry could never be shown, retried or discarded again. Its one
       // remaining effect would be a phantom in the sign-out warning.
-      final queued = await _queuedIdFor(id);
-      if (queued != null) {
-        await ref.read(transactionOutboxProvider).remove(queued);
+      //
+      // Guarded on its own: the server has already accepted the delete, so
+      // a storage problem here is not a failed delete and must not roll the
+      // row back on screen.
+      try {
+        final queued = await _queuedIdFor(id);
+        if (queued != null) {
+          await ref.read(transactionOutboxProvider).remove(queued);
+        }
+      } on Exception catch (e) {
+        debugPrint('TransactionsController: stale queued edit left behind: $e');
       }
       ref
         ..invalidateSelf()

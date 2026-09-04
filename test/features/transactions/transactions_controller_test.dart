@@ -243,6 +243,57 @@ void main() {
     ]);
   });
 
+  test(
+    'an outbox failure after an accepted delete does not put the row back',
+    () async {
+      // The server has already accepted the delete. An outbox problem
+      // while tidying up a stale queued edit must not be reported as a
+      // failed delete, and must not restore a row that is gone.
+      when(() => repo.getPage()).thenAnswer(
+        (_) async => TransactionPage(
+          content: [tx(7)],
+          page: 0,
+          size: 50,
+          totalElements: 1,
+          totalPages: 1,
+        ),
+      );
+      when(() => repo.delete(7)).thenAnswer((_) async {});
+      final outboxDir = Directory.systemTemp.createTempSync(
+        'ctrl_outbox_broken',
+      );
+      addTearDown(() => outboxDir.deleteSync(recursive: true));
+      final outbox = _BrokenReadOutbox(outboxDir);
+      final brokenContainer = ProviderContainer(
+        overrides: [
+          transactionsRepositoryProvider.overrideWithValue(repo),
+          transactionOutboxProvider.overrideWithValue(outbox),
+        ],
+      );
+      addTearDown(brokenContainer.dispose);
+      await brokenContainer.read(transactionsControllerProvider().future);
+      // Only now, after the initial load already succeeded, does the
+      // outbox start failing -- mirroring a storage problem that shows up
+      // mid-session rather than one that would have kept the screen from
+      // loading in the first place.
+      outbox.broken = true;
+
+      final outcome = await brokenContainer
+          .read(transactionsControllerProvider().notifier)
+          .delete(7);
+
+      expect(outcome, SaveOutcome.sent);
+      expect(
+        brokenContainer
+            .read(transactionsControllerProvider())
+            .value!
+            .items
+            .map((t) => t.id),
+        isNot(contains(7)),
+      );
+    },
+  );
+
   test('controller is keyed by accountId family', () async {
     when(
       () => repo.getPage(filter: const TransactionFilter(accountId: 3)),
@@ -1217,4 +1268,19 @@ void main() {
       },
     );
   });
+}
+
+/// An outbox whose reads fail once [broken] is set, standing in for a
+/// storage problem that shows up mid-session rather than at the initial
+/// load.
+class _BrokenReadOutbox extends TransactionOutbox {
+  _BrokenReadOutbox(super._directory);
+
+  bool broken = false;
+
+  @override
+  Future<List<PendingTransaction>> all() async {
+    if (broken) throw const FileSystemException('gone');
+    return super.all();
+  }
 }

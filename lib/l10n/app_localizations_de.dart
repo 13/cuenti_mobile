@@ -1339,5 +1339,5 @@ class LDe extends L {
 
   @override
   String get logoutPendingUnknown =>
-      'Nicht gesendete Buchungen konnten nicht gelesen werden. Beim Abmelden geht alles noch Wartende verloren.';
+      'Nicht gesendete Buchungen konnten nicht gelesen werden. Sie bleiben auf diesem Gerät, statt verworfen zu werden, und werden möglicherweise später gesendet.';
 }
