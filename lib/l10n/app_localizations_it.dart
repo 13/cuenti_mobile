@@ -1045,19 +1045,19 @@ class LIt extends L {
   String get txDeleted => 'Movimento eliminato';
 
   @override
-  String get txPendingNotSent => 'Non ancora inviata';
+  String get txPendingNotSent => 'Non ancora inviato';
 
   @override
   String txPendingRejected(String reason) {
-    return 'Rifiutata: $reason';
+    return 'Rifiutato: $reason';
   }
 
   @override
   String get txSavedOnDevice =>
-      'Salvata su questo dispositivo — verrà inviata quando ci sarà connessione';
+      'Salvato su questo dispositivo — verrà inviato quando ci sarà connessione';
 
   @override
-  String get txDiscardPending => 'Elimina';
+  String get txDiscardPending => 'Scarta';
 
   @override
   String get txRetryPending => 'Riprova';
