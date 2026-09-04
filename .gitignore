@@ -80,3 +80,6 @@ app.*.map.json
 
 # Test related
 coverage/
+
+# Worktrees and local agent state.
+.claude/
