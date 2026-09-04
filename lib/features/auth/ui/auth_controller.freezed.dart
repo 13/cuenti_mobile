@@ -13,7 +13,7 @@ part of 'auth_controller.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$AuthState implements DiagnosticableTreeMixin {
+mixin _$AuthState {
 
  UserProfile? get user; bool get registrationEnabled; bool get biometricEnabled; bool get initialized; String? get savedUsername; bool get hasSavedPassword;
 /// Create a copy of AuthState
@@ -23,13 +23,6 @@ mixin _$AuthState implements DiagnosticableTreeMixin {
 $AuthStateCopyWith<AuthState> get copyWith => _$AuthStateCopyWithImpl<AuthState>(this as AuthState, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as AuthState;
-  properties
-    ..add(DiagnosticsProperty('type', 'AuthState'))
-    ..add(DiagnosticsProperty('user', _this.user))..add(DiagnosticsProperty('registrationEnabled', _this.registrationEnabled))..add(DiagnosticsProperty('biometricEnabled', _this.biometricEnabled))..add(DiagnosticsProperty('initialized', _this.initialized))..add(DiagnosticsProperty('savedUsername', _this.savedUsername))..add(DiagnosticsProperty('hasSavedPassword', _this.hasSavedPassword));
-}
 
 @override
 bool operator ==(Object other) {
@@ -45,7 +38,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as AuthState;
   return 'AuthState(user: ${_this.user}, registrationEnabled: ${_this.registrationEnabled}, biometricEnabled: ${_this.biometricEnabled}, initialized: ${_this.initialized}, savedUsername: ${_this.savedUsername}, hasSavedPassword: ${_this.hasSavedPassword})';
 }
@@ -235,7 +228,7 @@ return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_tha
 /// @nodoc
 
 
-class _AuthState extends AuthState with DiagnosticableTreeMixin {
+class _AuthState extends AuthState {
   const _AuthState({this.user, this.registrationEnabled = true, this.biometricEnabled = false, this.initialized = false, this.savedUsername, this.hasSavedPassword = false}): super._();
   
 
@@ -253,12 +246,6 @@ class _AuthState extends AuthState with DiagnosticableTreeMixin {
 _$AuthStateCopyWith<_AuthState> get copyWith => __$AuthStateCopyWithImpl<_AuthState>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'AuthState'))
-    ..add(DiagnosticsProperty('user', user))..add(DiagnosticsProperty('registrationEnabled', registrationEnabled))..add(DiagnosticsProperty('biometricEnabled', biometricEnabled))..add(DiagnosticsProperty('initialized', initialized))..add(DiagnosticsProperty('savedUsername', savedUsername))..add(DiagnosticsProperty('hasSavedPassword', hasSavedPassword));
-}
 
 @override
 bool operator ==(Object other) {
@@ -272,7 +259,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'AuthState(user: $user, registrationEnabled: $registrationEnabled, biometricEnabled: $biometricEnabled, initialized: $initialized, savedUsername: $savedUsername, hasSavedPassword: $hasSavedPassword)';
 }
 
