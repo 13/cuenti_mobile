@@ -34,7 +34,10 @@ Future<bool> confirmSignOut(BuildContext context, WidgetRef ref) async {
   return showConfirmSheet(
     context,
     title: L.of(context).logoutPendingTitle,
-    message: outbox.isFallback
+    // The "they will stay on this device" wording is only true when there
+    // is nothing here to discard. A fallback store that DOES hold entries
+    // is one signOut will clear, so it gets the honest count instead.
+    message: outbox.isFallback && pending.isEmpty
         ? L.of(context).logoutPendingUnknown
         : L.of(context).logoutPendingBody(pending.length),
     confirmLabel: L.of(context).actionLogout,

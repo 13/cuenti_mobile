@@ -350,6 +350,45 @@ void main() {
       expect(auth.logoutCalls, 0);
     });
 
+    testWidgets('a fallback store that can be read names its count, and '
+        'confirming discards it', (tester) async {
+      // A session that starts in fallback still queues into that store, and
+      // the fallback directory is a stable path -- so it can hold entries.
+      // Those entries ARE what sign-out clears, so the message has to be
+      // the count-and-discard one, not the "will stay on this device" one.
+      await tester.runAsync(queueOne);
+      final auth = await pumpSettings(
+        tester,
+        outboxDir: outboxDir,
+        outboxIsFallback: true,
+      );
+
+      final logout = find.widgetWithText(OutlinedButton, 'Logout');
+      await tester.ensureVisible(logout);
+      await tester.pumpAndSettle();
+      await tester.tap(logout);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('could not be read'), findsNothing);
+      expect(find.textContaining('1 transactions'), findsOneWidget);
+      expect(find.textContaining('discard'), findsOneWidget);
+
+      // And the promise the message makes is the one that is kept: see
+      // 'confirming signs out and clears the outbox' for why this tap and
+      // its wait both live inside runAsync.
+      await tester.runAsync(() async {
+        await tester.tap(find.widgetWithText(FilledButton, 'Logout'));
+        for (var i = 0; i < 200 && auth.logoutCalls == 0; i++) {
+          await tester.pump(const Duration(milliseconds: 10));
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+        }
+      });
+      await tester.pumpAndSettle();
+
+      expect(auth.logoutCalls, 1);
+      expect(await TransactionOutbox(outboxDir).all(), isEmpty);
+    });
+
     testWidgets('confirming signs out and clears the outbox', (tester) async {
       await tester.runAsync(queueOne);
       final auth = await pumpSettings(tester, outboxDir: outboxDir);
