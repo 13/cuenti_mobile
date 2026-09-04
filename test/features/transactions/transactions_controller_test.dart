@@ -508,5 +508,79 @@ void main() {
       expect(queued.single.operation, PendingOperation.delete);
       expect(queued.single.transaction.id, 1);
     });
+
+    test(
+      'a successful resave through save(..., localId:) clears the queued '
+      'entry, so a later drain does not send it twice',
+      () async {
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+        final notifier = container.read(
+          transactionsControllerProvider().notifier,
+        );
+
+        await notifier.save(
+          Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)),
+        );
+        final localId = (await container.read(transactionOutboxProvider).all())
+            .single
+            .localId;
+
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
+        final outcome = await notifier.save(
+          Transaction(amount: 5, transactionDate: DateTime(2026, 9, 4)),
+          localId: localId,
+        );
+
+        expect(outcome, SaveOutcome.sent);
+        expect(await container.read(transactionOutboxProvider).all(), isEmpty);
+      },
+    );
+
+    test(
+      'deleting something already queued as an edit replaces that entry '
+      'with the delete, rather than leaving both queued for the same row',
+      () async {
+        when(() => repo.getPage()).thenAnswer(
+          (_) async => TransactionPage(
+            content: [tx(7)],
+            page: 0,
+            size: 50,
+            totalElements: 1,
+            totalPages: 1,
+          ),
+        );
+        when(
+          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+        when(() => repo.delete(7)).thenThrow(
+          const NetworkException('Cannot connect to server'),
+        );
+        final container = containerWithOutbox();
+        await container.read(transactionsControllerProvider().future);
+        final notifier = container.read(
+          transactionsControllerProvider().notifier,
+        );
+
+        await notifier.save(
+          Transaction(
+            id: 7,
+            amount: 9,
+            transactionDate: DateTime(2026, 9, 4),
+          ),
+        );
+        await notifier.delete(7);
+
+        final queued = await container.read(transactionOutboxProvider).all();
+        expect(queued, hasLength(1));
+        expect(queued.single.transaction.id, 7);
+        expect(queued.single.operation, PendingOperation.delete);
+      },
+    );
   });
 }
