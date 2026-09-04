@@ -2006,6 +2006,36 @@ abstract class L {
   /// **'Transaction deleted'**
   String get txDeleted;
 
+  /// No description provided for @txPendingNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent yet'**
+  String get txPendingNotSent;
+
+  /// No description provided for @txPendingRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Refused: {reason}'**
+  String txPendingRejected(String reason);
+
+  /// No description provided for @txSavedOnDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device — it will send when there is a connection'**
+  String get txSavedOnDevice;
+
+  /// No description provided for @txDiscardPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get txDiscardPending;
+
+  /// No description provided for @txRetryPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get txRetryPending;
+
   /// No description provided for @accountsSaved.
   ///
   /// In en, this message translates to:

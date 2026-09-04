@@ -1046,6 +1046,24 @@ class LDe extends L {
   String get txDeleted => 'Buchung gelöscht';
 
   @override
+  String get txPendingNotSent => 'Noch nicht gesendet';
+
+  @override
+  String txPendingRejected(String reason) {
+    return 'Abgelehnt: $reason';
+  }
+
+  @override
+  String get txSavedOnDevice =>
+      'Auf diesem Gerät gespeichert — wird gesendet, sobald eine Verbindung besteht';
+
+  @override
+  String get txDiscardPending => 'Verwerfen';
+
+  @override
+  String get txRetryPending => 'Erneut versuchen';
+
+  @override
   String get accountsSaved => 'Konto gespeichert';
 
   @override

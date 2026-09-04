@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
@@ -8,6 +10,7 @@ import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
+import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
@@ -26,6 +29,21 @@ class MockAccountsRepository extends Mock implements AccountsRepository {}
 
 class MockCategoriesRepository extends Mock implements CategoriesRepository {}
 
+/// PrivacyMode reads this on every screen build; without an override it
+/// hits the real flutter_secure_storage plugin channel, which throws
+/// MissingPluginException the moment anything (runAsync, in the group
+/// below) actually lets that pending real call run.
+class _MemoryStorage extends SecureStorage {
+  _MemoryStorage() : super();
+  final Map<String, String> _data = {};
+  @override
+  Future<String?> read(String key) async => _data[key];
+  @override
+  Future<void> write(String key, String value) async => _data[key] = value;
+  @override
+  Future<void> delete(String key) async => _data.remove(key);
+}
+
 void main() {
   setUpAll(() => registerFallbackValue(const TransactionFilter()));
 
@@ -40,16 +58,16 @@ void main() {
     transactionDate: date ?? DateTime(2026),
   );
 
-  late Directory outboxDir;
+  late Directory defaultOutboxDir;
 
   setUp(() {
     txRepo = MockTransactionsRepository();
     accountsRepo = MockAccountsRepository();
     categoriesRepo = MockCategoriesRepository();
-    outboxDir = Directory.systemTemp.createTempSync(
+    defaultOutboxDir = Directory.systemTemp.createTempSync(
       'transactions_screen_outbox',
     );
-    addTearDown(() => outboxDir.deleteSync(recursive: true));
+    addTearDown(() => defaultOutboxDir.deleteSync(recursive: true));
 
     when(
       () => accountsRepo.getAll(),
@@ -59,15 +77,19 @@ void main() {
     ).thenAnswer((_) async => []);
   });
 
-  Future<void> pumpScreen(WidgetTester tester) async {
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    Directory? outboxDir,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           transactionsRepositoryProvider.overrideWithValue(txRepo),
           accountsRepositoryProvider.overrideWithValue(accountsRepo),
           categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
+          secureStorageProvider.overrideWithValue(_MemoryStorage()),
           transactionOutboxProvider.overrideWithValue(
-            TransactionOutbox(outboxDir),
+            TransactionOutbox(outboxDir ?? defaultOutboxDir),
           ),
         ],
         child: MaterialApp(
@@ -365,5 +387,129 @@ void main() {
       ),
     ).captured.cast<TransactionFilter>();
     expect(filters.last.categoryId, 8);
+  });
+
+  group('what has not been sent', () {
+    late Directory outboxDir;
+
+    setUp(() {
+      outboxDir = Directory.systemTemp.createTempSync('screen_ob');
+      when(
+        () => txRepo.getPage(),
+      ).thenAnswer(
+        (_) async => const TransactionPage(
+          content: [],
+          page: 0,
+          size: 50,
+          totalElements: 0,
+          totalPages: 1,
+        ),
+      );
+    });
+    tearDown(() => outboxDir.deleteSync(recursive: true));
+
+    // TransactionOutbox does real disk I/O, which the widget-test clock
+    // (AutomatedTestWidgetsFlutterBinding runs the body inside FakeAsync)
+    // never lets complete on its own -- awaiting it directly here, or from
+    // inside a tapped button's handler, hangs forever. runAsync steps
+    // outside that fake clock for the real operation.
+    Future<void> queue(WidgetTester tester, {String? rejection}) =>
+        tester.runAsync(
+          () => TransactionOutbox(outboxDir).add(
+            PendingTransaction(
+              localId: 'local-1',
+              operation: PendingOperation.create,
+              transaction: Transaction(
+                amount: 12.34,
+                transactionDate: DateTime(2026, 9, 4),
+                payee: 'Aldi',
+              ),
+              queuedAt: DateTime(2026, 9, 4, 10),
+              rejection: rejection,
+            ),
+          ),
+        );
+
+    testWidgets('a transaction that has not been sent says so', (
+      tester,
+    ) async {
+      await queue(tester);
+
+      await pumpScreen(tester, outboxDir: outboxDir);
+
+      expect(find.text('Aldi'), findsOneWidget);
+      expect(find.text('Not sent yet'), findsOneWidget);
+    });
+
+    testWidgets('a sent transaction carries no pending mark', (tester) async {
+      when(
+        () => txRepo.getPage(),
+      ).thenAnswer(
+        (_) async => TransactionPage(
+          content: [tx(1)],
+          page: 0,
+          size: 50,
+          totalElements: 1,
+          totalPages: 1,
+        ),
+      );
+
+      await pumpScreen(tester, outboxDir: outboxDir);
+
+      expect(find.text('Payee 1'), findsOneWidget);
+      expect(find.text('Not sent yet'), findsNothing);
+    });
+
+    testWidgets('a refused one shows the reason, and offers to try again or '
+        'discard it', (tester) async {
+      await queue(tester, rejection: 'Account is closed');
+
+      await pumpScreen(tester, outboxDir: outboxDir);
+
+      expect(find.textContaining('Account is closed'), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
+      expect(find.text('Discard'), findsOneWidget);
+    });
+
+    testWidgets('discarding removes it from the queue and the list', (
+      tester,
+    ) async {
+      await queue(tester, rejection: 'Account is closed');
+      await pumpScreen(tester, outboxDir: outboxDir);
+
+      // The tap's onPressed awaits the outbox's real (disk-backed) remove.
+      // A real await started outside runAsync never completes at all --
+      // not just "not yet settled" -- because AutomatedTestWidgetsFlutterBinding
+      // runs the test body in a FakeAsync zone that real dart:io callbacks
+      // never get a turn in. The tap (which synchronously starts that
+      // await) and the wait for its effect both have to happen inside
+      // runAsync; pumpAndSettle only tracks scheduled frames, not this
+      // unrelated real I/O, so the wait is a poll of the real outbox
+      // rather than a pump.
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Discard'));
+        // Bounded: a real regression that stops removing the entry must
+        // fail this test, not hang the suite.
+        for (
+          var i = 0;
+          i < 200 && (await TransactionOutbox(outboxDir).all()).isNotEmpty;
+          i++
+        ) {
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+        }
+        for (
+          var i = 0;
+          i < 100 && find.text('Aldi').evaluate().isNotEmpty;
+          i++
+        ) {
+          await tester.pump(const Duration(milliseconds: 10));
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+        }
+      });
+      await tester.pumpAndSettle();
+
+      expect(find.text('Aldi'), findsNothing);
+      expect(await TransactionOutbox(outboxDir).all(), isEmpty);
+    });
   });
 }

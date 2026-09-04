@@ -1042,6 +1042,24 @@ class LEn extends L {
   String get txDeleted => 'Transaction deleted';
 
   @override
+  String get txPendingNotSent => 'Not sent yet';
+
+  @override
+  String txPendingRejected(String reason) {
+    return 'Refused: $reason';
+  }
+
+  @override
+  String get txSavedOnDevice =>
+      'Saved on this device — it will send when there is a connection';
+
+  @override
+  String get txDiscardPending => 'Discard';
+
+  @override
+  String get txRetryPending => 'Try again';
+
+  @override
   String get accountsSaved => 'Account saved';
 
   @override

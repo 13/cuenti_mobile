@@ -26,13 +26,44 @@ import 'package:cuentimobile/utils/number_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// Opens the add/edit sheet.
+///
+/// [localId] identifies the outbox entry [transaction] came from when it
+/// has never reached the server (no server id yet to key on). Passing it
+/// through to the dialog, and from there to
+/// [TransactionsController.save], is what lets editing an unsent entry
+/// replace it in the outbox instead of queuing a second one beside it.
+Future<void> showTransactionDialog(
+  BuildContext context, {
+  Transaction? transaction,
+  String? localId,
+  TransactionFilter filter = const TransactionFilter(),
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => TransactionDialog(
+      transaction: transaction,
+      localId: localId,
+      filter: filter,
+    ),
+  );
+}
+
 class TransactionDialog extends ConsumerStatefulWidget {
   const TransactionDialog({
     super.key,
     this.transaction,
+    this.localId,
     this.filter = const TransactionFilter(),
   });
   final Transaction? transaction;
+
+  /// The outbox key of the pending entry this dialog is editing, if
+  /// [transaction] has never reached the server. Carried through to
+  /// [TransactionsController.save] so an offline edit replaces that entry
+  /// instead of queuing a second one beside it.
+  final String? localId;
 
   /// Filter of the transactions list this dialog was opened from. Saving
   /// goes through the controller instance keyed by this exact filter so
@@ -534,16 +565,23 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     final l = L.of(context);
     final colors = Theme.of(context).colorScheme;
     try {
-      await ref
+      final outcome = await ref
           .read(transactionsControllerProvider(filter: widget.filter).notifier)
-          .save(transaction, splitsTouched: splitsTouched);
+          .save(
+            transaction,
+            splitsTouched: splitsTouched,
+            localId: widget.localId,
+          );
       // Kill the stale last-odometer hint so the next dialog for this
       // category refetches instead of showing pre-save data.
       if (mounted && _categoryId != null) {
         ref.invalidate(fuelMetaProvider(_categoryId!));
       }
       if (mounted) Navigator.pop(context);
-      showSuccessSnack(messenger, l.txSaved);
+      showSuccessSnack(
+        messenger,
+        outcome == SaveOutcome.queued ? l.txSavedOnDevice : l.txSaved,
+      );
     } on ApiException catch (e) {
       if (mounted) {
         setState(() => _submitting = false);

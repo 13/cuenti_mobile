@@ -3,11 +3,16 @@ import 'dart:async';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/amount_text.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
+import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/ui/transaction_dialog.dart';
+import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// The pieces the transactions list is built from: a day's worth of rows,
 /// the sticky header above them, the stagger that fades them in, and the
@@ -114,7 +119,7 @@ class StaggeredState extends State<Staggered> {
   }
 }
 
-class TransactionTile extends StatelessWidget {
+class TransactionTile extends ConsumerWidget {
   const TransactionTile({
     required this.transaction,
     required this.filter,
@@ -126,8 +131,41 @@ class TransactionTile extends StatelessWidget {
   final TransactionFilter filter;
   final void Function(int id) onDelete;
 
+  /// Clears the rejection and asks the sync to try again. Reads the outbox
+  /// and the sync directly rather than going through the controller: this
+  /// row already knows the filter its own list is keyed by, and
+  /// invalidating that one provider is all a fresh merge needs.
+  Future<void> _retry(WidgetRef ref, PendingTransaction entry) async {
+    await ref
+        .read(transactionOutboxProvider)
+        .replace(entry.copyWith(rejection: null));
+    await ref.read(transactionSyncProvider).drain();
+    ref.invalidate(transactionsControllerProvider(filter: filter));
+  }
+
+  Future<void> _discard(WidgetRef ref, PendingTransaction entry) async {
+    await ref.read(transactionOutboxProvider).remove(entry.localId);
+    ref.invalidate(transactionsControllerProvider(filter: filter));
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref
+        .watch(transactionsControllerProvider(filter: filter))
+        .value;
+    final pending = state?.pending ?? const <PendingTransaction>[];
+
+    // For a transaction the server has issued an id for, that id is the
+    // stable link to its pending entry. An entry that has never reached the
+    // server has no id to match on -- but mergePending puts the pending
+    // entry's own Transaction object into the list verbatim, so identity is
+    // the link for those.
+    PendingTransaction? pendingFor(Transaction t) => t.id != null
+        ? pending.where((e) => e.transaction.id == t.id).firstOrNull
+        : pending.where((e) => identical(e.transaction, t)).firstOrNull;
+
+    final entry = pendingFor(transaction);
+
     final color = amountColorFor(context, transaction.type);
     final icon = switch (transaction.type) {
       'EXPENSE' => Icons.arrow_downward,
@@ -200,13 +238,11 @@ class TransactionTile extends StatelessWidget {
           return confirmed;
         }
         unawaited(
-          showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            builder: (_) => TransactionDialog(
-              transaction: transaction,
-              filter: filter,
-            ),
+          showTransactionDialog(
+            context,
+            transaction: transaction,
+            localId: entry?.localId,
+            filter: filter,
           ),
         );
         return false;
@@ -217,11 +253,57 @@ class TransactionTile extends StatelessWidget {
           child: Icon(icon, color: color),
         ),
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: subtitleParts.isNotEmpty
-            ? Text(
-                subtitleParts.join(' · '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+        subtitle: subtitleParts.isNotEmpty || entry != null
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (subtitleParts.isNotEmpty)
+                    Text(
+                      subtitleParts.join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  if (entry != null)
+                    Row(
+                      children: [
+                        Icon(
+                          entry.isRejected
+                              ? Icons.error_outline
+                              : Icons.schedule_send,
+                          size: 14,
+                          color: entry.isRejected
+                              ? colorScheme.error
+                              : Theme.of(
+                                  context,
+                                ).textTheme.labelSmall?.color,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            entry.isRejected
+                                ? L
+                                      .of(context)
+                                      .txPendingRejected(
+                                        entry.rejection!,
+                                      )
+                                : L.of(context).txPendingNotSent,
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                        ),
+                        if (entry.isRejected) ...[
+                          TextButton(
+                            onPressed: () => unawaited(_retry(ref, entry)),
+                            child: Text(L.of(context).txRetryPending),
+                          ),
+                          TextButton(
+                            onPressed: () => unawaited(_discard(ref, entry)),
+                            child: Text(L.of(context).txDiscardPending),
+                          ),
+                        ],
+                      ],
+                    ),
+                ],
               )
             : null,
         trailing: AmountText(
@@ -232,13 +314,11 @@ class TransactionTile extends StatelessWidget {
         ),
         onTap: () {
           unawaited(
-            showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              builder: (_) => TransactionDialog(
-                transaction: transaction,
-                filter: filter,
-              ),
+            showTransactionDialog(
+              context,
+              transaction: transaction,
+              localId: entry?.localId,
+              filter: filter,
             ),
           );
         },
