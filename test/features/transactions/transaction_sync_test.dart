@@ -79,7 +79,17 @@ void main() {
     await queue('b', minute: 1);
 
     expect(await sync.drain(), 0);
-    expect(await outbox.all(), hasLength(2));
+
+    final left = await outbox.all();
+    expect(left, hasLength(2));
+    expect(
+      left.every((e) => !e.isRejected),
+      isTrue,
+      reason: 'still offline means untried, not refused',
+    );
+    verify(
+      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+    ).called(1);
   });
 
   test('a refusal marks that entry and the run carries on to the next: one '
@@ -150,5 +160,33 @@ void main() {
     await sync.drain();
 
     expect(sent, [false], reason: 'not touched, so not sent');
+  });
+
+  test('replays a true splits flag too, since an offline edit that did '
+      'manage splits must not sync as if it never touched them', () async {
+    final sent = <bool>[];
+    when(
+      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+    ).thenAnswer((i) async {
+      sent.add(i.namedArguments[#splitsTouched] as bool);
+      return i.positionalArguments.first as Transaction;
+    });
+    await outbox.add(
+      PendingTransaction(
+        localId: 'a',
+        operation: PendingOperation.update,
+        transaction: Transaction(
+          id: 3,
+          amount: 1,
+          transactionDate: DateTime(2026, 9, 4),
+        ),
+        queuedAt: DateTime(2026, 9, 4, 10),
+        splitsTouched: true,
+      ),
+    );
+
+    await sync.drain();
+
+    expect(sent, [true], reason: 'touched, so sent as touched');
   });
 }
