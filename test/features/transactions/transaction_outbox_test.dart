@@ -174,10 +174,16 @@ void main() {
   test('the owner file is not mistaken for an entry', () async {
     await outbox.setOwner('https://cuenti.muh#42');
     await outbox.add(entry('local-1'));
+    final logged = <String>[];
+    final original = debugPrint;
+    debugPrint = (message, {wrapWidth}) => logged.add(message ?? '');
+    addTearDown(() => debugPrint = original);
 
     final entries = await outbox.all();
+
     expect(entries, hasLength(1));
     expect(entries.single.localId, 'local-1');
+    expect(logged.where((l) => l.contains('owner.json')), isEmpty);
   });
 
   test('clear() drops the owner along with the entries', () async {
