@@ -130,6 +130,17 @@ class TransactionsController extends _$TransactionsController {
     return true;
   }
 
+  /// The queued entries this account may see. Foreign or unclaimed queues
+  /// read as empty -- they are somebody else's amounts and payees, so they
+  /// are not merged into the list any more than they are sent.
+  Future<List<PendingTransaction>> _pending() => ownedEntries(
+    ref.read(transactionOutboxProvider),
+    accountKeyFor(
+      ref.read(apiClientProvider).baseUrl,
+      ref.read(authControllerProvider),
+    ),
+  );
+
   @override
   Future<TransactionsState> build({
     TransactionFilter filter = defaultFilter,
@@ -137,7 +148,7 @@ class TransactionsController extends _$TransactionsController {
     final page = await ref
         .read(transactionsRepositoryProvider)
         .getPage(filter: filter);
-    final pending = await ref.read(transactionOutboxProvider).all();
+    final pending = await _pending();
     return TransactionsState(
       items: mergePending(_dedupeById(page.content), pending, filter),
       nextPage: 1,
@@ -155,7 +166,7 @@ class TransactionsController extends _$TransactionsController {
       final page = await ref
           .read(transactionsRepositoryProvider)
           .getPage(filter: current.filter, page: current.nextPage);
-      final pending = await ref.read(transactionOutboxProvider).all();
+      final pending = await _pending();
       // current.items already carries pending creates merged in (they have
       // no server id); dropping those before adding the new page and
       // remerging keeps mergePending from doubling them up.
@@ -220,7 +231,7 @@ class TransactionsController extends _$TransactionsController {
   Future<void> _remergeFromOutbox() async {
     final current = state.value;
     if (current == null) return;
-    final pending = await ref.read(transactionOutboxProvider).all();
+    final pending = await _pending();
     // Rows without an id are pending creates already merged in; dropping
     // them before remerging keeps mergePending from doubling them up, the
     // same bookkeeping loadMore does.
@@ -241,7 +252,7 @@ class TransactionsController extends _$TransactionsController {
   /// doesn't exist until Task 5) -- the outbox is the authority on what is
   /// queued.
   Future<String?> _queuedIdFor(int id) async {
-    final queued = await ref.read(transactionOutboxProvider).all();
+    final queued = await _pending();
     return queued.where((e) => e.transaction.id == id).firstOrNull?.localId;
   }
 
@@ -264,7 +275,7 @@ class TransactionsController extends _$TransactionsController {
     final outbox = ref.read(transactionOutboxProvider);
     final existing = localId == null
         ? null
-        : (await outbox.all()).where((e) => e.localId == localId).firstOrNull;
+        : (await _pending()).where((e) => e.localId == localId).firstOrNull;
     final entry = PendingTransaction(
       localId: localId ?? _newLocalId(),
       // An edit of something never sent is still a create: the server has

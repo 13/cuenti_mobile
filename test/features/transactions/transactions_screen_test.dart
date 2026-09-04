@@ -1,15 +1,18 @@
 import 'dart:io';
 
+import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
+import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/categories/data/categories_repository.dart';
 import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/payees/data/payees_repository.dart';
+import 'package:cuentimobile/features/transactions/data/outbox_ownership.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
@@ -20,6 +23,7 @@ import 'package:cuentimobile/features/transactions/domain/transaction_page.dart'
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_screen.dart';
 import 'package:cuentimobile/features/transactions/ui/widgets/transaction_list_parts.dart';
+import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +39,29 @@ class MockAccountsRepository extends Mock implements AccountsRepository {}
 class MockCategoriesRepository extends Mock implements CategoriesRepository {}
 
 class MockPayeesRepository extends Mock implements PayeesRepository {}
+
+/// Hands back a settled auth state synchronously, rather than letting the
+/// real controller start its platform-channel token read and profile
+/// fetch. The screen needs one now: the list only merges a queue its own
+/// account owns, so who is signed in decides what the rows say.
+class _FakeAuthController extends AuthController {
+  _FakeAuthController(this._state);
+  final AuthState _state;
+
+  @override
+  AuthState build() => _state;
+}
+
+const _signedInAuthState = AuthState(
+  user: UserProfile(id: 42, username: 'ben'),
+);
+
+/// The key the queue in these tests is claimed under. `apiClientProvider`
+/// is not overridden here, so the base URL is the default one.
+final String _ourAccountKey = accountKeyFor(
+  ApiClient.defaultServerUrl,
+  _signedInAuthState,
+)!;
 
 /// PrivacyMode reads this on every screen build; without an override it
 /// hits the real flutter_secure_storage plugin channel, which throws
@@ -150,6 +177,9 @@ void main() {
           secureStorageProvider.overrideWithValue(_MemoryStorage()),
           transactionOutboxProvider.overrideWithValue(
             TransactionOutbox(outboxDir ?? defaultOutboxDir),
+          ),
+          authControllerProvider.overrideWith(
+            () => _FakeAuthController(_signedInAuthState),
           ),
         ],
         child: MaterialApp(
@@ -473,9 +503,14 @@ void main() {
     // never lets complete on its own -- awaiting it directly here, or from
     // inside a tapped button's handler, hangs forever. runAsync steps
     // outside that fake clock for the real operation.
+    /// Claimed as well as written: in the app a queued write claims the
+    /// queue for whoever made it, and a queue nobody has claimed reads as
+    /// empty -- so an entry put straight on disk would never reach a row.
     Future<void> queue(WidgetTester tester, {String? rejection}) =>
-        tester.runAsync(
-          () => TransactionOutbox(outboxDir).add(
+        tester.runAsync(() async {
+          final outbox = TransactionOutbox(outboxDir);
+          await outbox.setOwner(_ourAccountKey);
+          await outbox.add(
             PendingTransaction(
               localId: 'local-1',
               operation: PendingOperation.create,
@@ -487,8 +522,8 @@ void main() {
               queuedAt: DateTime(2026, 9, 4, 10),
               rejection: rejection,
             ),
-          ),
-        );
+          );
+        });
 
     testWidgets('a transaction that has not been sent says so', (
       tester,
@@ -699,8 +734,11 @@ void main() {
       (tester) async {
         // fromAccountId set, or the EXPENSE dialog's "from account" picker
         // fails its own validator and Save never gets past _formKey.validate.
-        await tester.runAsync(
-          () => TransactionOutbox(outboxDir).add(
+        await tester.runAsync(() async {
+          final outbox = TransactionOutbox(outboxDir);
+          // Claimed too, for the reason queue() above is.
+          await outbox.setOwner(_ourAccountKey);
+          await outbox.add(
             PendingTransaction(
               localId: 'local-1',
               operation: PendingOperation.create,
@@ -712,8 +750,8 @@ void main() {
               ),
               queuedAt: DateTime(2026, 9, 4, 10),
             ),
-          ),
-        );
+          );
+        });
         // Still offline for the resave, or a successful save would remove
         // the entry outright rather than replace it -- either way tells
         // us nothing about whether localId made it through.

@@ -1,4 +1,7 @@
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/transactions/data/outbox_ownership.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
@@ -7,10 +10,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Sends what the outbox is holding, oldest first.
 class TransactionSync {
-  TransactionSync(this._outbox, this._repository);
+  TransactionSync(this._outbox, this._repository, this._accountKey);
 
   final TransactionOutbox _outbox;
   final TransactionsRepository _repository;
+
+  /// Read at the start of every pass rather than captured once: a drain can
+  /// outlive the sign-in it started under.
+  final String? Function() _accountKey;
 
   /// The run currently in progress, if any.
   ///
@@ -96,7 +103,7 @@ class TransactionSync {
 
   Future<int> _drain() async {
     var delivered = 0;
-    for (final entry in await _outbox.all()) {
+    for (final entry in await ownedEntries(_outbox, _accountKey())) {
       if (entry.isRejected) continue;
       try {
         await _send(entry);
@@ -154,5 +161,9 @@ final transactionSyncProvider = Provider<TransactionSync>(
   (ref) => TransactionSync(
     ref.watch(transactionOutboxProvider),
     ref.watch(transactionsRepositoryProvider),
+    () => accountKeyFor(
+      ref.read(apiClientProvider).baseUrl,
+      ref.read(authControllerProvider),
+    ),
   ),
 );

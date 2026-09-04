@@ -1,5 +1,7 @@
+import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/widgets/confirm_sheet.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/transactions/data/outbox_ownership.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/widgets.dart';
@@ -26,7 +28,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// naming how much would be lost.
 Future<bool> confirmSignOut(BuildContext context, WidgetRef ref) async {
   final outbox = ref.read(transactionOutboxProvider);
-  final pending = await outbox.all();
+  final accountKey = accountKeyFor(
+    ref.read(apiClientProvider).baseUrl,
+    ref.read(authControllerProvider),
+  );
+  final pending = await ownedEntries(outbox, accountKey);
   if (!context.mounted) return false;
   // An empty fallback store means the real one could not be opened, not
   // that nothing is waiting -- so it is exactly the case that must ask.
@@ -53,6 +59,19 @@ Future<void> signOut(WidgetRef ref) async {
   final outbox = ref.read(transactionOutboxProvider);
   // Only when there is something to drop: clear() rebuilds the directory,
   // which is real work to do for nothing on the ordinary sign-out.
-  if ((await outbox.all()).isNotEmpty) await outbox.clear();
+  //
+  // And only an owned queue. clear() deletes the directory wholesale, so
+  // calling it on a queue belonging to another account would delete data
+  // the user was never warned about -- confirmSignOut counted only what
+  // this account owns, so the message would describe one thing while the
+  // code did another. A foreign queue is left where it is: sealed on the
+  // read path, and not this session's to discard.
+  final accountKey = accountKeyFor(
+    ref.read(apiClientProvider).baseUrl,
+    ref.read(authControllerProvider),
+  );
+  if ((await ownedEntries(outbox, accountKey)).isNotEmpty) {
+    await outbox.clear();
+  }
   await ref.read(authControllerProvider.notifier).logout();
 }

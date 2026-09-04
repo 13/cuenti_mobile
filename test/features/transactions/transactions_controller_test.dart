@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
+import 'package:cuentimobile/features/transactions/data/outbox_ownership.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
@@ -33,6 +35,20 @@ class _FakeAuthController extends AuthController {
 const _signedInAuthState = AuthState(
   user: UserProfile(id: 42, username: 'ben'),
 );
+
+/// The key the containers below claim their queue under -- none of them
+/// override the API client provider, so the base URL is the default one.
+///
+/// Reads are owner-gated now, so an entry a test writes straight to disk
+/// is invisible to the controller unless the queue is claimed for the same
+/// account the container is signed in as. In the app the claim comes free:
+/// `_enqueue` makes it on every queued write. A test that skips `save()`
+/// and writes the file itself has to make it explicitly, or it is testing
+/// the guard rather than the merge it means to test.
+final String _ourAccountKey = accountKeyFor(
+  ApiClient.defaultServerUrl,
+  _signedInAuthState,
+)!;
 
 void main() {
   late MockTransactionsRepository repo;
@@ -66,6 +82,14 @@ void main() {
         transactionsRepositoryProvider.overrideWithValue(repo),
         transactionOutboxProvider.overrideWithValue(
           TransactionOutbox(defaultOutboxDir),
+        ),
+        // build() reads the auth state on every page fetch now, to know
+        // whose queue it may merge. Without this the real controller is
+        // built and starts the platform-channel token read and profile
+        // fetch these unit tests have no business triggering -- the same
+        // reason containerWithOutbox() overrides it below.
+        authControllerProvider.overrideWith(
+          () => _FakeAuthController(_signedInAuthState),
         ),
       ],
     );
@@ -797,9 +821,20 @@ void main() {
             transactionOutboxProvider.overrideWithValue(
               TransactionOutbox(outboxDir),
             ),
+            authControllerProvider.overrideWith(
+              () => _FakeAuthController(_signedInAuthState),
+            ),
           ],
         );
         addTearDown(container.dispose);
+        // Ours, so what keeps the row out of the list is the filter and
+        // nothing else: an unclaimed queue reads as empty and this would
+        // pass without the filter ever being consulted.
+        await container
+            .read(transactionOutboxProvider)
+            .setOwner(
+              _ourAccountKey,
+            );
         await container
             .read(transactionOutboxProvider)
             .add(
@@ -843,9 +878,13 @@ void main() {
           transactionOutboxProvider.overrideWithValue(
             TransactionOutbox(outboxDir),
           ),
+          authControllerProvider.overrideWith(
+            () => _FakeAuthController(_signedInAuthState),
+          ),
         ],
       );
       addTearDown(container.dispose);
+      await container.read(transactionOutboxProvider).setOwner(_ourAccountKey);
       await container
           .read(transactionOutboxProvider)
           .add(
@@ -1013,7 +1052,10 @@ void main() {
         );
         // Written before the container exists: containerWithOutbox() starts
         // build() the moment it listens, so writing through the provider
-        // afterwards would race that first read of the outbox.
+        // afterwards would race that first read of the outbox. Claimed for
+        // the same account, the way `_enqueue` would have claimed it in
+        // the earlier session this entry is meant to come from.
+        await TransactionOutbox(outboxDir).setOwner(_ourAccountKey);
         await TransactionOutbox(outboxDir).add(
           PendingTransaction(
             localId: 'local-predelete-1',
@@ -1150,6 +1192,14 @@ void main() {
 
         // Queued directly, bypassing save(), so this exercises the rebuild
         // path on its own rather than the invalidateSelf inside save().
+        // Bypassing save() also bypasses the claim `_enqueue` makes, so
+        // the queue is claimed here instead -- unclaimed, it reads as
+        // empty and the rebuild would have nothing to fold in.
+        await container
+            .read(transactionOutboxProvider)
+            .setOwner(
+              _ourAccountKey,
+            );
         await container
             .read(transactionOutboxProvider)
             .add(
@@ -1210,7 +1260,13 @@ void main() {
         final container = containerWithOutbox();
         await container.read(transactionsControllerProvider().future);
 
-        // Queued directly so it is already reflected before loadMore runs.
+        // Queued directly so it is already reflected before loadMore runs,
+        // and claimed here because that bypasses `_enqueue`'s own claim.
+        await container
+            .read(transactionOutboxProvider)
+            .setOwner(
+              _ourAccountKey,
+            );
         await container
             .read(transactionOutboxProvider)
             .add(
@@ -1363,6 +1419,86 @@ void main() {
         expect(await outbox.owner(), isNull);
       },
     );
+
+    // The display half of the guard, which the sending tests in
+    // transaction_sync_test.dart cannot reach. An entry carries an amount
+    // and a payee, so drawing another account's queue into this account's
+    // list is its own leak even if nothing is ever sent from it -- and it
+    // is the same read that decides what sign-out offers to discard.
+    group('a queue that is not ours is not shown', () {
+      Future<void> queueForeign() async {
+        final outbox = TransactionOutbox(outboxDir);
+        await outbox.add(
+          PendingTransaction(
+            localId: 'local-theirs',
+            operation: PendingOperation.create,
+            transaction: Transaction(
+              amount: 12.34,
+              payee: 'Aldi',
+              transactionDate: DateTime(2026, 9, 4),
+            ),
+            queuedAt: DateTime(2026, 9, 4, 10),
+          ),
+        );
+      }
+
+      test('a queue owned by another account stays off the list', () async {
+        await queueForeign();
+        await TransactionOutbox(outboxDir).setOwner('https://cuenti.muh#7');
+        final container = containerWithOutbox();
+
+        final state = await container.read(
+          transactionsControllerProvider().future,
+        );
+
+        expect(state.pending, isEmpty);
+        expect(
+          state.items,
+          isEmpty,
+          reason: "somebody else's amount and payee, drawn into our list",
+        );
+      });
+
+      test('an unclaimed queue stays off it too', () async {
+        await queueForeign();
+        final container = containerWithOutbox();
+
+        final state = await container.read(
+          transactionsControllerProvider().future,
+        );
+
+        expect(state.pending, isEmpty);
+        expect(state.items, isEmpty);
+      });
+
+      // The control: the guard has to seal a foreign queue without
+      // sealing ours, or the list simply stopped working.
+      test('our own queue is still shown', () async {
+        await queueForeign();
+        await TransactionOutbox(outboxDir).setOwner(_ourAccountKey);
+        final container = containerWithOutbox();
+
+        final state = await container.read(
+          transactionsControllerProvider().future,
+        );
+
+        expect(state.pending, hasLength(1));
+        expect(state.items.single.payee, 'Aldi');
+      });
+
+      test('nobody signed in sees no queue at all', () async {
+        await queueForeign();
+        await TransactionOutbox(outboxDir).setOwner(_ourAccountKey);
+        final container = containerWithOutbox(auth: const AuthState());
+
+        final state = await container.read(
+          transactionsControllerProvider().future,
+        );
+
+        expect(state.pending, isEmpty);
+        expect(state.items, isEmpty);
+      });
+    });
   });
 }
 

@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/currencies/data/currencies_repository.dart';
+import 'package:cuentimobile/features/transactions/data/outbox_ownership.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
@@ -263,17 +265,31 @@ void main() {
     setUp(() => outboxDir = Directory.systemTemp.createTempSync('logout_ob'));
     tearDown(() => outboxDir.deleteSync(recursive: true));
 
-    Future<void> queueOne() => TransactionOutbox(outboxDir).add(
-      PendingTransaction(
-        localId: 'local-1',
-        operation: PendingOperation.create,
-        transaction: Transaction(
-          amount: 12.34,
-          transactionDate: DateTime(2026, 9, 4),
+    /// Claimed as well as written. Sign-out only counts and clears a queue
+    /// this account owns, and in the app the claim is made for it: every
+    /// queued write claims the queue. An entry put straight on disk with
+    /// no owner is somebody's, but nobody can say whose, so it reads as
+    /// empty -- which is the guard doing its job, not this test's subject.
+    Future<void> queueOne() async {
+      final outbox = TransactionOutbox(outboxDir);
+      await outbox.setOwner(
+        accountKeyFor(
+          ApiClient.defaultServerUrl,
+          const AuthState(user: user),
+        )!,
+      );
+      await outbox.add(
+        PendingTransaction(
+          localId: 'local-1',
+          operation: PendingOperation.create,
+          transaction: Transaction(
+            amount: 12.34,
+            transactionDate: DateTime(2026, 9, 4),
+          ),
+          queuedAt: DateTime(2026, 9, 4, 10),
         ),
-        queuedAt: DateTime(2026, 9, 4, 10),
-      ),
-    );
+      );
+    }
 
     testWidgets('asks first, naming how many would be lost', (tester) async {
       // TransactionOutbox does real disk I/O, which the widget-test clock
@@ -388,6 +404,58 @@ void main() {
       expect(auth.logoutCalls, 1);
       expect(await TransactionOutbox(outboxDir).all(), isEmpty);
     });
+
+    testWidgets(
+      'a queue belonging to another account is neither counted nor cleared',
+      (tester) async {
+        // Both doors end here: a store the fallback left behind, and a
+        // queue kept across an expired session. Signing out must not
+        // count somebody else's entries in the warning, and must not
+        // delete them either -- clear() removes the directory wholesale,
+        // so discarding a queue this account was never shown would
+        // destroy work with no warning at all.
+        await tester.runAsync(() async {
+          final outbox = TransactionOutbox(outboxDir);
+          await outbox.setOwner('https://cuenti.muh#999');
+          await outbox.add(
+            PendingTransaction(
+              localId: 'local-theirs',
+              operation: PendingOperation.create,
+              transaction: Transaction(
+                amount: 12.34,
+                transactionDate: DateTime(2026, 9, 4),
+              ),
+              queuedAt: DateTime(2026, 9, 4, 10),
+            ),
+          );
+        });
+        final auth = await pumpSettings(tester, outboxDir: outboxDir);
+
+        final logout = find.widgetWithText(OutlinedButton, 'Logout');
+        await tester.ensureVisible(logout);
+        await tester.pumpAndSettle();
+        await tester.runAsync(() async {
+          await tester.tap(logout);
+          for (var i = 0; i < 200 && auth.logoutCalls == 0; i++) {
+            await tester.pump(const Duration(milliseconds: 10));
+            await Future<void>.delayed(const Duration(milliseconds: 5));
+          }
+        });
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Unsent transactions'),
+          findsNothing,
+          reason: "the count would be somebody else's",
+        );
+        expect(auth.logoutCalls, 1);
+        expect(
+          await TransactionOutbox(outboxDir).all(),
+          hasLength(1),
+          reason: 'left where it is, not discarded unannounced',
+        );
+      },
+    );
 
     testWidgets('confirming signs out and clears the outbox', (tester) async {
       await tester.runAsync(queueOne);

@@ -39,7 +39,21 @@ String? accountKeyFor(String baseUrl, AuthState auth) {
 
 /// The entries the current account may see and send.
 ///
-/// Every read of the outbox should go through here.
+/// Every read of the outbox goes through here. Not a convention:
+/// `test/features/transactions/outbox_reads_test.dart` bans a bare
+/// `.all()` anywhere in `lib` outside this file and the store itself, so a
+/// reader added later that skips this fails there. The rule is only worth
+/// anything if the next reader obeys it too -- one unguarded read puts
+/// somebody's amounts and payees in front of somebody else, and a guard
+/// that most callers honour is not a guard.
+///
+/// A queue nobody has claimed reads as empty rather than as ours: it is
+/// sealed, not adopted. It was written before ownership existed, so
+/// nothing on disk says whose it is, and guessing "the account signed in
+/// now" is exactly the wrong guess in the two cases this feature exists
+/// for -- a stale store the fallback left behind, and a queue kept across
+/// an expired session. Adopting is a decision for the person to make (the
+/// sheet asks); until they answer, nothing goes out and nothing is shown.
 Future<List<PendingTransaction>> ownedEntries(
   TransactionOutbox outbox,
   String? accountKey,

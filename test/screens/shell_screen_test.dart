@@ -9,6 +9,7 @@ import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/scheduled/data/scheduled_repository.dart';
 import 'package:cuentimobile/features/scheduled/domain/scheduled_transaction.dart';
+import 'package:cuentimobile/features/transactions/data/outbox_ownership.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
@@ -77,6 +78,12 @@ class _FakeAuthController extends AuthController {
     if (logoutGate != null) await logoutGate!.future;
   }
 }
+
+/// The account the Logout group is signed in as, and the one its queue is
+/// claimed under.
+const _drawerAuthState = AuthState(
+  user: UserProfile(username: 'demo', email: 'd@x', firstName: 'Demo'),
+);
 
 void main() {
   /// Scheduled entries the shell reads for the overdue badge. Stubbed empty
@@ -234,8 +241,16 @@ void main() {
 
     /// TransactionOutbox.add does real disk I/O, which the widget-test
     /// clock never lets complete on its own; runAsync steps outside it.
-    Future<void> queueOne(WidgetTester tester) => tester.runAsync(
-      () => TransactionOutbox(outboxDir).add(
+    ///
+    /// Claimed as well as written, for the account the drawer is signed in
+    /// as: sign-out counts and clears only a queue this account owns, and
+    /// in the app a queued write makes that claim for it.
+    Future<void> queueOne(WidgetTester tester) => tester.runAsync(() async {
+      final outbox = TransactionOutbox(outboxDir);
+      await outbox.setOwner(
+        accountKeyFor(ApiClient.defaultServerUrl, _drawerAuthState)!,
+      );
+      await outbox.add(
         PendingTransaction(
           localId: 'local-1',
           operation: PendingOperation.create,
@@ -245,8 +260,8 @@ void main() {
           ),
           queuedAt: DateTime(2026, 9, 4, 10),
         ),
-      ),
-    );
+      );
+    });
 
     Future<_FakeAuthController> openDrawerAndTapLogout(
       WidgetTester tester,
@@ -255,11 +270,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
-      final auth = _FakeAuthController(
-        const AuthState(
-          user: UserProfile(username: 'demo', email: 'd@x', firstName: 'Demo'),
-        ),
-      );
+      final auth = _FakeAuthController(_drawerAuthState);
       await pumpShell(tester, controller: auth, outboxDir: outboxDir);
       await tester.tap(find.byTooltip('Open navigation menu'));
       await tester.pumpAndSettle();

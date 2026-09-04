@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
+import 'package:cuentimobile/features/transactions/data/outbox_ownership.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
@@ -52,6 +53,9 @@ class _UnansweredAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+/// The account every `sync` in this file drains for.
+const _ourKey = 'https://cuenti.muh#2';
+
 void main() {
   late Directory dir;
   late TransactionOutbox outbox;
@@ -64,14 +68,23 @@ void main() {
     ),
   );
 
-  setUp(() {
+  setUp(() async {
     dir = Directory.systemTemp.createTempSync('sync_test');
     outbox = TransactionOutbox(dir);
     repo = MockTransactionsRepository();
-    sync = TransactionSync(outbox, repo);
+    sync = TransactionSync(outbox, repo, () => _ourKey);
+    // The queue is ours by default, as it is in the app: `_enqueue` claims
+    // it for the account that queued the write. Without a claim every
+    // drain below would read an empty queue and prove nothing about
+    // sending. Tests about a queue that is NOT ours set their own owner.
+    await outbox.setOwner(_ourKey);
   });
 
   tearDown(() => dir.deleteSync(recursive: true));
+
+  /// Drops the claim [setUp] made, leaving the store as a queue written
+  /// before ownership existed: entries, and nothing saying whose they are.
+  void unclaim() => File('${dir.path}/.owner.json').deleteSync();
 
   Future<void> queue(
     String id, {
@@ -280,7 +293,11 @@ void main() {
     await queue('b', minute: 1);
     // The store goes away between the read and the bookkeeping, which is
     // what an unwritable file or a vanished directory looks like here.
-    final brittle = TransactionSync(_BrokenWriteOutbox(dir), repo);
+    final brittle = TransactionSync(
+      _BrokenWriteOutbox(dir),
+      repo,
+      () => _ourKey,
+    );
 
     expect(await brittle.drain(), 2, reason: 'both were actually sent');
     verify(
@@ -298,6 +315,7 @@ void main() {
       final startup = TransactionSync(
         outbox,
         TransactionsRepository(client.dio),
+        () => _ourKey,
       );
       await queue('a');
 
@@ -372,6 +390,90 @@ void main() {
     await sync.drain();
 
     expect(sent, [true], reason: 'touched, so sent as touched');
+  });
+
+  group('a queue that is not ours', () {
+    test('a foreign queue is not sent', () async {
+      await queue('local-1');
+      await outbox.setOwner('https://cuenti.muh#1');
+      // The sync is built for account 2.
+
+      expect(await sync.drain(), 0);
+      verifyNever(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      );
+      expect(await outbox.all(), hasLength(1));
+    });
+
+    test('an unclaimed queue is not sent either', () async {
+      await queue('local-1');
+      unclaim();
+
+      expect(await sync.drain(), 0);
+      verifyNever(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      );
+    });
+
+    test('a drain with nobody signed in sends nothing', () async {
+      // A drain can outlive the sign-in it started under, which is why the
+      // key is a callback read per pass rather than a value captured once.
+      await queue('local-1');
+      final signedOut = TransactionSync(outbox, repo, () => null);
+
+      expect(await signedOut.drain(), 0);
+      verifyNever(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      );
+    });
+
+    // The other half of the guard: it must seal foreign queues without
+    // sealing everything, or the feature is just broken sending.
+    test('our own queue is still sent', () async {
+      when(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
+      await queue('local-1');
+      await outbox.setOwner(_ourKey);
+
+      expect(await sync.drain(), 1);
+    });
+  });
+
+  // The two ways a stale queue reaches a new account. Both end at the same
+  // guard, but they are named separately because they are the reason the
+  // guard exists, and a future reader deleting one should have to argue
+  // with the door it describes rather than with a generic case.
+  group('the doors this closes', () {
+    test('door 1: a real store that survived a fallback sign-out is not '
+        'sent for the next account', () async {
+      // Account 1 queued into the real store while a fallback was in use,
+      // so sign-out cleared the fallback and left this untouched.
+      await queue('local-1');
+      await outbox.setOwner('https://cuenti.muh#1');
+
+      expect(await sync.drain(), 0);
+      expect(await outbox.all(), hasLength(1), reason: 'left, not deleted');
+    });
+
+    test('door 2: a queue kept across an expired session is not sent to '
+        'whoever signs in next', () async {
+      // _handleSessionExpired keeps the outbox deliberately -- the session
+      // expired, the user did not ask to be forgotten. That is safe only
+      // because the next account cannot read it.
+      await queue('local-1');
+      await outbox.setOwner('https://cuenti.muh#1');
+
+      expect(await ownedEntries(outbox, _ourKey), isEmpty);
+      expect(await sync.drain(), 0);
+    });
+
+    test('but the same account signing back in still gets its queue', () async {
+      await queue('local-1');
+      await outbox.setOwner(_ourKey);
+
+      expect(await ownedEntries(outbox, _ourKey), hasLength(1));
+    });
   });
 
   group('drainAgain', () {
