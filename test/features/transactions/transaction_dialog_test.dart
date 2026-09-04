@@ -1,6 +1,11 @@
 import 'dart:io';
 
+import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
+import 'package:cuentimobile/core/api/offline_cache_interceptor.dart';
+import 'package:cuentimobile/core/api/response_cache.dart';
+import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
 import 'package:cuentimobile/features/accounts/domain/account.dart';
@@ -19,6 +24,7 @@ import 'package:cuentimobile/features/transactions/domain/transaction_split.dart
 import 'package:cuentimobile/features/transactions/ui/transaction_dialog.dart';
 import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -84,7 +90,15 @@ void main() {
     Locale? locale,
     TransactionFilter filter = const TransactionFilter(),
     Transaction? transaction,
+    bool offline = false,
   }) async {
+    OfflineCacheInterceptor? offlineCache;
+    if (offline) {
+      final cacheDir = Directory.systemTemp.createTempSync('tx_dialog_cache');
+      addTearDown(() => cacheDir.deleteSync(recursive: true));
+      offlineCache = OfflineCacheInterceptor(ResponseCache(cacheDir))
+        ..stale.value = true;
+    }
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -95,6 +109,14 @@ void main() {
           transactionOutboxProvider.overrideWithValue(
             TransactionOutbox(outboxDir),
           ),
+          if (offlineCache != null)
+            apiClientProvider.overrideWithValue(
+              ApiClient(
+                const SecureStorage(),
+                dioOverride: Dio(),
+                offlineCache: offlineCache,
+              ),
+            ),
         ],
         child: MaterialApp(
           locale: locale,
@@ -121,6 +143,22 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  /// Pumps the dialog with the offline notifier already true, as if the
+  /// connection had already been down when the dialog opened -- the create
+  /// rows read it once at build (see the group below).
+  Future<void> pumpDialogOffline(
+    WidgetTester tester, {
+    Locale? locale,
+    TransactionFilter filter = const TransactionFilter(),
+    Transaction? transaction,
+  }) => pumpDialog(
+    tester,
+    locale: locale,
+    filter: filter,
+    transaction: transaction,
+    offline: true,
+  );
 
   /// Opens the category picker at [index] (0 is the main Category field,
   /// the rest are split rows) and picks the entry labelled [name].
@@ -786,6 +824,37 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.byType(SnackBar), findsOneWidget);
+    });
+  });
+
+  group('while offline', () {
+    testWidgets('offline, there is no offer to create a category: a queued '
+        'transaction cannot reference one the server has never issued an id '
+        'for', (tester) async {
+      await pumpDialogOffline(tester);
+      await tester.ensureVisible(find.byType(CategoryPickerField));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(CategoryPickerField));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).last, 'Werkstatt');
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Create'), findsNothing);
+    });
+
+    testWidgets('offline, there is no offer to create a payee either: it '
+        'would just be a server write with nowhere to send it', (
+      tester,
+    ) async {
+      await pumpDialogOffline(tester);
+      await tester.ensureVisible(find.byType(PayeePickerField));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(PayeePickerField));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).last, 'Bäckerei');
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Create'), findsNothing);
     });
   });
 }

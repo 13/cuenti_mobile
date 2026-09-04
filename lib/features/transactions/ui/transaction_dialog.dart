@@ -1,4 +1,5 @@
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/enum_labels.dart';
 import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/enum_dropdown.dart';
@@ -190,6 +191,16 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
     final payees = ref.watch(payeesControllerProvider).value ?? [];
     final amountColor = amountColorFor(context, _type);
 
+    // A one-shot read, not a watch: creating a category or payee posts to
+    // the server for the id/record a queued transaction would otherwise
+    // have nothing to reference, so the row is withheld whenever the
+    // connection was down at open. This dialog is a short-lived modal --
+    // reconnecting mid-edit does not need the create row to reappear
+    // instantly, and the picker sheet it lives in is re-opened fresh each
+    // time anyway.
+    final offline =
+        ref.watch(apiClientProvider).offlineCache?.stale.value ?? false;
+
     final fuelMeta = _type == 'EXPENSE' && _categoryId != null
         ? ref.watch(fuelMetaProvider(_categoryId!)).value
         : null;
@@ -353,7 +364,7 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                 PayeePickerField(
                   controller: _payee,
                   payees: payees,
-                  onCreate: _createPayee,
+                  onCreate: offline ? null : _createPayee,
                 ),
                 const SizedBox(height: 12),
 
@@ -370,7 +381,10 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                       // A transfer is shown every category and so names no
                       // type; there is nothing to stamp on a new one, so it
                       // offers no create row rather than guessing EXPENSE.
-                      onCreate: _type == 'TRANSFER'
+                      // Offline, there is no id the server could hand back
+                      // for a queued transaction to reference, so the row
+                      // is withheld for the same reason.
+                      onCreate: _type == 'TRANSFER' || offline
                           ? null
                           : (typed) => _createCategory(typed, ofType),
                     );
