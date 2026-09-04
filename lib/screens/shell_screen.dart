@@ -7,7 +7,7 @@ import 'package:cuentimobile/core/widgets/refresh_all.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/auth/ui/sign_out.dart';
 import 'package:cuentimobile/features/scheduled/ui/scheduled_controller.dart';
-import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
+import 'package:cuentimobile/features/transactions/ui/outbox_drain.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -295,8 +295,7 @@ class ShellScreen extends ConsumerWidget {
           if (offlineCache != null)
             _OutboxDrainOnReconnect(
               stale: offlineCache.stale,
-              onReconnect: () =>
-                  unawaited(ref.read(transactionSyncProvider).drain()),
+              onReconnect: () => drainOutbox(ref),
             ),
           Expanded(child: child),
         ],

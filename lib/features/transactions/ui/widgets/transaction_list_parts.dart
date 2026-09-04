@@ -139,7 +139,13 @@ class TransactionTile extends ConsumerWidget {
     await ref
         .read(transactionOutboxProvider)
         .replace(entry.copyWith(rejection: null));
-    await ref.read(transactionSyncProvider).drain();
+    try {
+      await ref.read(transactionSyncProvider).drain();
+    } on Exception catch (_) {
+      // Still queued and still shown as unsent, which is the truth. The
+      // list is rebuilt either way: the rejection has been cleared, and
+      // leaving the old reason on screen would be a lie about it.
+    }
     ref.invalidate(transactionsControllerProvider(filter: filter));
   }
 

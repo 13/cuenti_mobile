@@ -4,8 +4,7 @@ import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/auth/ui/app_lock_observer.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
-import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
-import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
+import 'package:cuentimobile/features/transactions/ui/outbox_drain.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/l10n/locale_resolution.dart';
 import 'package:cuentimobile/router.dart';
@@ -81,20 +80,7 @@ class _CuentiAppState extends ConsumerState<CuentiApp> {
   void _drainOutboxOnce() {
     if (_startupDrainAsked) return;
     _startupDrainAsked = true;
-    unawaited(
-      ref
-          .read(transactionSyncProvider)
-          .drain()
-          .then((delivered) {
-            // Rows that just reached the server are still marked "Not sent
-            // yet" until the list is rebuilt.
-            if (delivered > 0 && mounted) {
-              ref.invalidate(transactionsControllerProvider);
-            }
-          })
-          // A drain failing is not an app failure; the entries stay queued.
-          .catchError((Object _) {}),
-    );
+    drainOutbox(ref);
   }
 
   static String _localeTagOf(AuthState auth) =>
