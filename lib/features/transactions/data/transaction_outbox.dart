@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -49,9 +50,13 @@ class TransactionOutbox {
           ),
         );
         // One unreadable file must not cost the user every other entry
-        // behind it, so it is skipped rather than thrown.
+        // behind it, so it is skipped rather than thrown -- but not in
+        // silence: this is work the user typed and nothing else has a copy
+        // of, and it disappearing with no trace anywhere is the softest
+        // version of the failure this whole feature exists to prevent.
         // ignore: avoid_catches_without_on_clauses
-      } catch (_) {
+      } catch (e) {
+        debugPrint('TransactionOutbox: skipping ${file.path}: $e');
         continue;
       }
     }

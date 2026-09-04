@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -89,6 +90,20 @@ void main() {
     File('${dir.path}/broken.json').writeAsStringSync('{not json');
 
     expect((await outbox.all()).map((e) => e.localId), ['good']);
+  });
+
+  test('an unreadable entry is logged, not dropped in silence: it is work '
+      'the user typed and nothing else has a copy of', () async {
+    await outbox.add(entry('good'));
+    File('${dir.path}/broken.json').writeAsStringSync('{not json');
+    final logged = <String>[];
+    final original = debugPrint;
+    debugPrint = (message, {wrapWidth}) => logged.add(message ?? '');
+    addTearDown(() => debugPrint = original);
+
+    await outbox.all();
+
+    expect(logged.where((l) => l.contains('broken.json')), hasLength(1));
   });
 
   test('clearing empties it', () async {

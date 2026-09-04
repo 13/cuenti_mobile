@@ -2,6 +2,7 @@ import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Sends what the outbox is holding, oldest first.
@@ -11,17 +12,6 @@ class TransactionSync {
   final TransactionOutbox _outbox;
   final TransactionsRepository _repository;
 
-  /// Returns how many entries reached the server.
-  ///
-  /// A [NetworkException] ends the run: the connection is still down, and
-  /// walking the rest of the queue would only collect the same failure. Any
-  /// other ApiException means the server answered and refused, so that one
-  /// entry is marked with its reason and the run continues -- one bad entry
-  /// must not hold up everything queued behind it.
-  ///
-  /// An entry already carrying a rejection is left alone. It is waiting for
-  /// a person to fix or discard it, and retrying it would overwrite the
-  /// reason they have not read yet.
   /// The run currently in progress, if any.
   ///
   /// Four things ask for a drain -- app start, the connection returning,
@@ -33,6 +23,25 @@ class TransactionSync {
   /// `AuthController._initFuture` already uses for the same reason.
   Future<int>? _inFlight;
 
+  /// Returns how many entries reached the server.
+  ///
+  /// Only a [ValidationException] or a [ServerException] marks an entry
+  /// refused: those mean the server answered and said no, and holding the
+  /// entry back to retry a permanent refusal for ever helps nobody. That
+  /// one entry is marked with its reason and the run carries on -- one bad
+  /// entry must not hold up everything queued behind it.
+  ///
+  /// Everything else ends the run untouched. A [NetworkException] is the
+  /// obvious one: still offline. But an [UnknownApiException] means the
+  /// request got no answer at all, and an [UnauthorizedException] means
+  /// the CREDENTIAL was refused, not the entry -- a session expiring while
+  /// a queue is waiting would otherwise turn every entry into "Refused:
+  /// Not authenticated". Since nothing retries a refused entry
+  /// automatically, marking either of those would be permanent.
+  ///
+  /// An entry already carrying a rejection is left alone. It is waiting for
+  /// a person to fix or discard it, and retrying it would overwrite the
+  /// reason they have not read yet.
   Future<int> drain() =>
       _inFlight ??= _drain().whenComplete(() => _inFlight = null);
 
@@ -42,15 +51,36 @@ class TransactionSync {
       if (entry.isRejected) continue;
       try {
         await _send(entry);
-        await _outbox.remove(entry.localId);
-        delivered++;
-      } on NetworkException catch (_) {
+      } on ValidationException catch (e) {
+        await _record(() => _outbox.markRejected(entry.localId, e.message));
+        continue;
+      } on ServerException catch (e) {
+        await _record(() => _outbox.markRejected(entry.localId, e.message));
+        continue;
+      } on ApiException catch (_) {
         return delivered;
-      } on ApiException catch (e) {
-        await _outbox.markRejected(entry.localId, e.message);
       }
+      delivered++;
+      await _record(() => _outbox.remove(entry.localId));
     }
     return delivered;
+  }
+
+  /// The outbox bookkeeping that follows a send.
+  ///
+  /// A failure here -- an unwritable file, a directory that went away --
+  /// used to throw out of the run and leave every entry behind this one
+  /// untouched: one entry's storage problem stopping the whole queue. The
+  /// entry is left as it stands and the run continues. (A send that
+  /// succeeded but could not be recorded will be sent again on the next
+  /// drain; the answer to that is a server-side idempotency key, which is
+  /// a bigger change than this one.)
+  Future<void> _record(Future<void> Function() write) async {
+    try {
+      await write();
+    } on Exception catch (e) {
+      debugPrint('TransactionSync: the outbox could not be updated: $e');
+    }
   }
 
   Future<void> _send(PendingTransaction entry) async {

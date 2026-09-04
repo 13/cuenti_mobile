@@ -1,17 +1,55 @@
 // test/features/transactions/transaction_sync_test.dart
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockTransactionsRepository extends Mock
     implements TransactionsRepository {}
+
+class _MemoryStorage extends SecureStorage {
+  _MemoryStorage() : super();
+  final Map<String, String> _data = {};
+  @override
+  Future<String?> read(String key) async => _data[key];
+  @override
+  Future<void> write(String key, String value) async => _data[key] = value;
+  @override
+  Future<void> delete(String key) async => _data.remove(key);
+}
+
+/// Records what a request was addressed to and then fails the way a
+/// request that never reached a server does -- which is what
+/// `DioExceptionType.unknown` is, and what an unset base URL produced.
+class _UnansweredAdapter implements HttpClientAdapter {
+  final uris = <Uri>[];
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    uris.add(options.uri);
+    throw DioException(
+      requestOptions: options,
+      error: 'no answer',
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
 
 void main() {
   late Directory dir;
@@ -158,6 +196,91 @@ void main() {
     );
   });
 
+  test(
+    'a session that expired mid-queue stops the run rather than marking '
+    'every entry refused: the credential was refused, not the entry',
+    () async {
+      when(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      ).thenThrow(const UnauthorizedException('Not authenticated'));
+      await queue('a');
+      await queue('b', minute: 1);
+
+      expect(await sync.drain(), 0);
+
+      final left = await outbox.all();
+      expect(left, hasLength(2));
+      expect(
+        left.every((e) => !e.isRejected),
+        isTrue,
+        reason:
+            'nothing retries a refused entry automatically, so "Refused: Not '
+            'authenticated" on the whole queue would be permanent',
+      );
+      verify(
+        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      ).called(1);
+    },
+  );
+
+  test('a request that got no answer at all is not a refusal either', () async {
+    when(
+      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+    ).thenThrow(const UnknownApiException('An error occurred'));
+    await queue('a');
+
+    expect(await sync.drain(), 0);
+    expect((await outbox.all()).single.isRejected, isFalse);
+  });
+
+  test('a failure writing the outbox after a send does not abandon the rest '
+      'of the queue', () async {
+    when(
+      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+    ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
+    await queue('a');
+    await queue('b', minute: 1);
+    // The store goes away between the read and the bookkeeping, which is
+    // what an unwritable file or a vanished directory looks like here.
+    final brittle = TransactionSync(_BrokenWriteOutbox(dir), repo);
+
+    expect(await brittle.drain(), 2, reason: 'both were actually sent');
+    verify(
+      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+    ).called(2);
+  });
+
+  group('a drain that goes out before ApiClient.init() has run', () {
+    test('addresses the configured server and marks nothing refused', () async {
+      // The client the app builds, with init() deliberately not called --
+      // the app-start race this reproduces.
+      final client = ApiClient(_MemoryStorage());
+      final adapter = _UnansweredAdapter();
+      client.dio.httpClientAdapter = adapter;
+      final startup = TransactionSync(
+        outbox,
+        TransactionsRepository(client.dio),
+      );
+      await queue('a');
+
+      expect(await startup.drain(), 0);
+
+      expect(
+        adapter.uris.single.toString(),
+        startsWith('${ApiClient.defaultServerUrl}/api'),
+        reason: 'RequestOptions captures the base URL as it composes',
+      );
+      expect(
+        (await outbox.all()).single.isRejected,
+        isFalse,
+        reason:
+            'a falsely-refused entry is skipped by every later drain, so one '
+            'app start would poison the queue against the reconnect and '
+            'refresh triggers for good',
+      );
+    });
+  });
+
   test('replays the splits flag as it was recorded, since an empty list '
       'under a true flag means delete them all', () async {
     final sent = <bool>[];
@@ -212,4 +335,17 @@ void main() {
 
     expect(sent, [true], reason: 'touched, so sent as touched');
   });
+}
+
+/// An outbox whose post-send bookkeeping always fails.
+class _BrokenWriteOutbox extends TransactionOutbox {
+  _BrokenWriteOutbox(super._directory);
+
+  @override
+  Future<void> remove(String localId) async =>
+      throw const FileSystemException('read-only file system');
+
+  @override
+  Future<void> markRejected(String localId, String reason) async =>
+      throw const FileSystemException('read-only file system');
 }
