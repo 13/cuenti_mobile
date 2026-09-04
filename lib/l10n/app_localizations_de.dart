@@ -1284,4 +1284,17 @@ class LDe extends L {
 
   @override
   String get paymentMethodInterest => 'Zinsen';
+
+  @override
+  String categoryCreate(String name) {
+    return '„$name“ anlegen';
+  }
+
+  @override
+  String categoryCreateUnder(String parent) {
+    return 'unter $parent';
+  }
+
+  @override
+  String get categoryCreateTopLevel => 'Neue Hauptkategorie';
 }

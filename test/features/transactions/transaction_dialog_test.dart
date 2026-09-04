@@ -7,6 +7,7 @@ import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
 import 'package:cuentimobile/features/payees/data/payees_repository.dart';
 import 'package:cuentimobile/features/payees/domain/payee.dart';
+import 'package:cuentimobile/features/payees/ui/payee_picker_field.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
@@ -34,6 +35,8 @@ void main() {
     registerFallbackValue(
       Transaction(amount: 0, transactionDate: DateTime(2026)),
     );
+    registerFallbackValue(const Category(name: 'fallback'));
+    registerFallbackValue(const Payee(name: 'fallback'));
   });
 
   late MockTransactionsRepository txRepo;
@@ -47,6 +50,9 @@ void main() {
     categoriesRepo = MockCategoriesRepository();
     payeesRepo = MockPayeesRepository();
     when(() => payeesRepo.getAll()).thenAnswer((_) async => []);
+    when(() => payeesRepo.save(any())).thenAnswer(
+      (i) async => i.positionalArguments.first as Payee,
+    );
 
     when(
       () => accountsRepo.getAll(),
@@ -128,6 +134,23 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Sets the payee through its picker: open the sheet, type, and take the
+  /// create row. The field stopped being a plain text box when it became a
+  /// picker like the category one.
+  Future<void> setPayee(WidgetTester tester, String name) async {
+    final field = find.byType(PayeePickerField);
+    await tester.ensureVisible(field);
+    await tester.pumpAndSettle();
+    await tester.tap(field);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, name);
+    await tester.pumpAndSettle();
+    // Found by its icon rather than its words: this helper runs under the
+    // German locale too, where the row reads "„Baker“ anlegen".
+    await tester.tap(find.widgetWithIcon(ListTile, Icons.add));
+    await tester.pumpAndSettle();
+  }
+
   Future<void> fillAndSave(
     WidgetTester tester, {
     String amountLabel = 'Amount',
@@ -138,10 +161,7 @@ void main() {
       find.widgetWithText(TextFormField, amountLabel),
       '12,34',
     );
-    await tester.enterText(
-      find.widgetWithText(TextFormField, payeeLabel),
-      'Baker',
-    );
+    await setPayee(tester, 'Baker');
 
     // EXPENSE type requires a From Account.
     await tester.tap(find.byType(DropdownButtonFormField<int>).first);
@@ -490,36 +510,6 @@ void main() {
     },
   );
 
-  testWidgets('the payee field suggests known payees and fills on tap', (
-    tester,
-  ) async {
-    when(() => payeesRepo.getAll()).thenAnswer(
-      (_) async => const [
-        Payee(id: 1, name: 'Aral Tankstelle'),
-        Payee(id: 2, name: 'Rewe Markt'),
-      ],
-    );
-
-    await pumpDialog(tester);
-
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Payee'),
-      'tank',
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Aral Tankstelle'), findsOneWidget);
-    expect(find.text('Rewe Markt'), findsNothing);
-
-    await tester.tap(find.text('Aral Tankstelle'));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.widgetWithText(TextFormField, 'Aral Tankstelle'),
-      findsOneWidget,
-    );
-  });
-
   /// Presents the dialog the way the app does -- in a modal sheet over a
   /// Scaffold -- so that popping it leaves the messenger's Scaffold standing.
   /// The flat host above cannot show a snackbar raised as the dialog closes.
@@ -568,6 +558,72 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
   }
+
+  group('the payee field', () {
+    const known = [
+      Payee(id: 1, name: 'Aral Tankstelle'),
+      Payee(id: 2, name: 'Rewe Markt'),
+    ];
+
+    Future<void> openPayeeSheet(WidgetTester tester) async {
+      when(() => payeesRepo.getAll()).thenAnswer((_) async => known);
+      await pumpDialog(tester);
+      await tester.ensureVisible(find.byType(PayeePickerField));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(PayeePickerField));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('lists the payees the account knows, and picking one fills '
+        'the field', (tester) async {
+      await openPayeeSheet(tester);
+      await tester.enterText(find.byType(TextField).last, 'tank');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Aral Tankstelle').last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Aral Tankstelle'), findsWidgets);
+    });
+
+    testWidgets('offers to create one it does not know', (tester) async {
+      await openPayeeSheet(tester);
+      await tester.enterText(find.byType(TextField).last, 'Bäckerei');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Create "Bäckerei"'), findsOneWidget);
+    });
+
+    testWidgets('creating one saves it', (tester) async {
+      when(() => payeesRepo.save(any())).thenAnswer(
+        (i) async => i.positionalArguments.first as Payee,
+      );
+      await openPayeeSheet(tester);
+      await tester.enterText(find.byType(TextField).last, 'Bäckerei');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Create "Bäckerei"'));
+      await tester.pumpAndSettle();
+
+      final saved =
+          verify(() => payeesRepo.save(captureAny())).captured.single as Payee;
+      expect(saved.name, 'Bäckerei');
+    });
+
+    testWidgets('a payee the server refuses still goes on the transaction, '
+        'because the transaction carries the name itself', (tester) async {
+      when(() => payeesRepo.save(any())).thenThrow(
+        const ValidationException('Name already taken'),
+      );
+      await openPayeeSheet(tester);
+      await tester.enterText(find.byType(TextField).last, 'Bäckerei');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Create "Bäckerei"'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Bäckerei'), findsWidgets);
+    });
+  });
 
   testWidgets('saving confirms it happened, rather than closing in silence', (
     tester,
@@ -640,4 +696,84 @@ void main() {
       expect(find.text('DIRECT_DEBIT'), findsOneWidget);
     },
   );
+
+  group('creating a category from the form', () {
+    const existing = [
+      Category(id: 10, name: 'Auto', fullName: 'Auto'),
+    ];
+
+    Future<void> pumpWithCategories(WidgetTester tester) async {
+      when(
+        () => categoriesRepo.getAll(type: any(named: 'type')),
+      ).thenAnswer((_) async => existing);
+      when(() => categoriesRepo.save(any())).thenAnswer(
+        (i) async => (i.positionalArguments.first as Category).copyWith(id: 77),
+      );
+      await pumpDialog(tester);
+    }
+
+    Future<void> openPickerAndType(WidgetTester tester, String text) async {
+      await tester.ensureVisible(find.byType(CategoryPickerField));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(CategoryPickerField));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).last, text);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('offers to create a category the search did not find', (
+      tester,
+    ) async {
+      await pumpWithCategories(tester);
+      await openPickerAndType(tester, 'Werkstatt');
+
+      expect(find.text('Create "Werkstatt"'), findsOneWidget);
+    });
+
+    testWidgets('saves it with the type the form is on', (tester) async {
+      await pumpWithCategories(tester);
+      await openPickerAndType(tester, 'Werkstatt');
+      await tester.tap(find.text('Create "Werkstatt"'));
+      await tester.pumpAndSettle();
+
+      final saved =
+          verify(() => categoriesRepo.save(captureAny())).captured.single
+              as Category;
+      expect(saved.name, 'Werkstatt');
+      expect(saved.type, 'EXPENSE');
+      expect(saved.parentId, isNull);
+    });
+
+    testWidgets('files it under the parent the typed path names', (
+      tester,
+    ) async {
+      await pumpWithCategories(tester);
+      await openPickerAndType(tester, 'Auto:Werkstatt');
+      await tester.tap(find.text('Create "Auto:Werkstatt"'));
+      await tester.pumpAndSettle();
+
+      final saved =
+          verify(() => categoriesRepo.save(captureAny())).captured.single
+              as Category;
+      expect(saved.name, 'Werkstatt');
+      expect(saved.parentId, 10);
+    });
+
+    testWidgets('a create the server refuses says so and does not select '
+        'anything', (tester) async {
+      when(
+        () => categoriesRepo.getAll(type: any(named: 'type')),
+      ).thenAnswer((_) async => existing);
+      when(() => categoriesRepo.save(any())).thenThrow(
+        const ValidationException('Name already taken'),
+      );
+      await pumpDialog(tester);
+      await openPickerAndType(tester, 'Werkstatt');
+      await tester.tap(find.text('Create "Werkstatt"'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(SnackBar), findsOneWidget);
+    });
+  });
 }

@@ -38,6 +38,7 @@ void main() {
     List<Category> categories = _categories,
     int? selectedId,
     bool allowNone = true,
+    Future<int?> Function(String typed)? onCreate,
   }) async {
     final changes = <int?>[];
     var current = selectedId;
@@ -51,6 +52,7 @@ void main() {
               categories: categories,
               selectedId: current,
               allowNone: allowNone,
+              onCreate: onCreate,
               onChanged: (value) => setState(() {
                 changes.add(value);
                 current = value;
@@ -376,5 +378,107 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(starred, [1]);
+  });
+
+  group('creating one that is not there yet', () {
+    testWidgets('offers nothing to create when the caller cannot create', (
+      tester,
+    ) async {
+      await pumpPicker(tester);
+      await tester.tap(find.byType(InkWell).first);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Werkstatt');
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Create'), findsNothing);
+    });
+
+    testWidgets('offers to create what the search did not find', (
+      tester,
+    ) async {
+      await pumpPicker(tester, onCreate: (_) async => 99);
+      await tester.tap(find.byType(InkWell).first);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Werkstatt');
+      await tester.pumpAndSettle();
+
+      expect(inSheet('Create "Werkstatt"'), findsOneWidget);
+    });
+
+    testWidgets('offers nothing when the name is already taken', (
+      tester,
+    ) async {
+      await pumpPicker(tester, onCreate: (_) async => 99);
+      await tester.tap(find.byType(InkWell).first);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Transport:Fuel');
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Create'), findsNothing);
+    });
+
+    testWidgets('says where the new one will go', (tester) async {
+      await pumpPicker(tester, onCreate: (_) async => 99);
+      await tester.tap(find.byType(InkWell).first);
+      await tester.pumpAndSettle();
+      // 'Food:Groceries' is a real category here; 'Transport' is not, only
+      // 'Transport:Fuel' is.
+      await tester.enterText(
+        find.byType(TextField),
+        'Food:Groceries:Werkstatt',
+      );
+      await tester.pumpAndSettle();
+
+      expect(inSheet('under Food:Groceries'), findsOneWidget);
+    });
+
+    testWidgets('a parent the list does not hold makes it top-level, and '
+        'says so rather than inventing one', (tester) async {
+      await pumpPicker(tester, onCreate: (_) async => 99);
+      await tester.tap(find.byType(InkWell).first);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Transport:Werkstatt');
+      await tester.pumpAndSettle();
+
+      expect(inSheet('New top-level category'), findsOneWidget);
+    });
+
+    testWidgets('creating reports the new id and closes the sheet', (
+      tester,
+    ) async {
+      final typed = <String>[];
+      final changes = await pumpPicker(
+        tester,
+        onCreate: (t) async {
+          typed.add(t);
+          return 99;
+        },
+      );
+      await tester.tap(find.byType(InkWell).first);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Werkstatt');
+      await tester.pumpAndSettle();
+      await tester.tap(inSheet('Create "Werkstatt"'));
+      await tester.pumpAndSettle();
+
+      expect(typed, ['Werkstatt']);
+      expect(changes, [99]);
+      expect(find.byType(CategorySearchSheet), findsNothing);
+    });
+
+    testWidgets('a create that fails leaves the sheet open with the text '
+        'still there, so it can be tried again', (tester) async {
+      final changes = await pumpPicker(tester, onCreate: (_) async => null);
+      await tester.tap(find.byType(InkWell).first);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Werkstatt');
+      await tester.pumpAndSettle();
+      await tester.tap(inSheet('Create "Werkstatt"'));
+      await tester.pumpAndSettle();
+
+      expect(changes, isEmpty);
+      expect(find.byType(CategorySearchSheet), findsOneWidget);
+      expect(find.text('Werkstatt'), findsWidgets);
+    });
   });
 }

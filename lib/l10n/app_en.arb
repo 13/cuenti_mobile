@@ -785,5 +785,11 @@
   "paymentMethodReward": "Reward",
   "@paymentMethodReward": {},
   "paymentMethodInterest": "Interest",
-  "@paymentMethodInterest": {}
+  "@paymentMethodInterest": {},
+  "categoryCreate": "Create \"{name}\"",
+  "@categoryCreate": {"placeholders": {"name": {"type": "String"}}},
+  "categoryCreateUnder": "under {parent}",
+  "@categoryCreateUnder": {"placeholders": {"parent": {"type": "String"}}},
+  "categoryCreateTopLevel": "New top-level category",
+  "@categoryCreateTopLevel": {}
 }

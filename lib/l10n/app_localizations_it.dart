@@ -1283,4 +1283,17 @@ class LIt extends L {
 
   @override
   String get paymentMethodInterest => 'Interessi';
+
+  @override
+  String categoryCreate(String name) {
+    return 'Crea \"$name\"';
+  }
+
+  @override
+  String categoryCreateUnder(String parent) {
+    return 'sotto $parent';
+  }
+
+  @override
+  String get categoryCreateTopLevel => 'Nuova categoria principale';
 }

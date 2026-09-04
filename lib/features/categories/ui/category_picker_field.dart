@@ -14,6 +14,57 @@ String categoryLabel(Category category) => category.fullName ?? category.name;
 List<Category> filterCategories(List<Category> categories, String query) =>
     categories.where((c) => matchesAllTokens(categoryLabel(c), query)).toList();
 
+/// What a typed path means: the name to create, and what it hangs from.
+///
+/// The picker lists categories by their full path, so the path is also how
+/// a new one is described. `Auto:Werkstatt` puts Werkstatt under Auto;
+/// `Werkstatt` puts it at the top. A prefix no category answers to is not
+/// invented into a parent -- the whole string becomes the name, where the
+/// user can see what they typed and correct it, rather than a category
+/// quietly appearing somewhere they did not ask for.
+({String name, int? parentId}) parseNewCategoryPath(
+  String typed,
+  List<Category> categories,
+) {
+  final trimmed = typed.trim();
+  final cut = trimmed.lastIndexOf(':');
+  if (cut < 0) return (name: trimmed, parentId: null);
+
+  final parentPath = trimmed.substring(0, cut).trim();
+  final name = trimmed.substring(cut + 1).trim();
+  final parent = _categoryAnsweringTo(parentPath, categories);
+  if (parent == null || name.isEmpty) {
+    return (name: name.isEmpty ? '' : trimmed, parentId: null);
+  }
+  return (name: name, parentId: parent.id);
+}
+
+/// Whether [typed] names something that is not there yet, and so is worth
+/// offering to create.
+///
+/// Judged on an exact match rather than on an empty result: with
+/// `Werkstatt Nord` on screen, typing `Werk` should still offer to make a
+/// `Werk`.
+bool offersCreate(String typed, List<Category> categories) {
+  final trimmed = typed.trim();
+  if (trimmed.isEmpty) return false;
+  return _categoryAnsweringTo(trimmed, categories) == null;
+}
+
+/// The single category [path] names, by full path or by bare name, folded
+/// the way the search folds. Null when nothing answers to it, or when more
+/// than one does and picking either would be a guess.
+Category? _categoryAnsweringTo(String path, List<Category> categories) {
+  final wanted = path.trim().toLowerCase();
+  if (wanted.isEmpty) return null;
+  final hits = categories.where(
+    (c) =>
+        categoryLabel(c).trim().toLowerCase() == wanted ||
+        c.name.trim().toLowerCase() == wanted,
+  );
+  return hits.length == 1 ? hits.single : null;
+}
+
 /// Builds the trailing widget for one row, letting a caller hang a per-row
 /// action (a "set as default" star, say) off the shared sheet. When given, it
 /// replaces the selected-row check mark, so include one if selection still
@@ -39,6 +90,7 @@ Future<CategoryChoice?> showCategorySearchSheet(
   String? title,
   String? noneLabel,
   CategoryTrailingBuilder? trailingBuilder,
+  Future<int?> Function(String typed)? onCreate,
 }) {
   return showModalBottomSheet<CategoryChoice>(
     context: context,
@@ -51,6 +103,7 @@ Future<CategoryChoice?> showCategorySearchSheet(
       title: title ?? L.of(context).categoryLabel,
       noneLabel: noneLabel ?? L.of(context).commonNone,
       trailingBuilder: trailingBuilder,
+      onCreate: onCreate,
     ),
   );
 }
@@ -66,6 +119,7 @@ class CategorySearchSheet extends StatefulWidget {
     super.key,
     this.noneLabel = 'None',
     this.trailingBuilder,
+    this.onCreate,
   });
 
   final List<Category> categories;
@@ -75,12 +129,18 @@ class CategorySearchSheet extends StatefulWidget {
   final String noneLabel;
   final CategoryTrailingBuilder? trailingBuilder;
 
+  /// Makes the category the search did not find, and answers with its id --
+  /// or null if it could not. Null itself means this sheet only picks: the
+  /// statistics filter has nothing to create into.
+  final Future<int?> Function(String typed)? onCreate;
+
   @override
   State<CategorySearchSheet> createState() => _CategorySearchSheetState();
 }
 
 class _CategorySearchSheetState extends State<CategorySearchSheet> {
   final _query = TextEditingController();
+  bool _creating = false;
 
   @override
   void dispose() {
@@ -90,6 +150,32 @@ class _CategorySearchSheetState extends State<CategorySearchSheet> {
 
   void _pick(int? categoryId) =>
       Navigator.of(context).pop(CategoryChoice(categoryId));
+
+  /// Hands the typed text to the caller and closes on the id it makes. A
+  /// null answer means the create failed -- the caller has already said so
+  /// -- and the sheet stays put with the text intact rather than dropping
+  /// what was typed.
+  Future<void> _create() async {
+    setState(() => _creating = true);
+    final id = await widget.onCreate!(_query.text.trim());
+    if (!mounted) return;
+    if (id == null) {
+      setState(() => _creating = false);
+      return;
+    }
+    _pick(id);
+  }
+
+  /// Names where the new category will hang, so the row says what it will
+  /// do before it does it.
+  String _destination(BuildContext context) {
+    final parsed = parseNewCategoryPath(_query.text, widget.categories);
+    if (parsed.parentId == null) return L.of(context).categoryCreateTopLevel;
+    final parent = widget.categories.firstWhere(
+      (c) => c.id == parsed.parentId,
+    );
+    return L.of(context).categoryCreateUnder(categoryLabel(parent));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -168,6 +254,25 @@ class _CategorySearchSheetState extends State<CategorySearchSheet> {
                               : null),
                       onTap: () => _pick(category.id),
                     ),
+                  // Judged on an exact match rather than an empty result:
+                  // with 'Werkstatt Nord' listed, typing 'Werk' should
+                  // still offer to make a 'Werk'.
+                  if (widget.onCreate != null &&
+                      offersCreate(_query.text, widget.categories))
+                    ListTile(
+                      leading: _creating
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.add),
+                      title: Text(
+                        L.of(context).categoryCreate(_query.text.trim()),
+                      ),
+                      subtitle: Text(_destination(context)),
+                      onTap: _creating ? null : _create,
+                    ),
                 ],
               ),
             ),
@@ -193,6 +298,7 @@ class CategoryPickerField extends StatelessWidget {
     this.placeholder,
     this.noneLabel,
     this.validator,
+    this.onCreate,
   });
 
   final List<Category> categories;
@@ -217,6 +323,9 @@ class CategoryPickerField extends StatelessWidget {
   /// enclosing [Form] the way the dropdown it replaces did.
   final String? Function(int?)? validator;
 
+  /// Makes a category the search did not find. Null offers no such row.
+  final Future<int?> Function(String typed)? onCreate;
+
   Category? get _selected {
     for (final category in categories) {
       if (category.id == selectedId) return category;
@@ -236,6 +345,7 @@ class CategoryPickerField extends StatelessWidget {
       allowNone: allowNone,
       title: labelText ?? L.of(context).categoryLabel,
       noneLabel: noneLabel,
+      onCreate: onCreate,
     );
     if (choice == null) return;
     // Tell the FormField as well as the parent, so an enclosing Form

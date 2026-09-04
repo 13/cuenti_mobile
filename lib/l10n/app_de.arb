@@ -392,5 +392,8 @@
   "paymentMethodCardTransaction": "Kartenzahlung",
   "paymentMethodTrade": "Wertpapiergeschäft",
   "paymentMethodReward": "Bonus",
-  "paymentMethodInterest": "Zinsen"
+  "paymentMethodInterest": "Zinsen",
+  "categoryCreate": "„{name}“ anlegen",
+  "categoryCreateUnder": "unter {parent}",
+  "categoryCreateTopLevel": "Neue Hauptkategorie"
 }

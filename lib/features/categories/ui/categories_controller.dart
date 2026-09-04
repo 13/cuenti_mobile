@@ -10,10 +10,13 @@ class CategoriesController extends _$CategoriesController {
   Future<List<Category>> build() =>
       ref.watch(categoriesRepositoryProvider).getAll();
 
-  Future<void> save(Category category) async {
-    await ref.read(categoriesRepositoryProvider).save(category);
+  /// Returns the saved category, so a caller creating one mid-flow -- the
+  /// transaction form's picker -- has the id it now needs to reference.
+  Future<Category> save(Category category) async {
+    final saved = await ref.read(categoriesRepositoryProvider).save(category);
     ref.invalidateSelf();
     await future;
+    return saved;
   }
 
   /// Optimistic delete with revert on failure.

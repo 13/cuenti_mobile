@@ -392,5 +392,8 @@
   "paymentMethodCardTransaction": "Pagamento con carta",
   "paymentMethodTrade": "Compravendita",
   "paymentMethodReward": "Premio",
-  "paymentMethodInterest": "Interessi"
+  "paymentMethodInterest": "Interessi",
+  "categoryCreate": "Crea \"{name}\"",
+  "categoryCreateUnder": "sotto {parent}",
+  "categoryCreateTopLevel": "Nuova categoria principale"
 }

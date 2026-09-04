@@ -4,9 +4,11 @@ import 'package:cuentimobile/core/theme/cuenti_colors.dart';
 import 'package:cuentimobile/core/widgets/enum_dropdown.dart';
 import 'package:cuentimobile/core/widgets/feedback_snack.dart';
 import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
+import 'package:cuentimobile/features/categories/domain/category.dart';
 import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
 import 'package:cuentimobile/features/categories/ui/category_picker_field.dart';
-import 'package:cuentimobile/features/payees/ui/payee_autocomplete_field.dart';
+import 'package:cuentimobile/features/payees/domain/payee.dart';
+import 'package:cuentimobile/features/payees/ui/payee_picker_field.dart';
 import 'package:cuentimobile/features/payees/ui/payees_controller.dart';
 import 'package:cuentimobile/features/transactions/domain/split_validation.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
@@ -317,19 +319,31 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
                   const SizedBox(height: 12),
 
                 // Payee
-                PayeeAutocompleteField(
+                PayeePickerField(
                   controller: _payee,
                   payees: payees,
+                  onCreate: _createPayee,
                 ),
                 const SizedBox(height: 12),
 
                 // Category
-                CategoryPickerField(
-                  categories: categories
-                      .where((c) => _type == 'TRANSFER' || c.type == _type)
-                      .toList(),
-                  selectedId: _categoryId,
-                  onChanged: (v) => setState(() => _categoryId = v),
+                Builder(
+                  builder: (context) {
+                    final ofType = categories
+                        .where((c) => _type == 'TRANSFER' || c.type == _type)
+                        .toList();
+                    return CategoryPickerField(
+                      categories: ofType,
+                      selectedId: _categoryId,
+                      onChanged: (v) => setState(() => _categoryId = v),
+                      // A transfer is shown every category and so names no
+                      // type; there is nothing to stamp on a new one, so it
+                      // offers no create row rather than guessing EXPENSE.
+                      onCreate: _type == 'TRANSFER'
+                          ? null
+                          : (typed) => _createCategory(typed, ofType),
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
 
@@ -428,6 +442,37 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
         ),
       ),
     );
+  }
+
+  /// Saves a payee by [name], answering whether it worked.
+  ///
+  /// The answer is advisory: a transaction stores its payee as a plain
+  /// string, so a refused save costs the record -- the default category and
+  /// payment method it would have carried -- and not the entry itself.
+  Future<bool> _createPayee(String name) => reportingFailure(
+    context,
+    () => ref.read(payeesControllerProvider.notifier).save(Payee(name: name)),
+  );
+
+  /// Makes the category the picker could not find and answers with its id,
+  /// or null if the server refused -- which the picker takes as "stay open".
+  Future<int?> _createCategory(String typed, List<Category> ofType) async {
+    final parsed = parseNewCategoryPath(typed, ofType);
+    if (parsed.name.isEmpty) return null;
+
+    Category? created;
+    final ok = await reportingFailure(context, () async {
+      created = await ref
+          .read(categoriesControllerProvider.notifier)
+          .save(
+            Category(
+              name: parsed.name,
+              type: _type,
+              parentId: parsed.parentId,
+            ),
+          );
+    });
+    return ok ? created?.id : null;
   }
 
   Future<void> _save() async {

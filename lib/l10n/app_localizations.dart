@@ -2461,6 +2461,24 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Interest'**
   String get paymentMethodInterest;
+
+  /// No description provided for @categoryCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create \"{name}\"'**
+  String categoryCreate(String name);
+
+  /// No description provided for @categoryCreateUnder.
+  ///
+  /// In en, this message translates to:
+  /// **'under {parent}'**
+  String categoryCreateUnder(String parent);
+
+  /// No description provided for @categoryCreateTopLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'New top-level category'**
+  String get categoryCreateTopLevel;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

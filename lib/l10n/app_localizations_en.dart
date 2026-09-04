@@ -1280,4 +1280,17 @@ class LEn extends L {
 
   @override
   String get paymentMethodInterest => 'Interest';
+
+  @override
+  String categoryCreate(String name) {
+    return 'Create \"$name\"';
+  }
+
+  @override
+  String categoryCreateUnder(String parent) {
+    return 'under $parent';
+  }
+
+  @override
+  String get categoryCreateTopLevel => 'New top-level category';
 }
