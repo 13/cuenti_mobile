@@ -21,6 +21,14 @@ class ApiClient {
     } else {
       dio = Dio(
         BaseOptions(
+          // Set here and not only in [init]: RequestOptions captures the
+          // base URL when a request is composed, so anything that fires
+          // before init() has finished its platform-channel awaits would
+          // otherwise go out against an empty base -- which fails as
+          // "unknown", not as "offline", and reads as the server refusing
+          // rather than never having been asked. init() refines this to
+          // whatever server the user has configured.
+          baseUrl: '$defaultServerUrl/api',
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 30),
           headers: {'Content-Type': 'application/json'},

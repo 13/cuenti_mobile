@@ -65,6 +65,22 @@ class _RecordingSync implements TransactionSync {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// Starts uninitialised, the way the real controller does, and settles
+/// once [settle] is called -- so a test can watch what the app does on
+/// either side of `ApiClient.init()` finishing.
+class _SettlingAuthController extends AuthController {
+  @override
+  AuthState build() => const AuthState();
+
+  /// The login screen calls `init()` on arrival, and the real one talks to
+  /// the API client and the repository before flipping `initialized`.
+  /// [settle] stands in for that, so a test controls when it happens.
+  @override
+  Future<void> init() async {}
+
+  void settle() => state = state.copyWith(initialized: true);
+}
+
 /// A drain that never completes, so a test can prove the app-start call is
 /// not awaited before the first frame.
 class _NeverEndingSync implements TransactionSync {
@@ -193,14 +209,14 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('sends whatever the outbox is holding as soon as the app '
-      'starts', (tester) async {
+  testWidgets('sends whatever the outbox is holding as soon as the app is '
+      'ready to send it', (tester) async {
     final sync = _RecordingSync();
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           authControllerProvider.overrideWith(
-            () => _FakeAuthController(const AuthState()),
+            () => _FakeAuthController(const AuthState(initialized: true)),
           ),
           authRepositoryProvider.overrideWithValue(repo),
           apiClientProvider.overrideWithValue(client),
@@ -215,6 +231,42 @@ void main() {
     expect(sync.drains, 1);
   });
 
+  testWidgets('holds the app-start drain until the api client has been '
+      'configured, and then sends exactly once', (tester) async {
+    final sync = _RecordingSync();
+    final auth = _SettlingAuthController();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(() => auth),
+          authRepositoryProvider.overrideWithValue(repo),
+          apiClientProvider.overrideWithValue(client),
+          secureStorageProvider.overrideWithValue(_MemoryStorage()),
+          transactionSyncProvider.overrideWithValue(sync),
+        ],
+        child: const CuentiApp(),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      sync.drains,
+      0,
+      reason:
+          'ApiClient.init() sets dio.options.baseUrl behind two '
+          'platform-channel awaits; a request composed before that goes '
+          'out against a base URL that is not the server',
+    );
+
+    auth.settle();
+    await tester.pump();
+    expect(sync.drains, 1);
+
+    // And not again on every frame after that.
+    await tester.pump();
+    expect(sync.drains, 1);
+  });
+
   testWidgets("the app-start drain doesn't hold up the first frame -- a "
       'drain that never resolves must not stop CuentiApp from rendering', (
     tester,
@@ -224,7 +276,7 @@ void main() {
       ProviderScope(
         overrides: [
           authControllerProvider.overrideWith(
-            () => _FakeAuthController(const AuthState()),
+            () => _FakeAuthController(const AuthState(initialized: true)),
           ),
           authRepositoryProvider.overrideWithValue(repo),
           apiClientProvider.overrideWithValue(client),

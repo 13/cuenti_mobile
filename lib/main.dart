@@ -5,6 +5,7 @@ import 'package:cuentimobile/features/auth/ui/app_lock_observer.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
+import 'package:cuentimobile/features/transactions/ui/transactions_controller.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
 import 'package:cuentimobile/l10n/locale_resolution.dart';
 import 'package:cuentimobile/router.dart';
@@ -58,9 +59,42 @@ class _CuentiAppState extends ConsumerState<CuentiApp> {
     // happens at an awkward moment.
     applyLocale(_localeTagOf(ref.read(authControllerProvider)));
     // Whatever the outbox is already holding from a previous run gets a
-    // send attempt now. Not awaited: a drain talks to the network, and
-    // nothing about showing the first frame should wait on that.
-    unawaited(ref.read(transactionSyncProvider).drain());
+    // send attempt -- but only once the API client is configured; see
+    // [_drainOutboxOnce]. Usually that is a listener away, not now.
+    if (ref.read(authControllerProvider).initialized) _drainOutboxOnce();
+  }
+
+  bool _startupDrainAsked = false;
+
+  /// Sends what the outbox is holding from a previous run.
+  ///
+  /// Gated on auth being initialised because `ApiClient.init()` is what
+  /// sets `dio.options.baseUrl`, behind two platform-channel awaits, and
+  /// `RequestOptions` captures the base URL when the request is composed.
+  /// Fired from `initState` this raced that: every entry went out against a
+  /// half-configured client and came back as "the server did not answer",
+  /// which the drain has no reason to treat as a refusal but every reason
+  /// to stop on.
+  ///
+  /// Not awaited: a drain talks to the network, and nothing about showing
+  /// the first frame should wait on that.
+  void _drainOutboxOnce() {
+    if (_startupDrainAsked) return;
+    _startupDrainAsked = true;
+    unawaited(
+      ref
+          .read(transactionSyncProvider)
+          .drain()
+          .then((delivered) {
+            // Rows that just reached the server are still marked "Not sent
+            // yet" until the list is rebuilt.
+            if (delivered > 0 && mounted) {
+              ref.invalidate(transactionsControllerProvider);
+            }
+          })
+          // A drain failing is not an app failure; the entries stay queued.
+          .catchError((Object _) {}),
+    );
   }
 
   static String _localeTagOf(AuthState auth) =>
@@ -77,6 +111,14 @@ class _CuentiAppState extends ConsumerState<CuentiApp> {
     // Any auth state change (login/logout/session restore) must re-trigger
     // GoRouter's redirect logic.
     ref.listen(authControllerProvider, (_, _) => _refreshNotifier.refresh());
+    // The moment the API client is configured is the moment a queued write
+    // can actually be sent.
+    ref.listen(authControllerProvider.select((s) => s.initialized), (
+      _,
+      initialized,
+    ) {
+      if (initialized) _drainOutboxOnce();
+    });
     // Drives intl's ambient locale, which formatNumber and every DateFormat
     // in the app read. Fires only when the chosen locale actually changes.
     ref.listen(

@@ -81,6 +81,16 @@ void main() {
     expect(await hasCachedData(), isTrue);
   });
 
+  test('a request composed before init() has run still goes to a server: '
+      'RequestOptions captures the base URL as the request is made, and the '
+      'app-start outbox drain composes one while init() is still awaiting '
+      'platform channels', () {
+    // No dioOverride: this is the client the app itself builds.
+    final fresh = ApiClient(_MemoryStorage());
+
+    expect(fresh.dio.options.baseUrl, '${ApiClient.defaultServerUrl}/api');
+  });
+
   test('the new url is still what requests go to', () async {
     await client.setServerUrl('https://second.example/');
 
