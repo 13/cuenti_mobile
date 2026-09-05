@@ -466,9 +466,8 @@ void main() {
         // Both doors end here: a store the fallback left behind, and a
         // queue kept across an expired session. Signing out must not
         // count somebody else's entries in the warning, and must not
-        // delete them either -- clear() removes the directory wholesale,
-        // so discarding a queue this account was never shown would
-        // destroy work with no warning at all.
+        // delete them either -- discarding a queue this account was never
+        // shown would destroy work with no warning at all.
         await tester.runAsync(() async {
           final outbox = TransactionOutbox(outboxDir);
           await outbox.setOwner('https://cuenti.muh#999');
@@ -522,14 +521,14 @@ void main() {
       await tester.tap(logout);
       await tester.pumpAndSettle();
 
-      // Confirming triggers the outbox's real clear() and then logout()
-      // from inside the button's handler -- same reason the tap and the
-      // wait for its effect both have to happen inside runAsync;
+      // Confirming triggers the outbox's real discardEntries() and then
+      // logout() from inside the button's handler -- same reason the tap
+      // and the wait for its effect both have to happen inside runAsync;
       // pumpAndSettle only tracks scheduled frames, not this unrelated
-      // real I/O. Polling logoutCalls rather than the outbox itself
-      // avoids racing this loop's own reads against clear()'s
-      // delete-then-recreate, and only flips once clear() -- which
-      // sequences before logout() in the handler -- has already run.
+      // real I/O. Polling logoutCalls rather than the outbox itself avoids
+      // racing this loop's own reads against discardEntries()'s file
+      // deletes, and only flips once discardEntries() -- which sequences
+      // before logout() in the handler -- has already run.
       await tester.runAsync(() async {
         await tester.tap(find.widgetWithText(FilledButton, 'Logout'));
         for (var i = 0; i < 200 && auth.logoutCalls == 0; i++) {
@@ -542,6 +541,85 @@ void main() {
       expect(auth.logoutCalls, 1);
       expect(await TransactionOutbox(outboxDir).all(), isEmpty);
     });
+
+    // I4: before this branch a sidelined queue was unrecoverable anyway,
+    // so signOut's recursive clear() destroying it alongside the owned
+    // root cost nothing. Now reclaimSidelined can bring a set-aside queue
+    // back, and clear() would delete it with no warning -- the warning
+    // counted only what this account owns. discardEntries() must delete
+    // exactly that and nothing beside it.
+    testWidgets(
+      "signing out empties the owned root and leaves a foreign account's "
+      'sidelined queue intact',
+      (tester) async {
+        late Directory sidelined;
+        await tester.runAsync(() async {
+          // A foreign account's queue was set aside by an earlier claim.
+          final outbox = TransactionOutbox(outboxDir);
+          await outbox.setOwner('https://cuenti.muh#999');
+          await outbox.add(
+            PendingTransaction(
+              localId: 'local-theirs',
+              operation: PendingOperation.create,
+              transaction: Transaction(
+                amount: 1,
+                transactionDate: DateTime(2026, 9, 4),
+              ),
+              queuedAt: DateTime(2026, 9, 4, 9),
+            ),
+          );
+          await outbox.sideline();
+          // This account claims the now-empty root and queues its own
+          // entry.
+          await queueOne();
+          sidelined = (await outbox.sidelinedQueues()).single.directory;
+        });
+        final auth = await pumpSettings(tester, outboxDir: outboxDir);
+
+        final logout = find.widgetWithText(OutlinedButton, 'Logout');
+        await tester.ensureVisible(logout);
+        await tester.pumpAndSettle();
+        await tester.tap(logout);
+        await tester.pumpAndSettle();
+
+        // The warning's count is of the owned root alone -- the sidelined
+        // queue is not this account's to be warned about.
+        expect(
+          find.textContaining('1 transaction has not reached the server'),
+          findsOneWidget,
+        );
+
+        await tester.runAsync(() async {
+          await tester.tap(find.widgetWithText(FilledButton, 'Logout'));
+          for (var i = 0; i < 200 && auth.logoutCalls == 0; i++) {
+            await tester.pump(const Duration(milliseconds: 10));
+            await Future<void>.delayed(const Duration(milliseconds: 5));
+          }
+        });
+        await tester.pumpAndSettle();
+
+        expect(auth.logoutCalls, 1);
+        expect(
+          await TransactionOutbox(outboxDir).all(),
+          isEmpty,
+          reason: 'the owned root is exactly what the warning counted',
+        );
+        expect(
+          sidelined.existsSync(),
+          isTrue,
+          reason:
+              "the sidelined queue is not this session's to discard, and "
+              'is now recoverable -- destroying it costs real data',
+        );
+        expect(
+          sidelined.listSync().whereType<File>().map(
+            (f) => f.uri.pathSegments.last,
+          ),
+          containsAll(['.owner.json']),
+          reason: 'still attributable, not just present as an empty shell',
+        );
+      },
+    );
   });
 
   testWidgets('the whole screen renders in German', (tester) async {

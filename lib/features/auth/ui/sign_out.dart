@@ -57,21 +57,28 @@ Future<bool> confirmSignOut(BuildContext context, WidgetRef ref) async {
 /// sign-in must not race the token clear and the saved-credential wipe.
 Future<void> signOut(WidgetRef ref) async {
   final outbox = ref.read(transactionOutboxProvider);
-  // Only when there is something to drop: clear() rebuilds the directory,
-  // which is real work to do for nothing on the ordinary sign-out.
+  // Only when there is something to drop: discardEntries() is real work to
+  // do for nothing on the ordinary sign-out.
   //
-  // And only an owned queue. clear() deletes the directory wholesale, so
-  // calling it on a queue belonging to another account would delete data
-  // the user was never warned about -- confirmSignOut counted only what
-  // this account owns, so the message would describe one thing while the
-  // code did another. A foreign queue is left where it is: sealed on the
-  // read path, and not this session's to discard.
+  // And only an owned queue. discardEntries() -- not clear() -- deletes
+  // the root's entries and its owner file, and nothing else: confirmSignOut
+  // counted only what this account owns, so the message would describe one
+  // thing while the code did another if this destroyed more. clear() is
+  // recursive and would also take any `.sidelined-...` subdirectory with
+  // it -- another account's queue, or this account's own under a server
+  // address it is not signed in under right now, neither ever shown or
+  // counted here. Recovering a sidelined queue used to cost nothing to get
+  // wrong, because nothing read one back; now that reclaiming is real
+  // (outbox_ownership.dart's reclaimSidelined), destroying one on sign-out
+  // would be the expired-session story failing by deleting the data. A
+  // foreign root is left where it is either way: sealed on the read path,
+  // and not this session's to discard.
   final accountKey = accountKeyFor(
     ref.read(apiClientProvider).baseUrl,
     ref.read(authControllerProvider),
   );
   if ((await ownedEntries(outbox, accountKey)).isNotEmpty) {
-    await outbox.clear();
+    await outbox.discardEntries();
   }
   await ref.read(authControllerProvider.notifier).logout();
 }
