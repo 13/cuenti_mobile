@@ -86,6 +86,14 @@ Future<void> promptForForeignOutbox(BuildContext context, WidgetRef ref) async {
   // Nobody to ask on behalf of, and nobody who could adopt the queue.
   if (accountKey == null) return;
 
+  // Before deciding what to ask: if this account's own queue was set aside
+  // by somebody else's write and the root is free again, it comes back
+  // now -- which is what makes "correcting the server address brings them
+  // back" true without the user having to save something first. The
+  // app-start drain has already run, so a reclaimed queue has to be sent
+  // from here.
+  if (await reclaimSidelined(outbox, accountKey) > 0) drainOutbox(ref);
+
   final claim = await claimStateOf(outbox, accountKey);
   if (claim == OutboxClaim.empty || claim == OutboxClaim.ours) return;
   if (!context.mounted) return;

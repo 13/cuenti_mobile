@@ -6,6 +6,7 @@ import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/transactions/data/outbox_ownership.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
+import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
@@ -29,6 +30,23 @@ class _FakeAuthController extends AuthController {
 
   @override
   AuthState build() => _state;
+}
+
+/// Records how many times [drain] is asked for, without touching the
+/// outbox or the network -- copied from shell_screen_test.dart, which
+/// these tests share the shape of (a reclaim before the sheet decides
+/// anything, followed by a drain if something came back).
+class _RecordingSync implements TransactionSync {
+  int drains = 0;
+
+  @override
+  Future<int> drain() async {
+    drains++;
+    return 0;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 /// Runs [promptForForeignOutbox] once, the way ShellScreen does.
@@ -104,12 +122,17 @@ void main() {
     if (owner != null) await outbox.setOwner(owner);
   }
 
-  Future<void> pumpHost(WidgetTester tester, {required int userId}) async {
+  Future<void> pumpHost(
+    WidgetTester tester, {
+    required int userId,
+    TransactionSync? sync,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           transactionOutboxProvider.overrideWithValue(outbox),
           transactionsRepositoryProvider.overrideWithValue(repo),
+          if (sync != null) transactionSyncProvider.overrideWithValue(sync),
           authControllerProvider.overrideWith(
             () => _FakeAuthController(
               AuthState(
@@ -494,5 +517,60 @@ void main() {
 
     expect(find.byType(BottomSheet), findsNothing);
     expect(await outbox.all(), hasLength(1));
+  });
+
+  group('reclaiming a set-aside queue at sign-in', () {
+    testWidgets('a returning account gets its set-aside queue back without '
+        'saving anything, and nothing is asked', (tester) async {
+      // Account 2 wrote while account 1's queue was current, so 1's queue
+      // was set aside. Now 2 has signed out and 1 is back: the root is
+      // 2's, empty after 2's own sign-out cleared it.
+      await tester.runAsync(() async {
+        await queue('one-1');
+        await outbox.setOwner(keyFor(1));
+        await outbox.sideline();
+      });
+      // Sign-out of account 2 leaves an empty, unowned root.
+
+      // The reclaim itself writes to disk (setOwner, then the restore's
+      // renames), which -- like every other write in this file -- the
+      // widget-test clock never lets complete on its own; the whole pump,
+      // plus a wait for the write to actually land, has to run outside it.
+      final sync = _RecordingSync();
+      await tester.runAsync(() async {
+        await pumpHost(tester, userId: 1, sync: sync);
+        for (var i = 0; i < 200 && (await outbox.owner()) != keyFor(1); i++) {
+          await tester.pump(const Duration(milliseconds: 10));
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+        }
+      });
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Dialog), findsNothing);
+      expect(find.textContaining('another account'), findsNothing);
+      expect((await ownedEntries(outbox, keyFor(1))).single.localId, 'one-1');
+      expect(
+        sync.drains,
+        greaterThan(0),
+        reason: 'the app-start drain already ran; this has to send',
+      );
+    });
+
+    testWidgets('a set-aside queue is not reclaimed into a root another '
+        'account still owns, and that root is asked about', (tester) async {
+      await tester.runAsync(() async {
+        await queue('one-1');
+        await outbox.setOwner(keyFor(1));
+        await outbox.sideline();
+        await queue('two-1');
+        await outbox.setOwner(keyFor(2));
+      });
+
+      await pumpHost(tester, userId: 1);
+
+      expect(find.textContaining('another account'), findsOneWidget);
+      expect(await ownedEntries(outbox, keyFor(1)), isEmpty);
+      expect(await outbox.sidelinedQueues(), hasLength(1));
+    });
   });
 }
