@@ -183,6 +183,32 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Waits, from inside [WidgetTester.runAsync], until [done] holds.
+  ///
+  /// A deadline rather than a fixed delay or an iteration bound -- copied
+  /// in shape from `transactions_screen_test.dart`'s own `waitFor` -- so a
+  /// regression that stops the write hangs on a message naming what it
+  /// was waiting for, rather than the caller guessing how many turns are
+  /// enough. Must be called from inside [WidgetTester.runAsync]: real
+  /// disk I/O started by [pumpHost] does not progress once that escape
+  /// hatch closes, so [done] has to become true before the caller leaves
+  /// it, not after.
+  Future<void> waitFor(
+    WidgetTester tester,
+    String what,
+    Future<bool> Function() done, {
+    Duration timeout = const Duration(seconds: 20),
+  }) async {
+    final deadline = DateTime.now().add(timeout);
+    while (!await done()) {
+      if (DateTime.now().isAfter(deadline)) {
+        fail('timed out after ${timeout.inSeconds}s waiting for: $what');
+      }
+      await tester.pump(const Duration(milliseconds: 10));
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+  }
+
   testWidgets('a foreign queue is named, and discarding empties it', (
     tester,
   ) async {
@@ -536,13 +562,29 @@ void main() {
       // renames), which -- like every other write in this file -- the
       // widget-test clock never lets complete on its own; the whole pump,
       // plus a wait for the write to actually land, has to run outside it.
+      //
+      // The wait has to be on what the assertions below actually read,
+      // not on outbox.owner() alone: _reclaim sets the owner file
+      // *before* it moves the entries back, and promptForForeignOutbox
+      // does not ask for a drain until the whole reclaim -- owner plus
+      // restore -- has resolved. A wait that ends on the owner file can
+      // fire in the gap between those two steps: runAsync's callback
+      // returns, its real-I/O escape hatch closes, and the restore and
+      // the fire-and-forget drain that follows it are left to finish (or
+      // not) back in the fake clock -- which is exactly the flake this
+      // replaced: ownedEntries usually already reflected the restore by
+      // the time the assertion ran, but sync.drains sometimes did not.
       final sync = _RecordingSync();
       await tester.runAsync(() async {
         await pumpHost(tester, userId: 1, sync: sync);
-        for (var i = 0; i < 200 && (await outbox.owner()) != keyFor(1); i++) {
-          await tester.pump(const Duration(milliseconds: 10));
-          await Future<void>.delayed(const Duration(milliseconds: 5));
-        }
+        await waitFor(
+          tester,
+          'the reclaimed entry to be owned again and the drain it '
+          'triggers to have actually run',
+          () async =>
+              sync.drains > 0 &&
+              (await ownedEntries(outbox, keyFor(1))).length == 1,
+        );
       });
       await tester.pumpAndSettle();
 
