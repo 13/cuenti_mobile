@@ -7,6 +7,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
+/// A queue [TransactionOutbox.sideline] set aside: its subdirectory, and
+/// the account it recorded as owner -- null when that record is missing or
+/// unreadable, in which case nobody may reclaim it.
+class SidelinedQueue {
+  const SidelinedQueue(this.directory, this.owner);
+
+  final Directory directory;
+  final String? owner;
+}
+
 /// Transaction writes the server has not accepted yet, kept on disk.
 ///
 /// One JSON file per entry in the app-support directory -- the same store
@@ -91,21 +101,33 @@ class TransactionOutbox {
   /// throwing, and never as unowned.
   Future<String?> owner() async {
     if (!_ownerFile.existsSync()) return null;
+    return _readOwnerFile(_ownerFile) ?? unattributableOwner;
+  }
+
+  /// Reads one owner file, wherever it is. Shared by [owner] for the root
+  /// and [sidelinedQueues] for each subdirectory, so the two cannot
+  /// disagree about what counts as readable.
+  ///
+  /// A file that parses but names no account, or does not parse at all,
+  /// logs here and reads as null -- the same two log lines [owner] used to
+  /// print itself, before it folded this result into [unattributableOwner].
+  static String? _readOwnerFile(File file) {
+    if (!file.existsSync()) return null;
     try {
-      final decoded = jsonDecode(_ownerFile.readAsStringSync());
+      final decoded = jsonDecode(file.readAsStringSync());
       final account = decoded is Map<String, dynamic>
           ? decoded['account']
           : null;
       if (account is String && account.isNotEmpty) return account;
       debugPrint('TransactionOutbox: owner file names no account');
-      return unattributableOwner;
+      return null;
       // A malformed owner file must be answered rather than crash the
       // caller, so any failure here -- bad JSON, wrong shape -- is caught
       // broadly rather than matched to one exception type.
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       debugPrint('TransactionOutbox: unreadable owner file: $e');
-      return unattributableOwner;
+      return null;
     }
   }
 
@@ -254,6 +276,62 @@ class TransactionOutbox {
       final name = file.uri.pathSegments.last;
       await file.rename('${target.path}/$name');
     }
+  }
+
+  /// Every queue [sideline] has set aside, oldest first, each with the
+  /// owner it recorded. Order is by directory name, which starts with the
+  /// moment of the sideline.
+  ///
+  /// Keyed on the `.sidelined-` prefix rather than "any subdirectory": a
+  /// sidelined queue is the only kind of subdirectory this store ever
+  /// creates, but naming the prefix rather than the shape means a future
+  /// subdirectory for something else does not silently show up here.
+  Future<List<SidelinedQueue>> sidelinedQueues() async {
+    if (!_directory.existsSync()) return const [];
+    final dirs =
+        _directory
+            .listSync()
+            .whereType<Directory>()
+            .where(
+              (d) => d.uri.pathSegments
+                  .lastWhere((s) => s.isNotEmpty)
+                  .startsWith('.sidelined-'),
+            )
+            .toList()
+          ..sort((a, b) => a.path.compareTo(b.path));
+    return [
+      for (final d in dirs)
+        SidelinedQueue(d, _readOwnerFile(File('${d.path}/.owner.json'))),
+    ];
+  }
+
+  /// Moves a sidelined queue's entries back into the root and removes the
+  /// subdirectory. The owner file inside it is deleted, not moved: whether
+  /// the root is claimed is the caller's decision, not this method's.
+  ///
+  /// Overwrites nothing. An entry whose filename already exists in the root
+  /// is left in the subdirectory, the subdirectory is kept, and the return
+  /// is false. Local ids are a timestamp plus a counter, so this cannot
+  /// happen; the rule makes the impossible case a no-op rather than a loss.
+  Future<bool> restore(SidelinedQueue queue) async {
+    final sub = queue.directory;
+    if (!sub.existsSync()) return true;
+    var complete = true;
+    for (final file in sub.listSync().whereType<File>()) {
+      final name = file.uri.pathSegments.last;
+      if (name == '.owner.json') {
+        await file.delete();
+        continue;
+      }
+      final target = File('${_directory.path}/$name');
+      if (target.existsSync()) {
+        complete = false;
+        continue;
+      }
+      await file.rename(target.path);
+    }
+    if (complete) await sub.delete(recursive: true);
+    return complete;
   }
 }
 

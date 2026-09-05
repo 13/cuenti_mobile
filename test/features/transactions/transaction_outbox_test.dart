@@ -22,17 +22,21 @@ void main() {
 
   tearDown(() => dir.deleteSync(recursive: true));
 
-  PendingTransaction entry(String id, {int minute = 0, String? rejection}) =>
-      PendingTransaction(
-        localId: id,
-        operation: PendingOperation.create,
-        transaction: Transaction(
-          amount: 1,
-          transactionDate: DateTime(2026, 9, 4),
-        ),
-        queuedAt: DateTime(2026, 9, 4, 10, minute),
-        rejection: rejection,
-      );
+  PendingTransaction entry(
+    String id, {
+    int minute = 0,
+    String? rejection,
+    double amount = 1,
+  }) => PendingTransaction(
+    localId: id,
+    operation: PendingOperation.create,
+    transaction: Transaction(
+      amount: amount,
+      transactionDate: DateTime(2026, 9, 4),
+    ),
+    queuedAt: DateTime(2026, 9, 4, 10, minute),
+    rejection: rejection,
+  );
 
   test('a store opened normally is not a fallback', () {
     expect(TransactionOutbox(dir).isFallback, isFalse);
@@ -358,6 +362,94 @@ void main() {
         expect(await outbox.all(), hasLength(1));
       },
     );
+  });
+
+  group('sidelined queues', () {
+    test('a fresh store has none', () async {
+      expect(await TransactionOutbox(dir).sidelinedQueues(), isEmpty);
+    });
+
+    test('a sidelined queue is listed with its recorded owner', () async {
+      final outbox = TransactionOutbox(dir);
+      await outbox.add(entry('local-1'));
+      await outbox.setOwner('key-a');
+
+      await outbox.sideline();
+
+      final queues = await outbox.sidelinedQueues();
+      expect(queues, hasLength(1));
+      expect(queues.single.owner, 'key-a');
+      expect(queues.single.directory.existsSync(), isTrue);
+    });
+
+    test('a sidelined queue with no readable owner lists as null', () async {
+      final outbox = TransactionOutbox(dir);
+      await outbox.add(entry('local-1'));
+      await outbox.setOwner('key-a');
+      await outbox.sideline();
+      final sub = (await outbox.sidelinedQueues()).single.directory;
+      File('${sub.path}/.owner.json').writeAsStringSync('{broken');
+
+      expect((await outbox.sidelinedQueues()).single.owner, isNull);
+    });
+
+    test(
+      'restore brings the entries back and removes the subdirectory',
+      () async {
+        final outbox = TransactionOutbox(dir);
+        await outbox.add(entry('local-1'));
+        await outbox.add(entry('local-2'));
+        await outbox.setOwner('key-a');
+        await outbox.sideline();
+        expect(await outbox.all(), isEmpty);
+
+        final queue = (await outbox.sidelinedQueues()).single;
+        final done = await outbox.restore(queue);
+
+        expect(done, isTrue);
+        expect(
+          (await outbox.all()).map((e) => e.localId),
+          containsAll(['local-1', 'local-2']),
+        );
+        expect(queue.directory.existsSync(), isFalse);
+        expect(await outbox.sidelinedQueues(), isEmpty);
+      },
+    );
+
+    // restore() moves entries, not ownership. Whoever owns the root keeps
+    // it; the caller decides whether the root should be claimed.
+    test('restore does not touch the root owner file', () async {
+      final outbox = TransactionOutbox(dir);
+      await outbox.add(entry('local-1'));
+      await outbox.setOwner('key-a');
+      await outbox.sideline();
+      await outbox.setOwner('key-b');
+
+      await outbox.restore((await outbox.sidelinedQueues()).single);
+
+      expect(await outbox.owner(), 'key-b');
+    });
+
+    // Local ids are a timestamp and a counter, so this cannot happen. The
+    // rule exists so the impossible case is a no-op and not a loss.
+    test('restore never overwrites an entry already in the root', () async {
+      final outbox = TransactionOutbox(dir);
+      await outbox.add(entry('local-1'));
+      await outbox.setOwner('key-a');
+      await outbox.sideline();
+      await outbox.add(entry('local-1', amount: 2));
+
+      final queue = (await outbox.sidelinedQueues()).single;
+      final done = await outbox.restore(queue);
+
+      expect(done, isFalse);
+      expect((await outbox.all()).single.transaction.amount, 2);
+      expect(
+        queue.directory.existsSync(),
+        isTrue,
+        reason: 'the colliding entry stays where it was',
+      );
+    });
   });
 
   test('an entry whose localId contains / and .. round-trips: add(), all() '
