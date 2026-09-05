@@ -400,6 +400,20 @@ void main() {
       expect(await outbox.sidelinedQueues(), hasLength(1));
     });
 
+    // The claim of a free root is made for the sake of the entries coming
+    // back into it. With nothing of ours to bring back there is no such
+    // reason, and claiming anyway would be a claim made on the strength of
+    // somebody else's set-aside queue -- it would seal, from the upgrade
+    // sheet, a root this account has no entries in.
+    test('a free root with nothing of ours to restore stays unowned', () async {
+      await sidelineAs('key-b', ['b-1']);
+      // The root is now empty and has no owner file.
+
+      expect(await reclaimSidelined(outbox, 'key-a'), 0);
+      expect(await outbox.owner(), isNull);
+      expect((await outbox.sidelinedQueues()).single.owner, 'key-b');
+    });
+
     // The first write after a queue was set aside is when it comes back.
     test("a claim reclaims the new owner's sidelined queue", () async {
       await sidelineAs('key-a', ['a-1']);
@@ -431,6 +445,58 @@ void main() {
 
       expect(await outbox.owner(), 'key-a');
       expect((await ownedEntries(outbox, 'key-a')).single.localId, 'a-1');
+    });
+
+    // The ordering that actually needs the chain, and the reason
+    // reclaimSidelined has one at all. The test above runs claim-then-
+    // reclaim, where the reclaim finds a root already ours with nothing of
+    // ours left and is a no-op either way; unchained, it still passes.
+    //
+    // Reclaim-then-claim is where an interleave costs something. The
+    // reclaim is renaming a's entries into a root a owns; the claim reads
+    // that root as foreign and sidelines whatever is in it. Run
+    // concurrently, the sideline lands between two of the restore's
+    // renames, sweeps up the entries that had already arrived, and then
+    // claims the root for b -- entries a alone could reclaim, in a root
+    // ownedEntries hands to b, which is the exact leak the ownership rules
+    // exist to prevent. Chained, the restore finishes before the claim
+    // starts and every one of a's entries moves together.
+    //
+    // Enough entries to straddle a sideline: with one or two, both calls'
+    // work lands in the same turn of the event loop and the interleave
+    // never gets the chance to show itself.
+    test("a claim racing a reclaim never lands one account's entries in "
+        "another's root", () async {
+      const count = 60;
+      for (var i = 0; i < count; i++) {
+        await queue('a-$i');
+      }
+      await outbox.setOwner('key-a');
+      await outbox.sideline();
+      // The root is a's again, and a's entries are waiting to come back.
+      await outbox.setOwner('key-a');
+
+      await Future.wait([
+        reclaimSidelined(outbox, 'key-a'),
+        claimForWriting(outbox, 'key-b'),
+      ]);
+
+      expect(
+        await ownedEntries(outbox, 'key-b'),
+        isEmpty,
+        reason: "not one of a's entries may end up readable by b",
+      );
+      final sidelined = (await outbox.sidelinedQueues()).single;
+      expect(sidelined.owner, 'key-a');
+      expect(
+        sidelined.directory
+            .listSync()
+            .whereType<File>()
+            .where((f) => !f.uri.pathSegments.last.startsWith('.'))
+            .length,
+        count,
+        reason: "all of a's entries stay together, none stranded",
+      );
     });
   });
 }

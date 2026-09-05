@@ -158,7 +158,13 @@ Future<void> claimForWriting(
 ///
 /// Returns how many queues came back. Serialized with [claimForWriting]
 /// on the same chain: both move files, and interleaving a restore with a
-/// sideline could move an entry twice or drop it.
+/// sideline could move an entry twice or drop it -- a claim that sidelines
+/// halfway through a restore carries whichever entries had already landed
+/// into the root it then claims for somebody else.
+///
+/// Because it waits on that chain, **nothing already running on the chain
+/// may call this**: it would wait on itself and never resolve. Code inside
+/// [claimForWriting]'s chain calls `_reclaim` directly instead.
 Future<int> reclaimSidelined(TransactionOutbox outbox, String? accountKey) {
   final previous = (_claimChains[outbox] ?? Future<void>.value()).catchError(
     (_) {},
@@ -175,12 +181,30 @@ Future<int> _reclaim(TransactionOutbox outbox, String? accountKey) async {
   final rootIsFree = owner == null && (await outbox.all()).isEmpty;
   if (!rootIsOurs && !rootIsFree) return 0;
 
+  final ours = (await outbox.sidelinedQueues())
+      .where((q) => q.owner == accountKey)
+      .toList();
+  // Nothing of ours to bring back: leave the root exactly as it was, an
+  // empty unowned one included. Claiming it would be a claim made on the
+  // strength of somebody else's set-aside queue.
+  if (ours.isEmpty) return 0;
+
+  // The claim goes first, before a single entry moves. Restoring first and
+  // claiming last leaves a window -- between the last rename and the
+  // claim -- in which the root holds entries and no owner file, and an
+  // unowned queue is the one state this feature must never invent by
+  // accident: [TransactionOutbox.sideline] orders its own moves to avoid
+  // exactly that. Interrupted this way round, the entries are still in the
+  // subdirectory and the empty root is already ours, so the next reclaim
+  // finishes the job. Interrupted the other way round, entries only this
+  // account could reclaim become entries the upgrade sheet offers to
+  // whoever signs in next.
+  if (rootIsFree) await outbox.setOwner(accountKey);
+
   var restored = 0;
-  for (final queue in await outbox.sidelinedQueues()) {
-    if (queue.owner != accountKey) continue;
+  for (final queue in ours) {
     if (await outbox.restore(queue)) restored++;
   }
-  if (restored > 0 && rootIsFree) await outbox.setOwner(accountKey);
   return restored;
 }
 
