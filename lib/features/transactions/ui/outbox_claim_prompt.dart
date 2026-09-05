@@ -93,7 +93,7 @@ Future<void> promptForForeignOutbox(BuildContext context, WidgetRef ref) async {
   // back" true without the user having to save something first. The
   // app-start drain has already run, so a reclaimed queue has to be sent
   // from here.
-  if (await reclaimSidelined(outbox, accountKey) > 0) drainOutbox(ref);
+  await _reclaimAndDrain(ref);
 
   final claim = await claimStateOf(outbox, accountKey);
   if (claim == OutboxClaim.empty || claim == OutboxClaim.ours) return;
@@ -136,6 +136,7 @@ Future<void> promptForForeignOutbox(BuildContext context, WidgetRef ref) async {
       );
       if (adopt) {
         await outbox.setOwner(accountKey);
+        if (!context.mounted) return;
         // The button says "Send as this account", so something has to
         // send. The app-start drain ran long before this sheet was
         // answered, and nothing else is waiting on the answer, so without
@@ -149,4 +150,31 @@ Future<void> promptForForeignOutbox(BuildContext context, WidgetRef ref) async {
     case OutboxClaim.ours:
       return;
   }
+
+  // The reclaim above and the sheet are mutually exclusive within a single
+  // call: whenever that reclaim brings something back, the root is ours
+  // and the switch above never runs. So the case that matters is the
+  // other one -- the sheet DID run, and its answer just freed the root
+  // (a foreign queue discarded, or an unowned one adopted). That is
+  // exactly the moment a queue this account set aside earlier becomes
+  // claimable, and nothing else in this call has reclaimed it yet. This is
+  // the fix for the headline story: mistype the server URL, save offline,
+  // correct it -- the corrected key sees the wrong-URL entry as foreign,
+  // the first reclaim above returns 0, the sheet asks, the user discards,
+  // and only now is the root free for this account's own set-aside queue
+  // to come back, with no save and no remount required.
+  if (!context.mounted) return;
+  await _reclaimAndDrain(ref);
+}
+
+/// Brings back whatever [reclaimSidelined] finds claimable for the
+/// signed-in account, and sends it if anything came back.
+Future<void> _reclaimAndDrain(WidgetRef ref) async {
+  final outbox = ref.read(transactionOutboxProvider);
+  final accountKey = accountKeyFor(
+    ref.read(apiClientProvider).baseUrl,
+    ref.read(authControllerProvider),
+  );
+  if (accountKey == null) return;
+  if (await reclaimSidelined(outbox, accountKey) > 0) drainOutbox(ref);
 }

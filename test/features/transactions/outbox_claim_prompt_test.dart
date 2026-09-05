@@ -615,4 +615,52 @@ void main() {
       expect(await outbox.sidelinedQueues(), hasLength(1));
     });
   });
+  group('reclaiming once the sheet frees the root', () {
+    // I3, the spec's headline story: the reclaim at the top of the
+    // function and the sheet are mutually exclusive in one call -- the
+    // reclaim ran first and found the root foreign, which is exactly why
+    // the sheet is open at all. Discarding is what frees the root, and
+    // that has to trigger a second reclaim in the same call, or account
+    // 1's own set-aside queue stays set aside until something else
+    // remounts this screen.
+    testWidgets(
+      'discarding a foreign queue reclaims our own set-aside queue and '
+      'drains it, in the same prompt',
+      (tester) async {
+        await tester.runAsync(() async {
+          await queue('one-1');
+          await outbox.setOwner(keyFor(1));
+          await outbox.sideline();
+          await queue('two-1');
+          await outbox.setOwner(keyFor(2));
+        });
+
+        final sync = _RecordingSync();
+        await pumpHost(tester, userId: 1, sync: sync);
+
+        expect(find.textContaining('another account'), findsOneWidget);
+
+        await tapAndWait(
+          tester,
+          find.widgetWithText(FilledButton, 'Discard'),
+          () async =>
+              sync.drains > 0 &&
+              (await ownedEntries(outbox, keyFor(1))).length == 1,
+        );
+
+        expect(
+          (await ownedEntries(outbox, keyFor(1))).single.localId,
+          'one-1',
+        );
+        expect(await outbox.owner(), keyFor(1));
+        expect(
+          sync.drains,
+          greaterThan(0),
+          reason:
+              'a queue reclaimed this late already missed the '
+              'app-start drain',
+        );
+      },
+    );
+  });
 }
