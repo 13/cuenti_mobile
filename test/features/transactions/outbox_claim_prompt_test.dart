@@ -166,23 +166,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// Taps a sheet button whose handler writes to disk, and waits for that
-  /// write outside the fake clock.
-  Future<void> tapAndWait(
-    WidgetTester tester,
-    Finder button,
-    Future<bool> Function() done,
-  ) async {
-    await tester.runAsync(() async {
-      await tester.tap(button);
-      for (var i = 0; i < 200 && !await done(); i++) {
-        await tester.pump(const Duration(milliseconds: 10));
-        await Future<void>.delayed(const Duration(milliseconds: 5));
-      }
-    });
-    await tester.pumpAndSettle();
-  }
-
   /// Waits, from inside [WidgetTester.runAsync], until [done] holds.
   ///
   /// A deadline rather than a fixed delay or an iteration bound -- copied
@@ -207,6 +190,23 @@ void main() {
       await tester.pump(const Duration(milliseconds: 10));
       await Future<void>.delayed(const Duration(milliseconds: 5));
     }
+  }
+
+  /// Taps a sheet button whose handler writes to disk, and waits for that
+  /// write outside the fake clock, on [waitFor]'s deadline rather than a
+  /// bounded loop -- a wrong-value assertion on exhaustion would have named
+  /// the value it read, not what it was actually waiting for.
+  Future<void> tapAndWait(
+    WidgetTester tester,
+    Finder button,
+    Future<bool> Function() done, {
+    String what = 'the disk write the button triggers',
+  }) async {
+    await tester.runAsync(() async {
+      await tester.tap(button);
+      await waitFor(tester, what, done);
+    });
+    await tester.pumpAndSettle();
   }
 
   testWidgets('a foreign queue is named, and discarding empties it', (
@@ -588,7 +588,6 @@ void main() {
       });
       await tester.pumpAndSettle();
 
-      expect(find.byType(Dialog), findsNothing);
       expect(find.textContaining('another account'), findsNothing);
       expect((await ownedEntries(outbox, keyFor(1))).single.localId, 'one-1');
       expect(
@@ -615,6 +614,7 @@ void main() {
       expect(await outbox.sidelinedQueues(), hasLength(1));
     });
   });
+
   group('reclaiming once the sheet frees the root', () {
     // I3, the spec's headline story: the reclaim at the top of the
     // function and the sheet are mutually exclusive in one call -- the

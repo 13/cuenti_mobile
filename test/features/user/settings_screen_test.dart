@@ -66,6 +66,34 @@ class _FakeAuthController extends AuthController {
   }
 }
 
+/// Waits, from inside [WidgetTester.runAsync], until the confirm button's
+/// handler has called [AuthController.logout].
+///
+/// A deadline rather than a fixed iteration bound: a regression that stops
+/// the handler completing (the real disk I/O `discardEntries()` or
+/// `clear()` do, ahead of `logout()` in the same handler) hangs on a
+/// message naming what it was waiting for, rather than surfacing as a
+/// wrong-value assertion that reads like the test itself is broken. Must
+/// be called from inside [WidgetTester.runAsync] -- the real I/O the
+/// handler does does not progress once that escape hatch closes.
+Future<void> _waitForLogout(
+  WidgetTester tester,
+  _FakeAuthController auth, {
+  Duration timeout = const Duration(seconds: 20),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (auth.logoutCalls == 0) {
+    if (DateTime.now().isAfter(deadline)) {
+      fail(
+        'timed out after ${timeout.inSeconds}s waiting for logout() to be '
+        'called',
+      );
+    }
+    await tester.pump(const Duration(milliseconds: 10));
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+  }
+}
+
 void main() {
   late MockUserRepository userRepo;
   late MockCurrenciesRepository currenciesRepo;
@@ -449,10 +477,7 @@ void main() {
       // its wait both live inside runAsync.
       await tester.runAsync(() async {
         await tester.tap(find.widgetWithText(FilledButton, 'Logout'));
-        for (var i = 0; i < 200 && auth.logoutCalls == 0; i++) {
-          await tester.pump(const Duration(milliseconds: 10));
-          await Future<void>.delayed(const Duration(milliseconds: 5));
-        }
+        await _waitForLogout(tester, auth);
       });
       await tester.pumpAndSettle();
 
@@ -490,10 +515,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.runAsync(() async {
           await tester.tap(logout);
-          for (var i = 0; i < 200 && auth.logoutCalls == 0; i++) {
-            await tester.pump(const Duration(milliseconds: 10));
-            await Future<void>.delayed(const Duration(milliseconds: 5));
-          }
+          await _waitForLogout(tester, auth);
         });
         await tester.pumpAndSettle();
 
@@ -531,10 +553,7 @@ void main() {
       // before logout() in the handler -- has already run.
       await tester.runAsync(() async {
         await tester.tap(find.widgetWithText(FilledButton, 'Logout'));
-        for (var i = 0; i < 200 && auth.logoutCalls == 0; i++) {
-          await tester.pump(const Duration(milliseconds: 10));
-          await Future<void>.delayed(const Duration(milliseconds: 5));
-        }
+        await _waitForLogout(tester, auth);
       });
       await tester.pumpAndSettle();
 
@@ -591,10 +610,7 @@ void main() {
 
         await tester.runAsync(() async {
           await tester.tap(find.widgetWithText(FilledButton, 'Logout'));
-          for (var i = 0; i < 200 && auth.logoutCalls == 0; i++) {
-            await tester.pump(const Duration(milliseconds: 10));
-            await Future<void>.delayed(const Duration(milliseconds: 5));
-          }
+          await _waitForLogout(tester, auth);
         });
         await tester.pumpAndSettle();
 
