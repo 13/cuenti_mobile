@@ -65,6 +65,7 @@ class TransactionsController extends _$TransactionsController {
     List<PendingTransaction> pending,
     TransactionFilter filter,
   ) {
+    final serverIds = {for (final t in fromServer) t.id};
     final deleted = {
       for (final e in pending)
         if (e.operation == PendingOperation.delete) e.transaction.id,
@@ -79,6 +80,18 @@ class TransactionsController extends _$TransactionsController {
         if (!deleted.contains(t.id)) updates[t.id] ?? t,
       for (final e in pending)
         if (e.operation == PendingOperation.create &&
+            matchesFilter(e.transaction, filter))
+          e.transaction,
+      // A refused update or delete whose row the server no longer returns
+      // has nowhere else to appear: the overlay above only lands on rows
+      // the server still has. Left out, it could never be shown, retried or
+      // discarded -- a phantom that only the sign-out count ever sees. It
+      // is shown as its own row, refused, so Discard can reach it. One
+      // still in flight stays hidden: the drain will send it or refuse it.
+      for (final e in pending)
+        if (e.operation != PendingOperation.create &&
+            e.isRejected &&
+            !serverIds.contains(e.transaction.id) &&
             matchesFilter(e.transaction, filter))
           e.transaction,
     ]..sort((a, b) => b.transactionDate.compareTo(a.transactionDate));

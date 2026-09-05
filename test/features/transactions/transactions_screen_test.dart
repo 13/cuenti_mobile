@@ -548,24 +548,31 @@ void main() {
     /// Claimed as well as written: in the app a queued write claims the
     /// queue for whoever made it, and a queue nobody has claimed reads as
     /// empty -- so an entry put straight on disk would never reach a row.
-    Future<void> queue(WidgetTester tester, {String? rejection}) =>
-        tester.runAsync(() async {
-          final outbox = TransactionOutbox(outboxDir);
-          await outbox.setOwner(_ourAccountKey);
-          await outbox.add(
-            PendingTransaction(
-              localId: 'local-1',
-              operation: PendingOperation.create,
-              transaction: Transaction(
-                amount: 12.34,
-                transactionDate: DateTime(2026, 9, 4),
-                payee: 'Aldi',
-              ),
-              queuedAt: DateTime(2026, 9, 4, 10),
-              rejection: rejection,
-            ),
-          );
-        });
+    Future<void> queue(
+      WidgetTester tester, {
+      String? rejection,
+      String localId = 'local-1',
+      PendingOperation operation = PendingOperation.create,
+      int? id,
+      String payee = 'Aldi',
+    }) => tester.runAsync(() async {
+      final outbox = TransactionOutbox(outboxDir);
+      await outbox.setOwner(_ourAccountKey);
+      await outbox.add(
+        PendingTransaction(
+          localId: localId,
+          operation: operation,
+          transaction: Transaction(
+            id: id,
+            amount: 12.34,
+            transactionDate: DateTime(2026, 9, 4),
+            payee: payee,
+          ),
+          queuedAt: DateTime(2026, 9, 4, 10),
+          rejection: rejection,
+        ),
+      );
+    });
 
     testWidgets('a transaction that has not been sent says so', (
       tester,
@@ -676,6 +683,51 @@ void main() {
       expect(find.text('Refused'), findsOneWidget);
       expect(find.textContaining('Refused: '), findsNothing);
     });
+
+    testWidgets(
+      'a refused edit of a row the server no longer has is shown, and can '
+      'be discarded',
+      (tester) async {
+        // The server page in this file has no id 777. The queued edit for
+        // it was refused (the drain took a 404), so it is an orphan:
+        // nothing the overlay could land on.
+        await queue(
+          tester,
+          localId: 'local-orphan',
+          operation: PendingOperation.update,
+          id: 777,
+          payee: 'Ghost',
+          rejection: 'Not found',
+        );
+        await pumpScreen(tester, outboxDir: outboxDir);
+
+        expect(find.text('Ghost'), findsOneWidget);
+        expect(find.textContaining('Refused'), findsOneWidget);
+
+        await tester.runAsync(() async {
+          await tester.tap(find.text('Discard'));
+          await waitForOutbox(
+            tester,
+            'the discarded orphan to leave the queue',
+            (entries) => entries.isEmpty,
+          );
+          await waitFor(
+            tester,
+            'the discarded orphan row to leave the list',
+            () async => find.text('Ghost').evaluate().isEmpty,
+          );
+        });
+        await tester.pumpAndSettle();
+
+        expect(find.text('Ghost'), findsNothing);
+        expect(
+          (await TransactionOutbox(
+            outboxDir,
+          ).all()).where((e) => e.localId == 'local-orphan'),
+          isEmpty,
+        );
+      },
+    );
 
     testWidgets('discarding removes it from the queue and the list', (
       tester,

@@ -52,7 +52,7 @@ final class TransactionsControllerProvider
 }
 
 String _$transactionsControllerHash() =>
-    r'43f062a1d5620cf7da13f3683712543ffb31df57';
+    r'1d5a1e1d592b6f3a94951d2246f9ec09f98ff890';
 
 final class TransactionsControllerFamily extends $Family
     with

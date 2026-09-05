@@ -55,11 +55,13 @@ void main() {
   late ProviderContainer container;
   late Directory defaultOutboxDir;
 
-  Transaction tx(int id) => Transaction(
-    id: id,
-    amount: 10,
-    transactionDate: DateTime(2026, 1, id),
-  );
+  Transaction tx(int id, {double amount = 10, int? fromAccountId}) =>
+      Transaction(
+        id: id,
+        amount: amount,
+        transactionDate: DateTime(2026, 1, id),
+        fromAccountId: fromAccountId,
+      );
 
   setUpAll(() {
     registerFallbackValue(
@@ -411,6 +413,106 @@ void main() {
     expect(stateB.items, [tx(2)]);
     verify(() => repo.getPage(filter: filterA)).called(1);
     verify(() => repo.getPage(filter: filterB)).called(1);
+  });
+
+  group('mergePending', () {
+    test('a refused update whose row the server no longer has is surfaced', () {
+      final orphan = PendingTransaction(
+        localId: 'local-orphan',
+        operation: PendingOperation.update,
+        transaction: tx(7, amount: 42),
+        queuedAt: DateTime(2026, 9, 5, 10),
+        rejection: 'Not found',
+      );
+
+      final merged = TransactionsController.mergePending(
+        [tx(1), tx(2)],
+        [orphan],
+        const TransactionFilter(),
+      );
+
+      expect(merged.map((t) => t.id), contains(7));
+      expect(merged.singleWhere((t) => t.id == 7).amount, 42);
+    });
+
+    // In flight, the drain will settle it one way or the other. Hiding it
+    // until then is today's behaviour and it stays.
+    test('an update for a missing row that is not refused stays hidden', () {
+      final inFlight = PendingTransaction(
+        localId: 'local-flight',
+        operation: PendingOperation.update,
+        transaction: tx(7, amount: 42),
+        queuedAt: DateTime(2026, 9, 5, 10),
+      );
+
+      final merged = TransactionsController.mergePending(
+        [tx(1)],
+        [inFlight],
+        const TransactionFilter(),
+      );
+
+      expect(merged.map((t) => t.id), isNot(contains(7)));
+    });
+
+    test('a refused delete for a missing row is surfaced too', () {
+      final orphan = PendingTransaction(
+        localId: 'local-del',
+        operation: PendingOperation.delete,
+        transaction: tx(9, amount: 5),
+        queuedAt: DateTime(2026, 9, 5, 10),
+        rejection: 'Not found',
+      );
+
+      final merged = TransactionsController.mergePending(
+        [tx(1)],
+        [orphan],
+        const TransactionFilter(),
+      );
+
+      expect(merged.map((t) => t.id), contains(9));
+    });
+
+    // A refused update whose row the server STILL returns is not an
+    // orphan; it is overlaid as before and must not be duplicated.
+    test(
+      'a refused update whose row still exists is overlaid, not doubled',
+      () {
+        final refused = PendingTransaction(
+          localId: 'local-still',
+          operation: PendingOperation.update,
+          transaction: tx(1, amount: 99),
+          queuedAt: DateTime(2026, 9, 5, 10),
+          rejection: 'Invalid',
+        );
+
+        final merged = TransactionsController.mergePending(
+          [tx(1)],
+          [refused],
+          const TransactionFilter(),
+        );
+
+        expect(merged.where((t) => t.id == 1), hasLength(1));
+        expect(merged.single.amount, 99);
+      },
+    );
+
+    test('a surfaced orphan obeys the active filter', () {
+      final orphan = PendingTransaction(
+        localId: 'local-orphan',
+        operation: PendingOperation.update,
+        transaction: tx(7, amount: 42, fromAccountId: 1),
+        queuedAt: DateTime(2026, 9, 5, 10),
+        rejection: 'Not found',
+      );
+
+      final merged = TransactionsController.mergePending(
+        const [],
+        [orphan],
+        const TransactionFilter(accountId: 999),
+      );
+
+      expect(merged, isEmpty);
+    });
   });
 
   group('saving without a connection', () {
