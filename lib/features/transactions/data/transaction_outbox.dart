@@ -313,16 +313,20 @@ class TransactionOutbox {
   /// is left in the subdirectory, the subdirectory is kept, and the return
   /// is false. Local ids are a timestamp plus a counter, so this cannot
   /// happen; the rule makes the impossible case a no-op rather than a loss.
+  ///
+  /// On that failure path the subdirectory is left exactly as it was
+  /// found, owner file included: the owner file is only deleted once every
+  /// entry has moved, so a colliding restore leaves the queue still
+  /// attributable and a later retry -- once the collision is gone -- can
+  /// still find whose it was.
   Future<bool> restore(SidelinedQueue queue) async {
     final sub = queue.directory;
     if (!sub.existsSync()) return true;
+    final ownerFile = File('${sub.path}/.owner.json');
     var complete = true;
     for (final file in sub.listSync().whereType<File>()) {
       final name = file.uri.pathSegments.last;
-      if (name == '.owner.json') {
-        await file.delete();
-        continue;
-      }
+      if (name == '.owner.json') continue;
       final target = File('${_directory.path}/$name');
       if (target.existsSync()) {
         complete = false;
@@ -330,8 +334,10 @@ class TransactionOutbox {
       }
       await file.rename(target.path);
     }
-    if (complete) await sub.delete(recursive: true);
-    return complete;
+    if (!complete) return false;
+    if (ownerFile.existsSync()) await ownerFile.delete();
+    await sub.delete(recursive: true);
+    return true;
   }
 }
 

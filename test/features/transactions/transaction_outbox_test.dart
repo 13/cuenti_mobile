@@ -449,6 +449,16 @@ void main() {
         isTrue,
         reason: 'the colliding entry stays where it was',
       );
+      expect(
+        File('${queue.directory.path}/.owner.json').existsSync(),
+        isTrue,
+        reason: 'a failed restore must not strand an ownerless queue',
+      );
+      expect(
+        (await outbox.sidelinedQueues()).single.owner,
+        'key-a',
+        reason: 'a later retry must still be able to find whose it was',
+      );
     });
   });
 
