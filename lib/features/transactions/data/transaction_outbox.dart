@@ -199,21 +199,20 @@ class TransactionOutbox {
     await replace(entry.copyWith(rejection: reason));
   }
 
-  Future<void> clear() async {
-    if (!_directory.existsSync()) return;
-    await _directory.delete(recursive: true);
-    await _directory.create(recursive: true);
-  }
-
   /// Deletes the entries the queue is currently holding, and the owner
   /// file that says whose they are -- and nothing else.
   ///
-  /// [clear] is recursive, so it also takes any `.sidelined-...`
-  /// subdirectory with it: entries that were never in the count the
-  /// caller showed the user before asking. The foreign-queue sheet counts
-  /// the root entries and offers to discard them, so it must destroy
-  /// exactly those; sign-out keeps [clear], because "sign out and get rid
-  /// of my unsent work" does mean all of it.
+  /// The `...` in "and nothing else" is a `.sidelined-...` subdirectory:
+  /// a queue set aside because it could not be attributed to whoever was
+  /// writing. Those entries were never in the count shown to the user
+  /// before they were asked, and they may still be reclaimed by the
+  /// account that owns them, so nothing here may take them.
+  ///
+  /// Both callers -- the foreign-queue sheet's Discard, and sign-out --
+  /// warn using a count of the root's own entries, so both must destroy
+  /// exactly those. A recursive wipe once stood here and did more than
+  /// either had counted; if you find yourself reaching for one, that is
+  /// the bug, not the shortcut.
   Future<void> discardEntries() async {
     if (!_directory.existsSync()) return;
     for (final file in _directory.listSync().whereType<File>()) {

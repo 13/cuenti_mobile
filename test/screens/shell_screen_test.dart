@@ -328,11 +328,21 @@ void main() {
       await queueOne(tester);
       final auth = await openDrawerAndTapLogout(tester);
 
-      // clear() and logout() both run from inside the sheet's handler, so
-      // the tap and the wait for its effect happen inside runAsync.
+      // discardEntries() and logout() both run from inside the sheet's
+      // handler, so the tap and the wait for its effect happen inside
+      // runAsync -- the real disk I/O does not progress once that escape
+      // hatch closes.
+      //
+      // A deadline rather than an iteration bound: if a regression stops
+      // the handler completing, this says so, instead of falling through
+      // to a wrong-value assertion that reads like the test is broken.
       await tester.runAsync(() async {
         await tester.tap(find.widgetWithText(FilledButton, 'Logout'));
-        for (var i = 0; i < 200 && auth.logoutCalls == 0; i++) {
+        final deadline = DateTime.now().add(const Duration(seconds: 20));
+        while (auth.logoutCalls == 0) {
+          if (DateTime.now().isAfter(deadline)) {
+            fail('timed out after 20s waiting for the sign-out to complete');
+          }
           await tester.pump(const Duration(milliseconds: 10));
           await Future<void>.delayed(const Duration(milliseconds: 5));
         }

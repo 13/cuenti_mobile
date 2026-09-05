@@ -126,19 +126,13 @@ void main() {
     // throws MissingPluginException: the "no platform channels at all"
     // case the fallback exists for.
     final fallback = await TransactionOutbox.openOrFallback();
-    addTearDown(fallback.clear);
+    // The fallback store is a fixed path in system temp, shared with any
+    // other run, so this has to clean up after itself.
+    addTearDown(fallback.discardEntries);
 
     await fallback.add(entry('a'));
 
     expect((await fallback.all()).map((e) => e.localId), ['a']);
-  });
-
-  test('clearing empties it', () async {
-    await outbox.add(entry('a'));
-
-    await outbox.clear();
-
-    expect(await outbox.all(), isEmpty);
   });
 
   test('atomic write means a partial JSON file is skipped, and a '
@@ -233,11 +227,13 @@ void main() {
     );
   });
 
-  test('clear() drops the owner along with the entries', () async {
+  test('discardEntries drops the owner along with the entries', () async {
+    await outbox.add(entry('a'));
     await outbox.setOwner('https://cuenti.muh#42');
 
-    await outbox.clear();
+    await outbox.discardEntries();
 
+    expect(await outbox.all(), isEmpty);
     expect(await outbox.owner(), isNull);
   });
 

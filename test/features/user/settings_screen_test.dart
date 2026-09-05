@@ -70,8 +70,8 @@ class _FakeAuthController extends AuthController {
 /// handler has called [AuthController.logout].
 ///
 /// A deadline rather than a fixed iteration bound: a regression that stops
-/// the handler completing (the real disk I/O `discardEntries()` or
-/// `clear()` do, ahead of `logout()` in the same handler) hangs on a
+/// the handler completing (the real disk I/O `discardEntries()` does,
+/// ahead of `logout()` in the same handler) hangs on a
 /// message naming what it was waiting for, rather than surfacing as a
 /// wrong-value assertion that reads like the test itself is broken. Must
 /// be called from inside [WidgetTester.runAsync] -- the real I/O the

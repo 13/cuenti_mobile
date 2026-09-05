@@ -22,7 +22,13 @@ void main() {
 
   test('every outbox read goes through outbox_ownership.dart', () {
     final offenders = <String>[];
-    final banned = RegExp(r'\.all\(\)');
+    // `.all()` is the obvious way past ownership. The other two are the
+    // recovery primitives: a sidelined queue is somebody's entries, and
+    // `sidelinedQueues()` hands out its directory, so a caller with one
+    // can list and parse the files inside without ever touching `.all()`.
+    // Reaching them outside the ownership layer skips the gate that
+    // decides whether this account may have them back at all.
+    final banned = RegExp(r'\.all\(\)|sidelinedQueues\(\)|\.restore\(');
 
     for (final file in Directory('lib').listSync(recursive: true)) {
       if (file is! File || !file.path.endsWith('.dart')) continue;
