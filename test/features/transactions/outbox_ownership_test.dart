@@ -400,6 +400,47 @@ void main() {
       expect(await outbox.sidelinedQueues(), hasLength(1));
     });
 
+    // I2: the commonest two-account case. B's queue drains successfully,
+    // so B's sign-out skips the recursive clear() (it only wipes a
+    // non-empty owned queue) and leaves `.owner.json` = B sitting on an
+    // otherwise empty root. A signs in and has a sidelined queue of their
+    // own -- the root has nothing to protect, so it comes back.
+    test(
+      'brings back a queue of ours into an empty root another account '
+      'still owns',
+      () async {
+        await sidelineAs('key-a', ['a-1']);
+        await outbox.setOwner('key-b');
+        // The root is empty (nothing was queued after the sideline) but
+        // still bears key-b's owner file.
+
+        expect(await reclaimSidelined(outbox, 'key-a'), 1);
+        expect(await outbox.owner(), 'key-a');
+        expect(
+          (await ownedEntries(outbox, 'key-a')).map((e) => e.localId),
+          ['a-1'],
+        );
+      },
+    );
+
+    // The unattributable case sits beside the one above: an owner file
+    // that will not parse must not read as "nothing to protect" while the
+    // root still holds entries nobody but their true owner can attribute.
+    test(
+      'does nothing when the root is unattributable and not actually '
+      'empty',
+      () async {
+        await sidelineAs('key-a', ['a-1']);
+        await queue('legacy-1');
+        await outbox.setOwner('key-b');
+        File('${dir.path}/.owner.json').writeAsStringSync('{not json');
+
+        expect(await reclaimSidelined(outbox, 'key-a'), 0);
+        expect(await outbox.sidelinedQueues(), hasLength(1));
+        expect(await outbox.all(), hasLength(1));
+      },
+    );
+
     // The claim of a free root is made for the sake of the entries coming
     // back into it. With nothing of ours to bring back there is no such
     // reason, and claiming anyway would be a claim made on the strength of

@@ -178,7 +178,14 @@ Future<int> _reclaim(TransactionOutbox outbox, String? accountKey) async {
   if (accountKey == null) return 0;
   final owner = await outbox.owner();
   final rootIsOurs = owner == accountKey;
-  final rootIsFree = owner == null && (await outbox.all()).isEmpty;
+  // Free means empty, whoever's owner file is sitting on it. The common
+  // two-account case leaves an empty root still bearing another account's
+  // (or an unattributable) owner file -- B's queue drained and B's
+  // sign-out only clears a non-empty owned queue, so `.owner.json` = B is
+  // left behind with nothing in the root. An empty queue has nothing to
+  // protect, and claimForWriting already takes an empty queue over on the
+  // first write regardless of whose name is on it.
+  final rootIsFree = (await outbox.all()).isEmpty;
   if (!rootIsOurs && !rootIsFree) return 0;
 
   final ours = (await outbox.sidelinedQueues())
