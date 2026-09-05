@@ -1334,7 +1334,15 @@ class LDe extends L {
 
   @override
   String logoutPendingBody(int count) {
-    return '$count Buchungen haben den Server nicht erreicht. Beim Abmelden gehen sie verloren.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Buchungen haben den Server nicht erreicht. Beim Abmelden gehen sie verloren.',
+      one:
+          '1 Buchung hat den Server nicht erreicht. Beim Abmelden geht sie verloren.',
+    );
+    return '$_temp0';
   }
 
   @override

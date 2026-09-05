@@ -362,13 +362,6 @@ class TransactionsController extends _$TransactionsController {
         ..invalidate(accountsControllerProvider);
       return SaveOutcome.sent;
     } on NetworkException catch (_) {
-      // _queuedIdFor below is a lookup of its own, made before _enqueue is
-      // even called -- Dart evaluates a call's arguments before the call
-      // runs, so _enqueue's own claimForWriting would resolve ownership
-      // too late to help it. Claiming here first, so the lookup sees the
-      // queue it is searching rather than a sealed one. Idempotent: once
-      // this has run, _enqueue's own call to it is a no-op.
-      await claimForWriting(ref.read(transactionOutboxProvider), _accountKey);
       await _enqueue(
         current.items
             .firstWhere(

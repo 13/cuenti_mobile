@@ -96,6 +96,16 @@ file, `lib/features/transactions/data/outbox_ownership.dart`:
 - `Future<void> claimIfUnowned(Ref ref)` — writes the current key when the
   queue has no owner.
 
+> **Superseded during execution, and removed.** `claimIfUnowned` only ever
+> claimed an *unowned* queue; it had nothing to say about a queue owned by
+> someone else, because at the time one was never written by a second
+> account in the first place. `claimForWriting` replaced it once sidelining
+> was added: on a write, a foreign or unreadable owner is set aside
+> (`TransactionOutbox.sideline`) before the current account claims the now
+> empty root, and any queue that account had set aside earlier is reclaimed
+> onto it in the same step. `claimIfUnowned` had no caller left once
+> `claimForWriting` covered its case, and was deleted.
+
 `TransactionOutbox` itself stays a dumb store: it gains `owner` and
 `setOwner` and its `all()` keeps returning everything. A store whose `all()`
 silently omits rows is a store that lies; the filtering belongs above it,
@@ -153,6 +163,17 @@ New strings in all three catalogues:
 | `outboxUnknownBody` | `{count} unsent transactions were saved before this version. Send them as {account}, or discard them?` | `{count} nicht gesendete Buchungen wurden vor dieser Version gespeichert. Als {account} senden oder verwerfen?` | `{count} operazioni non inviate sono state salvate prima di questa versione. Inviarle come {account} o scartarle?` |
 | `outboxKeep` | `Keep` | `Behalten` | `Mantieni` |
 | `outboxSendAsThisAccount` | `Send as this account` | `Als dieses Konto senden` | `Invia come questo account` |
+
+> **Corrected by the final review: the Italian above is not what shipped.**
+> *Operazione* is generic banking language; this app calls a transaction
+> *movimento* everywhere else in the Italian catalogue, and a transaction
+> is masculine (*movimento*, not *operazione*). The final review changed
+> the four Italian strings above that said *operazione*/*operazioni*
+> (`outboxForeignTitle`, `outboxForeignBody`, `outboxUnknownTitle`,
+> `outboxUnknownBody`) to *movimento*/*movimenti*, and went further on the
+> two body strings: each grew an ICU plural (`=1{…} other{…}`) and more
+> detail than the table shows. `lib/l10n/app_it.arb` is the authority for
+> the wording that actually ships.
 
 `outboxForeignBody` needs `count` as `int`; `outboxUnknownBody` needs `count`
 as `int` and `account` as `String`. Discard reuses the existing

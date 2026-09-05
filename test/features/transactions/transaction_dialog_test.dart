@@ -748,16 +748,20 @@ void main() {
       // tests in transactions_screen_test do.
       await tester.runAsync(() async {
         await tester.tap(saveButton);
-        for (
-          var i = 0;
-          i < 200 && (await TransactionOutbox(outboxDir).all()).isEmpty;
-          i++
-        ) {
+        // Not "until the entry hits disk": the save sheet is still up
+        // then, with its spinner running, and a pumpAndSettle after
+        // runAsync can never settle a spinner it cannot see the end of.
+        // Wait for the sheet itself to close -- no spinner, no Save
+        // button -- which is the moment the save chain is really done.
+        final deadline = DateTime.now().add(const Duration(seconds: 20));
+        while (find.byType(CircularProgressIndicator).evaluate().isNotEmpty ||
+            find.widgetWithText(FilledButton, 'Save').evaluate().isNotEmpty) {
+          if (DateTime.now().isAfter(deadline)) {
+            fail('timed out waiting for the save sheet to close');
+          }
+          await tester.pump(const Duration(milliseconds: 10));
           await Future<void>.delayed(const Duration(milliseconds: 5));
         }
-        // The rest of the queued path (re-reading the outbox for the merge)
-        // is real I/O too.
-        await Future<void>.delayed(const Duration(milliseconds: 200));
       });
       await tester.pumpAndSettle();
 

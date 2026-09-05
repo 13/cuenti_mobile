@@ -1333,7 +1333,14 @@ class LIt extends L {
 
   @override
   String logoutPendingBody(int count) {
-    return '$count movimenti non hanno raggiunto il server. Uscendo andranno persi.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count movimenti non hanno raggiunto il server. Uscendo andranno persi.',
+      one: '1 movimento non ha raggiunto il server. Uscendo andrà perso.',
+    );
+    return '$_temp0';
   }
 
   @override

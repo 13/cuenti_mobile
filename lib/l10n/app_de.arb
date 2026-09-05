@@ -405,7 +405,7 @@
   "categoryCreateUnder": "unter {parent}",
   "categoryCreateTopLevel": "Neue Hauptkategorie",
   "logoutPendingTitle": "Nicht gesendete Buchungen",
-  "logoutPendingBody": "{count} Buchungen haben den Server nicht erreicht. Beim Abmelden gehen sie verloren.",
+  "logoutPendingBody": "{count, plural, =1{1 Buchung hat den Server nicht erreicht. Beim Abmelden geht sie verloren.} other{{count} Buchungen haben den Server nicht erreicht. Beim Abmelden gehen sie verloren.}}",
   "logoutPendingUnknown": "Nicht gesendete Buchungen konnten nicht gelesen werden. Sie bleiben auf diesem Gerät, statt verworfen zu werden, und werden möglicherweise später gesendet.",
   "outboxForeignTitle": "Nicht gesendete Buchungen eines anderen Kontos",
   "outboxForeignBody": "{count, plural, =1{1 nicht gesendete Buchung wurde unter einem anderen Konto oder einer anderen Serveradresse gespeichert und wird nicht gesendet. Wer sich wieder mit jenem Konto anmeldet oder die Serveradresse korrigiert, sieht sie wieder — beim nächsten Speichern hier wird sie jedoch beiseitegelegt.} other{{count} nicht gesendete Buchungen wurden unter einem anderen Konto oder einer anderen Serveradresse gespeichert und werden nicht gesendet. Wer sich wieder mit jenem Konto anmeldet oder die Serveradresse korrigiert, sieht sie wieder — beim nächsten Speichern hier werden sie jedoch beiseitegelegt.}}",

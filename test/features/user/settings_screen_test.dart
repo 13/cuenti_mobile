@@ -291,6 +291,38 @@ void main() {
       );
     }
 
+    Future<void> queueTwo() async {
+      final outbox = TransactionOutbox(outboxDir);
+      await outbox.setOwner(
+        accountKeyFor(
+          ApiClient.defaultServerUrl,
+          const AuthState(user: user),
+        )!,
+      );
+      await outbox.add(
+        PendingTransaction(
+          localId: 'local-1',
+          operation: PendingOperation.create,
+          transaction: Transaction(
+            amount: 12.34,
+            transactionDate: DateTime(2026, 9, 4),
+          ),
+          queuedAt: DateTime(2026, 9, 4, 10),
+        ),
+      );
+      await outbox.add(
+        PendingTransaction(
+          localId: 'local-2',
+          operation: PendingOperation.create,
+          transaction: Transaction(
+            amount: 56.78,
+            transactionDate: DateTime(2026, 9, 4),
+          ),
+          queuedAt: DateTime(2026, 9, 4, 11),
+        ),
+      );
+    }
+
     testWidgets('asks first, naming how many would be lost', (tester) async {
       // TransactionOutbox does real disk I/O, which the widget-test clock
       // (AutomatedTestWidgetsFlutterBinding runs the body inside FakeAsync)
@@ -308,7 +340,27 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Unsent transactions'), findsOneWidget);
-      expect(find.textContaining('1'), findsWidgets);
+      expect(
+        find.textContaining('1 transaction has not reached the server'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('pins the plural branch for more than one', (tester) async {
+      await tester.runAsync(queueTwo);
+      await pumpSettings(tester, outboxDir: outboxDir);
+
+      final logout = find.widgetWithText(OutlinedButton, 'Logout');
+      await tester.ensureVisible(logout);
+      await tester.pumpAndSettle();
+      await tester.tap(logout);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unsent transactions'), findsOneWidget);
+      expect(
+        find.textContaining('2 transactions have not reached'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('cancelling leaves the queue and the session alone', (
@@ -386,7 +438,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('could not be read'), findsNothing);
-      expect(find.textContaining('1 transactions'), findsOneWidget);
+      expect(
+        find.textContaining('1 transaction has not reached the server'),
+        findsOneWidget,
+      );
       expect(find.textContaining('discard'), findsOneWidget);
 
       // And the promise the message makes is the one that is kept: see

@@ -1330,7 +1330,15 @@ class LEn extends L {
 
   @override
   String logoutPendingBody(int count) {
-    return '$count transactions have not reached the server. Signing out will discard them.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count transactions have not reached the server. Signing out will discard them.',
+      one:
+          '1 transaction has not reached the server. Signing out will discard it.',
+    );
+    return '$_temp0';
   }
 
   @override

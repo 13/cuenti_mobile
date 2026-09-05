@@ -49,9 +49,10 @@ String? accountDisplayName(String baseUrl, AuthState auth) {
 /// for by name.** A modal sheet can be dismissed by a scrim tap, a drag or
 /// the back button, and [showConfirmSheet] reports all three as a cancel --
 /// so whatever cancel does is what an accidental brush of the screen does.
-/// On the upgrade branch that is `setOwner` or nothing at all: discarding
-/// is not offered here, because an implicit discard of work the user has
-/// never been shown is exactly the failure this sheet exists to prevent.
+/// On the upgrade branch that is `setOwner` followed by a drain on adopt,
+/// and nothing at all on decline: discarding is not offered here, because
+/// an implicit discard of work the user has never been shown is exactly
+/// the failure this sheet exists to prevent.
 /// Nobody is stranded by that -- adopting the queue turns the entries into
 /// ordinary unsent rows, which the transaction list already lets them
 /// discard one by one.

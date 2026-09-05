@@ -405,7 +405,7 @@
   "categoryCreateUnder": "sotto {parent}",
   "categoryCreateTopLevel": "Nuova categoria principale",
   "logoutPendingTitle": "Movimenti non inviati",
-  "logoutPendingBody": "{count} movimenti non hanno raggiunto il server. Uscendo andranno persi.",
+  "logoutPendingBody": "{count, plural, =1{1 movimento non ha raggiunto il server. Uscendo andrà perso.} other{{count} movimenti non hanno raggiunto il server. Uscendo andranno persi.}}",
   "logoutPendingUnknown": "Non è stato possibile leggere i movimenti non inviati. Rimarranno su questo dispositivo invece di essere scartati e potrebbero essere inviati più tardi.",
   "outboxForeignTitle": "Movimenti non inviati di un altro account",
   "outboxForeignBody": "{count, plural, =1{1 movimento non inviato è stato salvato con un altro account o un altro indirizzo del server e non verrà inviato. Se accedi con quell'account o correggi l'indirizzo del server, tornerà visibile; se invece salvi prima un movimento qui, verrà messo da parte.} other{{count} movimenti non inviati sono stati salvati con un altro account o un altro indirizzo del server e non verranno inviati. Se accedi con quell'account o correggi l'indirizzo del server, torneranno visibili; se invece salvi prima un movimento qui, verranno messi da parte.}}",

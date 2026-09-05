@@ -2537,7 +2537,7 @@ abstract class L {
   /// No description provided for @logoutPendingBody.
   ///
   /// In en, this message translates to:
-  /// **'{count} transactions have not reached the server. Signing out will discard them.'**
+  /// **'{count, plural, =1{1 transaction has not reached the server. Signing out will discard it.} other{{count} transactions have not reached the server. Signing out will discard them.}}'**
   String logoutPendingBody(int count);
 
   /// No description provided for @logoutPendingUnknown.
