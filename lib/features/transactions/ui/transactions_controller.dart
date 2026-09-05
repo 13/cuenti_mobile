@@ -75,6 +75,25 @@ class TransactionsController extends _$TransactionsController {
         if (e.operation == PendingOperation.update)
           e.transaction.id!: e.transaction,
     };
+    // A refused update or delete whose row the server no longer returns has
+    // nowhere else to appear: the overlay above only lands on rows the
+    // server still has. Left out, it could never be shown, retried or
+    // discarded -- a phantom that only the sign-out count ever sees. It is
+    // shown as its own row, refused, so Discard can reach it. One still in
+    // flight stays hidden: the drain will send it or refuse it.
+    //
+    // Keyed by id rather than a plain list: two refused pending entries can
+    // exist for the same absent row (an outbox bug can put them there, and
+    // this is the one place that would otherwise show the duplicate), and
+    // this must surface one row for the row, not one per entry.
+    final orphaned = {
+      for (final e in pending)
+        if (e.operation != PendingOperation.create &&
+            e.isRejected &&
+            !serverIds.contains(e.transaction.id) &&
+            matchesFilter(e.transaction, filter))
+          e.transaction.id!: e.transaction,
+    };
     final merged = [
       for (final t in fromServer)
         if (!deleted.contains(t.id)) updates[t.id] ?? t,
@@ -82,18 +101,7 @@ class TransactionsController extends _$TransactionsController {
         if (e.operation == PendingOperation.create &&
             matchesFilter(e.transaction, filter))
           e.transaction,
-      // A refused update or delete whose row the server no longer returns
-      // has nowhere else to appear: the overlay above only lands on rows
-      // the server still has. Left out, it could never be shown, retried or
-      // discarded -- a phantom that only the sign-out count ever sees. It
-      // is shown as its own row, refused, so Discard can reach it. One
-      // still in flight stays hidden: the drain will send it or refuse it.
-      for (final e in pending)
-        if (e.operation != PendingOperation.create &&
-            e.isRejected &&
-            !serverIds.contains(e.transaction.id) &&
-            matchesFilter(e.transaction, filter))
-          e.transaction,
+      ...orphaned.values,
     ]..sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
     return merged;
   }
@@ -283,6 +291,18 @@ class TransactionsController extends _$TransactionsController {
 
   /// Puts a write in the outbox, replacing the entry it came from so that
   /// editing something queued never leaves two entries for one transaction.
+  ///
+  /// [localId] is the entry this call already knows it replaces -- an edit
+  /// of something the caller already has the queued local id for. A
+  /// [PendingOperation.delete] never carries one: nothing hands `delete()`
+  /// the local id of an edit that may already be queued for the same row,
+  /// so it is found here instead, by the transaction's own id, and only
+  /// **after** the claim below. Doing that lookup in the caller, before
+  /// this call even starts, was the bug: it would run against whatever the
+  /// queue was before this write resolved ownership -- a foreign root
+  /// reads as having nothing queued for the row -- and then this claim
+  /// could reclaim the very entry that lookup just missed, leaving two
+  /// entries for one row instead of one replacing the other.
   Future<void> _enqueue(
     Transaction t, {
     String? localId,
@@ -294,11 +314,18 @@ class TransactionsController extends _$TransactionsController {
     // the queue it may be amending, and an entry written into somebody
     // else's queue would be sealed away from the person who just typed it.
     await claimForWriting(outbox, _accountKey);
-    final existing = localId == null
+    final resolvedLocalId =
+        localId ??
+        (operation == PendingOperation.delete && t.id != null
+            ? await _queuedIdFor(t.id!)
+            : null);
+    final existing = resolvedLocalId == null
         ? null
-        : (await _pending()).where((e) => e.localId == localId).firstOrNull;
+        : (await _pending())
+              .where((e) => e.localId == resolvedLocalId)
+              .firstOrNull;
     final entry = PendingTransaction(
-      localId: localId ?? _newLocalId(),
+      localId: resolvedLocalId ?? _newLocalId(),
       // An edit of something never sent is still a create: the server has
       // nothing to update.
       operation:
@@ -370,9 +397,10 @@ class TransactionsController extends _$TransactionsController {
                   Transaction(amount: 0, transactionDate: DateTime.now()),
             )
             .copyWith(id: id),
-        // A delete supersedes any edit of the same row already queued: the
-        // outbox is keyed by localId, and _enqueue replaces in place.
-        localId: await _queuedIdFor(id),
+        // A delete supersedes any edit of the same row already queued.
+        // _enqueue finds that entry itself, by row id, after its own claim
+        // -- see its doc comment for why the lookup cannot run here
+        // instead.
         operation: PendingOperation.delete,
       );
       // Same reasoning as save()'s queued branch: only the queue changed,

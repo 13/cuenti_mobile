@@ -513,6 +513,38 @@ void main() {
 
       expect(merged, isEmpty);
     });
+
+    // I1: an outbox bug could leave two refused pending entries for the
+    // same absent row (an update and the delete that was meant to replace
+    // it). This is the one place that would otherwise show the duplicate,
+    // so it must not, independently of whatever put two entries there.
+    test(
+      'two refused pending entries for one absent id surface as one row',
+      () {
+        final refusedUpdate = PendingTransaction(
+          localId: 'local-edit-7',
+          operation: PendingOperation.update,
+          transaction: tx(7, amount: 42),
+          queuedAt: DateTime(2026, 9, 5, 10),
+          rejection: 'Not found',
+        );
+        final refusedDelete = PendingTransaction(
+          localId: 'local-delete-7',
+          operation: PendingOperation.delete,
+          transaction: tx(7, amount: 42),
+          queuedAt: DateTime(2026, 9, 5, 11),
+          rejection: 'Not found',
+        );
+
+        final merged = TransactionsController.mergePending(
+          const [],
+          [refusedUpdate, refusedDelete],
+          const TransactionFilter(),
+        );
+
+        expect(merged.where((t) => t.id == 7), hasLength(1));
+      },
+    );
   });
 
   group('saving without a connection', () {
@@ -1646,6 +1678,72 @@ void main() {
           final queued = await container.read(transactionOutboxProvider).all();
           expect(queued, hasLength(1));
           expect(queued.single.operation, PendingOperation.delete);
+        },
+      );
+
+      // I1: the root is foreign, and our own edit of the same row is
+      // sitting in a sidelined queue of ours -- set aside by whoever holds
+      // the root now. `delete()`'s catch branch used to look up the
+      // queued entry for this row *before* `_enqueue` ran, against the
+      // still-foreign root, and find nothing; `_enqueue`'s own claim then
+      // sidelined the foreign root and reclaimed our sidelined edit back
+      // into it a moment later, leaving both the reclaimed edit and a
+      // brand new delete entry for the same row. The claim has to be
+      // resolved before the lookup runs at all.
+      test(
+        'an offline delete on a foreign root, with our own edit of the row '
+        'sidelined, replaces that edit instead of doubling it',
+        () async {
+          await TransactionOutbox(outboxDir).setOwner(_ourAccountKey);
+          await TransactionOutbox(outboxDir).add(
+            PendingTransaction(
+              localId: 'local-edit-7',
+              operation: PendingOperation.update,
+              transaction: Transaction(
+                id: 7,
+                amount: 99,
+                transactionDate: DateTime(2026, 9),
+              ),
+              queuedAt: DateTime(2026, 9),
+            ),
+          );
+          // A foreign write took the root while our edit was still queued:
+          // it gets set aside, and the root becomes somebody else's.
+          await TransactionOutbox(outboxDir).sideline();
+          await TransactionOutbox(outboxDir).setOwner('account-a');
+
+          when(() => repo.getPage()).thenAnswer(
+            (_) async => TransactionPage(
+              content: [tx(7)],
+              page: 0,
+              size: 50,
+              totalElements: 1,
+              totalPages: 1,
+            ),
+          );
+          when(
+            () => repo.delete(any()),
+          ).thenThrow(const NetworkException('Cannot connect to server'));
+          final container = containerWithOutbox();
+          await container.read(transactionsControllerProvider().future);
+
+          await container
+              .read(transactionsControllerProvider().notifier)
+              .delete(7);
+
+          final outbox = container.read(transactionOutboxProvider);
+          final forRow = (await ownedEntries(
+            outbox,
+            _ourAccountKey,
+          )).where((e) => e.transaction.id == 7).toList();
+          expect(
+            forRow,
+            hasLength(1),
+            reason:
+                'the delete supersedes the reclaimed edit, not a second '
+                'entry beside it',
+          );
+          expect(forRow.single.operation, PendingOperation.delete);
         },
       );
 
