@@ -1,27 +1,49 @@
-## The category chart opens again
+## Transactions you enter offline are kept, and sent later
 
-Tapping a category on the Income or Expense tab was supposed to show what
-sits underneath it, and did nothing at all. The figures were right; the
-chart simply had no structure left to open, because the app was matching the
-amounts against the last part of a category's name (`Miete`) while the
-server names them in full (`Wohnen:Miete`). Nothing matched, so every
-category came back as though it had no subcategories.
+Saving a transaction with no connection used to fail, and what you had typed
+was gone. It is now kept on the device and sent when there is a connection
+again — on opening the app, when the connection returns, and when you pull
+to refresh.
 
-Tapping now drills in, the breadcrumb walks back out, and the arrow on a
-slice again means what it says. **If you have subcategories, expect the
-chart to look different: what were separate slices now group under their
-parent, and the parent opens.**
+Anything still waiting says so under the row. If the server refuses one, the
+row says why, in its own words, and offers to try again or discard it.
+Deleting something that was never sent simply takes it out of the queue; no
+request is made for a transaction the server never had.
 
-This has been broken since 2.4.0.
+Two things behave differently while you are offline, both deliberately. You
+cannot create a new category or payee from the transaction form, because
+those need the server to issue an id. And signing out asks first if anything
+is still waiting, naming how many — signing out discards them.
 
-## Payment methods you can actually use
+## Unsent transactions stay with the account that entered them
 
-The payment method on a payee was offering five options, two of which —
-"Card" and "Cheque" — are not methods this server has, while the ten it
-does use were missing. That list now matches the one the transaction editor
-has always used.
+If a second account signs in on the same device — or a session expires and
+somebody else signs in — anything still waiting to be sent is no longer
+theirs to send. It is set aside rather than deleted, and comes back when the
+account that entered it signs in again.
 
-All of them also read as words now. Debit card payments, standing orders,
-bank fees, securities trades and the rest were showing as the raw codes
-underneath them — `DEBIT_CARD`, `STANDING_ORDER`, `FI_FEE`,
-`TRADE` — in every language.
+The same applies if you mistype your server address: the queue is set aside,
+and correcting the address brings it back.
+
+## Errors say what the server actually said
+
+Every error in the app was replacing the server's own explanation with a
+generic sentence. If the server said which field it rejected, you were told
+"Invalid request" instead.
+
+The server's own words now appear inside a translated sentence — "Invalid
+request: Amount must be positive" — so the part that tells you what to fix
+survives, in every language. Two long-standing side effects of the same bug
+are fixed with it: a server with the API switched off now says so, rather
+than claiming you are not signed in; and a server error names its status
+instead of reporting "Unexpected response from server" every time.
+
+This has been broken since the app first talked to a server.
+
+## Smaller things
+
+Italian called a transaction *operazione* in a few places and *movimento*
+everywhere else; it is *movimento* throughout now. Counts of one no longer
+read "1 transactions". A refusal the server did not explain reads "Refused"
+rather than "Refused:" with nothing after it, and a very long one no longer
+stretches a row down the screen.
