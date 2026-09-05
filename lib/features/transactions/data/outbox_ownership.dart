@@ -141,6 +141,49 @@ Future<void> claimForWriting(
   return resolved;
 }
 
+/// Brings back every queue [TransactionOutbox.sideline] set aside for
+/// [accountKey], when the root is that account's to fill.
+///
+/// The foreign-queue sheet promises that signing back in, or correcting a
+/// mistyped server address, brings a set-aside queue back. That is only
+/// true if something reads the sidelined directories, and this is it.
+///
+/// "That account's to fill" is the whole rule, and it is narrow on
+/// purpose: the root must already be ours, or empty with no owner. Never
+/// into a queue somebody else owns -- the sheet handles that root, and the
+/// next write reclaims once it is resolved. Never into an unowned root
+/// that still holds entries -- that is the upgrade case, and the sheet
+/// owns it too. A sidelined queue with no readable owner is never
+/// reclaimed by anyone.
+///
+/// Returns how many queues came back. Serialized with [claimForWriting]
+/// on the same chain: both move files, and interleaving a restore with a
+/// sideline could move an entry twice or drop it.
+Future<int> reclaimSidelined(TransactionOutbox outbox, String? accountKey) {
+  final previous = (_claimChains[outbox] ?? Future<void>.value()).catchError(
+    (_) {},
+  );
+  final resolved = previous.then((_) => _reclaim(outbox, accountKey));
+  _claimChains[outbox] = resolved.then((_) {}).catchError((_) {});
+  return resolved;
+}
+
+Future<int> _reclaim(TransactionOutbox outbox, String? accountKey) async {
+  if (accountKey == null) return 0;
+  final owner = await outbox.owner();
+  final rootIsOurs = owner == accountKey;
+  final rootIsFree = owner == null && (await outbox.all()).isEmpty;
+  if (!rootIsOurs && !rootIsFree) return 0;
+
+  var restored = 0;
+  for (final queue in await outbox.sidelinedQueues()) {
+    if (queue.owner != accountKey) continue;
+    if (await outbox.restore(queue)) restored++;
+  }
+  if (restored > 0 && rootIsFree) await outbox.setOwner(accountKey);
+  return restored;
+}
+
 /// One chain per outbox instance, so two writes against different queues
 /// (different accounts overridden in different tests, say) never wait on
 /// each other. An [Expando] rather than a [Map] so it holds no reference
@@ -160,4 +203,8 @@ Future<void> _resolveOwnership(
   // listing and leaves no subdirectory behind.
   await outbox.sideline();
   await outbox.setOwner(accountKey);
+  // The root is now ours and empty: if this account had a queue set aside
+  // earlier, this is the moment it comes back. Direct, not through
+  // reclaimSidelined -- we are already on the chain.
+  await _reclaim(outbox, accountKey);
 }

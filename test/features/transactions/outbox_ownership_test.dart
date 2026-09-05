@@ -310,4 +310,127 @@ void main() {
       },
     );
   });
+
+  group('reclaimSidelined', () {
+    Future<void> sidelineAs(String owner, List<String> ids) async {
+      for (final id in ids) {
+        await queue(id);
+      }
+      await outbox.setOwner(owner);
+      await outbox.sideline();
+    }
+
+    test('brings back a queue this account set aside, into its own '
+        'root', () async {
+      await sidelineAs('key-a', ['a-1', 'a-2']);
+      await outbox.setOwner('key-a');
+
+      expect(await reclaimSidelined(outbox, 'key-a'), 1);
+      expect(
+        (await ownedEntries(outbox, 'key-a')).map((e) => e.localId),
+        containsAll(['a-1', 'a-2']),
+      );
+      expect(await outbox.sidelinedQueues(), isEmpty);
+    });
+
+    test('claims an empty unowned root when it restores into it', () async {
+      await sidelineAs('key-a', ['a-1']);
+      // The root is now empty and has no owner file.
+
+      expect(await reclaimSidelined(outbox, 'key-a'), 1);
+      expect(await outbox.owner(), 'key-a');
+    });
+
+    // Never merge into somebody else's queue. The sheet handles the
+    // foreign root; once that is resolved, the next write reclaims.
+    test('does nothing while the root belongs to another account', () async {
+      await sidelineAs('key-a', ['a-1']);
+      await queue('b-1');
+      await outbox.setOwner('key-b');
+
+      expect(await reclaimSidelined(outbox, 'key-a'), 0);
+      expect(await outbox.sidelinedQueues(), hasLength(1));
+      expect((await ownedEntries(outbox, 'key-b')).single.localId, 'b-1');
+    });
+
+    // An unowned root that still holds entries is the upgrade case, and
+    // the sheet owns it.
+    test('does nothing into an unowned root that still holds '
+        'entries', () async {
+      await sidelineAs('key-a', ['a-1']);
+      await queue('legacy-1');
+
+      expect(await reclaimSidelined(outbox, 'key-a'), 0);
+      expect(await outbox.owner(), isNull);
+      expect(await outbox.sidelinedQueues(), hasLength(1));
+    });
+
+    test('never restores a queue with no readable owner', () async {
+      await sidelineAs('key-a', ['a-1']);
+      final sub = (await outbox.sidelinedQueues()).single.directory;
+      File('${sub.path}/.owner.json').writeAsStringSync('{broken');
+      await outbox.setOwner('key-a');
+
+      expect(await reclaimSidelined(outbox, 'key-a'), 0);
+      expect(await outbox.sidelinedQueues(), hasLength(1));
+    });
+
+    test('restores every queue this account owns', () async {
+      await sidelineAs('key-a', ['a-1']);
+      await sidelineAs('key-a', ['a-2']);
+      await outbox.setOwner('key-a');
+
+      expect(await reclaimSidelined(outbox, 'key-a'), 2);
+      expect(await ownedEntries(outbox, 'key-a'), hasLength(2));
+    });
+
+    test("leaves another account's sidelined queue alone", () async {
+      await sidelineAs('key-b', ['b-1']);
+      await sidelineAs('key-a', ['a-1']);
+      await outbox.setOwner('key-a');
+
+      expect(await reclaimSidelined(outbox, 'key-a'), 1);
+      expect((await outbox.sidelinedQueues()).single.owner, 'key-b');
+    });
+
+    test('does nothing with no current account', () async {
+      await sidelineAs('key-a', ['a-1']);
+
+      expect(await reclaimSidelined(outbox, null), 0);
+      expect(await outbox.sidelinedQueues(), hasLength(1));
+    });
+
+    // The first write after a queue was set aside is when it comes back.
+    test("a claim reclaims the new owner's sidelined queue", () async {
+      await sidelineAs('key-a', ['a-1']);
+      await queue('b-1');
+      await outbox.setOwner('key-b');
+
+      await claimForWriting(outbox, 'key-a');
+
+      expect(await outbox.owner(), 'key-a');
+      expect((await ownedEntries(outbox, 'key-a')).single.localId, 'a-1');
+      // b's queue was set aside by the claim; it is still there.
+      expect(
+        (await outbox.sidelinedQueues()).map((q) => q.owner),
+        contains('key-b'),
+      );
+    });
+
+    // Both move files. They must not interleave.
+    test('a reclaim racing a claim does not throw and leaves one coherent '
+        'queue', () async {
+      await sidelineAs('key-a', ['a-1']);
+      await queue('b-1');
+      await outbox.setOwner('key-b');
+
+      await Future.wait([
+        claimForWriting(outbox, 'key-a'),
+        reclaimSidelined(outbox, 'key-a'),
+      ]);
+
+      expect(await outbox.owner(), 'key-a');
+      expect((await ownedEntries(outbox, 'key-a')).single.localId, 'a-1');
+    });
+  });
 }
