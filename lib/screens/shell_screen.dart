@@ -34,11 +34,6 @@ class ShellScreen extends ConsumerWidget {
       label: L.of(context).navTransactions,
       path: '/transactions',
     ),
-    (
-      icon: Icons.swap_horiz,
-      label: L.of(context).navTransfers,
-      path: '/transfers',
-    ),
     (icon: Icons.pie_chart, label: L.of(context).navBudgets, path: '/budgets'),
     (
       icon: Icons.bar_chart,

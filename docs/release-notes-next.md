@@ -22,7 +22,7 @@ the server again.
 
 ## Transfers
 
-Transfers have their own screen, in the navigation bar and the drawer. It is
+Transfers have their own screen, in the drawer under General. It is
 the transaction list showing only transfers, so everything you can do to a
 transaction you can still do here, and new entries made from it start as
 transfers.

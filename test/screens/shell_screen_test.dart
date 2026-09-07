@@ -210,19 +210,7 @@ void main() {
   });
 
   group('Transfers, as a place of its own', () {
-    testWidgets('rides the bottom bar, and going there gets you there', (
-      tester,
-    ) async {
-      await pumpShell(tester);
-
-      expect(find.text('Transfers'), findsOneWidget);
-      await tester.tap(find.text('Transfers'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('transfers page'), findsOneWidget);
-    });
-
-    testWidgets('is in the drawer too, in the General section', (tester) async {
+    testWidgets('lives in the drawer, in the General section', (tester) async {
       // Tall surface so the whole drawer renders without scrolling.
       tester.view.physicalSize = const Size(1200, 2400);
       tester.view.devicePixelRatio = 1.0;
@@ -232,9 +220,8 @@ void main() {
       await tester.tap(find.byTooltip('Open navigation menu'));
       await tester.pumpAndSettle();
 
-      // Two now: the bottom bar's and the drawer's.
-      expect(find.text('Transfers'), findsNWidgets(2));
-      final transfersY = tester.getTopLeft(find.text('Transfers').last).dy;
+      expect(find.text('Transfers'), findsOneWidget);
+      final transfersY = tester.getTopLeft(find.text('Transfers')).dy;
       expect(
         transfersY,
         greaterThan(tester.getTopLeft(find.text('General')).dy),
@@ -245,15 +232,31 @@ void main() {
       );
     });
 
-    testWidgets('a fifth destination still fits, in German -- the longest '
-        'labels this bar has', (tester) async {
-      // The default 800px test width, which is the tight case: five
-      // destinations across it is 160px each, and "Umbuchungen" sits next to
-      // "Statistiken".
+    testWidgets('going there from the drawer gets you there', (tester) async {
+      tester.view.physicalSize = const Size(1200, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await pumpShell(tester);
+      await tester.tap(find.byTooltip('Open navigation menu'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Transfers'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('transfers page'), findsOneWidget);
+    });
+
+    testWidgets('stays out of the bottom bar, which keeps its four', (
+      tester,
+    ) async {
       await pumpShell(tester, locale: const Locale('de'));
 
-      expect(find.text('Umbuchungen'), findsOneWidget);
-      expect(tester.takeException(), isNull);
+      // Five destinations fit at the Material 3 limit but read as cramped,
+      // and "Umbuchungen" next to "Statistiken" is the tightest pair this
+      // bar would have had.
+      expect(find.text('Umbuchungen'), findsNothing);
+      expect(find.byType(NavigationDestination), findsNWidgets(4));
     });
   });
 
