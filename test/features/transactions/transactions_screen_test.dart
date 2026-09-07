@@ -165,6 +165,8 @@ void main() {
     WidgetTester tester, {
     Directory? outboxDir,
     TransactionSync? sync,
+    String? lockedType,
+    Locale? locale,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -183,10 +185,11 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          locale: locale,
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,
           theme: AppTheme.light(),
-          home: const TransactionsScreen(),
+          home: TransactionsScreen(lockedType: lockedType),
         ),
       ),
     );
@@ -942,5 +945,137 @@ void main() {
         expect(find.text('Not sent yet'), findsOneWidget);
       },
     );
+  });
+
+  group('locked to one type', () {
+    /// Captures the filter the controller was keyed by, which is the only
+    /// thing that decides what the list is showing.
+    TransactionFilter capturedFilter() =>
+        verify(
+              () => txRepo.getPage(
+                filter: captureAny(named: 'filter'),
+                page: any(named: 'page'),
+              ),
+            ).captured.first
+            as TransactionFilter;
+
+    void serveEmpty() {
+      when(
+        () => txRepo.getPage(
+          filter: any(named: 'filter'),
+          page: any(named: 'page'),
+        ),
+      ).thenAnswer(
+        (_) async => const TransactionPage(
+          content: [],
+          page: 0,
+          size: 50,
+          totalElements: 0,
+          totalPages: 0,
+        ),
+      );
+    }
+
+    testWidgets('asks the server only for that type', (tester) async {
+      serveEmpty();
+
+      await pumpScreen(tester, lockedType: 'TRANSFER');
+
+      expect(capturedFilter().type, 'TRANSFER');
+    });
+
+    testWidgets('offers no type chip -- the route is what the type means '
+        'here', (tester) async {
+      serveEmpty();
+
+      await pumpScreen(tester, lockedType: 'TRANSFER');
+
+      expect(find.text('Type'), findsNothing);
+      // The chips that still make sense are still there.
+      expect(find.text('Category'), findsOneWidget);
+    });
+
+    testWidgets('an empty list offers Add, not Clear filters', (tester) async {
+      serveEmpty();
+
+      await pumpScreen(tester, lockedType: 'TRANSFER');
+
+      // The list is empty because there are no transfers, not because a
+      // filter the user set is hiding them -- so there is nothing to clear.
+      expect(find.text('No transactions yet'), findsOneWidget);
+      expect(find.text('Clear filters'), findsNothing);
+    });
+
+    testWidgets('an unlocked screen with no rows still offers Add', (
+      tester,
+    ) async {
+      serveEmpty();
+
+      await pumpScreen(tester);
+
+      expect(find.text('No transactions yet'), findsOneWidget);
+    });
+
+    testWidgets('the type survives clearing the other filters', (tester) async {
+      serveEmpty();
+      await pumpScreen(tester, lockedType: 'TRANSFER');
+      // Narrow by account, so the empty state offers Clear filters.
+      await tester.tap(find.text('Account'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Giro').last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Clear filters'));
+      await tester.pumpAndSettle();
+
+      final filter =
+          verify(
+                () => txRepo.getPage(
+                  filter: captureAny(named: 'filter'),
+                  page: any(named: 'page'),
+                ),
+              ).captured.last
+              as TransactionFilter;
+      expect(filter.type, 'TRANSFER');
+      expect(filter.accountId, isNull);
+    });
+
+    testWidgets('the add form opens already set to that type', (tester) async {
+      serveEmpty();
+      await pumpScreen(tester, lockedType: 'TRANSFER');
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      // A transfer shows both account fields; an expense shows only "From".
+      expect(find.text('To Account'), findsOneWidget);
+    });
+  });
+
+  testWidgets('the type chip says Umbuchung in German, not the English the '
+      'switch arms used to hard-code', (tester) async {
+    when(
+      () => txRepo.getPage(
+        filter: any(named: 'filter'),
+        page: any(named: 'page'),
+      ),
+    ).thenAnswer(
+      (_) async => const TransactionPage(
+        content: [],
+        page: 0,
+        size: 50,
+        totalElements: 0,
+        totalPages: 0,
+      ),
+    );
+    await pumpScreen(tester, locale: const Locale('de'));
+
+    await tester.tap(find.text('Typ'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Umbuchung').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Umbuchung'), findsOneWidget);
+    expect(find.text('Transfer'), findsNothing);
   });
 }

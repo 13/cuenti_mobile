@@ -101,6 +101,13 @@ class AppRouter {
                   fadeThroughPage(child: const TransactionsScreen(), state: s),
             ),
             GoRoute(
+              path: '/transfers',
+              pageBuilder: (_, s) => fadeThroughPage(
+                child: const TransactionsScreen(lockedType: 'TRANSFER'),
+                state: s,
+              ),
+            ),
+            GoRoute(
               path: '/budgets',
               pageBuilder: (_, s) =>
                   fadeThroughPage(child: const BudgetsScreen(), state: s),

@@ -93,6 +93,9 @@ class LEn extends L {
   String get navTransactions => 'Transactions';
 
   @override
+  String get navTransfers => 'Transfers';
+
+  @override
   String get navBudgets => 'Budgets';
 
   @override

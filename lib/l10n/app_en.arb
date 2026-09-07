@@ -56,6 +56,8 @@
   "@navDashboard": {},
   "navTransactions": "Transactions",
   "@navTransactions": {},
+  "navTransfers": "Transfers",
+  "@navTransfers": {},
   "navBudgets": "Budgets",
   "@navBudgets": {},
   "navStatistics": "Statistics",

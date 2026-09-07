@@ -21,7 +21,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
-  const TransactionsScreen({super.key});
+  const TransactionsScreen({super.key, this.lockedType});
+
+  /// When set, this screen is *about* one transaction type: only those rows
+  /// are shown, and the type chip is not offered.
+  ///
+  /// The route is what the type means here, so a chip that could change it
+  /// would navigate you off the screen you are on without the address
+  /// changing.
+  final String? lockedType;
 
   @override
   ConsumerState<TransactionsScreen> createState() => _TransactionsScreenState();
@@ -31,7 +39,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
   Timer? _debounce;
-  TransactionFilter _filter = TransactionsController.defaultFilter;
+
+  /// This screen's "no filters" -- which on a type-locked screen still
+  /// carries that type. Everything that resets to, or compares against, an
+  /// unfiltered list has to mean this rather than the controller's own
+  /// `defaultFilter`.
+  TransactionFilter get _baseFilter =>
+      TransactionsController.defaultFilter.copyWith(type: widget.lockedType);
+
+  late TransactionFilter _filter = _baseFilter;
 
   @override
   void initState() {
@@ -75,7 +91,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   void _resetFilters() {
     _debounce?.cancel();
     _searchController.clear();
-    setState(() => _filter = TransactionsController.defaultFilter);
+    setState(() => _filter = _baseFilter);
   }
 
   @override
@@ -120,7 +136,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     return ListView(
                       children: [
                         const SizedBox(height: 80),
-                        if (_filter == TransactionsController.defaultFilter)
+                        if (_filter == _baseFilter)
                           EmptyState(
                             icon: Icons.receipt_long,
                             message: L.of(context).txEmpty,
@@ -248,8 +264,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         children: [
-          _typeChip(context),
-          const SizedBox(width: 8),
+          if (widget.lockedType == null) ...[
+            _typeChip(context),
+            const SizedBox(width: 8),
+          ],
           _categoryChip(context, categories),
           const SizedBox(width: 8),
           _dateRangeChip(context),
@@ -266,7 +284,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               context,
               ref,
               current: _filter,
-              onApply: (f) => setState(() => _filter = f),
+              onApply: (f) => setState(
+                () => _filter = widget.lockedType == null
+                    ? f
+                    // A saved view carries a type of its own. Applied as-is
+                    // on a screen that *is* a type, it would silently show
+                    // something else under this screen's name.
+                    : f.copyWith(type: widget.lockedType),
+              ),
             ),
           ),
         ],
@@ -274,10 +299,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 
-  String _typeLabel(String type) => switch (type) {
-    'EXPENSE' => 'Expense',
-    'INCOME' => 'Income',
-    'TRANSFER' => 'Transfer',
+  String _typeLabel(BuildContext context, String type) => switch (type) {
+    'EXPENSE' => L.of(context).commonExpense,
+    'INCOME' => L.of(context).commonIncome,
+    'TRANSFER' => L.of(context).commonTransfer,
     _ => type,
   };
 
@@ -286,7 +311,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     return InputChip(
       avatar: const Icon(Icons.category_outlined, size: 18),
       label: Text(
-        active ? _typeLabel(_filter.type!) : L.of(context).commonType,
+        active ? _typeLabel(context, _filter.type!) : L.of(context).commonType,
       ),
       onPressed: () => _openOptionsSheet<String>(
         context,

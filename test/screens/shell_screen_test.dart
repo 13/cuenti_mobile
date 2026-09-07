@@ -117,6 +117,7 @@ void main() {
     List<Override> overrides = const [],
     OfflineCacheInterceptor? offlineCache,
     Directory? outboxDir,
+    Locale? locale,
   }) async {
     final dir =
         outboxDir ?? Directory.systemTemp.createTempSync('shell_outbox');
@@ -134,6 +135,10 @@ void main() {
             GoRoute(
               path: '/dashboard',
               builder: (context, state) => const Text('dash'),
+            ),
+            GoRoute(
+              path: '/transfers',
+              builder: (context, state) => const Text('transfers page'),
             ),
           ],
         ),
@@ -169,6 +174,7 @@ void main() {
           ...overrides,
         ],
         child: MaterialApp.router(
+          locale: locale,
           localizationsDelegates: L.localizationsDelegates,
           supportedLocales: L.supportedLocales,
           routerConfig: router,
@@ -201,6 +207,54 @@ void main() {
           'Vehicles must appear in the General section, '
           'above the Management header',
     );
+  });
+
+  group('Transfers, as a place of its own', () {
+    testWidgets('rides the bottom bar, and going there gets you there', (
+      tester,
+    ) async {
+      await pumpShell(tester);
+
+      expect(find.text('Transfers'), findsOneWidget);
+      await tester.tap(find.text('Transfers'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('transfers page'), findsOneWidget);
+    });
+
+    testWidgets('is in the drawer too, in the General section', (tester) async {
+      // Tall surface so the whole drawer renders without scrolling.
+      tester.view.physicalSize = const Size(1200, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await pumpShell(tester);
+      await tester.tap(find.byTooltip('Open navigation menu'));
+      await tester.pumpAndSettle();
+
+      // Two now: the bottom bar's and the drawer's.
+      expect(find.text('Transfers'), findsNWidgets(2));
+      final transfersY = tester.getTopLeft(find.text('Transfers').last).dy;
+      expect(
+        transfersY,
+        greaterThan(tester.getTopLeft(find.text('General')).dy),
+      );
+      expect(
+        transfersY,
+        lessThan(tester.getTopLeft(find.text('Management')).dy),
+      );
+    });
+
+    testWidgets('a fifth destination still fits, in German -- the longest '
+        'labels this bar has', (tester) async {
+      // The default 800px test width, which is the tight case: five
+      // destinations across it is 160px each, and "Umbuchungen" sits next to
+      // "Statistiken".
+      await pumpShell(tester, locale: const Locale('de'));
+
+      expect(find.text('Umbuchungen'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   });
 
   testWidgets('logout clears the session before navigating to login', (

@@ -158,6 +158,89 @@ void main() {
 
     expect((await dio.get<Object>('/transactions')).data, {'total': 99});
   });
+
+  group('the seam a repository uses to answer an offline failure itself', () {
+    test('peek returns what a prior successful GET stored', () async {
+      adapter.body = {'total': 7};
+      await dio.get<Object>('/transactions', queryParameters: {'page': 0});
+
+      final hit = await interceptor.peek(
+        RequestOptions(path: '/transactions', queryParameters: {'page': 0}),
+      );
+
+      expect(hit, isNotNull);
+      expect(hit!.body, {'total': 7});
+    });
+
+    test('peek returns null for a key never fetched', () async {
+      await dio.get<Object>('/transactions', queryParameters: {'page': 0});
+
+      // A different query is a different key, which is the whole reason the
+      // repository has to cut a filtered list out of an unfiltered one.
+      final miss = await interceptor.peek(
+        RequestOptions(
+          path: '/transactions',
+          queryParameters: {'page': 0, 'type': 'TRANSFER'},
+        ),
+      );
+
+      expect(miss, isNull);
+    });
+
+    test('markStale raises the banner with no request made', () async {
+      final when = DateTime(2026, 3, 4, 5, 6);
+
+      interceptor.markStale(when);
+
+      expect(interceptor.servingStaleData, isTrue);
+      expect(interceptor.staleSince.value, when);
+    });
+
+    test('a later live response clears what markStale raised', () async {
+      interceptor.markStale(DateTime(2026));
+
+      await dio.get<Object>('/transactions');
+
+      expect(interceptor.servingStaleData, isFalse);
+      expect(interceptor.staleSince.value, isNull);
+    });
+
+    test('isOfflineFailure is true only where the server was never '
+        'reached', () {
+      DioException of(DioExceptionType t) => DioException(
+        requestOptions: RequestOptions(path: '/x'),
+        type: t,
+      );
+
+      for (final type in [
+        DioExceptionType.connectionError,
+        DioExceptionType.connectionTimeout,
+        DioExceptionType.receiveTimeout,
+        DioExceptionType.sendTimeout,
+      ]) {
+        expect(
+          OfflineCacheInterceptor.isOfflineFailure(of(type)),
+          isTrue,
+          reason: '$type',
+        );
+      }
+      // A 500 and an untrusted certificate are both servers that answered.
+      // Standing in for either would hide a real problem, or pre-empt the
+      // trust prompt the sign-in screen is about to raise.
+      expect(
+        OfflineCacheInterceptor.isOfflineFailure(
+          of(DioExceptionType.badResponse),
+        ),
+        isFalse,
+      );
+      expect(
+        OfflineCacheInterceptor.isOfflineFailure(
+          of(DioExceptionType.badCertificate),
+        ),
+        isFalse,
+      );
+    });
+  });
 }
 
 class _ErrorAdapter implements HttpClientAdapter {

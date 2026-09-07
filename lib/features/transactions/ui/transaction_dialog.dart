@@ -101,7 +101,16 @@ class _TransactionDialogState extends ConsumerState<TransactionDialog> {
   void initState() {
     super.initState();
     final t = widget.transaction;
-    _type = t?.type ?? 'EXPENSE';
+    // A list narrowed to one type is a list you are adding that type to --
+    // and on the transfers screen it is the only type the list can show, so
+    // an entry made here at the default would be queued offline and then not
+    // appear, because the pending merge asks the filter whether it belongs.
+    final filtered = widget.filter.type;
+    _type =
+        t?.type ??
+        (filtered != null && kTransactionTypes.contains(filtered)
+            ? filtered
+            : 'EXPENSE');
     _amount = TextEditingController(
       text: t != null ? formatNumber(t.amount) : '',
     );

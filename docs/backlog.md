@@ -72,3 +72,58 @@ queued write (`localId` already is one — unique, stable across replays), and
 the server treats a repeat of a key it has already accepted as a no-op
 returning the original result. No client-side workaround is honest; every
 one of them is this same race moved somewhere else.
+
+---
+
+## Offline transfers show only what was cached
+
+**What.** With no connection, a filtered transaction list — the Transfers
+screen, or any type/search filter — is cut locally out of the unfiltered
+pages already in the response cache, because a filtered query is a different
+cache key and usually has no entry of its own. The corpus walked is whatever
+pages of the unfiltered list this device happens to hold, from page 0 until
+the first gap. That is the head of a date-descending list, so what is missing
+is the oldest rows. A device that has never opened the transactions list
+while online has nothing to cut from and still fails.
+
+There is an asymmetry in what it will say. Where the cached pages are the
+complete list, an empty result is reported as an empty list. Where they are
+only a prefix, an empty result is reported as an error instead — a prefix
+cannot support a claim of absence, and "you have no transfers" is a worse
+answer than "could not load" when the honest one is "we do not know".
+
+**Cost of leaving it.** An incomplete list under a banner saying when the
+figures were fetched, never a wrong figure: every row shown is a row the
+server handed this client verbatim, and totals describe what the device
+holds rather than what exists. The visible cost is an offline transfers list
+that stops earlier than the online one, and an error where an empty list
+would have read better.
+
+**What closing it takes.** Either a local store of transactions rather than a
+cache of paged HTTP responses — which is the real answer, and a much larger
+change than this one — or warming the cache while online by fetching the
+filters the app knows it will want. The second is cheap and dishonest in a
+small way: it spends the user's bandwidth on a question they have not asked,
+and it only helps the filters someone thought to pre-fetch.
+
+---
+
+## A session expiry still clears the whole offline cache
+
+**What.** `_handleSessionExpired` calls `logout()`, which calls
+`ApiClient.clearToken()`, which clears the response cache. The cache is
+cleared on sign-out so the next account cannot be shown the last one's
+figures — but a session expiry is the *same* account, which is exactly why
+that path already keeps the saved credentials and the outbox. One 401 on
+reconnection therefore throws away every figure the offline mode depends on,
+for a reason that does not apply.
+
+**Cost of leaving it.** A session that expires while the user is away leaves
+them with an empty cache the next time they open the app without a network —
+the situation the cache exists for. They can still sign in offline against
+their saved credentials, but there is nothing left to show them.
+
+**What closing it takes.** Splitting `clearToken()` into "the token is dead"
+and "this device is changing hands": the first keeps the cache, the second
+clears it, and only `logout` and a server change call the second. Small, but
+it needs care that no other caller of `clearToken` is relying on the sweep.

@@ -94,6 +94,9 @@ class LIt extends L {
   String get navTransactions => 'Movimenti';
 
   @override
+  String get navTransfers => 'Trasferimenti';
+
+  @override
   String get navBudgets => 'Budget';
 
   @override

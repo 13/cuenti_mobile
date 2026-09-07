@@ -267,6 +267,12 @@ abstract class L {
   /// **'Transactions'**
   String get navTransactions;
 
+  /// No description provided for @navTransfers.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfers'**
+  String get navTransfers;
+
   /// No description provided for @navBudgets.
   ///
   /// In en, this message translates to:

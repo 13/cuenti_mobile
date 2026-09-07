@@ -95,6 +95,9 @@ class LDe extends L {
   String get navTransactions => 'Buchungen';
 
   @override
+  String get navTransfers => 'Umbuchungen';
+
+  @override
   String get navBudgets => 'Budgets';
 
   @override

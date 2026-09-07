@@ -45,7 +45,37 @@ class OfflineCacheInterceptor extends Interceptor {
 
   bool get servingStaleData => stale.value;
 
-  static bool _isOffline(DioException e) => switch (e.type) {
+  /// What is cached for [options], or null.
+  ///
+  /// Offered because this interceptor replays only an exact key hit, and a
+  /// filtered list is a different key from the unfiltered one it is a subset
+  /// of. Reading is all that is offered: what a body *means* stays with
+  /// whoever knows its shape.
+  Future<CachedResponse?> peek(RequestOptions options) =>
+      _cache.read(cacheKeyFor(options));
+
+  /// Says the figures now on screen came from [storedAt], not from the
+  /// server just now.
+  ///
+  /// For a caller that answered an offline failure itself: [stale] is set
+  /// only where this interceptor does the replaying, so without this the
+  /// banner would stay down over data that is not live -- which in an app
+  /// about money is the one thing the banner exists to prevent. It also arms
+  /// the reconnect drain, which watches [stale] for a true-to-false edge.
+  void markStale(DateTime storedAt) {
+    stale.value = true;
+    staleSince.value = storedAt;
+  }
+
+  /// Whether [e] means the server was never reached, as opposed to
+  /// answering with something we did not want.
+  ///
+  /// Public because a caller that resolves such a failure itself -- the
+  /// transactions repository, cutting a filtered list out of a cached
+  /// unfiltered one -- must apply exactly this test and no looser one. A 500
+  /// is a server that answered, and so is a certificate this install has not
+  /// trusted.
+  static bool isOfflineFailure(DioException e) => switch (e.type) {
     DioExceptionType.connectionError ||
     DioExceptionType.connectionTimeout ||
     DioExceptionType.receiveTimeout ||
@@ -73,7 +103,8 @@ class OfflineCacheInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (err.requestOptions.method.toUpperCase() != 'GET' || !_isOffline(err)) {
+    if (err.requestOptions.method.toUpperCase() != 'GET' ||
+        !isOfflineFailure(err)) {
       handler.next(err);
       return;
     }

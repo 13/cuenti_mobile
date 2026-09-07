@@ -12,6 +12,7 @@ void main() {
       for (final location in [
         '/dashboard',
         '/transactions',
+        '/transfers',
         '/accounts',
         '/statistics',
         '/settings',
@@ -66,6 +67,7 @@ void main() {
       for (final location in [
         '/dashboard',
         '/transactions',
+        '/transfers',
         '/accounts',
         '/settings',
       ]) {

@@ -28,6 +28,7 @@
   "offlineBanner": "Offline — sono mostrati gli ultimi dati scaricati",
   "navDashboard": "Riepilogo",
   "navTransactions": "Movimenti",
+  "navTransfers": "Trasferimenti",
   "navBudgets": "Budget",
   "navStatistics": "Statistiche",
   "actionRefresh": "Aggiorna",

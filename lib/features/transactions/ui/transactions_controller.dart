@@ -121,35 +121,11 @@ class TransactionsController extends _$TransactionsController {
   /// the server may be, and narrow in the safe direction: an entry hidden
   /// from a search is still on the list with no search at all, still
   /// marked unsent, and still in the sign-out warning.
-  static bool matchesFilter(Transaction t, TransactionFilter filter) {
-    if (filter.accountId != null &&
-        t.fromAccountId != filter.accountId &&
-        t.toAccountId != filter.accountId) {
-      return false;
-    }
-    if (filter.type != null && t.type != filter.type) return false;
-    if (filter.categoryId != null && t.categoryId != filter.categoryId) {
-      return false;
-    }
-    // start/end are date-only on the wire, so the comparison is too --
-    // an entry made at 18:00 is inside a range ending that same day.
-    DateTime dayOf(DateTime d) => DateTime(d.year, d.month, d.day);
-    final day = dayOf(t.transactionDate);
-    final start = filter.start;
-    if (start != null && day.isBefore(dayOf(start))) return false;
-    final end = filter.end;
-    if (end != null && day.isAfter(dayOf(end))) return false;
-    final search = filter.search;
-    if (search != null && search.isNotEmpty) {
-      final needle = search.toLowerCase();
-      final found = [
-        t.payee,
-        t.memo,
-      ].whereType<String>().any((s) => s.toLowerCase().contains(needle));
-      if (!found) return false;
-    }
-    return true;
-  }
+  /// The rule itself lives on [TransactionFilter] now, because the offline
+  /// read fallback in `TransactionsRepository` has to apply exactly the same
+  /// one to cut a filtered list out of a cached unfiltered one.
+  static bool matchesFilter(Transaction t, TransactionFilter filter) =>
+      filter.matches(t);
 
   /// The account signed in now, for attributing and claiming the queue.
   /// Read fresh every time rather than cached: the signed-in account can

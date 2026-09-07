@@ -28,6 +28,7 @@
   "offlineBanner": "Offline — angezeigt werden die zuletzt geladenen Zahlen",
   "navDashboard": "Übersicht",
   "navTransactions": "Buchungen",
+  "navTransfers": "Umbuchungen",
   "navBudgets": "Budgets",
   "navStatistics": "Statistiken",
   "actionRefresh": "Aktualisieren",

@@ -34,6 +34,11 @@ class ShellScreen extends ConsumerWidget {
       label: L.of(context).navTransactions,
       path: '/transactions',
     ),
+    (
+      icon: Icons.swap_horiz,
+      label: L.of(context).navTransfers,
+      path: '/transfers',
+    ),
     (icon: Icons.pie_chart, label: L.of(context).navBudgets, path: '/budgets'),
     (
       icon: Icons.bar_chart,
@@ -62,6 +67,8 @@ class ShellScreen extends ConsumerWidget {
         return l.navDashboard;
       case '/transactions':
         return l.navTransactions;
+      case '/transfers':
+        return l.navTransfers;
       case '/budgets':
         return l.navBudgets;
       case '/scheduled':
@@ -157,6 +164,12 @@ class ShellScreen extends ConsumerWidget {
               Icons.receipt_long,
               l.navTransactions,
               '/transactions',
+            ),
+            _buildNavItem(
+              context,
+              Icons.swap_horiz,
+              l.navTransfers,
+              '/transfers',
             ),
             _buildNavItem(context, Icons.pie_chart, l.navBudgets, '/budgets'),
             _buildNavItem(
