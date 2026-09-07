@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
@@ -17,6 +18,18 @@ part 'auth_controller.g.dart';
 const _biometricKey = 'biometric_enabled';
 const _savedUsernameKey = 'saved_username';
 const _savedPasswordKey = 'saved_password';
+
+/// The profile the server last handed us, so a launch with no network can
+/// still say who is signed in.
+const _savedProfileKey = 'saved_profile';
+
+/// How long that snapshot is allowed to stand in for the server.
+///
+/// Past this it is not "who signed in here", it is a guess about a device
+/// that has been out of touch for a fortnight. The same bound
+/// `ResponseCache.defaultMaxAge` puts on stale figures, and for the same
+/// reason.
+const offlineProfileMaxAge = Duration(days: 14);
 
 @freezed
 abstract class AuthState with _$AuthState {
@@ -59,44 +72,198 @@ class AuthController extends _$AuthController {
   // means both call sites share exactly one run.
   Future<void>? _initFuture;
 
-  Future<void> init() => _initFuture ??= _init();
+  Future<void> init() async {
+    final pending = _initFuture;
+    if (pending != null) return pending;
+    final run = _init();
+    _initFuture = run;
+    try {
+      await run;
+    } on Object {
+      // A rejected future must not be the answer for the life of the
+      // process. The launch that fails here is typically the offline one,
+      // and `LoginScreen` calls init() again every time it is built -- that
+      // retry has to be able to reach the network half once there is a
+      // network to reach.
+      //
+      // Cleared only after the failed run has settled, so a retry is
+      // sequential with it. The guard this replaces was protecting against
+      // two *concurrent* runs, and it still does.
+      _initFuture = null;
+      rethrow;
+    }
+  }
 
   Future<void> _init() async {
     final client = ref.read(apiClientProvider)
       ..onSessionExpired = _handleSessionExpired;
     await client.init();
 
-    final bioStr = await _storage.read(_biometricKey);
-    final biometricEnabled = bioStr == 'true';
-
-    final savedUsername = await _storage.read(_savedUsernameKey);
+    // Published before anything touches the network, and separately from
+    // the rest. All of this used to land in one copyWith at the very end,
+    // so a launch whose network half failed left the sign-in screen with no
+    // saved username, no biometric offer, and `initialized` false -- the
+    // flag that gates main.dart's startup outbox drain and AppLockObserver's
+    // cold-start decision. Offline, that was the whole difference between
+    // signing in once and signing in twice.
     final savedPassword = await _storage.read(_savedPasswordKey);
-
-    UserProfile? user;
-    if (await _repo.hasToken()) {
-      try {
-        user = await _repo.getProfile();
-      } on Exception catch (_) {
-        await _repo.logout();
-      }
-    }
-
-    final registrationEnabled = await _repo.fetchRegistrationEnabled();
-
     state = state.copyWith(
-      user: user,
-      biometricEnabled: biometricEnabled,
-      registrationEnabled: registrationEnabled,
-      initialized: true,
-      savedUsername: savedUsername,
+      biometricEnabled: await _storage.read(_biometricKey) == 'true',
+      savedUsername: await _storage.read(_savedUsernameKey),
       hasSavedPassword: savedPassword != null && savedPassword.isNotEmpty,
     );
+
+    // The profile GET below races `ApiClient`'s unawaited cache attach and
+    // can lose, arriving with no interceptor to replay it. That used to
+    // decide the launch: unreplayable meant "offline", which meant logout,
+    // which deleted the token and cleared the whole cache. Nothing waits on
+    // that race now -- the NetworkException branch below restores from
+    // [_readSavedProfile], which reads SecureStorage rather than the cache
+    // and so cannot lose it.
+    UserProfile? user;
+    var registrationEnabled = state.registrationEnabled;
+    try {
+      if (await _repo.hasToken()) {
+        try {
+          user = await _repo.getProfile();
+          await _persistProfile(user);
+        } on UnauthorizedException catch (_) {
+          // The server answered, and refused this token. The only failure
+          // that is evidence the credential is dead, and so the only one
+          // entitled to call logout() -- which deletes the token *and*
+          // clears the whole offline cache.
+          await _repo.logout();
+        } on NetworkException catch (e) {
+          // Never reached the server, so the server never refused anything.
+          // Keep the token, keep the cache, and carry on with what the last
+          // successful sign-in left on the device. A certificate refusal is
+          // not this case: that server did answer, and the sign-in screen is
+          // about to offer to trust it.
+          if (!e.isCertificateRefusal) user = await _readSavedProfile();
+        } on Exception catch (e) {
+          // A 500, a 4xx that is not 401/403, a body that would not parse.
+          // The server answered, but not with a profile -- that is the
+          // server's problem, not a revoked credential, and throwing the
+          // token away would punish the user for it and wipe the cache on
+          // the way out. The token is kept and the user is left signed out:
+          // they get a real error and can retry. If the token really is
+          // dead, the next request takes a 401 and `_handleSessionExpired`
+          // does the job properly.
+          debugPrint('AuthController: profile fetch failed, token kept: $e');
+        }
+      }
+      registrationEnabled = await _repo.fetchRegistrationEnabled();
+    } finally {
+      state = state.copyWith(
+        // Never removes a user this run did not put there: `_init` can be
+        // retried now, and the only things entitled to sign someone out are
+        // [logout] and [_handleSessionExpired].
+        user: user ?? state.user,
+        registrationEnabled: registrationEnabled,
+        initialized: true,
+      );
+    }
+  }
+
+  /// Keeps a copy of the profile the server last handed us, so a launch with
+  /// no network can say who is signed in.
+  ///
+  /// `savedAt` is written only here, and only from a profile the *server*
+  /// answered with. Refreshing it from a snapshot restore would make the
+  /// snapshot immortal, and [offlineProfileMaxAge] exists precisely so a
+  /// phone left in a drawer does not come back "signed in" over an empty
+  /// cache.
+  ///
+  /// Best effort, like [_persistSuccessfulLogin]: a storage failure must not
+  /// turn a successful fetch into a failed one.
+  Future<void> _persistProfile(UserProfile user) async {
+    try {
+      await _storage.write(
+        _savedProfileKey,
+        jsonEncode({
+          'savedAt': DateTime.now().toIso8601String(),
+          'profile': user.toJson(),
+        }),
+      );
+    } on Exception catch (_) {}
+  }
+
+  /// The stored snapshot, or null if there is none, it will not parse, or it
+  /// is older than [offlineProfileMaxAge].
+  Future<UserProfile?> _readSavedProfile() async {
+    try {
+      final raw = await _storage.read(_savedProfileKey);
+      if (raw == null || raw.isEmpty) return null;
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      final savedAt = DateTime.tryParse(decoded['savedAt'] as String? ?? '');
+      if (savedAt == null ||
+          DateTime.now().difference(savedAt) > offlineProfileMaxAge) {
+        return null;
+      }
+      return UserProfile.fromJson(decoded['profile'] as Map<String, dynamic>);
+      // A snapshot we cannot read is a snapshot we do not have -- never a
+      // reason to fail a sign-in that was already failing. `fromJson` throws
+      // TypeError, not Exception, on a shape that has moved on.
+      // ignore: avoid_catches_without_on_clauses
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Signs in against what the last successful sign-in left on this device,
+  /// for the one case where the server cannot be reached at all.
+  ///
+  /// Reached only from a [NetworkException] that is not a certificate
+  /// refusal. A password the server actively *rejected* must never fall
+  /// through to a local check, or this becomes a way to keep using a
+  /// credential the server has revoked.
+  ///
+  /// The comparison is a plain `==`. It is not constant-time and does not
+  /// need to be: both operands are already inside the same trust boundary,
+  /// and anyone who can time this call is running in a process where the
+  /// plaintext can simply be read out of [SecureStorage]. A timing channel
+  /// that leaks a secret you can also just read is not one.
+  ///
+  /// A live token is required. Without one the app would be signed in to
+  /// nothing: cached GETs still replay (the cache interceptor sits ahead of
+  /// the auth one, so a replay needs no token), so it would *look* like it
+  /// worked -- until the network returned, the first live request took a
+  /// 401, `_handleSessionExpired` fired, and the user was dropped back here
+  /// with the cache wiped. It also bounds what this can resurrect:
+  /// `clearToken` is what a real sign-out and a real session expiry both
+  /// call, so neither can be undone here.
+  Future<bool> _signInOffline(String username, String password) async {
+    if (!await _repo.hasToken()) return false;
+    final savedUsername = await _storage.read(_savedUsernameKey);
+    final savedPassword = await _storage.read(_savedPasswordKey);
+    if (savedUsername == null ||
+        savedPassword == null ||
+        savedPassword.isEmpty) {
+      return false;
+    }
+    if (username != savedUsername || password != savedPassword) return false;
+    final profile = await _readSavedProfile();
+    if (profile == null) return false;
+    state = state.copyWith(
+      user: profile,
+      savedUsername: savedUsername,
+      hasSavedPassword: true,
+    );
+    return true;
   }
 
   Future<String?> login(L l, String username, String password) async {
     final UserProfile user;
     try {
       user = await _repo.login(username, password);
+    } on NetworkException catch (e) {
+      // The server could not be reached, so nothing rejected these
+      // credentials -- see [_signInOffline] for why that is the only failure
+      // allowed to fall through to a local check.
+      if (!e.isCertificateRefusal && await _signInOffline(username, password)) {
+        return null;
+      }
+      return _errorMessage(l, e);
     } on Exception catch (e) {
       return _errorMessage(l, e);
     }
@@ -141,6 +308,10 @@ class AuthController extends _$AuthController {
   /// (having asked first) because a different account may sign in next; an
   /// expired session is the same person and the same account, and the
   /// queued writes are still theirs to send once they are back in.
+  ///
+  /// The profile snapshot is kept for the same reason, and cannot be used to
+  /// undo this: `_repo.logout` deletes the token, and [_signInOffline]
+  /// requires one. An expired session stays expired.
   Future<void> _handleSessionExpired() async {
     // Several requests can fail at once, and a signed-out state must not be
     // re-cleared while the login screen is already up.
@@ -180,6 +351,15 @@ class AuthController extends _$AuthController {
       await _storage.delete(_savedPasswordKey);
       state = state.copyWith(hasSavedPassword: false);
       return l.errorSavedPasswordInvalid;
+    } on NetworkException catch (e) {
+      // Ordered after [UnauthorizedException] deliberately -- Dart matches
+      // catch clauses in order, and a refused password must reach the clause
+      // above rather than this one. This is what makes the fingerprint work
+      // on a train: biometric sign-in replays these same credentials.
+      if (!e.isCertificateRefusal && await _signInOffline(username, password)) {
+        return null;
+      }
+      return _errorMessage(l, e);
     } on Exception catch (e) {
       return _errorMessage(l, e);
     }
@@ -188,12 +368,16 @@ class AuthController extends _$AuthController {
   Future<void> forgetSavedCredentials() async {
     await _storage.delete(_savedUsernameKey);
     await _storage.delete(_savedPasswordKey);
+    // "Not you?" and sign-out both land here, and the snapshot names a
+    // person and their email. It goes with the credentials it belongs to.
+    await _storage.delete(_savedProfileKey);
     state = state.copyWith(savedUsername: null, hasSavedPassword: false);
   }
 
   Future<void> refreshProfile() async {
     try {
       final user = await _repo.getProfile();
+      await _persistProfile(user);
       state = state.copyWith(user: user);
     } on Exception catch (_) {}
   }
@@ -222,6 +406,10 @@ class AuthController extends _$AuthController {
       await _storage.write(_savedPasswordKey, password);
       persisted = true;
     } on Exception catch (_) {}
+    // Alongside them, so a later launch with no network has a profile to
+    // restore and [_signInOffline] has something to sign in as. Separate
+    // from the block above because it swallows its own failures.
+    await _persistProfile(user);
     state = persisted
         ? state.copyWith(
             user: user,

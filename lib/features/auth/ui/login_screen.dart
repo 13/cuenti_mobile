@@ -50,11 +50,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   /// must still leave a login form the user can type into, not an
   /// unhandled async error.
   Future<void> _restoreSession() async {
-    var restored = true;
     try {
       await ref.read(authControllerProvider.notifier).init();
     } on Exception catch (_) {
-      restored = false;
+      // Best effort, and deliberately not tracked. `AuthController._init`
+      // publishes the storage-derived half of its state before it touches
+      // the network and sets `initialized` in a `finally`, so what is read
+      // below is there whether the server answered or not.
     }
     if (!mounted) return;
     // The restore above already reached the server, so a certificate it
@@ -67,12 +69,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await promptToTrustCertificate(context, ref, rejected);
       if (!mounted) return;
     }
-    if (!restored) return;
     final auth = ref.read(authControllerProvider);
     if (auth.isLoggedIn) {
       context.go('/dashboard');
       return;
     }
+    // Reached after a failed restore too. Returning early here instead --
+    // which is what this used to do -- is what made a launch with no network
+    // ask for the username and password it already had.
     _applySavedCredentials(auth);
   }
 

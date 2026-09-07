@@ -114,6 +114,12 @@ class ApiClient {
     // and a channel that never answers -- an unusual host, a test binding --
     // would otherwise hang startup behind a convenience. Requests made
     // before it attaches simply are not cached.
+    //
+    // The startup profile fetch can lose that race, and used to be broken by
+    // it: unreplayable, it failed as "offline" and took the token and the
+    // whole cache with it. It no longer depends on winning -- `AuthController`
+    // restores an offline session from its own profile snapshot in
+    // SecureStorage, which is not this cache and is not raced.
     if (offlineCache == null) unawaited(_attachOfflineCache());
     final url = await _storage.read(_serverUrlKey);
     if (url != null && url.isNotEmpty) {

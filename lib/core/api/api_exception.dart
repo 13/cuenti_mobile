@@ -143,6 +143,19 @@ final class NetworkException extends ApiException {
     super.serverMessage,
     super.statusCode,
   });
+
+  /// Whether this is a certificate this install has not vouched for, rather
+  /// than a server that could not be reached at all.
+  ///
+  /// Both arrive as a [NetworkException] because nothing useful came back,
+  /// but they are not the same event and must not be answered the same way.
+  /// A rejected certificate is a server that *answered*: the sign-in screen
+  /// is about to offer to trust it and retry, and anything that quietly
+  /// stands in for a live answer here -- a cached figure, a session restored
+  /// from disk -- would pre-empt that offer and leave the user wondering why
+  /// the app never asks. `OfflineCacheInterceptor` draws the same line by
+  /// excluding `badCertificate` from what counts as offline.
+  bool get isCertificateRefusal => message == _certificateMessage;
 }
 
 final class UnauthorizedException extends ApiException {

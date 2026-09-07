@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
@@ -8,6 +10,7 @@ import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/l10n/app_localizations_de.dart';
 import 'package:cuentimobile/l10n/app_localizations_en.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -257,17 +260,43 @@ void main() {
       storage.data['saved_username'] = 'demo';
       storage.data['saved_password'] = 'secret';
       when(() => repo.hasToken()).thenAnswer((_) async => true);
-      when(() => repo.getProfile()).thenThrow(Exception('expired'));
+      when(
+        () => repo.getProfile(),
+      ).thenThrow(const UnauthorizedException('Not authenticated'));
       final notifier = container.read(authControllerProvider.notifier);
 
       await notifier.init();
 
       final state = container.read(authControllerProvider);
       expect(state.user, isNull);
+      // The server answered and refused the token: the one failure entitled
+      // to drop it, and with it the whole offline cache.
+      verify(() => repo.logout()).called(1);
       expect(state.savedUsername, 'demo');
       expect(state.hasSavedPassword, isTrue);
       expect(storage.data['saved_password'], 'secret');
     });
+
+    test(
+      'a server that answers with something other than a profile keeps the '
+      'token, because a 500 is not a revoked credential',
+      () async {
+        storage.data['saved_username'] = 'demo';
+        storage.data['saved_password'] = 'secret';
+        when(() => repo.hasToken()).thenAnswer((_) async => true);
+        when(
+          () => repo.getProfile(),
+        ).thenThrow(const ServerException('Server error (500)'));
+        final notifier = container.read(authControllerProvider.notifier);
+
+        await notifier.init();
+
+        expect(container.read(authControllerProvider).user, isNull);
+        // logout() would delete the token and clear every cached figure over
+        // a fault that is the server's, not the credential's.
+        verifyNever(() => repo.logout());
+      },
+    );
 
     test(
       'logout forgets what was searched on the list screens, so the next '
@@ -376,7 +405,8 @@ void main() {
     );
 
     test(
-      'loginWithSavedCredentials on network error keeps credentials',
+      'loginWithSavedCredentials on network error signs in from the saved '
+      'profile, so the fingerprint works on a train',
       () async {
         storage.data['saved_username'] = 'demo';
         storage.data['saved_password'] = 'secret';
@@ -384,11 +414,38 @@ void main() {
           () => repo.login('demo', 'secret'),
         ).thenThrow(const NetworkException('No connection'));
         final notifier = container.read(authControllerProvider.notifier);
+        // Leaves a fresh profile snapshot behind, which is what the offline
+        // sign-in below restores.
         await notifier.init();
 
         final error = await notifier.loginWithSavedCredentials(LEn());
 
-        expect(error, isNotNull);
+        expect(error, isNull);
+        expect(container.read(authControllerProvider).user, user);
+        expect(storage.data['saved_password'], 'secret');
+        expect(container.read(authControllerProvider).hasSavedPassword, isTrue);
+      },
+    );
+
+    test(
+      'loginWithSavedCredentials on network error with no saved profile '
+      'keeps credentials and reports the failure',
+      () async {
+        storage.data['saved_username'] = 'demo';
+        storage.data['saved_password'] = 'secret';
+        when(
+          () => repo.login('demo', 'secret'),
+        ).thenThrow(const NetworkException('No connection'));
+        // No successful profile fetch, so nothing to sign in as offline.
+        when(() => repo.hasToken()).thenAnswer((_) async => false);
+        final notifier = container.read(authControllerProvider.notifier);
+        await notifier.init();
+        when(() => repo.hasToken()).thenAnswer((_) async => true);
+
+        final error = await notifier.loginWithSavedCredentials(LEn());
+
+        expect(error, LEn().errorNetwork);
+        expect(container.read(authControllerProvider).user, isNull);
         expect(storage.data['saved_password'], 'secret');
         expect(container.read(authControllerProvider).hasSavedPassword, isTrue);
       },
@@ -465,6 +522,206 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       verify(() => repo.logout()).called(1);
+    });
+  });
+
+  group('signing in with no server to sign in to', () {
+    /// A device carrying what a previous successful online session leaves
+    /// behind -- saved credentials and a fresh profile snapshot -- sitting on
+    /// the sign-in screen with no server to reach.
+    ///
+    /// `hasToken` is false across `init()` so this launch restores nobody:
+    /// [login] is only ever called from a screen the user is signed out on,
+    /// and a test that starts already signed in cannot tell a refusal from a
+    /// success.
+    Future<AuthController> primed() async {
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      storage.data['saved_profile'] = jsonEncode({
+        'savedAt': DateTime.now().toIso8601String(),
+        'profile': user.toJson(),
+      });
+      when(() => repo.hasToken()).thenAnswer((_) async => false);
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+      when(() => repo.hasToken()).thenAnswer((_) async => true);
+      when(
+        () => repo.login(any(), any()),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+      return notifier;
+    }
+
+    test('the right credentials get in, from the saved profile', () async {
+      final notifier = await primed();
+
+      final error = await notifier.login(LEn(), 'demo', 'secret');
+
+      expect(error, isNull);
+      expect(container.read(authControllerProvider).user, user);
+    });
+
+    test('the wrong password does not', () async {
+      final notifier = await primed();
+
+      final error = await notifier.login(LEn(), 'demo', 'wrong');
+
+      expect(error, LEn().errorNetwork);
+      expect(container.read(authControllerProvider).user, isNull);
+    });
+
+    test('nor does the wrong username', () async {
+      final notifier = await primed();
+
+      final error = await notifier.login(LEn(), 'someone', 'secret');
+
+      expect(error, LEn().errorNetwork);
+      expect(container.read(authControllerProvider).user, isNull);
+    });
+
+    test(
+      'a password the server itself rejected never reaches the local check',
+      () async {
+        final notifier = await primed();
+        when(
+          () => repo.login('demo', 'secret'),
+        ).thenThrow(const UnauthorizedException(invalidCredentialsMessage));
+
+        final error = await notifier.login(LEn(), 'demo', 'secret');
+
+        // Falling through to the saved password here would be a way to keep
+        // using a credential the server has revoked.
+        expect(error, LEn().errorInvalidCredentials);
+        expect(container.read(authControllerProvider).user, isNull);
+      },
+    );
+
+    test(
+      'a certificate this install has not trusted is not "offline"',
+      () async {
+        final notifier = await primed();
+        when(() => repo.login('demo', 'secret')).thenThrow(
+          ApiException.fromDio(
+            DioException(
+              requestOptions: RequestOptions(path: '/auth/login'),
+              type: DioExceptionType.badCertificate,
+            ),
+          ),
+        );
+
+        final error = await notifier.login(LEn(), 'demo', 'secret');
+
+        // The server answered. Signing in locally here would pre-empt the
+        // trust prompt the login screen is about to raise.
+        expect(error, LEn().errorCertificate);
+        expect(container.read(authControllerProvider).user, isNull);
+      },
+    );
+
+    test('a token that is already gone refuses the whole thing', () async {
+      final notifier = await primed();
+      when(() => repo.hasToken()).thenAnswer((_) async => false);
+
+      final error = await notifier.login(LEn(), 'demo', 'secret');
+
+      // Without a token the app would be signed in to nothing: the moment
+      // the network returned, the first request would 401 straight back out.
+      expect(error, LEn().errorNetwork);
+      expect(container.read(authControllerProvider).user, isNull);
+    });
+
+    test('a snapshot older than a fortnight is not who is signed in', () async {
+      final notifier = await primed();
+      storage.data['saved_profile'] = jsonEncode({
+        'savedAt': DateTime.now()
+            .subtract(offlineProfileMaxAge + const Duration(days: 1))
+            .toIso8601String(),
+        'profile': user.toJson(),
+      });
+
+      final error = await notifier.login(LEn(), 'demo', 'secret');
+
+      expect(error, LEn().errorNetwork);
+      expect(container.read(authControllerProvider).user, isNull);
+    });
+
+    test(
+      'a snapshot that will not parse is a snapshot we do not have',
+      () async {
+        final notifier = await primed();
+        storage.data['saved_profile'] = 'not json';
+
+        final error = await notifier.login(LEn(), 'demo', 'secret');
+
+        expect(error, LEn().errorNetwork);
+      },
+    );
+
+    test('an unreachable server on init keeps the token and restores the '
+        'session, rather than signing the user out', () async {
+      // One successful launch, to leave a snapshot on the device.
+      await container.read(authControllerProvider.notifier).init();
+      expect(storage.data['saved_profile'], isNotNull);
+
+      // A second launch, over the same storage, with nothing to reach.
+      when(
+        () => repo.getProfile(),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+      final relaunch = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(repo),
+          apiClientProvider.overrideWithValue(apiClient),
+          secureStorageProvider.overrideWithValue(storage),
+        ],
+      );
+      addTearDown(relaunch.dispose);
+
+      await relaunch.read(authControllerProvider.notifier).init();
+
+      expect(relaunch.read(authControllerProvider).user, user);
+      // logout() here is what used to delete the token and wipe every
+      // cached figure on a single offline launch.
+      verifyNever(() => repo.logout());
+    });
+
+    test('forgetSavedCredentials drops the profile snapshot too', () async {
+      final notifier = await primed();
+      expect(storage.data['saved_profile'], isNotNull);
+
+      await notifier.forgetSavedCredentials();
+
+      expect(storage.data.containsKey('saved_profile'), isFalse);
+    });
+
+    test('a failed init can be retried, rather than being the answer for the '
+        'life of the process', () async {
+      when(() => repo.hasToken()).thenThrow(Exception('storage unavailable'));
+      final notifier = container.read(authControllerProvider.notifier);
+
+      await expectLater(notifier.init(), throwsA(isA<Exception>()));
+      when(() => repo.hasToken()).thenAnswer((_) async => true);
+      await notifier.init();
+
+      // The retry got through to the network half. Memoizing the rejection
+      // left the login screen with no saved username and no biometric offer
+      // -- the "type both again" bug.
+      expect(container.read(authControllerProvider).user, user);
+    });
+
+    test('a launch whose network half fails still leaves a form that knows '
+        'who you are', () async {
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      storage.data['biometric_enabled'] = 'true';
+      when(() => repo.hasToken()).thenThrow(Exception('kaboom'));
+      final notifier = container.read(authControllerProvider.notifier);
+
+      await expectLater(notifier.init(), throwsA(isA<Exception>()));
+
+      final state = container.read(authControllerProvider);
+      expect(state.initialized, isTrue, reason: 'gates the outbox drain');
+      expect(state.savedUsername, 'demo');
+      expect(state.hasSavedPassword, isTrue);
+      expect(state.biometricEnabled, isTrue);
     });
   });
 }
