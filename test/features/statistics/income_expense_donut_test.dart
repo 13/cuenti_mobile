@@ -110,6 +110,22 @@ void main() {
     expect(dataOf(tester).sections[1].radius, before);
   });
 
+  testWidgets('a refresh that only moves the figures keeps the reading '
+      'open: the slices are still income and expense', (tester) async {
+    await pumpDonut(tester);
+    tapSlice(tester, 0);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('1.200'), findsOneWidget);
+
+    await pumpDonut(tester, income: 1500);
+
+    expect(
+      find.textContaining('1.500'),
+      findsOneWidget,
+      reason: 'the reading follows the new figure rather than closing',
+    );
+  });
+
   testWidgets('privacy mode hides the figure in the middle too, or the '
       'tooltip would give away what the slice labels are covering', (
     tester,

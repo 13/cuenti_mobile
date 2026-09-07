@@ -68,6 +68,9 @@ void main() {
   /// rather than matched by text, since the chip legend repeats the name.
   Finder row(String name) => find.byKey(ValueKey('category-row-$name'));
 
+  PieChartData dataOf(WidgetTester tester) =>
+      tester.widget<PieChart>(find.byType(PieChart)).data;
+
   testWidgets('opens on the top-level categories, not on every leaf', (
     tester,
   ) async {
@@ -200,6 +203,13 @@ void main() {
       return Offset(box.center.dx + 42, box.center.dy + 42);
     }
 
+    /// The mirror of that point, above the centre line: with a first slice
+    /// of three quarters or more, this is inside the second one.
+    Offset onSecondSlice(WidgetTester tester) {
+      final box = tester.getRect(find.byType(PieChart));
+      return Offset(box.center.dx + 42, box.center.dy - 42);
+    }
+
     testWidgets('a completed tap on a slice drills into it', (tester) async {
       await pumpTab(tester);
 
@@ -245,6 +255,62 @@ void main() {
         row('Food'),
         findsOneWidget,
         reason: 'that gesture was a scroll, not a tap on Food',
+      );
+    });
+
+    testWidgets('a tap on a slice that opens nothing still swells it, so a '
+        'tap that changes no level is not silent', (tester) async {
+      await pumpTab(tester, data: const {'Mystery': 300, 'Fuel': 50});
+      final base = dataOf(tester).sections[0].radius;
+
+      await tester.tapAt(onLargestSlice(tester));
+      await tester.pumpAndSettle();
+
+      expect(dataOf(tester).sections[0].radius, greaterThan(base));
+      expect(
+        dataOf(tester).sections[1].radius,
+        base,
+        reason: 'only the slice under the finger grows',
+      );
+    });
+
+    testWidgets('tapping the swollen slice again puts it back', (tester) async {
+      await pumpTab(tester, data: const {'Mystery': 300, 'Fuel': 50});
+      final base = dataOf(tester).sections[0].radius;
+
+      await tester.tapAt(onLargestSlice(tester));
+      await tester.pumpAndSettle();
+      expect(dataOf(tester).sections[0].radius, greaterThan(base));
+
+      await tester.tapAt(onLargestSlice(tester));
+      await tester.pumpAndSettle();
+
+      expect(dataOf(tester).sections[0].radius, base);
+    });
+
+    testWidgets('the level a drill opens starts at rest: the swelling '
+        'belonged to the slice that was tapped, not to its index', (
+      tester,
+    ) async {
+      await pumpTab(tester, data: const {'Mystery': 300, 'Groceries': 100});
+      final base = dataOf(tester).sections[0].radius;
+
+      await tester.tapAt(onLargestSlice(tester));
+      await tester.pumpAndSettle();
+      expect(
+        dataOf(tester).sections[0].radius,
+        greaterThan(base),
+        reason: 'Mystery opens nothing, so it stays swollen',
+      );
+
+      await tester.tapAt(onSecondSlice(tester));
+      await tester.pumpAndSettle();
+
+      expect(row('Groceries'), findsOneWidget, reason: 'it drilled into Food');
+      expect(
+        dataOf(tester).sections.map((s) => s.radius),
+        everyElement(base),
+        reason: 'a whole new set of slices, none of them touched',
       );
     });
 

@@ -7,8 +7,8 @@ import 'package:cuentimobile/features/categories/ui/categories_controller.dart';
 import 'package:cuentimobile/features/statistics/domain/category_breakdown.dart';
 import 'package:cuentimobile/features/statistics/ui/widgets/category_breadcrumb.dart';
 import 'package:cuentimobile/features/statistics/ui/widgets/category_breakdown_row.dart';
+import 'package:cuentimobile/features/statistics/ui/widgets/statistics_donut.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -81,6 +81,11 @@ class _CategoryTabState extends ConsumerState<CategoryTab> {
 
   void _popTo(int depth) => setState(() => _path = _path.sublist(0, depth));
 
+  /// Whether [node] holds enough of [total] to carry writing on its slice.
+  /// Below this a percentage -- or a badge -- sits over its neighbours.
+  bool _sliceIsFat(CategoryNode node, double total) =>
+      total > 0 && node.total / total * 100 >= 5;
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
@@ -133,91 +138,37 @@ class _CategoryTabState extends ConsumerState<CategoryTab> {
           ),
           const SizedBox(height: 16),
           if (level.isNotEmpty) ...[
-            SizedBox(
+            StatisticsDonut(
               height: 220,
               // Announced by name only: the same figures follow as real
               // text in the list below, which a screen reader can read.
-              child: Semantics(
-                label: l.a11yChartCategories,
-                container: true,
-                child: PieChart(
-                  PieChartData(
-                    sectionsSpace: 2,
-                    centerSpaceRadius: 40,
-                    pieTouchData: PieTouchData(
-                      // FlTapUpEvent, explicitly, is the completed tap.
-                      // isInterestedForInteractions looks like the right
-                      // guard and is not: it exists to drive hover
-                      // highlighting, so it excludes the up events and
-                      // admits the down ones. Gating on it drilled in the
-                      // moment a finger landed -- so a scroll that began on
-                      // the chart navigated instead -- and fired twice per
-                      // tap besides.
-                      touchCallback: (event, response) {
-                        if (event is! FlTapUpEvent) return;
-                        final index =
-                            response?.touchedSection?.touchedSectionIndex;
-                        if (index == null ||
-                            index < 0 ||
-                            index >= level.length) {
-                          return;
-                        }
-                        _drillInto(level[index]);
-                      },
-                    ),
-                    sections: List.generate(level.length, (i) {
-                      final pct = total > 0
-                          ? (level[i].total / total * 100)
-                          : 0.0;
-                      // Nothing about a slice says whether tapping it opens
-                      // anything, so the ones that do carry the chevron the
-                      // list rows below already use for the same thing.
-                      // Gated on the same 5% the label is: a slice too thin
-                      // to hold a percentage is too thin to hold a badge
-                      // without it sitting over its neighbours -- and its
-                      // row below still shows one.
-                      final opens = level[i].hasChildren && pct >= 5;
-                      return PieChartSectionData(
-                        value: level[i].total,
-                        title: pct >= 5 ? '${pct.toStringAsFixed(0)}%' : '',
-                        color: colors[i],
-                        radius: 50,
-                        badgeWidget: opens
-                            ? const Icon(
-                                Icons.chevron_right,
-                                size: 14,
-                                color: Colors.white,
-                              )
-                            : null,
-                        // Outward of the percentage, which sits at the
-                        // default 0.5, so the two do not overlap.
-                        badgePositionPercentageOffset: 0.85,
-                        titleStyle: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      );
-                    }),
+              semanticsLabel: l.a11yChartCategories,
+              onSliceTap: (i) => _drillInto(level[i]),
+              slices: [
+                for (var i = 0; i < level.length; i++)
+                  DonutSlice(
+                    value: level[i].total,
+                    label: level[i].name,
+                    color: colors[i],
+                    title: _sliceIsFat(level[i], total)
+                        ? '${(level[i].total / total * 100).toStringAsFixed(0)}%'
+                        : '',
+                    // Nothing about a slice says whether tapping it opens
+                    // anything, so the ones that do carry the chevron the
+                    // list rows below already use for the same thing.
+                    // Gated on the same 5% the label is: a slice too thin
+                    // to hold a percentage is too thin to hold a badge
+                    // without it sitting over its neighbours -- and its
+                    // row below still shows one.
+                    badge: level[i].hasChildren && _sliceIsFat(level[i], total)
+                        ? const Icon(
+                            Icons.chevron_right,
+                            size: 14,
+                            color: Colors.white,
+                          )
+                        : null,
                   ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: List.generate(level.length, (i) {
-                return Chip(
-                  avatar: CircleAvatar(backgroundColor: colors[i], radius: 6),
-                  label: Text(
-                    level[i].name,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                );
-              }),
+              ],
             ),
             const SizedBox(height: 16),
           ] else
