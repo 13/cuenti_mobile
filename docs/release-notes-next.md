@@ -1,10 +1,9 @@
-## One download per build
+## Your password on every launch
 
-Each release now carries every APK once, named for the app and the version,
-for example Cuenti-v2.9.4-arm64-v8a-release.apk. Releases used to attach the
-same build three times under different names.
+If fingerprint unlock is off, the app now asks for your password every time
+it starts, with or without a connection. It used to open straight into your
+account whenever it was connected. Your username is filled in for you.
 
-Coming from 2.9.3, this update installs from inside the app as usual. On
-2.9.2 or older the app cannot find it: download the file for your phone
-from the GitHub release page once, and later updates work from inside the
-app again.
+With fingerprint unlock on, nothing changes: the app opens where you left it
+and asks for your fingerprint. Returning to the app from the background works
+as before.
