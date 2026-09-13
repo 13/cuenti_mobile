@@ -363,6 +363,12 @@ abstract class L {
   /// **'Unlock'**
   String get authUnlock;
 
+  /// No description provided for @authUnlockUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocking is not available right now. Try again, or sign out and sign in with your password.'**
+  String get authUnlockUnavailable;
+
   /// No description provided for @authShowPassword.
   ///
   /// In en, this message translates to:
@@ -1579,6 +1585,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Download failed'**
   String get updateDownloadFailed;
+
+  /// No description provided for @updateIntegrityFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The download did not match the published checksum and was deleted. Nothing was installed.'**
+  String get updateIntegrityFailed;
 
   /// No description provided for @updateReady.
   ///

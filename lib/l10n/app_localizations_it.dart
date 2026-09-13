@@ -142,6 +142,10 @@ class LIt extends L {
   String get authUnlock => 'Sblocca';
 
   @override
+  String get authUnlockUnavailable =>
+      'Lo sblocco non è disponibile al momento. Riprova, oppure esci e accedi di nuovo con la password.';
+
+  @override
   String get authShowPassword => 'Mostra password';
 
   @override
@@ -790,6 +794,10 @@ class LIt extends L {
 
   @override
   String get updateDownloadFailed => 'Download non riuscito';
+
+  @override
+  String get updateIntegrityFailed =>
+      'Il download non corrispondeva al checksum pubblicato ed è stato eliminato. Non è stato installato nulla.';
 
   @override
   String updateReady(String tag) {

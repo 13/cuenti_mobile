@@ -11,6 +11,7 @@ _ReleaseAsset _$ReleaseAssetFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String? ?? '',
       browserDownloadUrl: json['browser_download_url'] as String? ?? '',
       size: (json['size'] as num?)?.toInt() ?? 0,
+      digest: json['digest'] as String?,
     );
 
 Map<String, dynamic> _$ReleaseAssetToJson(_ReleaseAsset instance) =>
@@ -18,6 +19,7 @@ Map<String, dynamic> _$ReleaseAssetToJson(_ReleaseAsset instance) =>
       'name': instance.name,
       'browser_download_url': instance.browserDownloadUrl,
       'size': instance.size,
+      'digest': instance.digest,
     };
 
 _AppRelease _$AppReleaseFromJson(Map<String, dynamic> json) => _AppRelease(

@@ -16,7 +16,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ReleaseAsset {
 
- String get name;@JsonKey(name: 'browser_download_url') String get browserDownloadUrl; int get size;
+ String get name;@JsonKey(name: 'browser_download_url') String get browserDownloadUrl; int get size;/// GitHub's checksum for the asset, e.g. `sha256:<hex>`. Absent on
+/// releases published before GitHub started recording digests.
+ String? get digest;
 /// Create a copy of ReleaseAsset
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +32,20 @@ $ReleaseAssetCopyWith<ReleaseAsset> get copyWith => _$ReleaseAssetCopyWithImpl<R
 @override
 bool operator ==(Object other) {
   final _this = this as ReleaseAsset;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReleaseAsset&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.browserDownloadUrl, _this.browserDownloadUrl) || other.browserDownloadUrl == _this.browserDownloadUrl)&&(identical(other.size, _this.size) || other.size == _this.size));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReleaseAsset&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.browserDownloadUrl, _this.browserDownloadUrl) || other.browserDownloadUrl == _this.browserDownloadUrl)&&(identical(other.size, _this.size) || other.size == _this.size)&&(identical(other.digest, _this.digest) || other.digest == _this.digest));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ReleaseAsset;
-  return Object.hash(runtimeType,_this.name,_this.browserDownloadUrl,_this.size);
+  return Object.hash(runtimeType,_this.name,_this.browserDownloadUrl,_this.size,_this.digest);
 }
 
 @override
 String toString() {
   final _this = this as ReleaseAsset;
-  return 'ReleaseAsset(name: ${_this.name}, browserDownloadUrl: ${_this.browserDownloadUrl}, size: ${_this.size})';
+  return 'ReleaseAsset(name: ${_this.name}, browserDownloadUrl: ${_this.browserDownloadUrl}, size: ${_this.size}, digest: ${_this.digest})';
 }
 
 
@@ -54,7 +56,7 @@ abstract mixin class $ReleaseAssetCopyWith<$Res>  {
   factory $ReleaseAssetCopyWith(ReleaseAsset value, $Res Function(ReleaseAsset) _then) = _$ReleaseAssetCopyWithImpl;
 @useResult
 $Res call({
- String name,@JsonKey(name: 'browser_download_url') String browserDownloadUrl, int size
+ String name,@JsonKey(name: 'browser_download_url') String browserDownloadUrl, int size, String? digest
 });
 
 
@@ -71,12 +73,13 @@ class _$ReleaseAssetCopyWithImpl<$Res>
 
 /// Create a copy of ReleaseAsset
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? browserDownloadUrl = null,Object? size = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? browserDownloadUrl = null,Object? size = null,Object? digest = freezed,}) {
   return _then(ReleaseAsset(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,browserDownloadUrl: null == browserDownloadUrl ? _self.browserDownloadUrl : browserDownloadUrl // ignore: cast_nullable_to_non_nullable
 as String,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
-as int,
+as int,digest: freezed == digest ? _self.digest : digest // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -161,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name, @JsonKey(name: 'browser_download_url')  String browserDownloadUrl,  int size)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name, @JsonKey(name: 'browser_download_url')  String browserDownloadUrl,  int size,  String? digest)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReleaseAsset() when $default != null:
-return $default(_that.name,_that.browserDownloadUrl,_that.size);case _:
+return $default(_that.name,_that.browserDownloadUrl,_that.size,_that.digest);case _:
   return orElse();
 
 }
@@ -182,10 +185,10 @@ return $default(_that.name,_that.browserDownloadUrl,_that.size);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name, @JsonKey(name: 'browser_download_url')  String browserDownloadUrl,  int size)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name, @JsonKey(name: 'browser_download_url')  String browserDownloadUrl,  int size,  String? digest)  $default,) {final _that = this;
 switch (_that) {
 case _ReleaseAsset():
-return $default(_that.name,_that.browserDownloadUrl,_that.size);case _:
+return $default(_that.name,_that.browserDownloadUrl,_that.size,_that.digest);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +205,10 @@ return $default(_that.name,_that.browserDownloadUrl,_that.size);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name, @JsonKey(name: 'browser_download_url')  String browserDownloadUrl,  int size)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name, @JsonKey(name: 'browser_download_url')  String browserDownloadUrl,  int size,  String? digest)?  $default,) {final _that = this;
 switch (_that) {
 case _ReleaseAsset() when $default != null:
-return $default(_that.name,_that.browserDownloadUrl,_that.size);case _:
+return $default(_that.name,_that.browserDownloadUrl,_that.size,_that.digest);case _:
   return null;
 
 }
@@ -217,12 +220,15 @@ return $default(_that.name,_that.browserDownloadUrl,_that.size);case _:
 @JsonSerializable()
 
 class _ReleaseAsset implements ReleaseAsset {
-  const _ReleaseAsset({this.name = '', @JsonKey(name: 'browser_download_url') this.browserDownloadUrl = '', this.size = 0});
+  const _ReleaseAsset({this.name = '', @JsonKey(name: 'browser_download_url') this.browserDownloadUrl = '', this.size = 0, this.digest});
   factory _ReleaseAsset.fromJson(Map<String, dynamic> json) => _$ReleaseAssetFromJson(json);
 
 @override@JsonKey() final  String name;
 @override@JsonKey(name: 'browser_download_url') final  String browserDownloadUrl;
 @override@JsonKey() final  int size;
+/// GitHub's checksum for the asset, e.g. `sha256:<hex>`. Absent on
+/// releases published before GitHub started recording digests.
+@override final  String? digest;
 
 /// Create a copy of ReleaseAsset
 /// with the given fields replaced by the non-null parameter values.
@@ -237,18 +243,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReleaseAsset&&(identical(other.name, name) || other.name == name)&&(identical(other.browserDownloadUrl, browserDownloadUrl) || other.browserDownloadUrl == browserDownloadUrl)&&(identical(other.size, size) || other.size == size));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReleaseAsset&&(identical(other.name, name) || other.name == name)&&(identical(other.browserDownloadUrl, browserDownloadUrl) || other.browserDownloadUrl == browserDownloadUrl)&&(identical(other.size, size) || other.size == size)&&(identical(other.digest, digest) || other.digest == digest));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,name,browserDownloadUrl,size);
+    return Object.hash(runtimeType,name,browserDownloadUrl,size,digest);
 }
 
 @override
 String toString() {
-    return 'ReleaseAsset(name: $name, browserDownloadUrl: $browserDownloadUrl, size: $size)';
+    return 'ReleaseAsset(name: $name, browserDownloadUrl: $browserDownloadUrl, size: $size, digest: $digest)';
 }
 
 
@@ -259,7 +265,7 @@ abstract mixin class _$ReleaseAssetCopyWith<$Res> implements $ReleaseAssetCopyWi
   factory _$ReleaseAssetCopyWith(_ReleaseAsset value, $Res Function(_ReleaseAsset) _then) = __$ReleaseAssetCopyWithImpl;
 @override @useResult
 $Res call({
- String name,@JsonKey(name: 'browser_download_url') String browserDownloadUrl, int size
+ String name,@JsonKey(name: 'browser_download_url') String browserDownloadUrl, int size, String? digest
 });
 
 
@@ -276,12 +282,13 @@ class __$ReleaseAssetCopyWithImpl<$Res>
 
 /// Create a copy of ReleaseAsset
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? browserDownloadUrl = null,Object? size = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? browserDownloadUrl = null,Object? size = null,Object? digest = freezed,}) {
   return _then(_ReleaseAsset(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,browserDownloadUrl: null == browserDownloadUrl ? _self.browserDownloadUrl : browserDownloadUrl // ignore: cast_nullable_to_non_nullable
 as String,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
-as int,
+as int,digest: freezed == digest ? _self.digest : digest // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

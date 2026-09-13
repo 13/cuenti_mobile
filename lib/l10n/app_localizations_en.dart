@@ -141,6 +141,10 @@ class LEn extends L {
   String get authUnlock => 'Unlock';
 
   @override
+  String get authUnlockUnavailable =>
+      'Unlocking is not available right now. Try again, or sign out and sign in with your password.';
+
+  @override
   String get authShowPassword => 'Show password';
 
   @override
@@ -788,6 +792,10 @@ class LEn extends L {
 
   @override
   String get updateDownloadFailed => 'Download failed';
+
+  @override
+  String get updateIntegrityFailed =>
+      'The download did not match the published checksum and was deleted. Nothing was installed.';
 
   @override
   String updateReady(String tag) {

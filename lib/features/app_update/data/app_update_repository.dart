@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:crypto/crypto.dart';
 import 'package:cuentimobile/core/api/api_guard.dart';
 import 'package:cuentimobile/features/app_update/domain/app_release.dart';
 import 'package:dio/dio.dart';
@@ -71,6 +74,39 @@ class AppUpdateRepository {
       savePath,
       onReceiveProgress: onProgress,
     );
+    await verifyDigest(File(savePath), asset.digest);
     return savePath;
   });
+}
+
+/// The downloaded update does not match the checksum GitHub published for
+/// it, so it must not be installed.
+class ApkIntegrityException implements Exception {
+  const ApkIntegrityException(this.detail);
+
+  final String detail;
+
+  @override
+  String toString() => 'ApkIntegrityException: $detail';
+}
+
+/// Checks [file] against a GitHub asset digest (`sha256:<hex>`).
+///
+/// HTTPS already protects the transfer; this catches a truncated or
+/// corrupted download and an asset swapped on the release after the fact.
+/// On a mismatch the file is deleted, so nothing half-verified is left for
+/// the installer to pick up. Assets without a digest (older releases) are
+/// left to Android's own check, which refuses an update not signed with the
+/// installed app's key.
+Future<void> verifyDigest(File file, String? digest) async {
+  if (digest == null || digest.isEmpty) return;
+  const prefix = 'sha256:';
+  if (!digest.startsWith(prefix)) {
+    throw ApkIntegrityException('unsupported digest format: $digest');
+  }
+  final actual = (await sha256.bind(file.openRead()).first).toString();
+  if (actual != digest.substring(prefix.length).toLowerCase()) {
+    if (file.existsSync()) await file.delete();
+    throw ApkIntegrityException('sha256 mismatch for ${file.path}');
+  }
 }

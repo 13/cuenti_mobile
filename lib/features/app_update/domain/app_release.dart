@@ -11,6 +11,10 @@ abstract class ReleaseAsset with _$ReleaseAsset {
     @Default('')
     String browserDownloadUrl,
     @Default(0) int size,
+
+    /// GitHub's checksum for the asset, e.g. `sha256:<hex>`. Absent on
+    /// releases published before GitHub started recording digests.
+    String? digest,
   }) = _ReleaseAsset;
 
   factory ReleaseAsset.fromJson(Map<String, dynamic> json) =>

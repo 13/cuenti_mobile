@@ -150,6 +150,13 @@ class _UpdateDialogState extends ConsumerState<_UpdateDialog> {
       );
       await ref.read(apkInstallerProvider)(path);
       if (mounted) Navigator.pop(context);
+    } on ApkIntegrityException catch (_) {
+      if (mounted) {
+        setState(() {
+          _progress = null;
+          _error = L.of(context).updateIntegrityFailed;
+        });
+      }
     } on Exception catch (_) {
       if (mounted) {
         setState(() {

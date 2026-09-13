@@ -116,17 +116,42 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
     });
   }
 
+  /// Set when the authenticator could not run at all; the lock screen then
+  /// says so and offers the way out.
+  bool _unlockUnavailable = false;
+
   Future<void> _authenticate() async {
     try {
       final didAuth = await _localAuth.authenticate(
         localizedReason: L.of(context).authUnlockReason,
       );
-      if (didAuth) {
-        setState(() => _locked = false);
+      if (didAuth && mounted) {
+        setState(() {
+          _locked = false;
+          _unlockUnavailable = false;
+        });
       }
     } on Exception catch (_) {
-      // If biometric auth is unavailable, just unlock
-      setState(() => _locked = false);
+      // Fail closed. This used to unlock, so anything that made the
+      // authenticator throw -- a sensor locked out after too many attempts,
+      // biometrics removed from the device -- opened the app to whoever held
+      // the phone. Signing out, which takes the password to come back from,
+      // is the way out instead.
+      if (mounted) setState(() => _unlockUnavailable = true);
+    }
+  }
+
+  /// Plain [AuthController.logout], not the drawer's sign-out flow: that one
+  /// asks before discarding unsent transactions, and there is no navigator
+  /// above this screen to ask with. logout() keeps the outbox, so nothing
+  /// the user entered is lost; the router takes them to the login screen.
+  Future<void> _signOut() async {
+    await ref.read(authControllerProvider.notifier).logout();
+    if (mounted) {
+      setState(() {
+        _locked = false;
+        _unlockUnavailable = false;
+      });
     }
   }
 
@@ -140,7 +165,11 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
     }
 
     if (_locked) {
-      return _LockScreen(onUnlock: _authenticate);
+      return _LockScreen(
+        onUnlock: _authenticate,
+        onSignOut: _signOut,
+        unlockUnavailable: _unlockUnavailable,
+      );
     }
     if (!_updateCheckStarted) {
       _updateCheckStarted = true;
@@ -151,8 +180,14 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
 }
 
 class _LockScreen extends StatelessWidget {
-  const _LockScreen({required this.onUnlock});
+  const _LockScreen({
+    required this.onUnlock,
+    required this.onSignOut,
+    required this.unlockUnavailable,
+  });
   final VoidCallback onUnlock;
+  final VoidCallback onSignOut;
+  final bool unlockUnavailable;
 
   @override
   Widget build(BuildContext context) {
@@ -173,6 +208,22 @@ class _LockScreen extends StatelessWidget {
               icon: const Icon(Icons.fingerprint),
               label: Text(L.of(context).authUnlock),
             ),
+            if (unlockUnavailable) ...[
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  L.of(context).authUnlockUnavailable,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: onSignOut,
+                child: Text(L.of(context).actionLogout),
+              ),
+            ],
           ],
         ),
       ),

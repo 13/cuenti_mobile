@@ -16,8 +16,14 @@ class MockLocalAuthentication extends Mock implements LocalAuthentication {}
 class _FakeAuthController extends AuthController {
   _FakeAuthController(this._state);
   final AuthState _state;
+  bool loggedOut = false;
   @override
   AuthState build() => _state;
+  @override
+  Future<void> logout() async {
+    loggedOut = true;
+    state = state.copyWith(user: null);
+  }
 }
 
 const _user = UserProfile(username: 'demo', email: 'd@x');
@@ -25,10 +31,13 @@ const _user = UserProfile(username: 'demo', email: 'd@x');
 Widget _host({
   required AuthState authState,
   LocalAuthentication? authenticator,
+  _FakeAuthController? controller,
 }) {
   return ProviderScope(
     overrides: [
-      authControllerProvider.overrideWith(() => _FakeAuthController(authState)),
+      authControllerProvider.overrideWith(
+        () => controller ?? _FakeAuthController(authState),
+      ),
     ],
     child: MaterialApp(
       localizationsDelegates: L.localizationsDelegates,
@@ -70,6 +79,102 @@ void main() {
 
       expect(find.text('Cuenti is Locked'), findsOneWidget);
       expect(find.text('Home'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'fails closed: an authenticator that cannot run keeps the app locked',
+    (tester) async {
+      // Regression: a sensor locked out after too many attempts (or no
+      // biometrics enrolled any more) made authenticate() throw, and the
+      // catch unlocked the app.
+      final authenticator = MockLocalAuthentication();
+      when(
+        () => authenticator.authenticate(
+          localizedReason: any(named: 'localizedReason'),
+        ),
+      ).thenThrow(Exception('LockedOut'));
+
+      await tester.pumpWidget(
+        _host(
+          authState: const AuthState(
+            user: _user,
+            biometricEnabled: true,
+            initialized: true,
+          ),
+          authenticator: authenticator,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cuenti is Locked'), findsOneWidget);
+      expect(find.text('Home'), findsNothing);
+      expect(find.textContaining('not available right now'), findsOneWidget);
+      expect(find.text('Logout'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'signing out from the lock screen logs out and drops the lock',
+    (tester) async {
+      final authenticator = MockLocalAuthentication();
+      when(
+        () => authenticator.authenticate(
+          localizedReason: any(named: 'localizedReason'),
+        ),
+      ).thenThrow(Exception('NotAvailable'));
+      final controller = _FakeAuthController(
+        const AuthState(user: _user, biometricEnabled: true, initialized: true),
+      );
+
+      await tester.pumpWidget(
+        _host(
+          authState: const AuthState(),
+          authenticator: authenticator,
+          controller: controller,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Logout'));
+      await tester.pumpAndSettle();
+
+      expect(controller.loggedOut, isTrue);
+      expect(find.text('Cuenti is Locked'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'a successful retry after an unavailable authenticator unlocks',
+    (tester) async {
+      final authenticator = MockLocalAuthentication();
+      var attempts = 0;
+      when(
+        () => authenticator.authenticate(
+          localizedReason: any(named: 'localizedReason'),
+        ),
+      ).thenAnswer((_) async {
+        attempts++;
+        if (attempts == 1) throw Exception('Temporarily unavailable');
+        return true;
+      });
+
+      await tester.pumpWidget(
+        _host(
+          authState: const AuthState(
+            user: _user,
+            biometricEnabled: true,
+            initialized: true,
+          ),
+          authenticator: authenticator,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Cuenti is Locked'), findsOneWidget);
+
+      await tester.tap(find.text('Unlock'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Home'), findsOneWidget);
     },
   );
 

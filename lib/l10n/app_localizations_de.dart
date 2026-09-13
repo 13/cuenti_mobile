@@ -143,6 +143,10 @@ class LDe extends L {
   String get authUnlock => 'Entsperren';
 
   @override
+  String get authUnlockUnavailable =>
+      'Entsperren ist gerade nicht möglich. Versuche es erneut oder melde dich ab und mit deinem Passwort wieder an.';
+
+  @override
   String get authShowPassword => 'Passwort anzeigen';
 
   @override
@@ -791,6 +795,10 @@ class LDe extends L {
 
   @override
   String get updateDownloadFailed => 'Download fehlgeschlagen';
+
+  @override
+  String get updateIntegrityFailed =>
+      'Der Download stimmte nicht mit der veröffentlichten Prüfsumme überein und wurde gelöscht. Es wurde nichts installiert.';
 
   @override
   String updateReady(String tag) {
