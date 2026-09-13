@@ -156,7 +156,13 @@ class AuthController extends _$AuthController {
     UserProfile? user;
     var registrationEnabled = state.registrationEnabled;
     try {
-      if (await _repo.hasToken()) {
+      // A launch resumes the last session only behind the fingerprint.
+      // Without biometric unlock nothing on the device confirms who is
+      // holding it -- online the token proves the session, not the person --
+      // so nobody is signed in and the login screen asks for the password.
+      // The token stays: the offline password check needs it, and a sign-in
+      // replaces it anyway.
+      if (state.biometricEnabled && await _repo.hasToken()) {
         try {
           user = await _repo.getProfile();
           await _persistProfile(user);
@@ -172,15 +178,9 @@ class AuthController extends _$AuthController {
           // not this case: that server did answer, and the sign-in screen is
           // about to offer to trust it.
           //
-          // Whether to carry on as the last signed-in user depends on how
-          // this device would otherwise confirm who is holding it. Online,
-          // the server vouches for the token. Offline, nothing does: with
-          // biometric unlock on, the snapshot is restored and the app lock
-          // asks for the fingerprint; without it, nobody is signed in and the
-          // login screen asks for the password, which [_signInOffline] checks
-          // against the saved credentials. Restoring here without either let
-          // anyone holding the phone into the app.
-          if (!e.isCertificateRefusal && state.biometricEnabled) {
+          // Only reached with biometric unlock on (see above), so the
+          // restored snapshot is guarded by the app lock's fingerprint.
+          if (!e.isCertificateRefusal) {
             user = await _readSavedProfile();
           }
         } on Exception catch (e) {

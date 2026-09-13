@@ -78,6 +78,7 @@ void main() {
   test(
     'concurrent init() calls are single-flight: getProfile called once',
     () async {
+      storage.data['biometric_enabled'] = 'true';
       final notifier = container.read(authControllerProvider.notifier);
 
       // Two explicit concurrent calls, plus the microtask `build()` already
@@ -257,6 +258,7 @@ void main() {
     );
 
     test('session expiry on init keeps saved credentials', () async {
+      storage.data['biometric_enabled'] = 'true';
       storage.data['saved_username'] = 'demo';
       storage.data['saved_password'] = 'secret';
       when(() => repo.hasToken()).thenAnswer((_) async => true);
@@ -408,6 +410,7 @@ void main() {
       'loginWithSavedCredentials on network error signs in from the saved '
       'profile, so the fingerprint works on a train',
       () async {
+        storage.data['biometric_enabled'] = 'true';
         storage.data['saved_username'] = 'demo';
         storage.data['saved_password'] = 'secret';
         when(
@@ -479,6 +482,7 @@ void main() {
       'a 401 from an ordinary endpoint signs the user out, so the router '
       'sends them to login instead of leaving every screen erroring',
       () async {
+        storage.data['biometric_enabled'] = 'true';
         when(() => repo.hasToken()).thenAnswer((_) async => true);
         when(() => repo.getProfile()).thenAnswer((_) async => user);
         final notifier = container.read(authControllerProvider.notifier);
@@ -511,6 +515,7 @@ void main() {
 
     test('several requests failing at once sign the user out once, not once '
         'each', () async {
+      storage.data['biometric_enabled'] = 'true';
       final notifier = container.read(authControllerProvider.notifier);
       await notifier.init();
       expect(container.read(authControllerProvider).isLoggedIn, isTrue);
@@ -731,6 +736,7 @@ void main() {
 
     test('a failed init can be retried, rather than being the answer for the '
         'life of the process', () async {
+      storage.data['biometric_enabled'] = 'true';
       when(() => repo.hasToken()).thenThrow(Exception('storage unavailable'));
       final notifier = container.read(authControllerProvider.notifier);
 
@@ -771,6 +777,7 @@ void main() {
     test(
       'a session restored from the stored token is marked restored',
       () async {
+        storage.data['biometric_enabled'] = 'true';
         await container.read(authControllerProvider.notifier).init();
 
         final state = container.read(authControllerProvider);
@@ -978,5 +985,42 @@ void main() {
 
       expect(container.read(authControllerProvider).user, isNull);
     });
+  });
+
+  group('an online launch without biometric unlock', () {
+    test('signs nobody in and asks for the password', () async {
+      // Regression: with a stored token the app opened straight into the
+      // account. Online the token proves the session, not who holds the
+      // phone; without the fingerprint nothing else does.
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      final notifier = container.read(authControllerProvider.notifier);
+
+      await notifier.init();
+
+      final state = container.read(authControllerProvider);
+      expect(state.user, isNull);
+      expect(state.initialized, isTrue);
+      expect(state.savedUsername, 'demo', reason: 'the form is prefilled');
+      verifyNever(() => repo.getProfile());
+      verifyNever(() => repo.logout());
+
+      when(() => repo.login('demo', 'secret')).thenAnswer((_) async => user);
+      expect(await notifier.login(LEn(), 'demo', 'secret'), isNull);
+      expect(container.read(authControllerProvider).user, user);
+    });
+
+    test(
+      'with biometric unlock the session is restored for the lock',
+      () async {
+        storage.data['biometric_enabled'] = 'true';
+
+        await container.read(authControllerProvider.notifier).init();
+
+        final state = container.read(authControllerProvider);
+        expect(state.user, user);
+        expect(state.restoredSession, isTrue);
+      },
+    );
   });
 }
