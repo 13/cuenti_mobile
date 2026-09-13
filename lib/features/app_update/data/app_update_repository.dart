@@ -51,13 +51,20 @@ class AppUpdateRepository {
       return null;
     }
 
+    // The versioned name first: it is what the release page shows, and the
+    // only one that still says which build it is once downloaded.
+    final prefixes = [
+      if (release.tagName.isNotEmpty) 'Cuenti-${release.tagName}',
+      ..._apkPrefixes,
+    ];
+
     for (final abi in supportedAbis) {
-      for (final prefix in _apkPrefixes) {
+      for (final prefix in prefixes) {
         final asset = named('$prefix-$abi-release.apk');
         if (asset != null) return asset;
       }
     }
-    for (final prefix in _apkPrefixes) {
+    for (final prefix in prefixes) {
       final asset = named('$prefix-release.apk');
       if (asset != null) return asset;
     }

@@ -21,6 +21,10 @@ void main() {
     ];
   }
 
+  /// A published name as a v9.9.9 release carries it: `-v*-` is the tag in
+  /// the versioned names, and any `*` left over is an ABI.
+  String expandVersion(String name) => name.replaceFirst('-v*-', '-v9.9.9-');
+
   ReleaseAsset? pick(List<String> names, List<String> abis) => repo.pickAsset(
     AppRelease(
       tagName: 'v9.9.9',
@@ -34,7 +38,10 @@ void main() {
 
   test('the workflow publishes a universal APK this client can find', () {
     final published = publishedAssetNames();
-    final universal = published.where((n) => !n.contains('*')).toList();
+    final universal = published
+        .map(expandVersion)
+        .where((n) => !n.contains('*'))
+        .toList();
 
     expect(universal, isNotEmpty, reason: 'no universal APK is published');
     for (final name in universal) {
@@ -47,7 +54,9 @@ void main() {
   });
 
   test('the workflow publishes split APKs this client can find', () {
-    final patterns = publishedAssetNames().where((n) => n.contains('*'));
+    final patterns = publishedAssetNames()
+        .map(expandVersion)
+        .where((n) => n.contains('*'));
 
     expect(patterns, isNotEmpty, reason: 'no split APKs are published');
     for (final pattern in patterns) {
@@ -74,5 +83,12 @@ void main() {
 
     expect(published, contains('cuenti-release.apk'));
     expect(published, contains('cuenti-*-release.apk'));
+  });
+
+  test('the version and the app name are in the published file names', () {
+    final published = publishedAssetNames();
+
+    expect(published, contains('Cuenti-v*-release.apk'));
+    expect(published, contains('Cuenti-v*-*-release.apk'));
   });
 }

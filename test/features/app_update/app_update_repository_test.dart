@@ -145,6 +145,36 @@ void main() {
       );
     });
 
+    test('prefers the versioned, app-named split APK', () {
+      expect(
+        pick(
+          [
+            'cuenti-arm64-v8a-release.apk',
+            'Cuenti-v9.9.9-arm64-v8a-release.apk',
+          ],
+          ['arm64-v8a'],
+        )?.name,
+        'Cuenti-v9.9.9-arm64-v8a-release.apk',
+      );
+    });
+
+    test('falls back to the versioned universal APK for an unlisted ABI', () {
+      expect(
+        pick(
+          ['cuenti-release.apk', 'Cuenti-v9.9.9-release.apk'],
+          ['x86'],
+        )?.name,
+        'Cuenti-v9.9.9-release.apk',
+      );
+    });
+
+    test('never takes a versioned APK built for a different release', () {
+      expect(
+        pick(['Cuenti-v1.0.0-arm64-v8a-release.apk'], ['arm64-v8a']),
+        isNull,
+      );
+    });
+
     test('ignores assets that are not APKs', () {
       expect(pick(['cuenti-release.apk.sha256', 'notes.txt'], ['x86']), isNull);
     });

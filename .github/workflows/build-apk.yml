@@ -216,10 +216,15 @@ jobs:
       # users unable to update to anything, ever.
       - name: Name the APKs for the app
         run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/^version: *//' | cut -d+ -f1)
           cd build/app/outputs/flutter-apk
           for f in app-release.apk app-*-release.apk; do
             [ -e "$f" ] || continue
             cp "$f" "cuenti-${f#app-}"
+            # What a person downloads: app name and version in the file name
+            # (Cuenti-v2.9.3-arm64-v8a-release.apk). The unversioned copies
+            # stay for the updater in installs that only know those names.
+            cp "$f" "Cuenti-v${VERSION}-${f#app-}"
           done
           ls -1 *.apk
 
@@ -228,6 +233,7 @@ jobs:
         with:
           name: cuenti-release-apk
           path: |
+            build/app/outputs/flutter-apk/Cuenti-v*-release.apk
             build/app/outputs/flutter-apk/cuenti-release.apk
             build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
@@ -257,10 +263,15 @@ jobs:
 
       - name: Name the split APKs for the app
         run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/^version: *//' | cut -d+ -f1)
           cd build/app/outputs/flutter-apk
           for f in app-*-release.apk; do
             [ -e "$f" ] || continue
             cp "$f" "cuenti-${f#app-}"
+            # What a person downloads: app name and version in the file name
+            # (Cuenti-v2.9.3-arm64-v8a-release.apk). The unversioned copies
+            # stay for the updater in installs that only know those names.
+            cp "$f" "Cuenti-v${VERSION}-${f#app-}"
           done
           ls -1 *.apk
 
@@ -269,6 +280,7 @@ jobs:
         with:
           name: cuenti-split-apks
           path: |
+            build/app/outputs/flutter-apk/Cuenti-v*-*-release.apk
             build/app/outputs/flutter-apk/cuenti-*-release.apk
             build/app/outputs/flutter-apk/app-*-release.apk
           retention-days: 30
@@ -323,6 +335,8 @@ jobs:
           body: ${{ steps.preamble.outputs.body }}
           generate_release_notes: ${{ github.server_url == 'https://github.com' }}
           files: |
+            artifacts/Cuenti-v*-release.apk
+            artifacts/split/Cuenti-v*-*-release.apk
             artifacts/cuenti-release.apk
             artifacts/split/cuenti-*-release.apk
             artifacts/app-release.apk
