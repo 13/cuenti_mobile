@@ -2018,6 +2018,18 @@ abstract class L {
   /// **'Saved password no longer valid'**
   String get errorSavedPasswordInvalid;
 
+  /// No description provided for @errorOfflineSignInWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong passwords. Try again in {seconds} seconds, or connect to the internet.'**
+  String errorOfflineSignInWait(int seconds);
+
+  /// No description provided for @errorOfflineSignInLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong passwords. Connect to the internet to sign in.'**
+  String get errorOfflineSignInLocked;
+
   /// No description provided for @errorUnexpectedResponse.
   ///
   /// In en, this message translates to:

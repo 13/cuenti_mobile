@@ -1054,6 +1054,15 @@ class LEn extends L {
   String get errorSavedPasswordInvalid => 'Saved password no longer valid';
 
   @override
+  String errorOfflineSignInWait(int seconds) {
+    return 'Too many wrong passwords. Try again in $seconds seconds, or connect to the internet.';
+  }
+
+  @override
+  String get errorOfflineSignInLocked =>
+      'Too many wrong passwords. Connect to the internet to sign in.';
+
+  @override
   String get errorUnexpectedResponse => 'Unexpected response from server';
 
   @override

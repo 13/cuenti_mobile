@@ -165,7 +165,11 @@ void main() {
       await dio.get<Object>('/transactions', queryParameters: {'page': 0});
 
       final hit = await interceptor.peek(
-        RequestOptions(path: '/transactions', queryParameters: {'page': 0}),
+        RequestOptions(
+          baseUrl: dio.options.baseUrl,
+          path: '/transactions',
+          queryParameters: {'page': 0},
+        ),
       );
 
       expect(hit, isNotNull);
@@ -179,6 +183,7 @@ void main() {
       // repository has to cut a filtered list out of an unfiltered one.
       final miss = await interceptor.peek(
         RequestOptions(
+          baseUrl: dio.options.baseUrl,
           path: '/transactions',
           queryParameters: {'page': 0, 'type': 'TRANSFER'},
         ),

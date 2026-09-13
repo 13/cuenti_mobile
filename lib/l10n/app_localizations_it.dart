@@ -1057,6 +1057,15 @@ class LIt extends L {
       'La password salvata non è più valida';
 
   @override
+  String errorOfflineSignInWait(int seconds) {
+    return 'Troppe password errate. Riprova tra $seconds secondi o connettiti a Internet.';
+  }
+
+  @override
+  String get errorOfflineSignInLocked =>
+      'Troppe password errate. Connettiti a Internet per accedere.';
+
+  @override
   String get errorUnexpectedResponse => 'Risposta del server imprevista';
 
   @override

@@ -319,6 +319,8 @@
   "errorUnknown": "Si è verificato un errore",
   "errorNoSavedCredentials": "Nessuna credenziale salvata",
   "errorSavedPasswordInvalid": "La password salvata non è più valida",
+  "errorOfflineSignInWait": "Troppe password errate. Riprova tra {seconds} secondi o connettiti a Internet.",
+  "errorOfflineSignInLocked": "Troppe password errate. Connettiti a Internet per accedere.",
   "errorUnexpectedResponse": "Risposta del server imprevista",
   "txSaved": "Movimento salvato",
   "txDeleted": "Movimento eliminato",

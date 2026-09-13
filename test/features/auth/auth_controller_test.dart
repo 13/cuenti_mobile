@@ -840,4 +840,143 @@ void main() {
       expect(container.read(authControllerProvider).restoredSession, isFalse);
     });
   });
+
+  group('offline sign-in attempts', () {
+    /// Signed out on the sign-in screen with no server: saved credentials,
+    /// a fresh snapshot, a live token.
+    Future<AuthController> offline() async {
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      storage.data['saved_profile'] = jsonEncode({
+        'savedAt': DateTime.now().toIso8601String(),
+        'profile': user.toJson(),
+      });
+      when(() => repo.hasToken()).thenAnswer((_) async => false);
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+      when(() => repo.hasToken()).thenAnswer((_) async => true);
+      when(
+        () => repo.login(any(), any()),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+      return notifier;
+    }
+
+    test('the delay policy: free attempts, then 30 s doubling', () {
+      expect(offlineRetryDelay(0), Duration.zero);
+      expect(offlineRetryDelay(offlineFreeAttempts - 1), Duration.zero);
+      expect(offlineRetryDelay(5), const Duration(seconds: 30));
+      expect(offlineRetryDelay(6), const Duration(seconds: 60));
+      expect(offlineRetryDelay(9), const Duration(seconds: 480));
+    });
+
+    test(
+      'an early wrong password just reports the server unreachable',
+      () async {
+        final notifier = await offline();
+
+        expect(
+          await notifier.login(LEn(), 'demo', 'wrong'),
+          LEn().errorNetwork,
+        );
+        expect(storage.data['offline_signin_failures'], '1');
+      },
+    );
+
+    test('after five wrong passwords even the right one has to wait', () async {
+      // Regression: offline, nothing limited guesses -- someone holding the
+      // phone could try passwords until one opened the cached finances.
+      final notifier = await offline();
+      for (var i = 0; i < offlineFreeAttempts; i++) {
+        await notifier.login(LEn(), 'demo', 'wrong-$i');
+      }
+
+      final error = await notifier.login(LEn(), 'demo', 'secret');
+
+      expect(error, contains('Too many wrong passwords'));
+      expect(error, isNot(LEn().errorOfflineSignInLocked));
+      expect(container.read(authControllerProvider).user, isNull);
+    });
+
+    test('once the wait has passed the right password gets in and the count '
+        'resets', () async {
+      final notifier = await offline();
+      storage.data['offline_signin_failures'] = '$offlineFreeAttempts';
+      storage.data['offline_signin_retry_after'] = DateTime.now()
+          .subtract(const Duration(seconds: 1))
+          .toIso8601String();
+
+      expect(await notifier.login(LEn(), 'demo', 'secret'), isNull);
+
+      expect(container.read(authControllerProvider).user, user);
+      expect(storage.data.containsKey('offline_signin_failures'), isFalse);
+      expect(storage.data.containsKey('offline_signin_retry_after'), isFalse);
+    });
+
+    test('ten wrong passwords refuse offline sign-in outright', () async {
+      final notifier = await offline();
+      storage.data['offline_signin_failures'] = '$offlineMaxAttempts';
+
+      expect(
+        await notifier.login(LEn(), 'demo', 'secret'),
+        LEn().errorOfflineSignInLocked,
+      );
+      expect(container.read(authControllerProvider).user, isNull);
+    });
+
+    test('a sign-in the server confirms clears the count', () async {
+      final notifier = await offline();
+      storage.data['offline_signin_failures'] = '$offlineMaxAttempts';
+      storage.data['offline_signin_retry_after'] = DateTime.now()
+          .add(const Duration(minutes: 5))
+          .toIso8601String();
+      when(() => repo.login('demo', 'secret')).thenAnswer((_) async => user);
+
+      expect(await notifier.login(LEn(), 'demo', 'secret'), isNull);
+
+      expect(storage.data.containsKey('offline_signin_failures'), isFalse);
+      expect(storage.data.containsKey('offline_signin_retry_after'), isFalse);
+    });
+
+    test('the fingerprint replay is neither throttled nor counted', () async {
+      final notifier = await offline();
+      storage.data['offline_signin_failures'] = '$offlineMaxAttempts';
+
+      expect(await notifier.loginWithSavedCredentials(LEn()), isNull);
+
+      expect(container.read(authControllerProvider).user, user);
+    });
+
+    test('a wait stretched by a clock moved back is capped', () async {
+      final notifier = await offline();
+      storage.data['offline_signin_failures'] = '${offlineMaxAttempts - 1}';
+      storage.data['offline_signin_retry_after'] = DateTime.now()
+          .add(const Duration(days: 30))
+          .toIso8601String();
+
+      final longest = offlineRetryDelay(offlineMaxAttempts - 1).inSeconds + 1;
+      expect(
+        await notifier.login(LEn(), 'demo', 'secret'),
+        LEn().errorOfflineSignInWait(longest),
+      );
+    });
+
+    test('a profile snapshot dated in the future is not trusted', () async {
+      // Setting the clock back must not stretch the fortnight a snapshot may
+      // stand in for the server.
+      storage.data['biometric_enabled'] = 'true';
+      storage.data['saved_profile'] = jsonEncode({
+        'savedAt': DateTime.now()
+            .add(const Duration(days: 1))
+            .toIso8601String(),
+        'profile': user.toJson(),
+      });
+      when(
+        () => repo.getProfile(),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+
+      await container.read(authControllerProvider.notifier).init();
+
+      expect(container.read(authControllerProvider).user, isNull);
+    });
+  });
 }

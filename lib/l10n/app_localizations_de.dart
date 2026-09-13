@@ -1058,6 +1058,15 @@ class LDe extends L {
       'Gespeichertes Passwort ist nicht mehr gültig';
 
   @override
+  String errorOfflineSignInWait(int seconds) {
+    return 'Zu viele falsche Passwörter. Versuche es in $seconds Sekunden erneut oder stelle eine Internetverbindung her.';
+  }
+
+  @override
+  String get errorOfflineSignInLocked =>
+      'Zu viele falsche Passwörter. Stelle eine Internetverbindung her, um dich anzumelden.';
+
+  @override
   String get errorUnexpectedResponse => 'Unerwartete Antwort vom Server';
 
   @override

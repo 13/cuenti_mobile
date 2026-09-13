@@ -319,6 +319,8 @@
   "errorUnknown": "Ein Fehler ist aufgetreten",
   "errorNoSavedCredentials": "Keine gespeicherten Zugangsdaten",
   "errorSavedPasswordInvalid": "Gespeichertes Passwort ist nicht mehr gültig",
+  "errorOfflineSignInWait": "Zu viele falsche Passwörter. Versuche es in {seconds} Sekunden erneut oder stelle eine Internetverbindung her.",
+  "errorOfflineSignInLocked": "Zu viele falsche Passwörter. Stelle eine Internetverbindung her, um dich anzumelden.",
   "errorUnexpectedResponse": "Unerwartete Antwort vom Server",
   "txSaved": "Buchung gespeichert",
   "txDeleted": "Buchung gelöscht",

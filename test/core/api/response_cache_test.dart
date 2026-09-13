@@ -171,4 +171,29 @@ void main() {
       expect(await plain.read('key0'), isNotNull);
     });
   });
+
+  test(
+    'an entry written "in the future" is a miss: the clock was moved back',
+    () async {
+      final dir = Directory.systemTemp.createTempSync('cache_clock');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      final cache = ResponseCache(dir);
+      await cache.store('k', {'a': 1});
+      File(
+        '${dir.path}/k.json',
+      ).setLastModifiedSync(DateTime.now().add(const Duration(days: 1)));
+
+      expect(await cache.read('k'), isNull);
+    },
+  );
+
+  test('the server is part of the cache key', () {
+    RequestOptions at(String base) =>
+        RequestOptions(path: '/transactions', baseUrl: base);
+
+    expect(
+      cacheKeyFor(at('https://a.example/api')),
+      isNot(cacheKeyFor(at('https://b.example/api'))),
+    );
+  });
 }

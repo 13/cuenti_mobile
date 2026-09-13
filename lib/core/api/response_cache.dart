@@ -14,8 +14,12 @@ class CachedResponse {
   final DateTime storedAt;
 }
 
-/// Identifies an endpoint for caching: the method, the path, and the query
-/// parameters in a fixed order, hashed so the result is a safe file name.
+/// Identifies an endpoint for caching: the method, the server, the path, and
+/// the query parameters in a fixed order, hashed so the result is a safe
+/// file name.
+///
+/// The server is part of it so two servers can never answer for each other,
+/// even on a path where clearing the cache on a server change did not run.
 ///
 /// Query parameters are part of the key because a filtered list and an
 /// unfiltered one are different answers, and serving one for the other
@@ -24,7 +28,8 @@ String cacheKeyFor(RequestOptions options) {
   final query =
       options.queryParameters.entries.map((e) => '${e.key}=${e.value}').toList()
         ..sort();
-  final signature = '${options.method} ${options.path}?${query.join('&')}';
+  final signature =
+      '${options.method} ${options.baseUrl}${options.path}?${query.join('&')}';
   return base64Url
       .encode(sha256.convert(utf8.encode(signature)).bytes)
       .replaceAll('=', '');
@@ -52,6 +57,10 @@ class ResponseCache {
   /// Past this, an entry is a miss rather than "the last figures fetched".
   /// Stale numbers are useful for a train journey, not for a quarter.
   static const defaultMaxAge = Duration(days: 14);
+
+  /// How far ahead of the clock a write time may be before the clock is
+  /// taken to have been moved back.
+  static const clockSkewAllowance = Duration(minutes: 5);
 
   /// Opens the cache in the app's support directory, which the OS does not
   /// purge behind the app's back the way it may purge temp.
@@ -105,9 +114,11 @@ class ResponseCache {
   Future<CachedResponse?> read(String key) async {
     final file = _fileFor(key);
     if (!file.existsSync()) return null;
-    if (DateTime.now().difference(file.statSync().modified) > maxAge) {
-      return null;
-    }
+    final age = DateTime.now().difference(file.statSync().modified);
+    // Written "in the future" means the clock was moved back since. The age
+    // is then unknown, and calling it fresh is exactly what would let a
+    // clock change keep figures alive past maxAge.
+    if (age > maxAge || age < -clockSkewAllowance) return null;
     try {
       final decoded = jsonDecode(await file.readAsString()) as Map;
       return CachedResponse(

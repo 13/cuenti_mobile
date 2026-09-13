@@ -57,7 +57,9 @@ class TransactionOutbox {
     try {
       return await open().timeout(const Duration(seconds: 5));
     } on Exception catch (e) {
-      debugPrint('TransactionOutbox: no app-support store ($e), using temp');
+      if (kDebugMode) {
+        debugPrint('TransactionOutbox: no app-support store ($e), using temp');
+      }
       final dir = Directory('${Directory.systemTemp.path}/cuenti_outbox')
         ..createSync(recursive: true);
       return TransactionOutbox(dir, isFallback: true);
@@ -119,14 +121,18 @@ class TransactionOutbox {
           ? decoded['account']
           : null;
       if (account is String && account.isNotEmpty) return account;
-      debugPrint('TransactionOutbox: owner file names no account');
+      if (kDebugMode) {
+        debugPrint('TransactionOutbox: owner file names no account');
+      }
       return null;
       // A malformed owner file must be answered rather than crash the
       // caller, so any failure here -- bad JSON, wrong shape -- is caught
       // broadly rather than matched to one exception type.
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
-      debugPrint('TransactionOutbox: unreadable owner file: $e');
+      if (kDebugMode) {
+        debugPrint('TransactionOutbox: unreadable owner file: $e');
+      }
       return null;
     }
   }
@@ -178,7 +184,9 @@ class TransactionOutbox {
         // version of the failure this whole feature exists to prevent.
         // ignore: avoid_catches_without_on_clauses
       } catch (e) {
-        debugPrint('TransactionOutbox: skipping ${file.path}: $e');
+        if (kDebugMode) {
+          debugPrint('TransactionOutbox: skipping ${file.path}: $e');
+        }
         continue;
       }
     }

@@ -139,7 +139,9 @@ class TransactionSync {
     try {
       await write();
     } on Exception catch (e) {
-      debugPrint('TransactionSync: the outbox could not be updated: $e');
+      if (kDebugMode) {
+        debugPrint('TransactionSync: the outbox could not be updated: $e');
+      }
     }
   }
 

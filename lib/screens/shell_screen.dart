@@ -426,7 +426,9 @@ class _OutboxClaimCheckState extends ConsumerState<_OutboxClaimCheck> {
       // in exchange for nothing.
       unawaited(
         promptForForeignOutbox(context, ref).catchError((Object e) {
-          debugPrint('ShellScreen: the outbox claim prompt failed: $e');
+          if (kDebugMode) {
+            debugPrint('ShellScreen: the outbox claim prompt failed: $e');
+          }
         }),
       );
     }

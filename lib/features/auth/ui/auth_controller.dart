@@ -8,7 +8,7 @@ import 'package:cuentimobile/core/widgets/entity_list_filter.dart';
 import 'package:cuentimobile/features/auth/data/auth_repository.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -30,6 +30,34 @@ const _savedProfileKey = 'saved_profile';
 /// `ResponseCache.defaultMaxAge` puts on stale figures, and for the same
 /// reason.
 const offlineProfileMaxAge = Duration(days: 14);
+
+/// A saved timestamp this far ahead of the clock means the clock was moved
+/// back since it was written. Past it, the age cannot be trusted, and
+/// trusting it would let setting the clock back keep stale data alive.
+const _clockSkewAllowance = Duration(minutes: 5);
+
+const _offlineFailuresKey = 'offline_signin_failures';
+const _offlineRetryAfterKey = 'offline_signin_retry_after';
+
+/// Wrong offline passwords allowed before each further attempt has to wait.
+const offlineFreeAttempts = 5;
+
+/// Wrong offline passwords after which offline sign-in is refused outright,
+/// until the server confirms a sign-in again.
+///
+/// Online, the server can rate-limit guesses. Offline, the only thing
+/// between someone holding the phone and the cached finances is this check,
+/// and without a limit it could be scripted.
+const offlineMaxAttempts = 10;
+
+/// How long the next offline attempt must wait after [failures] wrong ones:
+/// nothing for the first [offlineFreeAttempts], then 30 s doubling.
+Duration offlineRetryDelay(int failures) => failures < offlineFreeAttempts
+    ? Duration.zero
+    : Duration(seconds: 30 * (1 << (failures - offlineFreeAttempts)));
+
+/// What checking a password against the saved credentials came to.
+enum _OfflineCheck { signedIn, wrongCredentials, unavailable }
 
 @freezed
 abstract class AuthState with _$AuthState {
@@ -61,7 +89,7 @@ class AuthController extends _$AuthController {
     // silent failure here is a startup that quietly never syncs.
     unawaited(
       Future.microtask(init).catchError((Object e, StackTrace s) {
-        debugPrint('AuthController: init failed: $e\n$s');
+        if (kDebugMode) debugPrint('AuthController: init failed: $e\n$s');
       }),
     );
     return const AuthState();
@@ -164,7 +192,9 @@ class AuthController extends _$AuthController {
           // they get a real error and can retry. If the token really is
           // dead, the next request takes a 401 and `_handleSessionExpired`
           // does the job properly.
-          debugPrint('AuthController: profile fetch failed, token kept: $e');
+          if (kDebugMode) {
+            debugPrint('AuthController: profile fetch failed, token kept: $e');
+          }
         }
       }
       registrationEnabled = await _repo.fetchRegistrationEnabled();
@@ -214,8 +244,9 @@ class AuthController extends _$AuthController {
       if (raw == null || raw.isEmpty) return null;
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
       final savedAt = DateTime.tryParse(decoded['savedAt'] as String? ?? '');
-      if (savedAt == null ||
-          DateTime.now().difference(savedAt) > offlineProfileMaxAge) {
+      if (savedAt == null) return null;
+      final age = DateTime.now().difference(savedAt);
+      if (age > offlineProfileMaxAge || age < -_clockSkewAllowance) {
         return null;
       }
       return UserProfile.fromJson(decoded['profile'] as Map<String, dynamic>);
@@ -250,25 +281,101 @@ class AuthController extends _$AuthController {
   /// with the cache wiped. It also bounds what this can resurrect:
   /// `clearToken` is what a real sign-out and a real session expiry both
   /// call, so neither can be undone here.
-  Future<bool> _signInOffline(String username, String password) async {
-    if (!await _repo.hasToken()) return false;
+  Future<_OfflineCheck> _signInOffline(String username, String password) async {
+    if (!await _repo.hasToken()) return _OfflineCheck.unavailable;
     final savedUsername = await _storage.read(_savedUsernameKey);
     final savedPassword = await _storage.read(_savedPasswordKey);
     if (savedUsername == null ||
         savedPassword == null ||
         savedPassword.isEmpty) {
-      return false;
+      return _OfflineCheck.unavailable;
     }
-    if (username != savedUsername || password != savedPassword) return false;
+    if (username != savedUsername || password != savedPassword) {
+      return _OfflineCheck.wrongCredentials;
+    }
     final profile = await _readSavedProfile();
-    if (profile == null) return false;
+    if (profile == null) return _OfflineCheck.unavailable;
     state = state.copyWith(
       user: profile,
       savedUsername: savedUsername,
       hasSavedPassword: true,
       restoredSession: false,
     );
-    return true;
+    return _OfflineCheck.signedIn;
+  }
+
+  /// The offline answer to a sign-in the server could not be reached for:
+  /// null once signed in, otherwise the message to show.
+  ///
+  /// [typedByUser] is false for the biometric replay of the saved
+  /// credentials. That path is already gated by the OS's own attempt limits,
+  /// and its password is by construction the saved one, so it is neither
+  /// throttled nor counted.
+  Future<String?> _offlineSignIn(
+    L l,
+    NetworkException cause,
+    String username,
+    String password, {
+    required bool typedByUser,
+  }) async {
+    // A certificate refusal is a server that answered; nothing about it
+    // falls through to a local check.
+    if (cause.isCertificateRefusal) return _errorMessage(l, cause);
+    if (typedByUser) {
+      final blocked = await _offlineSignInBlocked(l);
+      if (blocked != null) return blocked;
+    }
+    switch (await _signInOffline(username, password)) {
+      case _OfflineCheck.signedIn:
+        await _resetOfflineFailures();
+        return null;
+      case _OfflineCheck.wrongCredentials:
+        if (typedByUser) {
+          await _recordOfflineFailure();
+          final blocked = await _offlineSignInBlocked(l);
+          if (blocked != null) return blocked;
+        }
+        return _errorMessage(l, cause);
+      case _OfflineCheck.unavailable:
+        return _errorMessage(l, cause);
+    }
+  }
+
+  Future<int> _offlineFailures() async =>
+      int.tryParse(await _storage.read(_offlineFailuresKey) ?? '') ?? 0;
+
+  /// The message for an offline attempt that may not be made now, or null.
+  Future<String?> _offlineSignInBlocked(L l) async {
+    final failures = await _offlineFailures();
+    if (failures >= offlineMaxAttempts) return l.errorOfflineSignInLocked;
+    final retryAfter = DateTime.tryParse(
+      await _storage.read(_offlineRetryAfterKey) ?? '',
+    );
+    if (retryAfter == null) return null;
+    var wait = retryAfter.difference(DateTime.now());
+    if (wait <= Duration.zero) return null;
+    // A clock moved back would otherwise turn this into days. Never longer
+    // than the longest wait the policy itself hands out.
+    final longest = offlineRetryDelay(offlineMaxAttempts - 1);
+    if (wait > longest) wait = longest;
+    return l.errorOfflineSignInWait(wait.inSeconds + 1);
+  }
+
+  Future<void> _recordOfflineFailure() async {
+    final failures = await _offlineFailures() + 1;
+    await _storage.write(_offlineFailuresKey, '$failures');
+    final delay = offlineRetryDelay(failures);
+    if (delay > Duration.zero) {
+      await _storage.write(
+        _offlineRetryAfterKey,
+        DateTime.now().add(delay).toIso8601String(),
+      );
+    }
+  }
+
+  Future<void> _resetOfflineFailures() async {
+    await _storage.delete(_offlineFailuresKey);
+    await _storage.delete(_offlineRetryAfterKey);
   }
 
   Future<String?> login(L l, String username, String password) async {
@@ -279,10 +386,7 @@ class AuthController extends _$AuthController {
       // The server could not be reached, so nothing rejected these
       // credentials -- see [_signInOffline] for why that is the only failure
       // allowed to fall through to a local check.
-      if (!e.isCertificateRefusal && await _signInOffline(username, password)) {
-        return null;
-      }
-      return _errorMessage(l, e);
+      return _offlineSignIn(l, e, username, password, typedByUser: true);
     } on Exception catch (e) {
       return _errorMessage(l, e);
     }
@@ -363,6 +467,7 @@ class AuthController extends _$AuthController {
     }
     try {
       final user = await _repo.login(username, password);
+      await _resetOfflineFailures();
       state = state.copyWith(user: user, restoredSession: false);
       return null;
     } on UnauthorizedException catch (e) {
@@ -375,10 +480,7 @@ class AuthController extends _$AuthController {
       // catch clauses in order, and a refused password must reach the clause
       // above rather than this one. This is what makes the fingerprint work
       // on a train: biometric sign-in replays these same credentials.
-      if (!e.isCertificateRefusal && await _signInOffline(username, password)) {
-        return null;
-      }
-      return _errorMessage(l, e);
+      return _offlineSignIn(l, e, username, password, typedByUser: false);
     } on Exception catch (e) {
       return _errorMessage(l, e);
     }
@@ -419,6 +521,11 @@ class AuthController extends _$AuthController {
     String username,
     String password,
   ) async {
+    // The server just confirmed these credentials, so earlier wrong offline
+    // guesses no longer stand between this person and an offline sign-in.
+    try {
+      await _resetOfflineFailures();
+    } on Exception catch (_) {}
     var persisted = false;
     try {
       await _storage.write(_savedUsernameKey, username);

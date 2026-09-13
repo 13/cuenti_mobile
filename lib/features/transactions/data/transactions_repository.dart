@@ -125,6 +125,9 @@ class TransactionsRepository {
       for (var p = 0; p < _maxCachedPages; p++) {
         final hit = await cache.peek(
           RequestOptions(
+            // The server is part of the cache key, so the lookup has to name
+            // the same one the live request went to.
+            baseUrl: _dio.options.baseUrl,
             path: '/transactions',
             queryParameters: queryFor(base, page: p, size: size),
           ),
