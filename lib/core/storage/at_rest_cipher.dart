@@ -137,14 +137,14 @@ class AesGcmAtRestCipher extends AtRestCipher {
       return OpenedText(utf8.decode(clear), legacy: false);
     } on SecretBoxAuthenticationError {
       throw const AtRestDecryptionException('authentication failed');
-    } on FormatException catch (e) {
-      throw AtRestDecryptionException('malformed: ${e.message}');
+    } on FormatException catch (cause) {
+      throw AtRestDecryptionException('malformed: ${cause.message}');
       // SecretBox.fromConcatenation reports a body too short to hold a nonce
       // and tag as an ArgumentError. Here that is a damaged file, not a
       // programming mistake, and must be answered like one.
       // ignore: avoid_catching_errors
-    } on ArgumentError catch (e) {
-      throw AtRestDecryptionException('malformed: ${e.message}');
+    } on ArgumentError catch (cause) {
+      throw AtRestDecryptionException('malformed: ${cause.message}');
     }
   }
 }
