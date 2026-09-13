@@ -81,3 +81,18 @@ can find out why.
 
 This cost only grows with the number of installs. Do it at the next
 release.
+
+## Key history
+
+Record every signing certificate here, so a future release can be checked
+against the key installs actually carry (`apksigner verify --print-certs`).
+
+| Releases | Certificate | SHA-256 |
+|----------|-------------|---------|
+| up to v2.2.1 | Android debug key | differs per build machine |
+| v2.3.0 – v2.9.1 | `CN=ben, OU=muh, O=muh, L=Tyrol, ST=bz, C=it` | `541555cf219e8fa47bdeef016502f3fbdace6e16e97a4c24ff0fbe2f0dcbb2b5` |
+| v2.9.2 – | `CN=Ben, OU=MUH, O=MUH Studios, L=Tyrol, ST=BZ, C=IT` (the MUH release key shared with Apex Maps, alias `key0`) | `ef46d303232d7394d83b42f117e2c81f1ca5fe7399a22d0ac0d7dda19a60b8f3` |
+
+v2.9.2 switched to the shared MUH release key, which forced a second
+uninstall/reinstall for everyone on v2.3.0 – v2.9.1; its release note says
+so. The CI secrets hold that key now. Do not change it again.
