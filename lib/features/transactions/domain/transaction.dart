@@ -51,6 +51,11 @@ abstract class Transaction with _$Transaction {
     @JsonKey(fromJson: jsonToDoubleN) double? units,
     @Default(0) int sortOrder,
     @Default([]) List<TransactionSplit> splits,
+
+    /// The server's concurrency token for this row, as last fetched. Sent
+    /// back as `If-Match` on an update, so a change queued offline is
+    /// refused (409) rather than silently overwriting one made elsewhere.
+    String? version,
   }) = _Transaction;
 
   const Transaction._();

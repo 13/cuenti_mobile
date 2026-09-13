@@ -55,14 +55,105 @@ class TransactionOutbox {
   /// starts.
   static Future<TransactionOutbox> openOrFallback() async {
     try {
-      return await open().timeout(const Duration(seconds: 5));
+      final outbox = await open().timeout(const Duration(seconds: 5));
+      try {
+        await outbox.rescueTempFallback();
+        // Best effort: a rescue that fails leaves the stranded queue where it
+        // was, which is no worse than before, and must not block startup.
+        // ignore: avoid_catches_without_on_clauses
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('TransactionOutbox: temp fallback not rescued: $e');
+        }
+      }
+      return outbox;
     } on Exception catch (e) {
+      // On Android the same durable directory [open] would have used can be
+      // worked out from the temp directory with no channel at all. Temp itself
+      // is the last resort: the OS may purge it between runs, taking queued
+      // transactions nothing else has a copy of.
+      final support = Platform.isAndroid
+          ? supportPathFromTemp(Directory.systemTemp.path)
+          : null;
+      if (support != null) {
+        if (kDebugMode) {
+          debugPrint('TransactionOutbox: no channel ($e), using $support');
+        }
+        final dir = Directory('$support/transaction_outbox')
+          ..createSync(recursive: true);
+        return TransactionOutbox(dir);
+      }
       if (kDebugMode) {
         debugPrint('TransactionOutbox: no app-support store ($e), using temp');
       }
       final dir = Directory('${Directory.systemTemp.path}/cuenti_outbox')
         ..createSync(recursive: true);
       return TransactionOutbox(dir, isFallback: true);
+    }
+  }
+
+  /// The app-support directory worked out from the temp directory, or null
+  /// where the shape does not hold.
+  ///
+  /// On Android, dart:io's temp directory is the app's cache directory,
+  /// `/data/user/<n>/<package>/cache` (or `/data/data/<package>/cache`), and
+  /// getApplicationSupportDirectory() is its sibling `files`.
+  @visibleForTesting
+  static String? supportPathFromTemp(String tempPath) {
+    final match = RegExp(
+      r'^(/data/(?:user/\d+|data)/[^/]+)/cache/?$',
+    ).firstMatch(tempPath);
+    return match == null ? null : '${match.group(1)}/files';
+  }
+
+  /// Where an earlier launch had to keep its queue when the real store could
+  /// not be opened.
+  static Directory get _tempFallbackDirectory =>
+      Directory('${Directory.systemTemp.path}/cuenti_outbox');
+
+  /// Moves a queue an earlier launch left in the temp fallback into this
+  /// store, as sidelined queues, before the OS purges it.
+  ///
+  /// Sidelined rather than merged: the root may already belong to another
+  /// account, and entries must never change owner by being moved. The owner
+  /// they recorded reclaims them through the usual path
+  /// (`reclaimSidelined`). Queues the fallback itself had sidelined come
+  /// across the same way.
+  Future<void> rescueTempFallback({Directory? from}) async {
+    final source = from ?? _tempFallbackDirectory;
+    if (!source.existsSync() || source.path == _directory.path) return;
+    await _rescueFiles(source);
+    for (final sub in source.listSync().whereType<Directory>()) {
+      final name = sub.uri.pathSegments.lastWhere((s) => s.isNotEmpty);
+      if (name.startsWith('.sidelined-')) await _rescueFiles(sub);
+    }
+    await source.delete(recursive: true);
+  }
+
+  /// Moves [source]'s own files (not subdirectories) into a fresh sidelined
+  /// subdirectory, owner file last -- the ordering [sideline] explains.
+  Future<void> _rescueFiles(Directory source) async {
+    final present = source.listSync().whereType<File>().toList();
+    bool isOwner(File f) => f.uri.pathSegments.last == '.owner.json';
+    if (!present.any((f) => !isOwner(f))) return;
+    final target = Directory(
+      '${_directory.path}/.sidelined-'
+      '${DateTime.now().microsecondsSinceEpoch}-${_sidelineSeq++}',
+    );
+    await target.create(recursive: true);
+    for (final file in [
+      ...present.where((f) => !isOwner(f)),
+      ...present.where(isOwner),
+    ]) {
+      final destination = '${target.path}/${file.uri.pathSegments.last}';
+      try {
+        await file.rename(destination);
+      } on FileSystemException {
+        // Temp and app support can be different filesystems off Android,
+        // where a rename cannot cross; copy, then remove.
+        await file.copy(destination);
+        await file.delete();
+      }
     }
   }
 

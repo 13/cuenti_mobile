@@ -225,41 +225,79 @@ class TransactionsRepository {
   /// (default) the splits key is stripped for backend back-compat (omitted =
   /// unchanged server-side). When true, t.splits is sent verbatim — an empty
   /// list means deliberate remove-all.
-  Future<Transaction> save(Transaction t, {bool splitsTouched = false}) =>
-      guardApi(() async {
-        final json = t.toJson()
-          ..remove('id')
-          ..remove('fromAccountName')
-          ..remove('toAccountName')
-          ..remove('categoryName')
-          ..remove('assetName')
-          ..remove('status');
-        json['paymentMethod'] = t.paymentMethod ?? 'NONE';
-        if (!splitsTouched) {
-          json.remove('splits');
-        } else {
-          json['splits'] = t.splits
-              .map(
-                (s) => {
-                  'categoryId': s.categoryId,
-                  'amount': s.amount,
-                  if (s.memo != null) 'memo': s.memo,
-                },
-              )
-              .toList();
-        }
-        final res = t.id != null
-            ? await _dio.put<Map<String, dynamic>>(
-                '/transactions/${t.id}',
-                data: json,
-              )
-            : await _dio.post<Map<String, dynamic>>(
-                '/transactions',
-                data: json,
-              );
-        return Transaction.fromJson(res.data!);
-      });
+  ///
+  /// [idempotencyKey], on a create, lets a resend of the same write return
+  /// the transaction the first attempt made instead of a duplicate. An update
+  /// of a row with a [Transaction.version] carries it as `If-Match`, so a
+  /// change made against an outdated copy is refused with a 409.
+  Future<Transaction> save(
+    Transaction t, {
+    bool splitsTouched = false,
+    String? idempotencyKey,
+  }) => guardApi(() async {
+    final json = t.toJson()
+      ..remove('id')
+      ..remove('fromAccountName')
+      ..remove('toAccountName')
+      ..remove('categoryName')
+      ..remove('assetName')
+      ..remove('status')
+      ..remove('version');
+    json['paymentMethod'] = t.paymentMethod ?? 'NONE';
+    if (!splitsTouched) {
+      json.remove('splits');
+    } else {
+      json['splits'] = t.splits
+          .map(
+            (s) => {
+              'categoryId': s.categoryId,
+              'amount': s.amount,
+              if (s.memo != null) 'memo': s.memo,
+            },
+          )
+          .toList();
+    }
+    final version = t.version;
+    final headers = <String, String>{
+      if (t.id != null && version != null) 'If-Match': '"$version"',
+      if (t.id == null && idempotencyKey != null)
+        'Idempotency-Key': idempotencyKey,
+    };
+    // Options only when there is something to say, so a request without
+    // either header is exactly the request this always was.
+    final options = headers.isEmpty ? null : Options(headers: headers);
+    final res = t.id != null
+        ? (options == null
+              ? await _dio.put<Map<String, dynamic>>(
+                  '/transactions/${t.id}',
+                  data: json,
+                )
+              : await _dio.put<Map<String, dynamic>>(
+                  '/transactions/${t.id}',
+                  data: json,
+                  options: options,
+                ))
+        : (options == null
+              ? await _dio.post<Map<String, dynamic>>(
+                  '/transactions',
+                  data: json,
+                )
+              : await _dio.post<Map<String, dynamic>>(
+                  '/transactions',
+                  data: json,
+                  options: options,
+                ));
+    return Transaction.fromJson(res.data!);
+  });
 
-  Future<void> delete(int id) =>
-      guardApi(() => _dio.delete<void>('/transactions/$id'));
+  /// Deletes a transaction. With [version], only if the row still has it:
+  /// a delete queued against an outdated copy is refused with a 409.
+  Future<void> delete(int id, {String? version}) => guardApi(
+    () => version == null
+        ? _dio.delete<void>('/transactions/$id')
+        : _dio.delete<void>(
+            '/transactions/$id',
+            options: Options(headers: {'If-Match': '"$version"'}),
+          ),
+  );
 }

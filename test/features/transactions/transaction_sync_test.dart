@@ -110,7 +110,11 @@ void main() {
 
   test('a delivered entry leaves the queue', () async {
     when(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
     await queue('a');
 
@@ -123,7 +127,11 @@ void main() {
     () async {
       var saves = 0;
       when(
-        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        () => repo.save(
+          any(),
+          splitsTouched: any(named: 'splitsTouched'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
       ).thenAnswer((i) async {
         saves++;
         // A real send is not instant, and the overlap is the whole point:
@@ -142,17 +150,23 @@ void main() {
   );
 
   test('a delete entry is sent as a delete', () async {
-    when(() => repo.delete(any())).thenAnswer((_) async {});
+    when(
+      () => repo.delete(any(), version: any(named: 'version')),
+    ).thenAnswer((_) async {});
     await queue('a', operation: PendingOperation.delete, transactionId: 7);
 
     await sync.drain();
 
-    verify(() => repo.delete(7)).called(1);
+    verify(() => repo.delete(7, version: any(named: 'version'))).called(1);
   });
 
   test('still offline stops the run and keeps everything queued', () async {
     when(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).thenThrow(const NetworkException('Cannot connect to server'));
     await queue('a');
     await queue('b', minute: 1);
@@ -167,7 +181,11 @@ void main() {
       reason: 'still offline means untried, not refused',
     );
     verify(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).called(1);
   });
 
@@ -175,7 +193,11 @@ void main() {
       'bad entry must not hold up the rest', () async {
     var calls = 0;
     when(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).thenAnswer((i) async {
       calls++;
       if (calls == 1) {
@@ -198,7 +220,11 @@ void main() {
 
   test('a refusal stores the server own words, not the English half', () async {
     when(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).thenThrow(
       const ValidationException(
         'Amount must be positive',
@@ -217,7 +243,11 @@ void main() {
   test('a refusal with no server body stores an empty reason, and the '
       'entry is still refused', () async {
     when(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).thenThrow(const ValidationException('Invalid request'));
     await queue('a');
 
@@ -230,7 +260,11 @@ void main() {
 
   test('an entry already refused is not tried again on the next run', () async {
     when(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
     await outbox.add(
       PendingTransaction(
@@ -247,7 +281,11 @@ void main() {
 
     expect(await sync.drain(), 0);
     verifyNever(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     );
   });
 
@@ -256,7 +294,11 @@ void main() {
     'every entry refused: the credential was refused, not the entry',
     () async {
       when(
-        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        () => repo.save(
+          any(),
+          splitsTouched: any(named: 'splitsTouched'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
       ).thenThrow(const UnauthorizedException('Not authenticated'));
       await queue('a');
       await queue('b', minute: 1);
@@ -273,14 +315,22 @@ void main() {
             'authenticated" on the whole queue would be permanent',
       );
       verify(
-        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        () => repo.save(
+          any(),
+          splitsTouched: any(named: 'splitsTouched'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
       ).called(1);
     },
   );
 
   test('a request that got no answer at all is not a refusal either', () async {
     when(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).thenThrow(const UnknownApiException('An error occurred'));
     await queue('a');
 
@@ -291,7 +341,11 @@ void main() {
   test('a failure writing the outbox after a send does not abandon the rest '
       'of the queue', () async {
     when(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
     await queue('a');
     await queue('b', minute: 1);
@@ -305,7 +359,11 @@ void main() {
 
     expect(await brittle.drain(), 2, reason: 'both were actually sent');
     verify(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).called(2);
   });
 
@@ -345,7 +403,11 @@ void main() {
       'under a true flag means delete them all', () async {
     final sent = <bool>[];
     when(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).thenAnswer((i) async {
       sent.add(i.namedArguments[#splitsTouched] as bool);
       return i.positionalArguments.first as Transaction;
@@ -372,7 +434,11 @@ void main() {
       'manage splits must not sync as if it never touched them', () async {
     final sent = <bool>[];
     when(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).thenAnswer((i) async {
       sent.add(i.namedArguments[#splitsTouched] as bool);
       return i.positionalArguments.first as Transaction;
@@ -404,7 +470,11 @@ void main() {
 
       expect(await sync.drain(), 0);
       verifyNever(
-        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        () => repo.save(
+          any(),
+          splitsTouched: any(named: 'splitsTouched'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
       );
       expect(await outbox.all(), hasLength(1));
     });
@@ -415,7 +485,11 @@ void main() {
 
       expect(await sync.drain(), 0);
       verifyNever(
-        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        () => repo.save(
+          any(),
+          splitsTouched: any(named: 'splitsTouched'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
       );
     });
 
@@ -427,7 +501,11 @@ void main() {
 
       expect(await signedOut.drain(), 0);
       verifyNever(
-        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        () => repo.save(
+          any(),
+          splitsTouched: any(named: 'splitsTouched'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
       );
     });
 
@@ -435,7 +513,11 @@ void main() {
     // sealing everything, or the feature is just broken sending.
     test('our own queue is still sent', () async {
       when(
-        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        () => repo.save(
+          any(),
+          splitsTouched: any(named: 'splitsTouched'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
       ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
       await queue('local-1');
       await outbox.setOwner(_ourKey);
@@ -490,7 +572,11 @@ void main() {
         final gate = Completer<void>();
         var saves = 0;
         when(
-          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+          () => repo.save(
+            any(),
+            splitsTouched: any(named: 'splitsTouched'),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
         ).thenAnswer((i) async {
           saves++;
           await gate.future;
@@ -520,7 +606,11 @@ void main() {
         final gate = Completer<void>();
         var runs = 0;
         when(
-          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+          () => repo.save(
+            any(),
+            splitsTouched: any(named: 'splitsTouched'),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
         ).thenAnswer((i) async {
           runs++;
           await gate.future;
@@ -546,7 +636,11 @@ void main() {
 
     test('with nothing in flight it behaves exactly like drain', () async {
       when(
-        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        () => repo.save(
+          any(),
+          splitsTouched: any(named: 'splitsTouched'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
       ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
       await queue('one');
 
@@ -565,7 +659,11 @@ void main() {
         final release = List.generate(3, (_) => Completer<void>());
         var calls = 0;
         when(
-          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+          () => repo.save(
+            any(),
+            splitsTouched: any(named: 'splitsTouched'),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
         ).thenAnswer((i) async {
           final index = calls;
           calls++;
@@ -611,7 +709,11 @@ void main() {
       () async {
         var calls = 0;
         when(
-          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+          () => repo.save(
+            any(),
+            splitsTouched: any(named: 'splitsTouched'),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
         ).thenAnswer((i) async {
           calls++;
           if (calls == 1) throw Exception('boom');
@@ -648,7 +750,11 @@ void main() {
         // the person asked for silently never ran.
         var calls = 0;
         when(
-          () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+          () => repo.save(
+            any(),
+            splitsTouched: any(named: 'splitsTouched'),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
         ).thenAnswer((i) async {
           calls++;
           if (calls == 1) throw StateError('boom');
@@ -721,14 +827,22 @@ void main() {
 
       expect(sent, 0);
       verifyNever(
-        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        () => repo.save(
+          any(),
+          splitsTouched: any(named: 'splitsTouched'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
       );
       expect(await outbox.all(), hasLength(1), reason: 'left, not deleted');
     });
 
     test('and our own queue is', () async {
       when(
-        () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+        () => repo.save(
+          any(),
+          splitsTouched: any(named: 'splitsTouched'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
       ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
       await queue('local-1');
       await outbox.setOwner('https://cuenti.muh#2');

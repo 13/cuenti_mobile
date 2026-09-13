@@ -330,6 +330,92 @@ void main() {
   });
 
   group('reading transfers with no server to ask', _offlineFallbackTests);
+
+  group('concurrency headers', () {
+    setUpAll(() => registerFallbackValue(Options()));
+
+    Map<String, dynamic> row(int id, String version) => {
+      'id': id,
+      'type': 'EXPENSE',
+      'amount': 1,
+      'transactionDate': '2026-01-01T00:00:00.000',
+      'version': version,
+    };
+
+    test('an update of a row with a version sends it as If-Match, not in '
+        'the body', () async {
+      when(
+        () => dio.put<Map<String, dynamic>>(
+          any(),
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer((_) async => ok(row(5, '2')));
+
+      final saved = await repo.save(
+        Transaction(
+          id: 5,
+          amount: 1,
+          transactionDate: DateTime(2026),
+          version: '1',
+        ),
+      );
+
+      final captured = verify(
+        () => dio.put<Map<String, dynamic>>(
+          '/transactions/5',
+          data: captureAny(named: 'data'),
+          options: captureAny(named: 'options'),
+        ),
+      ).captured;
+      expect((captured[1] as Options).headers?['If-Match'], '"1"');
+      expect((captured[0] as Map).containsKey('version'), isFalse);
+      expect(saved.version, '2');
+    });
+
+    test('a create with a key sends Idempotency-Key', () async {
+      when(
+        () => dio.post<Map<String, dynamic>>(
+          any(),
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer((_) async => ok(row(9, '1')));
+
+      await repo.save(
+        Transaction(amount: 1, transactionDate: DateTime(2026)),
+        idempotencyKey: 'local-1',
+      );
+
+      final captured = verify(
+        () => dio.post<Map<String, dynamic>>(
+          '/transactions',
+          data: any(named: 'data'),
+          options: captureAny(named: 'options'),
+        ),
+      ).captured;
+      expect(
+        (captured.single as Options).headers?['Idempotency-Key'],
+        'local-1',
+      );
+    });
+
+    test('a delete with a version sends it as If-Match', () async {
+      when(
+        () => dio.delete<void>(any(), options: any(named: 'options')),
+      ).thenAnswer((_) async => ok<void>(null));
+
+      await repo.delete(7, version: '3');
+
+      final captured = verify(
+        () => dio.delete<void>(
+          '/transactions/7',
+          options: captureAny(named: 'options'),
+        ),
+      ).captured;
+      expect((captured.single as Options).headers?['If-Match'], '"3"');
+    });
+  });
 }
 
 /// Serves one canned body per query string, and throws a connection failure

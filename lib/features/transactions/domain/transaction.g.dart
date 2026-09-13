@@ -32,6 +32,7 @@ _Transaction _$TransactionFromJson(Map<String, dynamic> json) => _Transaction(
           ?.map((e) => TransactionSplit.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  version: json['version'] as String?,
 );
 
 Map<String, dynamic> _$TransactionToJson(_Transaction instance) =>
@@ -57,4 +58,5 @@ Map<String, dynamic> _$TransactionToJson(_Transaction instance) =>
       'units': instance.units,
       'sortOrder': instance.sortOrder,
       'splits': instance.splits,
+      'version': instance.version,
     };

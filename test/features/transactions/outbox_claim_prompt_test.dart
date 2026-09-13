@@ -87,7 +87,11 @@ void main() {
     outbox = TransactionOutbox(dir);
     repo = MockTransactionsRepository();
     when(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
   });
 
@@ -310,7 +314,11 @@ void main() {
     // the assertion could see it. That the adoption sends at all is the
     // next test.
     when(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).thenThrow(const NetworkException('Cannot connect to server'));
     await tester.runAsync(() => queue('local-1'));
     await pumpHost(tester, userId: 2);
@@ -346,7 +354,11 @@ void main() {
     );
 
     verify(
-      () => repo.save(any(), splitsTouched: any(named: 'splitsTouched')),
+      () => repo.save(
+        any(),
+        splitsTouched: any(named: 'splitsTouched'),
+        idempotencyKey: any(named: 'idempotencyKey'),
+      ),
     ).called(1);
     expect(
       await outbox.all(),

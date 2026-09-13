@@ -108,6 +108,12 @@ class TransactionSync {
       try {
         await _send(entry);
       } on ValidationException catch (e) {
+        if (_alreadyDeleted(entry, e)) {
+          // The first attempt got through and only its answer was lost.
+          delivered++;
+          await _record(() => _outbox.remove(entry.localId));
+          continue;
+        }
         await _record(
           () => _outbox.markRejected(entry.localId, e.serverMessage ?? ''),
         );
@@ -145,16 +151,40 @@ class TransactionSync {
     }
   }
 
+  /// A queued delete answered 404: the row is already gone, most likely
+  /// because an earlier attempt succeeded and its response was lost. That
+  /// is the outcome the user asked for, not a refusal to show them.
+  static bool _alreadyDeleted(
+    PendingTransaction entry,
+    ValidationException e,
+  ) => entry.operation == PendingOperation.delete && e.statusCode == 404;
+
   Future<void> _send(PendingTransaction entry) async {
     switch (entry.operation) {
       case PendingOperation.create:
-      case PendingOperation.update:
+        // The entry's local id is the idempotency key. A create whose
+        // response was lost is resent with the same key, and the server
+        // answers with the transaction it already made instead of a second.
         await _repository.save(
           entry.transaction,
           splitsTouched: entry.splitsTouched,
+          idempotencyKey: entry.localId,
+        );
+      case PendingOperation.update:
+        // The transaction still carries the version it was edited from, so
+        // the repository sends it as If-Match.
+        await _repository.save(
+          entry.transaction,
+          splitsTouched: entry.splitsTouched,
+          // Passed explicitly so every send has the same shape.
+          // ignore: avoid_redundant_argument_values
+          idempotencyKey: null,
         );
       case PendingOperation.delete:
-        await _repository.delete(entry.transaction.id!);
+        await _repository.delete(
+          entry.transaction.id!,
+          version: entry.transaction.version,
+        );
     }
   }
 }

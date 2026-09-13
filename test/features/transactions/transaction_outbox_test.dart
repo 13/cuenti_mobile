@@ -484,4 +484,56 @@ void main() {
     await outbox.remove(specialId);
     expect(await outbox.all(), isEmpty);
   });
+
+  group('a store that cannot be opened normally', () {
+    test('on Android the durable directory is worked out from temp', () {
+      expect(
+        TransactionOutbox.supportPathFromTemp(
+          '/data/user/0/com.cuenti.cuentimobile/cache',
+        ),
+        '/data/user/0/com.cuenti.cuentimobile/files',
+      );
+      expect(
+        TransactionOutbox.supportPathFromTemp('/data/data/com.x/cache/'),
+        '/data/data/com.x/files',
+      );
+      expect(TransactionOutbox.supportPathFromTemp('/tmp'), isNull);
+      expect(
+        TransactionOutbox.supportPathFromTemp('/data/user/0/com.x/cache/sub'),
+        isNull,
+      );
+    });
+
+    test('a queue stranded in the temp fallback is rescued as a sidelined '
+        'queue its owner can reclaim', () async {
+      final temp = Directory.systemTemp.createTempSync('stranded_outbox');
+      addTearDown(() {
+        if (temp.existsSync()) temp.deleteSync(recursive: true);
+      });
+      final stranded = TransactionOutbox(temp, isFallback: true);
+      await stranded.setOwner('https://cuenti.muh#2');
+      await stranded.add(entry('a'));
+
+      await outbox.rescueTempFallback(from: temp);
+
+      expect(temp.existsSync(), isFalse);
+      expect(await outbox.all(), isEmpty, reason: 'never merged into the root');
+      final queues = await outbox.sidelinedQueues();
+      expect(queues.single.owner, 'https://cuenti.muh#2');
+      expect(await outbox.restore(queues.single), isTrue);
+      expect((await outbox.all()).single.localId, 'a');
+    });
+
+    test('an empty temp fallback is simply removed', () async {
+      final temp = Directory.systemTemp.createTempSync('empty_outbox');
+      addTearDown(() {
+        if (temp.existsSync()) temp.deleteSync(recursive: true);
+      });
+
+      await outbox.rescueTempFallback(from: temp);
+
+      expect(temp.existsSync(), isFalse);
+      expect(await outbox.sidelinedQueues(), isEmpty);
+    });
+  });
 }

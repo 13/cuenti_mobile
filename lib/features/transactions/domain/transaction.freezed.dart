@@ -20,7 +20,10 @@ mixin _$Transaction {
 /// `save` strips it alongside the other derived fields, and nothing
 /// shows it. Kept so a future value -- a pending or cleared state --
 /// arrives parsed rather than dropped on the floor.
- String? get status; String? get payee; int? get categoryId; String? get categoryName; String? get memo; String? get tags; String? get number; String? get paymentMethod; int? get assetId; String? get assetName;@JsonKey(fromJson: jsonToDoubleN) double? get units; int get sortOrder; List<TransactionSplit> get splits;
+ String? get status; String? get payee; int? get categoryId; String? get categoryName; String? get memo; String? get tags; String? get number; String? get paymentMethod; int? get assetId; String? get assetName;@JsonKey(fromJson: jsonToDoubleN) double? get units; int get sortOrder; List<TransactionSplit> get splits;/// The server's concurrency token for this row, as last fetched. Sent
+/// back as `If-Match` on an update, so a change queued offline is
+/// refused (409) rather than silently overwriting one made elsewhere.
+ String? get version;
 /// Create a copy of Transaction
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -34,20 +37,20 @@ $TransactionCopyWith<Transaction> get copyWith => _$TransactionCopyWithImpl<Tran
 @override
 bool operator ==(Object other) {
   final _this = this as Transaction;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Transaction&&(identical(other.amount, _this.amount) || other.amount == _this.amount)&&(identical(other.transactionDate, _this.transactionDate) || other.transactionDate == _this.transactionDate)&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.fromAccountId, _this.fromAccountId) || other.fromAccountId == _this.fromAccountId)&&(identical(other.fromAccountName, _this.fromAccountName) || other.fromAccountName == _this.fromAccountName)&&(identical(other.toAccountId, _this.toAccountId) || other.toAccountId == _this.toAccountId)&&(identical(other.toAccountName, _this.toAccountName) || other.toAccountName == _this.toAccountName)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.payee, _this.payee) || other.payee == _this.payee)&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.categoryName, _this.categoryName) || other.categoryName == _this.categoryName)&&(identical(other.memo, _this.memo) || other.memo == _this.memo)&&(identical(other.tags, _this.tags) || other.tags == _this.tags)&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.paymentMethod, _this.paymentMethod) || other.paymentMethod == _this.paymentMethod)&&(identical(other.assetId, _this.assetId) || other.assetId == _this.assetId)&&(identical(other.assetName, _this.assetName) || other.assetName == _this.assetName)&&(identical(other.units, _this.units) || other.units == _this.units)&&(identical(other.sortOrder, _this.sortOrder) || other.sortOrder == _this.sortOrder)&&const DeepCollectionEquality().equals(other.splits, _this.splits));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Transaction&&(identical(other.amount, _this.amount) || other.amount == _this.amount)&&(identical(other.transactionDate, _this.transactionDate) || other.transactionDate == _this.transactionDate)&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.fromAccountId, _this.fromAccountId) || other.fromAccountId == _this.fromAccountId)&&(identical(other.fromAccountName, _this.fromAccountName) || other.fromAccountName == _this.fromAccountName)&&(identical(other.toAccountId, _this.toAccountId) || other.toAccountId == _this.toAccountId)&&(identical(other.toAccountName, _this.toAccountName) || other.toAccountName == _this.toAccountName)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.payee, _this.payee) || other.payee == _this.payee)&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.categoryName, _this.categoryName) || other.categoryName == _this.categoryName)&&(identical(other.memo, _this.memo) || other.memo == _this.memo)&&(identical(other.tags, _this.tags) || other.tags == _this.tags)&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.paymentMethod, _this.paymentMethod) || other.paymentMethod == _this.paymentMethod)&&(identical(other.assetId, _this.assetId) || other.assetId == _this.assetId)&&(identical(other.assetName, _this.assetName) || other.assetName == _this.assetName)&&(identical(other.units, _this.units) || other.units == _this.units)&&(identical(other.sortOrder, _this.sortOrder) || other.sortOrder == _this.sortOrder)&&const DeepCollectionEquality().equals(other.splits, _this.splits)&&(identical(other.version, _this.version) || other.version == _this.version));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Transaction;
-  return Object.hashAll([runtimeType,_this.amount,_this.transactionDate,_this.id,_this.type,_this.fromAccountId,_this.fromAccountName,_this.toAccountId,_this.toAccountName,_this.status,_this.payee,_this.categoryId,_this.categoryName,_this.memo,_this.tags,_this.number,_this.paymentMethod,_this.assetId,_this.assetName,_this.units,_this.sortOrder,const DeepCollectionEquality().hash(_this.splits)]);
+  return Object.hashAll([runtimeType,_this.amount,_this.transactionDate,_this.id,_this.type,_this.fromAccountId,_this.fromAccountName,_this.toAccountId,_this.toAccountName,_this.status,_this.payee,_this.categoryId,_this.categoryName,_this.memo,_this.tags,_this.number,_this.paymentMethod,_this.assetId,_this.assetName,_this.units,_this.sortOrder,const DeepCollectionEquality().hash(_this.splits),_this.version]);
 }
 
 @override
 String toString() {
   final _this = this as Transaction;
-  return 'Transaction(amount: ${_this.amount}, transactionDate: ${_this.transactionDate}, id: ${_this.id}, type: ${_this.type}, fromAccountId: ${_this.fromAccountId}, fromAccountName: ${_this.fromAccountName}, toAccountId: ${_this.toAccountId}, toAccountName: ${_this.toAccountName}, status: ${_this.status}, payee: ${_this.payee}, categoryId: ${_this.categoryId}, categoryName: ${_this.categoryName}, memo: ${_this.memo}, tags: ${_this.tags}, number: ${_this.number}, paymentMethod: ${_this.paymentMethod}, assetId: ${_this.assetId}, assetName: ${_this.assetName}, units: ${_this.units}, sortOrder: ${_this.sortOrder}, splits: ${_this.splits})';
+  return 'Transaction(amount: ${_this.amount}, transactionDate: ${_this.transactionDate}, id: ${_this.id}, type: ${_this.type}, fromAccountId: ${_this.fromAccountId}, fromAccountName: ${_this.fromAccountName}, toAccountId: ${_this.toAccountId}, toAccountName: ${_this.toAccountName}, status: ${_this.status}, payee: ${_this.payee}, categoryId: ${_this.categoryId}, categoryName: ${_this.categoryName}, memo: ${_this.memo}, tags: ${_this.tags}, number: ${_this.number}, paymentMethod: ${_this.paymentMethod}, assetId: ${_this.assetId}, assetName: ${_this.assetName}, units: ${_this.units}, sortOrder: ${_this.sortOrder}, splits: ${_this.splits}, version: ${_this.version})';
 }
 
 
@@ -58,7 +61,7 @@ abstract mixin class $TransactionCopyWith<$Res>  {
   factory $TransactionCopyWith(Transaction value, $Res Function(Transaction) _then) = _$TransactionCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(fromJson: jsonToDouble) double amount, DateTime transactionDate, int? id, String type, int? fromAccountId, String? fromAccountName, int? toAccountId, String? toAccountName, String? status, String? payee, int? categoryId, String? categoryName, String? memo, String? tags, String? number, String? paymentMethod, int? assetId, String? assetName,@JsonKey(fromJson: jsonToDoubleN) double? units, int sortOrder, List<TransactionSplit> splits
+@JsonKey(fromJson: jsonToDouble) double amount, DateTime transactionDate, int? id, String type, int? fromAccountId, String? fromAccountName, int? toAccountId, String? toAccountName, String? status, String? payee, int? categoryId, String? categoryName, String? memo, String? tags, String? number, String? paymentMethod, int? assetId, String? assetName,@JsonKey(fromJson: jsonToDoubleN) double? units, int sortOrder, List<TransactionSplit> splits, String? version
 });
 
 
@@ -75,7 +78,7 @@ class _$TransactionCopyWithImpl<$Res>
 
 /// Create a copy of Transaction
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? amount = null,Object? transactionDate = null,Object? id = freezed,Object? type = null,Object? fromAccountId = freezed,Object? fromAccountName = freezed,Object? toAccountId = freezed,Object? toAccountName = freezed,Object? status = freezed,Object? payee = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? memo = freezed,Object? tags = freezed,Object? number = freezed,Object? paymentMethod = freezed,Object? assetId = freezed,Object? assetName = freezed,Object? units = freezed,Object? sortOrder = null,Object? splits = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? amount = null,Object? transactionDate = null,Object? id = freezed,Object? type = null,Object? fromAccountId = freezed,Object? fromAccountName = freezed,Object? toAccountId = freezed,Object? toAccountName = freezed,Object? status = freezed,Object? payee = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? memo = freezed,Object? tags = freezed,Object? number = freezed,Object? paymentMethod = freezed,Object? assetId = freezed,Object? assetName = freezed,Object? units = freezed,Object? sortOrder = null,Object? splits = null,Object? version = freezed,}) {
   return _then(Transaction(
 amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
 as double,transactionDate: null == transactionDate ? _self.transactionDate : transactionDate // ignore: cast_nullable_to_non_nullable
@@ -98,7 +101,8 @@ as int?,assetName: freezed == assetName ? _self.assetName : assetName // ignore:
 as String?,units: freezed == units ? _self.units : units // ignore: cast_nullable_to_non_nullable
 as double?,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
 as int,splits: null == splits ? _self.splits : splits // ignore: cast_nullable_to_non_nullable
-as List<TransactionSplit>,
+as List<TransactionSplit>,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -183,10 +187,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: jsonToDouble)  double amount,  DateTime transactionDate,  int? id,  String type,  int? fromAccountId,  String? fromAccountName,  int? toAccountId,  String? toAccountName,  String? status,  String? payee,  int? categoryId,  String? categoryName,  String? memo,  String? tags,  String? number,  String? paymentMethod,  int? assetId,  String? assetName, @JsonKey(fromJson: jsonToDoubleN)  double? units,  int sortOrder,  List<TransactionSplit> splits)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: jsonToDouble)  double amount,  DateTime transactionDate,  int? id,  String type,  int? fromAccountId,  String? fromAccountName,  int? toAccountId,  String? toAccountName,  String? status,  String? payee,  int? categoryId,  String? categoryName,  String? memo,  String? tags,  String? number,  String? paymentMethod,  int? assetId,  String? assetName, @JsonKey(fromJson: jsonToDoubleN)  double? units,  int sortOrder,  List<TransactionSplit> splits,  String? version)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Transaction() when $default != null:
-return $default(_that.amount,_that.transactionDate,_that.id,_that.type,_that.fromAccountId,_that.fromAccountName,_that.toAccountId,_that.toAccountName,_that.status,_that.payee,_that.categoryId,_that.categoryName,_that.memo,_that.tags,_that.number,_that.paymentMethod,_that.assetId,_that.assetName,_that.units,_that.sortOrder,_that.splits);case _:
+return $default(_that.amount,_that.transactionDate,_that.id,_that.type,_that.fromAccountId,_that.fromAccountName,_that.toAccountId,_that.toAccountName,_that.status,_that.payee,_that.categoryId,_that.categoryName,_that.memo,_that.tags,_that.number,_that.paymentMethod,_that.assetId,_that.assetName,_that.units,_that.sortOrder,_that.splits,_that.version);case _:
   return orElse();
 
 }
@@ -204,10 +208,10 @@ return $default(_that.amount,_that.transactionDate,_that.id,_that.type,_that.fro
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: jsonToDouble)  double amount,  DateTime transactionDate,  int? id,  String type,  int? fromAccountId,  String? fromAccountName,  int? toAccountId,  String? toAccountName,  String? status,  String? payee,  int? categoryId,  String? categoryName,  String? memo,  String? tags,  String? number,  String? paymentMethod,  int? assetId,  String? assetName, @JsonKey(fromJson: jsonToDoubleN)  double? units,  int sortOrder,  List<TransactionSplit> splits)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: jsonToDouble)  double amount,  DateTime transactionDate,  int? id,  String type,  int? fromAccountId,  String? fromAccountName,  int? toAccountId,  String? toAccountName,  String? status,  String? payee,  int? categoryId,  String? categoryName,  String? memo,  String? tags,  String? number,  String? paymentMethod,  int? assetId,  String? assetName, @JsonKey(fromJson: jsonToDoubleN)  double? units,  int sortOrder,  List<TransactionSplit> splits,  String? version)  $default,) {final _that = this;
 switch (_that) {
 case _Transaction():
-return $default(_that.amount,_that.transactionDate,_that.id,_that.type,_that.fromAccountId,_that.fromAccountName,_that.toAccountId,_that.toAccountName,_that.status,_that.payee,_that.categoryId,_that.categoryName,_that.memo,_that.tags,_that.number,_that.paymentMethod,_that.assetId,_that.assetName,_that.units,_that.sortOrder,_that.splits);case _:
+return $default(_that.amount,_that.transactionDate,_that.id,_that.type,_that.fromAccountId,_that.fromAccountName,_that.toAccountId,_that.toAccountName,_that.status,_that.payee,_that.categoryId,_that.categoryName,_that.memo,_that.tags,_that.number,_that.paymentMethod,_that.assetId,_that.assetName,_that.units,_that.sortOrder,_that.splits,_that.version);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -224,10 +228,10 @@ return $default(_that.amount,_that.transactionDate,_that.id,_that.type,_that.fro
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: jsonToDouble)  double amount,  DateTime transactionDate,  int? id,  String type,  int? fromAccountId,  String? fromAccountName,  int? toAccountId,  String? toAccountName,  String? status,  String? payee,  int? categoryId,  String? categoryName,  String? memo,  String? tags,  String? number,  String? paymentMethod,  int? assetId,  String? assetName, @JsonKey(fromJson: jsonToDoubleN)  double? units,  int sortOrder,  List<TransactionSplit> splits)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: jsonToDouble)  double amount,  DateTime transactionDate,  int? id,  String type,  int? fromAccountId,  String? fromAccountName,  int? toAccountId,  String? toAccountName,  String? status,  String? payee,  int? categoryId,  String? categoryName,  String? memo,  String? tags,  String? number,  String? paymentMethod,  int? assetId,  String? assetName, @JsonKey(fromJson: jsonToDoubleN)  double? units,  int sortOrder,  List<TransactionSplit> splits,  String? version)?  $default,) {final _that = this;
 switch (_that) {
 case _Transaction() when $default != null:
-return $default(_that.amount,_that.transactionDate,_that.id,_that.type,_that.fromAccountId,_that.fromAccountName,_that.toAccountId,_that.toAccountName,_that.status,_that.payee,_that.categoryId,_that.categoryName,_that.memo,_that.tags,_that.number,_that.paymentMethod,_that.assetId,_that.assetName,_that.units,_that.sortOrder,_that.splits);case _:
+return $default(_that.amount,_that.transactionDate,_that.id,_that.type,_that.fromAccountId,_that.fromAccountName,_that.toAccountId,_that.toAccountName,_that.status,_that.payee,_that.categoryId,_that.categoryName,_that.memo,_that.tags,_that.number,_that.paymentMethod,_that.assetId,_that.assetName,_that.units,_that.sortOrder,_that.splits,_that.version);case _:
   return null;
 
 }
@@ -239,7 +243,7 @@ return $default(_that.amount,_that.transactionDate,_that.id,_that.type,_that.fro
 @JsonSerializable()
 
 class _Transaction extends Transaction {
-  const _Transaction({@JsonKey(fromJson: jsonToDouble) required this.amount, required this.transactionDate, this.id, this.type = 'EXPENSE', this.fromAccountId, this.fromAccountName, this.toAccountId, this.toAccountName, this.status, this.payee, this.categoryId, this.categoryName, this.memo, this.tags, this.number, this.paymentMethod, this.assetId, this.assetName, @JsonKey(fromJson: jsonToDoubleN) this.units, this.sortOrder = 0,  List<TransactionSplit> splits = const []}): _splits = splits,super._();
+  const _Transaction({@JsonKey(fromJson: jsonToDouble) required this.amount, required this.transactionDate, this.id, this.type = 'EXPENSE', this.fromAccountId, this.fromAccountName, this.toAccountId, this.toAccountName, this.status, this.payee, this.categoryId, this.categoryName, this.memo, this.tags, this.number, this.paymentMethod, this.assetId, this.assetName, @JsonKey(fromJson: jsonToDoubleN) this.units, this.sortOrder = 0,  List<TransactionSplit> splits = const [], this.version}): _splits = splits,super._();
   factory _Transaction.fromJson(Map<String, dynamic> json) => _$TransactionFromJson(json);
 
 @override@JsonKey(fromJson: jsonToDouble) final  double amount;
@@ -273,6 +277,10 @@ class _Transaction extends Transaction {
   return EqualUnmodifiableListView(_splits);
 }
 
+/// The server's concurrency token for this row, as last fetched. Sent
+/// back as `If-Match` on an update, so a change queued offline is
+/// refused (409) rather than silently overwriting one made elsewhere.
+@override final  String? version;
 
 /// Create a copy of Transaction
 /// with the given fields replaced by the non-null parameter values.
@@ -287,18 +295,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Transaction&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.transactionDate, transactionDate) || other.transactionDate == transactionDate)&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.fromAccountId, fromAccountId) || other.fromAccountId == fromAccountId)&&(identical(other.fromAccountName, fromAccountName) || other.fromAccountName == fromAccountName)&&(identical(other.toAccountId, toAccountId) || other.toAccountId == toAccountId)&&(identical(other.toAccountName, toAccountName) || other.toAccountName == toAccountName)&&(identical(other.status, status) || other.status == status)&&(identical(other.payee, payee) || other.payee == payee)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.tags, tags) || other.tags == tags)&&(identical(other.number, number) || other.number == number)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.assetId, assetId) || other.assetId == assetId)&&(identical(other.assetName, assetName) || other.assetName == assetName)&&(identical(other.units, units) || other.units == units)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&const DeepCollectionEquality().equals(other.splits, _splits));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Transaction&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.transactionDate, transactionDate) || other.transactionDate == transactionDate)&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.fromAccountId, fromAccountId) || other.fromAccountId == fromAccountId)&&(identical(other.fromAccountName, fromAccountName) || other.fromAccountName == fromAccountName)&&(identical(other.toAccountId, toAccountId) || other.toAccountId == toAccountId)&&(identical(other.toAccountName, toAccountName) || other.toAccountName == toAccountName)&&(identical(other.status, status) || other.status == status)&&(identical(other.payee, payee) || other.payee == payee)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.memo, memo) || other.memo == memo)&&(identical(other.tags, tags) || other.tags == tags)&&(identical(other.number, number) || other.number == number)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.assetId, assetId) || other.assetId == assetId)&&(identical(other.assetName, assetName) || other.assetName == assetName)&&(identical(other.units, units) || other.units == units)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&const DeepCollectionEquality().equals(other.splits, _splits)&&(identical(other.version, version) || other.version == version));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hashAll([runtimeType,amount,transactionDate,id,type,fromAccountId,fromAccountName,toAccountId,toAccountName,status,payee,categoryId,categoryName,memo,tags,number,paymentMethod,assetId,assetName,units,sortOrder,const DeepCollectionEquality().hash(_splits)]);
+    return Object.hashAll([runtimeType,amount,transactionDate,id,type,fromAccountId,fromAccountName,toAccountId,toAccountName,status,payee,categoryId,categoryName,memo,tags,number,paymentMethod,assetId,assetName,units,sortOrder,const DeepCollectionEquality().hash(_splits),version]);
 }
 
 @override
 String toString() {
-    return 'Transaction(amount: $amount, transactionDate: $transactionDate, id: $id, type: $type, fromAccountId: $fromAccountId, fromAccountName: $fromAccountName, toAccountId: $toAccountId, toAccountName: $toAccountName, status: $status, payee: $payee, categoryId: $categoryId, categoryName: $categoryName, memo: $memo, tags: $tags, number: $number, paymentMethod: $paymentMethod, assetId: $assetId, assetName: $assetName, units: $units, sortOrder: $sortOrder, splits: $splits)';
+    return 'Transaction(amount: $amount, transactionDate: $transactionDate, id: $id, type: $type, fromAccountId: $fromAccountId, fromAccountName: $fromAccountName, toAccountId: $toAccountId, toAccountName: $toAccountName, status: $status, payee: $payee, categoryId: $categoryId, categoryName: $categoryName, memo: $memo, tags: $tags, number: $number, paymentMethod: $paymentMethod, assetId: $assetId, assetName: $assetName, units: $units, sortOrder: $sortOrder, splits: $splits, version: $version)';
 }
 
 
@@ -309,7 +317,7 @@ abstract mixin class _$TransactionCopyWith<$Res> implements $TransactionCopyWith
   factory _$TransactionCopyWith(_Transaction value, $Res Function(_Transaction) _then) = __$TransactionCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(fromJson: jsonToDouble) double amount, DateTime transactionDate, int? id, String type, int? fromAccountId, String? fromAccountName, int? toAccountId, String? toAccountName, String? status, String? payee, int? categoryId, String? categoryName, String? memo, String? tags, String? number, String? paymentMethod, int? assetId, String? assetName,@JsonKey(fromJson: jsonToDoubleN) double? units, int sortOrder, List<TransactionSplit> splits
+@JsonKey(fromJson: jsonToDouble) double amount, DateTime transactionDate, int? id, String type, int? fromAccountId, String? fromAccountName, int? toAccountId, String? toAccountName, String? status, String? payee, int? categoryId, String? categoryName, String? memo, String? tags, String? number, String? paymentMethod, int? assetId, String? assetName,@JsonKey(fromJson: jsonToDoubleN) double? units, int sortOrder, List<TransactionSplit> splits, String? version
 });
 
 
@@ -326,7 +334,7 @@ class __$TransactionCopyWithImpl<$Res>
 
 /// Create a copy of Transaction
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? amount = null,Object? transactionDate = null,Object? id = freezed,Object? type = null,Object? fromAccountId = freezed,Object? fromAccountName = freezed,Object? toAccountId = freezed,Object? toAccountName = freezed,Object? status = freezed,Object? payee = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? memo = freezed,Object? tags = freezed,Object? number = freezed,Object? paymentMethod = freezed,Object? assetId = freezed,Object? assetName = freezed,Object? units = freezed,Object? sortOrder = null,Object? splits = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? amount = null,Object? transactionDate = null,Object? id = freezed,Object? type = null,Object? fromAccountId = freezed,Object? fromAccountName = freezed,Object? toAccountId = freezed,Object? toAccountName = freezed,Object? status = freezed,Object? payee = freezed,Object? categoryId = freezed,Object? categoryName = freezed,Object? memo = freezed,Object? tags = freezed,Object? number = freezed,Object? paymentMethod = freezed,Object? assetId = freezed,Object? assetName = freezed,Object? units = freezed,Object? sortOrder = null,Object? splits = null,Object? version = freezed,}) {
   return _then(_Transaction(
 amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
 as double,transactionDate: null == transactionDate ? _self.transactionDate : transactionDate // ignore: cast_nullable_to_non_nullable
@@ -349,7 +357,8 @@ as int?,assetName: freezed == assetName ? _self.assetName : assetName // ignore:
 as String?,units: freezed == units ? _self.units : units // ignore: cast_nullable_to_non_nullable
 as double?,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
 as int,splits: null == splits ? _self._splits : splits // ignore: cast_nullable_to_non_nullable
-as List<TransactionSplit>,
+as List<TransactionSplit>,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
