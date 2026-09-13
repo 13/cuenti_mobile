@@ -70,25 +70,22 @@ void main() {
     }
   });
 
-  test('the app-named assets released up to v2.2.0 are still published, so '
-      'clients already installed can still update', () {
-    final published = publishedAssetNames();
-
-    expect(published, contains('app-release.apk'));
-    expect(published, contains('app-*-release.apk'));
-  });
-
-  test('the app is named in the assets it publishes', () {
-    final published = publishedAssetNames();
-
-    expect(published, contains('cuenti-release.apk'));
-    expect(published, contains('cuenti-*-release.apk'));
-  });
-
   test('the version and the app name are in the published file names', () {
     final published = publishedAssetNames();
 
     expect(published, contains('Cuenti-v*-release.apk'));
     expect(published, contains('Cuenti-v*-*-release.apk'));
+  });
+
+  test('each APK is published under exactly one name', () {
+    // Releases used to carry every APK three times (app-*, cuenti-* and
+    // Cuenti-v*). Only the versioned, app-named file is published now.
+    expect(
+      publishedAssetNames(),
+      unorderedEquals([
+        'Cuenti-v*-release.apk',
+        'Cuenti-v*-*-release.apk',
+      ]),
+    );
   });
 }
