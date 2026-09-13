@@ -656,8 +656,9 @@ void main() {
       },
     );
 
-    test('an unreachable server on init keeps the token and restores the '
-        'session, rather than signing the user out', () async {
+    test('with biometric unlock on, an unreachable server on init keeps the '
+        'token and restores the session for the app lock to guard', () async {
+      storage.data['biometric_enabled'] = 'true';
       // One successful launch, to leave a snapshot on the device.
       await container.read(authControllerProvider.notifier).init();
       expect(storage.data['saved_profile'], isNotNull);
@@ -677,10 +678,46 @@ void main() {
 
       await relaunch.read(authControllerProvider.notifier).init();
 
-      expect(relaunch.read(authControllerProvider).user, user);
+      final relaunched = relaunch.read(authControllerProvider);
+      expect(relaunched.user, user);
+      expect(relaunched.restoredSession, isTrue);
       // logout() here is what used to delete the token and wipe every
       // cached figure on a single offline launch.
       verifyNever(() => repo.logout());
+    });
+
+    test('without biometric unlock, an offline launch signs nobody in and '
+        'asks for the password -- which still works offline', () async {
+      // Regression: the snapshot was restored with no check at all, so an
+      // offline start opened the app for whoever held the phone.
+      storage.data['saved_username'] = 'demo';
+      storage.data['saved_password'] = 'secret';
+      storage.data['saved_profile'] = jsonEncode({
+        'savedAt': DateTime.now().toIso8601String(),
+        'profile': user.toJson(),
+      });
+      when(
+        () => repo.getProfile(),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+      final notifier = container.read(authControllerProvider.notifier);
+
+      await notifier.init();
+
+      final state = container.read(authControllerProvider);
+      expect(state.user, isNull);
+      expect(state.initialized, isTrue);
+      expect(state.savedUsername, 'demo', reason: 'the form is prefilled');
+      // The session is not thrown away, only not resumed unchecked.
+      verifyNever(() => repo.logout());
+      expect(storage.data['saved_profile'], isNotNull);
+
+      when(
+        () => repo.login(any(), any()),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+      expect(await notifier.login(LEn(), 'demo', 'wrong'), isNotNull);
+      expect(container.read(authControllerProvider).user, isNull);
+      expect(await notifier.login(LEn(), 'demo', 'secret'), isNull);
+      expect(container.read(authControllerProvider).user, user);
     });
 
     test('forgetSavedCredentials drops the profile snapshot too', () async {
@@ -746,6 +783,7 @@ void main() {
       'a session restored offline from the snapshot is marked restored',
       () async {
         storage.data['saved_profile'] = snapshot();
+        storage.data['biometric_enabled'] = 'true';
         when(
           () => repo.getProfile(),
         ).thenThrow(const NetworkException('Cannot connect to server'));

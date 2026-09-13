@@ -140,11 +140,21 @@ class AuthController extends _$AuthController {
           await _repo.logout();
         } on NetworkException catch (e) {
           // Never reached the server, so the server never refused anything.
-          // Keep the token, keep the cache, and carry on with what the last
-          // successful sign-in left on the device. A certificate refusal is
+          // Keep the token and the cache either way. A certificate refusal is
           // not this case: that server did answer, and the sign-in screen is
           // about to offer to trust it.
-          if (!e.isCertificateRefusal) user = await _readSavedProfile();
+          //
+          // Whether to carry on as the last signed-in user depends on how
+          // this device would otherwise confirm who is holding it. Online,
+          // the server vouches for the token. Offline, nothing does: with
+          // biometric unlock on, the snapshot is restored and the app lock
+          // asks for the fingerprint; without it, nobody is signed in and the
+          // login screen asks for the password, which [_signInOffline] checks
+          // against the saved credentials. Restoring here without either let
+          // anyone holding the phone into the app.
+          if (!e.isCertificateRefusal && state.biometricEnabled) {
+            user = await _readSavedProfile();
+          }
         } on Exception catch (e) {
           // A 500, a 4xx that is not 401/403, a body that would not parse.
           // The server answered, but not with a profile -- that is the
