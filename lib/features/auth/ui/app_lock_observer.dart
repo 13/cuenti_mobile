@@ -34,12 +34,9 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
       widget.authenticator ?? LocalAuthentication();
   bool _locked = false;
 
-  // Cold start is handled at most once per app session: the first time auth
-  // state is observed to be initialized, we decide then and never again —
-  // otherwise a login happening later in the same session (after this
-  // widget's already up) would look like a fresh cold start and lock
-  // unnecessarily.
-  bool _coldStartHandled = false;
+  // Whether build() has made its synchronous check for a session restored
+  // before this widget subscribed. Every later change arrives via ref.listen.
+  bool _initialStateChecked = false;
 
   // Once per app session, the same way the cold-start lock is decided once:
   // the check throttles itself across launches, and this stops a rebuild
@@ -92,19 +89,30 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
     });
   }
 
-  /// Decides the cold-start lock exactly once, the first time [state] shows
-  /// `initialized`. [duringBuild] must be true when called synchronously
-  /// from [build] (calling `setState` there would throw) and false when
-  /// called from the `ref.listen` callback (called outside build, where
-  /// `setState` is required to schedule the rebuild that shows the lock
-  /// screen).
-  void _handleColdStart(AuthState state, {required bool duringBuild}) {
-    if (_coldStartHandled) return;
-    if (!state.initialized) return;
-    _coldStartHandled = true;
-
-    // Logged-out or biometric-off cold starts never lock.
-    if (!state.isLoggedIn || !state.biometricEnabled) return;
+  /// Locks when a biometric-enabled session appears without an interactive
+  /// sign-in: a restored token or, offline, the profile snapshot.
+  ///
+  /// This used to be decided once, the first time auth reported
+  /// `initialized`. A launch whose first restore ended with nobody signed in
+  /// spent that decision; the login screen's retry then restored the session
+  /// -- offline, from the snapshot -- and went straight into the app with no
+  /// fingerprint and no password. Checking every transition into a restored
+  /// session closes that. A password or biometric sign-in the user just
+  /// performed is not a restored session, so it still does not lock twice.
+  ///
+  /// [duringBuild] must be true when called synchronously from [build]
+  /// (calling `setState` there would throw) and false from the `ref.listen`
+  /// callback, where `setState` schedules the rebuild that shows the lock.
+  void _lockIfRestored(
+    AuthState? previous,
+    AuthState next, {
+    required bool duringBuild,
+  }) {
+    if (_locked) return;
+    if (previous?.isLoggedIn ?? false) return;
+    if (!next.isLoggedIn || !next.restoredSession || !next.biometricEnabled) {
+      return;
+    }
 
     if (duringBuild) {
       _locked = true;
@@ -158,10 +166,15 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
   @override
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authControllerProvider, (previous, next) {
-      _handleColdStart(next, duringBuild: false);
+      _lockIfRestored(previous, next, duringBuild: false);
     });
-    if (!_coldStartHandled) {
-      _handleColdStart(ref.read(authControllerProvider), duringBuild: true);
+    if (!_initialStateChecked) {
+      _initialStateChecked = true;
+      _lockIfRestored(
+        null,
+        ref.read(authControllerProvider),
+        duringBuild: true,
+      );
     }
 
     if (_locked) {

@@ -724,4 +724,82 @@ void main() {
       expect(state.biometricEnabled, isTrue);
     });
   });
+
+  group('restoredSession, which the app lock keys off', () {
+    String snapshot() => jsonEncode({
+      'savedAt': DateTime.now().toIso8601String(),
+      'profile': user.toJson(),
+    });
+
+    test(
+      'a session restored from the stored token is marked restored',
+      () async {
+        await container.read(authControllerProvider.notifier).init();
+
+        final state = container.read(authControllerProvider);
+        expect(state.user, user);
+        expect(state.restoredSession, isTrue);
+      },
+    );
+
+    test(
+      'a session restored offline from the snapshot is marked restored',
+      () async {
+        storage.data['saved_profile'] = snapshot();
+        when(
+          () => repo.getProfile(),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+
+        await container.read(authControllerProvider.notifier).init();
+
+        final state = container.read(authControllerProvider);
+        expect(state.user, user);
+        expect(state.restoredSession, isTrue);
+      },
+    );
+
+    test('a password sign-in is not a restored session', () async {
+      when(() => repo.hasToken()).thenAnswer((_) async => false);
+      when(() => repo.login('demo', 'secret')).thenAnswer((_) async => user);
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      expect(await notifier.login(LEn(), 'demo', 'secret'), isNull);
+
+      final state = container.read(authControllerProvider);
+      expect(state.user, user);
+      expect(state.restoredSession, isFalse);
+    });
+
+    test(
+      'an offline password sign-in is not a restored session either',
+      () async {
+        storage.data['saved_username'] = 'demo';
+        storage.data['saved_password'] = 'secret';
+        storage.data['saved_profile'] = snapshot();
+        when(() => repo.hasToken()).thenAnswer((_) async => false);
+        final notifier = container.read(authControllerProvider.notifier);
+        await notifier.init();
+        when(() => repo.hasToken()).thenAnswer((_) async => true);
+        when(
+          () => repo.login(any(), any()),
+        ).thenThrow(const NetworkException('Cannot connect to server'));
+
+        expect(await notifier.login(LEn(), 'demo', 'secret'), isNull);
+
+        final state = container.read(authControllerProvider);
+        expect(state.user, user);
+        expect(state.restoredSession, isFalse);
+      },
+    );
+
+    test('signing out clears it', () async {
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      await notifier.logout();
+
+      expect(container.read(authControllerProvider).restoredSession, isFalse);
+    });
+  });
 }

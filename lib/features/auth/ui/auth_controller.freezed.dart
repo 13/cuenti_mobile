@@ -15,7 +15,10 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuthState {
 
- UserProfile? get user; bool get registrationEnabled; bool get biometricEnabled; bool get initialized; String? get savedUsername; bool get hasSavedPassword;
+ UserProfile? get user; bool get registrationEnabled; bool get biometricEnabled; bool get initialized; String? get savedUsername; bool get hasSavedPassword;/// The signed-in user came from restoring a session -- a stored token,
+/// or offline the profile snapshot -- rather than from a password or a
+/// biometric prompt the user just passed. The app lock keys off this.
+ bool get restoredSession;
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +30,20 @@ $AuthStateCopyWith<AuthState> get copyWith => _$AuthStateCopyWithImpl<AuthState>
 @override
 bool operator ==(Object other) {
   final _this = this as AuthState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthState&&(identical(other.user, _this.user) || other.user == _this.user)&&(identical(other.registrationEnabled, _this.registrationEnabled) || other.registrationEnabled == _this.registrationEnabled)&&(identical(other.biometricEnabled, _this.biometricEnabled) || other.biometricEnabled == _this.biometricEnabled)&&(identical(other.initialized, _this.initialized) || other.initialized == _this.initialized)&&(identical(other.savedUsername, _this.savedUsername) || other.savedUsername == _this.savedUsername)&&(identical(other.hasSavedPassword, _this.hasSavedPassword) || other.hasSavedPassword == _this.hasSavedPassword));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthState&&(identical(other.user, _this.user) || other.user == _this.user)&&(identical(other.registrationEnabled, _this.registrationEnabled) || other.registrationEnabled == _this.registrationEnabled)&&(identical(other.biometricEnabled, _this.biometricEnabled) || other.biometricEnabled == _this.biometricEnabled)&&(identical(other.initialized, _this.initialized) || other.initialized == _this.initialized)&&(identical(other.savedUsername, _this.savedUsername) || other.savedUsername == _this.savedUsername)&&(identical(other.hasSavedPassword, _this.hasSavedPassword) || other.hasSavedPassword == _this.hasSavedPassword)&&(identical(other.restoredSession, _this.restoredSession) || other.restoredSession == _this.restoredSession));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AuthState;
-  return Object.hash(runtimeType,_this.user,_this.registrationEnabled,_this.biometricEnabled,_this.initialized,_this.savedUsername,_this.hasSavedPassword);
+  return Object.hash(runtimeType,_this.user,_this.registrationEnabled,_this.biometricEnabled,_this.initialized,_this.savedUsername,_this.hasSavedPassword,_this.restoredSession);
 }
 
 @override
 String toString() {
   final _this = this as AuthState;
-  return 'AuthState(user: ${_this.user}, registrationEnabled: ${_this.registrationEnabled}, biometricEnabled: ${_this.biometricEnabled}, initialized: ${_this.initialized}, savedUsername: ${_this.savedUsername}, hasSavedPassword: ${_this.hasSavedPassword})';
+  return 'AuthState(user: ${_this.user}, registrationEnabled: ${_this.registrationEnabled}, biometricEnabled: ${_this.biometricEnabled}, initialized: ${_this.initialized}, savedUsername: ${_this.savedUsername}, hasSavedPassword: ${_this.hasSavedPassword}, restoredSession: ${_this.restoredSession})';
 }
 
 
@@ -51,7 +54,7 @@ abstract mixin class $AuthStateCopyWith<$Res>  {
   factory $AuthStateCopyWith(AuthState value, $Res Function(AuthState) _then) = _$AuthStateCopyWithImpl;
 @useResult
 $Res call({
- UserProfile? user, bool registrationEnabled, bool biometricEnabled, bool initialized, String? savedUsername, bool hasSavedPassword
+ UserProfile? user, bool registrationEnabled, bool biometricEnabled, bool initialized, String? savedUsername, bool hasSavedPassword, bool restoredSession
 });
 
 
@@ -68,7 +71,7 @@ class _$AuthStateCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? user = freezed,Object? registrationEnabled = null,Object? biometricEnabled = null,Object? initialized = null,Object? savedUsername = freezed,Object? hasSavedPassword = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? user = freezed,Object? registrationEnabled = null,Object? biometricEnabled = null,Object? initialized = null,Object? savedUsername = freezed,Object? hasSavedPassword = null,Object? restoredSession = null,}) {
   return _then(AuthState(
 user: freezed == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as UserProfile?,registrationEnabled: null == registrationEnabled ? _self.registrationEnabled : registrationEnabled // ignore: cast_nullable_to_non_nullable
@@ -76,6 +79,7 @@ as bool,biometricEnabled: null == biometricEnabled ? _self.biometricEnabled : bi
 as bool,initialized: null == initialized ? _self.initialized : initialized // ignore: cast_nullable_to_non_nullable
 as bool,savedUsername: freezed == savedUsername ? _self.savedUsername : savedUsername // ignore: cast_nullable_to_non_nullable
 as String?,hasSavedPassword: null == hasSavedPassword ? _self.hasSavedPassword : hasSavedPassword // ignore: cast_nullable_to_non_nullable
+as bool,restoredSession: null == restoredSession ? _self.restoredSession : restoredSession // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -173,10 +177,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( UserProfile? user,  bool registrationEnabled,  bool biometricEnabled,  bool initialized,  String? savedUsername,  bool hasSavedPassword)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( UserProfile? user,  bool registrationEnabled,  bool biometricEnabled,  bool initialized,  String? savedUsername,  bool hasSavedPassword,  bool restoredSession)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthState() when $default != null:
-return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_that.initialized,_that.savedUsername,_that.hasSavedPassword);case _:
+return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_that.initialized,_that.savedUsername,_that.hasSavedPassword,_that.restoredSession);case _:
   return orElse();
 
 }
@@ -194,10 +198,10 @@ return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( UserProfile? user,  bool registrationEnabled,  bool biometricEnabled,  bool initialized,  String? savedUsername,  bool hasSavedPassword)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( UserProfile? user,  bool registrationEnabled,  bool biometricEnabled,  bool initialized,  String? savedUsername,  bool hasSavedPassword,  bool restoredSession)  $default,) {final _that = this;
 switch (_that) {
 case _AuthState():
-return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_that.initialized,_that.savedUsername,_that.hasSavedPassword);case _:
+return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_that.initialized,_that.savedUsername,_that.hasSavedPassword,_that.restoredSession);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -214,10 +218,10 @@ return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( UserProfile? user,  bool registrationEnabled,  bool biometricEnabled,  bool initialized,  String? savedUsername,  bool hasSavedPassword)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( UserProfile? user,  bool registrationEnabled,  bool biometricEnabled,  bool initialized,  String? savedUsername,  bool hasSavedPassword,  bool restoredSession)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthState() when $default != null:
-return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_that.initialized,_that.savedUsername,_that.hasSavedPassword);case _:
+return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_that.initialized,_that.savedUsername,_that.hasSavedPassword,_that.restoredSession);case _:
   return null;
 
 }
@@ -229,7 +233,7 @@ return $default(_that.user,_that.registrationEnabled,_that.biometricEnabled,_tha
 
 
 class _AuthState extends AuthState {
-  const _AuthState({this.user, this.registrationEnabled = true, this.biometricEnabled = false, this.initialized = false, this.savedUsername, this.hasSavedPassword = false}): super._();
+  const _AuthState({this.user, this.registrationEnabled = true, this.biometricEnabled = false, this.initialized = false, this.savedUsername, this.hasSavedPassword = false, this.restoredSession = false}): super._();
   
 
 @override final  UserProfile? user;
@@ -238,6 +242,10 @@ class _AuthState extends AuthState {
 @override@JsonKey() final  bool initialized;
 @override final  String? savedUsername;
 @override@JsonKey() final  bool hasSavedPassword;
+/// The signed-in user came from restoring a session -- a stored token,
+/// or offline the profile snapshot -- rather than from a password or a
+/// biometric prompt the user just passed. The app lock keys off this.
+@override@JsonKey() final  bool restoredSession;
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
@@ -249,18 +257,18 @@ _$AuthStateCopyWith<_AuthState> get copyWith => __$AuthStateCopyWithImpl<_AuthSt
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthState&&(identical(other.user, user) || other.user == user)&&(identical(other.registrationEnabled, registrationEnabled) || other.registrationEnabled == registrationEnabled)&&(identical(other.biometricEnabled, biometricEnabled) || other.biometricEnabled == biometricEnabled)&&(identical(other.initialized, initialized) || other.initialized == initialized)&&(identical(other.savedUsername, savedUsername) || other.savedUsername == savedUsername)&&(identical(other.hasSavedPassword, hasSavedPassword) || other.hasSavedPassword == hasSavedPassword));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthState&&(identical(other.user, user) || other.user == user)&&(identical(other.registrationEnabled, registrationEnabled) || other.registrationEnabled == registrationEnabled)&&(identical(other.biometricEnabled, biometricEnabled) || other.biometricEnabled == biometricEnabled)&&(identical(other.initialized, initialized) || other.initialized == initialized)&&(identical(other.savedUsername, savedUsername) || other.savedUsername == savedUsername)&&(identical(other.hasSavedPassword, hasSavedPassword) || other.hasSavedPassword == hasSavedPassword)&&(identical(other.restoredSession, restoredSession) || other.restoredSession == restoredSession));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,user,registrationEnabled,biometricEnabled,initialized,savedUsername,hasSavedPassword);
+    return Object.hash(runtimeType,user,registrationEnabled,biometricEnabled,initialized,savedUsername,hasSavedPassword,restoredSession);
 }
 
 @override
 String toString() {
-    return 'AuthState(user: $user, registrationEnabled: $registrationEnabled, biometricEnabled: $biometricEnabled, initialized: $initialized, savedUsername: $savedUsername, hasSavedPassword: $hasSavedPassword)';
+    return 'AuthState(user: $user, registrationEnabled: $registrationEnabled, biometricEnabled: $biometricEnabled, initialized: $initialized, savedUsername: $savedUsername, hasSavedPassword: $hasSavedPassword, restoredSession: $restoredSession)';
 }
 
 
@@ -271,7 +279,7 @@ abstract mixin class _$AuthStateCopyWith<$Res> implements $AuthStateCopyWith<$Re
   factory _$AuthStateCopyWith(_AuthState value, $Res Function(_AuthState) _then) = __$AuthStateCopyWithImpl;
 @override @useResult
 $Res call({
- UserProfile? user, bool registrationEnabled, bool biometricEnabled, bool initialized, String? savedUsername, bool hasSavedPassword
+ UserProfile? user, bool registrationEnabled, bool biometricEnabled, bool initialized, String? savedUsername, bool hasSavedPassword, bool restoredSession
 });
 
 
@@ -288,7 +296,7 @@ class __$AuthStateCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? user = freezed,Object? registrationEnabled = null,Object? biometricEnabled = null,Object? initialized = null,Object? savedUsername = freezed,Object? hasSavedPassword = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? user = freezed,Object? registrationEnabled = null,Object? biometricEnabled = null,Object? initialized = null,Object? savedUsername = freezed,Object? hasSavedPassword = null,Object? restoredSession = null,}) {
   return _then(_AuthState(
 user: freezed == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as UserProfile?,registrationEnabled: null == registrationEnabled ? _self.registrationEnabled : registrationEnabled // ignore: cast_nullable_to_non_nullable
@@ -296,6 +304,7 @@ as bool,biometricEnabled: null == biometricEnabled ? _self.biometricEnabled : bi
 as bool,initialized: null == initialized ? _self.initialized : initialized // ignore: cast_nullable_to_non_nullable
 as bool,savedUsername: freezed == savedUsername ? _self.savedUsername : savedUsername // ignore: cast_nullable_to_non_nullable
 as String?,hasSavedPassword: null == hasSavedPassword ? _self.hasSavedPassword : hasSavedPassword // ignore: cast_nullable_to_non_nullable
+as bool,restoredSession: null == restoredSession ? _self.restoredSession : restoredSession // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

@@ -24,6 +24,11 @@ class _FakeAuthController extends AuthController {
     loggedOut = true;
     state = state.copyWith(user: null);
   }
+
+  /// Pushes a new auth state, as the real controller does when a restore or
+  /// a sign-in finishes.
+  // ignore: use_setters_to_change_properties
+  void emit(AuthState next) => state = next;
 }
 
 const _user = UserProfile(username: 'demo', email: 'd@x');
@@ -70,6 +75,7 @@ void main() {
           authState: const AuthState(
             user: _user,
             biometricEnabled: true,
+            restoredSession: true,
             initialized: true,
           ),
           authenticator: authenticator,
@@ -100,6 +106,7 @@ void main() {
           authState: const AuthState(
             user: _user,
             biometricEnabled: true,
+            restoredSession: true,
             initialized: true,
           ),
           authenticator: authenticator,
@@ -124,7 +131,12 @@ void main() {
         ),
       ).thenThrow(Exception('NotAvailable'));
       final controller = _FakeAuthController(
-        const AuthState(user: _user, biometricEnabled: true, initialized: true),
+        const AuthState(
+          user: _user,
+          biometricEnabled: true,
+          restoredSession: true,
+          initialized: true,
+        ),
       );
 
       await tester.pumpWidget(
@@ -163,6 +175,7 @@ void main() {
           authState: const AuthState(
             user: _user,
             biometricEnabled: true,
+            restoredSession: true,
             initialized: true,
           ),
           authenticator: authenticator,
@@ -175,6 +188,74 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Home'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'a session restored after a first init that found nobody still locks',
+    (tester) async {
+      // Regression: the lock was decided once, at the first initialized
+      // state. A launch whose first restore ended with nobody signed in spent
+      // that decision, and the login screen's retry then restored the session
+      // offline straight into the app -- no fingerprint, no password.
+      final authenticator = MockLocalAuthentication();
+      when(
+        () => authenticator.authenticate(
+          localizedReason: any(named: 'localizedReason'),
+        ),
+      ).thenAnswer((_) async => false);
+      final controller = _FakeAuthController(
+        const AuthState(biometricEnabled: true, initialized: true),
+      );
+
+      await tester.pumpWidget(
+        _host(
+          authState: const AuthState(),
+          authenticator: authenticator,
+          controller: controller,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Home'), findsOneWidget);
+
+      controller.emit(
+        const AuthState(
+          user: _user,
+          biometricEnabled: true,
+          initialized: true,
+          restoredSession: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cuenti is Locked'), findsOneWidget);
+      expect(find.text('Home'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'signing in with a password or fingerprint does not lock again',
+    (tester) async {
+      final controller = _FakeAuthController(
+        const AuthState(biometricEnabled: true, initialized: true),
+      );
+
+      await tester.pumpWidget(
+        _host(authState: const AuthState(), controller: controller),
+      );
+      await tester.pumpAndSettle();
+
+      controller.emit(
+        const AuthState(
+          user: _user,
+          biometricEnabled: true,
+          initialized: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Home'), findsOneWidget);
+      expect(find.text('Cuenti is Locked'), findsNothing);
     },
   );
 

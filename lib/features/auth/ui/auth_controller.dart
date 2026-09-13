@@ -40,6 +40,11 @@ abstract class AuthState with _$AuthState {
     @Default(false) bool initialized,
     String? savedUsername,
     @Default(false) bool hasSavedPassword,
+
+    /// The signed-in user came from restoring a session -- a stored token,
+    /// or offline the profile snapshot -- rather than from a password or a
+    /// biometric prompt the user just passed. The app lock keys off this.
+    @Default(false) bool restoredSession,
   }) = _AuthState;
 
   const AuthState._();
@@ -159,6 +164,9 @@ class AuthController extends _$AuthController {
         // retried now, and the only things entitled to sign someone out are
         // [logout] and [_handleSessionExpired].
         user: user ?? state.user,
+        // Only a user this run restored counts as restored. Someone who
+        // signed in while it was running keeps what their sign-in set.
+        restoredSession: user != null || state.restoredSession,
         registrationEnabled: registrationEnabled,
         initialized: true,
       );
@@ -248,6 +256,7 @@ class AuthController extends _$AuthController {
       user: profile,
       savedUsername: savedUsername,
       hasSavedPassword: true,
+      restoredSession: false,
     );
     return true;
   }
@@ -316,12 +325,12 @@ class AuthController extends _$AuthController {
     // Several requests can fail at once, and a signed-out state must not be
     // re-cleared while the login screen is already up.
     if (state.user == null) return;
-    state = state.copyWith(user: null);
+    state = state.copyWith(user: null, restoredSession: false);
     await _repo.logout();
   }
 
   Future<void> logout() async {
-    state = state.copyWith(user: null);
+    state = state.copyWith(user: null, restoredSession: false);
     // The list screens' searches outlive a screen on purpose, so they have
     // to be dropped here: the data providers dispose themselves, but this
     // one is kept alive and would otherwise greet the next person with the
@@ -344,7 +353,7 @@ class AuthController extends _$AuthController {
     }
     try {
       final user = await _repo.login(username, password);
-      state = state.copyWith(user: user);
+      state = state.copyWith(user: user, restoredSession: false);
       return null;
     } on UnauthorizedException catch (e) {
       if (e.message != invalidCredentialsMessage) return _errorMessage(l, e);
@@ -415,8 +424,9 @@ class AuthController extends _$AuthController {
             user: user,
             savedUsername: username,
             hasSavedPassword: true,
+            restoredSession: false,
           )
-        : state.copyWith(user: user);
+        : state.copyWith(user: user, restoredSession: false);
   }
 
   Future<void> setBiometricEnabled({required bool enabled}) async {
