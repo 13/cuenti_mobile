@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cuentimobile/core/api/certificate_pins.dart';
 import 'package:cuentimobile/core/api/offline_cache_interceptor.dart';
 import 'package:cuentimobile/core/api/response_cache.dart';
+import 'package:cuentimobile/core/storage/at_rest_cipher.dart';
 import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
@@ -130,7 +131,9 @@ class ApiClient {
 
   Future<void> _attachOfflineCache() async {
     try {
-      final interceptor = OfflineCacheInterceptor(await ResponseCache.open());
+      final interceptor = OfflineCacheInterceptor(
+        await ResponseCache.open(cipher: AesGcmAtRestCipher(_storage)),
+      );
       offlineCache = interceptor;
       dio.interceptors.insert(0, interceptor);
     } on Exception catch (_) {

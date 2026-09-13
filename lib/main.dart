@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:cuentimobile/core/storage/at_rest_cipher.dart';
+import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/core/theme/app_theme.dart';
 import 'package:cuentimobile/features/auth/ui/app_lock_observer.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
@@ -21,7 +23,11 @@ Future<void> main() async {
   // as an override rather than built lazily inside the provider tree. Not
   // open(): nothing about the first frame should hang or crash on a
   // platform channel, so a store that cannot be opened degrades instead.
-  final outbox = await TransactionOutbox.openOrFallback();
+  // Sealed with the same Keystore-held key the response cache uses, so
+  // unsent transactions are not readable on disk either.
+  final outbox = await TransactionOutbox.openOrFallback(
+    cipher: AesGcmAtRestCipher(const SecureStorage()),
+  );
   runApp(
     ProviderScope(
       overrides: [transactionOutboxProvider.overrideWithValue(outbox)],

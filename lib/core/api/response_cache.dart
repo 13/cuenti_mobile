@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'package:cuentimobile/core/storage/at_rest_cipher.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -47,7 +48,12 @@ class ResponseCache {
     this._directory, {
     this.maxEntries = defaultMaxEntries,
     this.maxAge = defaultMaxAge,
+    this.cipher = AtRestCipher.none,
   });
+
+  /// Seals entries on disk. [open] always passes a real one; constructing a
+  /// cache directly over a directory (tests) leaves entries in the clear.
+  final AtRestCipher cipher;
 
   /// Every distinct query is its own entry, and the transactions list keys
   /// on the search box -- so each search anyone types would otherwise leave
@@ -64,11 +70,11 @@ class ResponseCache {
 
   /// Opens the cache in the app's support directory, which the OS does not
   /// purge behind the app's back the way it may purge temp.
-  static Future<ResponseCache> open() async {
+  static Future<ResponseCache> open({required AtRestCipher cipher}) async {
     final base = await getApplicationSupportDirectory();
     final dir = Directory('${base.path}/response_cache');
     if (!dir.existsSync()) await dir.create(recursive: true);
-    return ResponseCache(dir);
+    return ResponseCache(dir, cipher: cipher);
   }
 
   final Directory _directory;
@@ -79,10 +85,12 @@ class ResponseCache {
 
   Future<void> store(String key, Object? body) async {
     await _fileFor(key).writeAsString(
-      jsonEncode({
-        'storedAt': DateTime.now().toIso8601String(),
-        'body': body,
-      }),
+      await cipher.seal(
+        jsonEncode({
+          'storedAt': DateTime.now().toIso8601String(),
+          'body': body,
+        }),
+      ),
     );
     await _evictExcess();
   }
@@ -120,7 +128,14 @@ class ResponseCache {
     // clock change keep figures alive past maxAge.
     if (age > maxAge || age < -clockSkewAllowance) return null;
     try {
-      final decoded = jsonDecode(await file.readAsString()) as Map;
+      final opened = await cipher.open(await file.readAsString());
+      if (opened.legacy) {
+        // Plaintext from before encryption: the account's figures, readable
+        // on disk. A cache can always be fetched again, so it goes.
+        await file.delete();
+        return null;
+      }
+      final decoded = jsonDecode(opened.text) as Map;
       return CachedResponse(
         body: decoded['body'],
         storedAt: DateTime.parse(decoded['storedAt'] as String),
@@ -129,6 +144,13 @@ class ResponseCache {
       // reason to fail the request that was already failing.
       // ignore: avoid_catches_without_on_clauses
     } catch (_) {
+      // Sealed under a key this install no longer has, or damaged: it can
+      // never be read again, so it is removed rather than retried forever.
+      try {
+        if (file.existsSync()) await file.delete();
+        // A file that vanished or cannot be deleted is simply not served.
+        // ignore: avoid_catches_without_on_clauses
+      } catch (_) {}
       return null;
     }
   }

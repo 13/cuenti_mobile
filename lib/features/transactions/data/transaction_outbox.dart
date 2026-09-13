@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cuentimobile/core/storage/at_rest_cipher.dart';
 import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,18 +25,29 @@ class SidelinedQueue {
 /// behind the app's back the way it may purge temp. Unlike that cache, what
 /// is in here is work the user did and nothing else has a copy of.
 class TransactionOutbox {
-  TransactionOutbox(this._directory, {this.isFallback = false});
+  TransactionOutbox(
+    this._directory, {
+    this.isFallback = false,
+    AtRestCipher cipher = AtRestCipher.none,
+  }) : _cipher = cipher;
+
+  /// Seals entries and the owner file on disk. [open] and [openOrFallback]
+  /// are given the real one in production; a store constructed directly over
+  /// a directory (tests) keeps them in the clear.
+  final AtRestCipher _cipher;
 
   /// True when this store is the temp-directory fallback rather than the
   /// real one, which means an empty queue is "could not be read", not
   /// "nothing is waiting". The sign-out flow must not treat the two alike.
   final bool isFallback;
 
-  static Future<TransactionOutbox> open() async {
+  static Future<TransactionOutbox> open({
+    AtRestCipher cipher = AtRestCipher.none,
+  }) async {
     final base = await getApplicationSupportDirectory();
     final dir = Directory('${base.path}/transaction_outbox');
     if (!dir.existsSync()) await dir.create(recursive: true);
-    return TransactionOutbox(dir);
+    return TransactionOutbox(dir, cipher: cipher);
   }
 
   /// [open], or a store that still works when it cannot be had.
@@ -53,9 +65,13 @@ class TransactionOutbox {
   /// purge it between runs, so a queue kept there is less durable than the
   /// real one -- but the queue still works for this session, and the app
   /// starts.
-  static Future<TransactionOutbox> openOrFallback() async {
+  static Future<TransactionOutbox> openOrFallback({
+    AtRestCipher cipher = AtRestCipher.none,
+  }) async {
     try {
-      final outbox = await open().timeout(const Duration(seconds: 5));
+      final outbox = await open(
+        cipher: cipher,
+      ).timeout(const Duration(seconds: 5));
       try {
         await outbox.rescueTempFallback();
         // Best effort: a rescue that fails leaves the stranded queue where it
@@ -81,14 +97,14 @@ class TransactionOutbox {
         }
         final dir = Directory('$support/transaction_outbox')
           ..createSync(recursive: true);
-        return TransactionOutbox(dir);
+        return TransactionOutbox(dir, cipher: cipher);
       }
       if (kDebugMode) {
         debugPrint('TransactionOutbox: no app-support store ($e), using temp');
       }
       final dir = Directory('${Directory.systemTemp.path}/cuenti_outbox')
         ..createSync(recursive: true);
-      return TransactionOutbox(dir, isFallback: true);
+      return TransactionOutbox(dir, isFallback: true, cipher: cipher);
     }
   }
 
@@ -194,7 +210,7 @@ class TransactionOutbox {
   /// throwing, and never as unowned.
   Future<String?> owner() async {
     if (!_ownerFile.existsSync()) return null;
-    return _readOwnerFile(_ownerFile) ?? unattributableOwner;
+    return await _readOwnerFile(_ownerFile) ?? unattributableOwner;
   }
 
   /// Reads one owner file, wherever it is. Shared by [owner] for the root
@@ -204,14 +220,21 @@ class TransactionOutbox {
   /// A file that parses but names no account, or does not parse at all,
   /// logs here and reads as null -- the same two log lines [owner] used to
   /// print itself, before it folded this result into [unattributableOwner].
-  static String? _readOwnerFile(File file) {
+  Future<String?> _readOwnerFile(File file) async {
     if (!file.existsSync()) return null;
     try {
-      final decoded = jsonDecode(file.readAsStringSync());
+      final opened = await _cipher.open(file.readAsStringSync());
+      final decoded = jsonDecode(opened.text);
       final account = decoded is Map<String, dynamic>
           ? decoded['account']
           : null;
-      if (account is String && account.isNotEmpty) return account;
+      if (account is String && account.isNotEmpty) {
+        // Written before encryption existed: seal the root's owner file now.
+        if (opened.legacy && file.path == _ownerFile.path) {
+          await setOwner(account);
+        }
+        return account;
+      }
       if (kDebugMode) {
         debugPrint('TransactionOutbox: owner file names no account');
       }
@@ -243,14 +266,18 @@ class TransactionOutbox {
   Future<void> setOwner(String account) async {
     if (!_directory.existsSync()) await _directory.create(recursive: true);
     final tempFile = File('${_ownerFile.path}.${_setOwnerSeq++}.tmp');
-    await tempFile.writeAsString(jsonEncode({'account': account}));
+    await tempFile.writeAsString(
+      await _cipher.seal(jsonEncode({'account': account})),
+    );
     await tempFile.rename(_ownerFile.path);
   }
 
   Future<void> add(PendingTransaction entry) async {
     final file = _fileFor(entry.localId);
     final tempFile = File('${file.path}.tmp');
-    await tempFile.writeAsString(jsonEncode(entry.toJson()));
+    await tempFile.writeAsString(
+      await _cipher.seal(jsonEncode(entry.toJson())),
+    );
     await tempFile.rename(file.path);
   }
 
@@ -263,11 +290,15 @@ class TransactionOutbox {
       // Dot-files are the store's own bookkeeping, not entries.
       if (name.startsWith('.') || !name.endsWith('.json')) continue;
       try {
-        entries.add(
-          PendingTransaction.fromJson(
-            jsonDecode(file.readAsStringSync()) as Map<String, dynamic>,
-          ),
+        final opened = await _cipher.open(file.readAsStringSync());
+        final entry = PendingTransaction.fromJson(
+          jsonDecode(opened.text) as Map<String, dynamic>,
         );
+        entries.add(entry);
+        // Written before encryption existed: seal it now, in place. An entry
+        // sealed under a key this install no longer has throws above and is
+        // skipped -- kept on disk, never guessed at.
+        if (opened.legacy) await add(entry);
         // One unreadable file must not cost the user every other entry
         // behind it, so it is skipped rather than thrown -- but not in
         // silence: this is work the user typed and nothing else has a copy
@@ -399,7 +430,7 @@ class TransactionOutbox {
           ..sort((a, b) => a.path.compareTo(b.path));
     return [
       for (final d in dirs)
-        SidelinedQueue(d, _readOwnerFile(File('${d.path}/.owner.json'))),
+        SidelinedQueue(d, await _readOwnerFile(File('${d.path}/.owner.json'))),
     ];
   }
 
