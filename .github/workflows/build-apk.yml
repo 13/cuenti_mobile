@@ -233,11 +233,14 @@ jobs:
           path: build/app/outputs/flutter-apk/Cuenti-v*-release.apk
           retention-days: 30
 
+      # Phones only: arm and arm64. No x86_64 split is published -- that is
+      # emulators, and they still get the universal APK above, which the
+      # in-app updater falls back to when no split matches the device.
       - name: Build split APKs
         run: |
           BUILD_DATE=$(date +'%Y-%m-%d')
           BUILD_TIME=$(date +'%H:%M:%S')
-          flutter build apk --split-per-abi --dart-define=BUILD_DATE=$BUILD_DATE --dart-define=BUILD_TIME=$BUILD_TIME
+          flutter build apk --split-per-abi --target-platform android-arm,android-arm64 --dart-define=BUILD_DATE=$BUILD_DATE --dart-define=BUILD_TIME=$BUILD_TIME
 
       # Proves the shipped APK carries the release certificate. A build that
       # quietly fell back to the debug key would pass every other check.
