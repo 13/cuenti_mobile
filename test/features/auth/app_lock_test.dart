@@ -1,3 +1,7 @@
+// Test doubles expose what they were asked to do (calls, flags) as public
+// fields for the test to inspect; that is their job, not a notifier API.
+// ignore_for_file: riverpod_lint/avoid_public_notifier_properties
+
 import 'package:cuentimobile/features/auth/ui/app_lock_observer.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
@@ -40,6 +44,9 @@ Widget _host({
 }) {
   return ProviderScope(
     overrides: [
+      // The root scope, handed straight to pumpWidget; the lint cannot see
+      // that from inside this helper.
+      // ignore: riverpod_lint/scoped_providers_should_specify_dependencies
       authControllerProvider.overrideWith(
         () => controller ?? _FakeAuthController(authState),
       ),

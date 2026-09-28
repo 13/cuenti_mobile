@@ -559,7 +559,9 @@ class AuthController extends _$AuthController {
     await _storage.write(_biometricKey, enabled.toString());
   }
 
-  String get serverUrl => _repo.serverUrl;
+  /// The server this app is pointed at. A method: a notifier's public
+  /// surface is its state and its actions (avoid_public_notifier_properties).
+  String serverUrl() => _repo.serverUrl;
 
   Future<void> setServerUrl(String url) => _repo.setServerUrl(url);
 

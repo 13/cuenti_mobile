@@ -1,3 +1,7 @@
+// Test doubles expose what they were asked to do (calls, flags) as public
+// fields for the test to inspect; that is their job, not a notifier API.
+// ignore_for_file: riverpod_lint/avoid_public_notifier_properties
+
 import 'dart:async';
 import 'dart:io';
 

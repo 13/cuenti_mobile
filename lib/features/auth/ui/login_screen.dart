@@ -242,7 +242,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       L
                           .of(context)
                           .authServerLine(
-                            ref.read(authControllerProvider.notifier).serverUrl,
+                            ref
+                                .read(authControllerProvider.notifier)
+                                .serverUrl(),
                           ),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),

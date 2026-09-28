@@ -70,7 +70,7 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
   @override
   void initState() {
     super.initState();
-    _controller.text = ref.read(authControllerProvider.notifier).serverUrl;
+    _controller.text = ref.read(authControllerProvider.notifier).serverUrl();
   }
 
   @override

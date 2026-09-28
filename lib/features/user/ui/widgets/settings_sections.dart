@@ -261,7 +261,7 @@ class ServerSection extends ConsumerWidget {
       children: [
         const SizedBox(height: 8),
         Text(
-          l.settingsConnectedTo(auth.serverUrl),
+          l.settingsConnectedTo(auth.serverUrl()),
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
