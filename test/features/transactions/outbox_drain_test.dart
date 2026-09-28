@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/features/accounts/data/accounts_repository.dart';
+import 'package:cuentimobile/features/accounts/ui/accounts_controller.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_outbox.dart';
 import 'package:cuentimobile/features/transactions/data/transaction_sync.dart';
 import 'package:cuentimobile/features/transactions/data/transactions_repository.dart';
@@ -112,4 +114,57 @@ void main() {
 
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('a drain that delivered something refreshes the balances too: '
+      'a sent transaction moved money', (tester) async {
+    final accounts = _MockAccountsRepository();
+    when(accounts.getAll).thenAnswer((_) async => const []);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          accountsRepositoryProvider.overrideWithValue(accounts),
+          transactionOutboxProvider.overrideWithValue(
+            TransactionOutbox(outboxDir),
+          ),
+          transactionSyncProvider.overrideWithValue(_StubSync(delivered: 1)),
+        ],
+        child: MaterialApp(
+          home: Consumer(
+            builder: (context, ref, _) {
+              ref.watch(accountsControllerProvider);
+              return TextButton(
+                onPressed: () => drainOutbox(ref),
+                child: const Text('drain'),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    verify(accounts.getAll).called(1);
+
+    await tester.tap(find.text('drain'));
+    await tester.pumpAndSettle();
+
+    verify(accounts.getAll).called(1);
+  });
+
+  testWidgets('given something to do afterwards, a drain runs it however it '
+      'ended and does not refresh on its own as well', (tester) async {
+    for (final sync in [_StubSync(delivered: 1), _StubSync(fails: true)]) {
+      await pump(tester, sync);
+      clearInteractions(repo);
+      var ran = 0;
+      final ref = tester.element(find.byType(Consumer)) as WidgetRef;
+
+      drainOutbox(ref, afterwards: () => ran++);
+      await tester.pumpAndSettle();
+
+      expect(ran, 1);
+      verifyNever(() => repo.getPage());
+    }
+  });
 }
+
+class _MockAccountsRepository extends Mock implements AccountsRepository {}

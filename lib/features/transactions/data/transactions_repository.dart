@@ -1,13 +1,18 @@
+import 'dart:convert';
 import 'dart:math' show min;
 
+import 'package:crypto/crypto.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
 import 'package:cuentimobile/core/api/api_guard.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/core/api/offline_cache_interceptor.dart';
+import 'package:cuentimobile/core/api/response_cache.dart';
+import 'package:cuentimobile/features/transactions/domain/pending_transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_filter.dart';
 import 'package:cuentimobile/features/transactions/domain/transaction_page.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -22,9 +27,27 @@ final transactionsRepositoryProvider = Provider<TransactionsRepository>(
   ),
 );
 
+/// What the server answered for one operation of a batch: the status its
+/// own request would have had, and the reason it gave for a refusal.
+@immutable
+class BatchItemResult {
+  const BatchItemResult({
+    required this.clientId,
+    required this.status,
+    this.error,
+  });
+
+  final String? clientId;
+  final int status;
+  final String? error;
+}
+
 class TransactionsRepository {
   TransactionsRepository(this._dio, {this.offlineCache});
   final Dio _dio;
+
+  /// Which server this talks to, for remembering what that server supports.
+  String get baseUrl => _dio.options.baseUrl;
 
   /// The read cache, looked up when asked for rather than held, and null
   /// where there is none -- which simply disables the fallback below.
@@ -119,27 +142,40 @@ class TransactionsRepository {
     };
 
     for (final base in bases) {
-      final rows = <Transaction>[];
-      DateTime? oldest;
-      var complete = false;
-      for (var p = 0; p < _maxCachedPages; p++) {
-        final hit = await cache.peek(
-          RequestOptions(
-            // The server is part of the cache key, so the lookup has to name
-            // the same one the live request went to.
-            baseUrl: _dio.options.baseUrl,
-            path: '/transactions',
-            queryParameters: queryFor(base, page: p, size: size),
-          ),
-        );
+      Future<CachedResponse?> peekPage(int p) => cache.peek(
+        RequestOptions(
+          // The server is part of the cache key, so the lookup has to name
+          // the same one the live request went to.
+          baseUrl: _dio.options.baseUrl,
+          path: '/transactions',
+          queryParameters: queryFor(base, page: p, size: size),
+        ),
+      );
+
+      // Page 0 says how many pages there are; the rest are then read
+      // together rather than one decrypt after another.
+      final first = await peekPage(0);
+      final firstParsed = first == null
+          ? null
+          : _tryParseCached(first.body, page: 0, size: size);
+      if (first == null || firstParsed == null) continue;
+      final wanted = min(firstParsed.totalPages, _maxCachedPages);
+      final later = await Future.wait([
+        for (var p = 1; p < wanted; p++) peekPage(p),
+      ]);
+
+      final rows = <Transaction>[...firstParsed.content];
+      var oldest = first.storedAt;
+      var complete = firstParsed.totalPages <= 1;
+      for (var i = 0; i < later.length; i++) {
+        final p = i + 1;
+        final hit = later[i];
         // A hole ends the walk. Never assembled across one: a list with a
         // gap in the middle reads as data loss, with nothing to say so.
         if (hit == null) break;
         final parsed = _tryParseCached(hit.body, page: p, size: size);
         if (parsed == null) break;
-        if (oldest == null || hit.storedAt.isBefore(oldest)) {
-          oldest = hit.storedAt;
-        }
+        if (hit.storedAt.isBefore(oldest)) oldest = hit.storedAt;
         rows.addAll(parsed.content);
         if (p + 1 >= parsed.totalPages) {
           complete = true;
@@ -163,7 +199,7 @@ class TransactionsRepository {
       final slice = start >= matched.length
           ? const <Transaction>[]
           : matched.sublist(start, min(start + size, matched.length));
-      cache.markStale(oldest!);
+      cache.markStale(oldest);
       return TransactionPage(
         content: slice,
         page: page,
@@ -235,28 +271,7 @@ class TransactionsRepository {
     bool splitsTouched = false,
     String? idempotencyKey,
   }) => guardApi(() async {
-    final json = t.toJson()
-      ..remove('id')
-      ..remove('fromAccountName')
-      ..remove('toAccountName')
-      ..remove('categoryName')
-      ..remove('assetName')
-      ..remove('status')
-      ..remove('version');
-    json['paymentMethod'] = t.paymentMethod ?? 'NONE';
-    if (!splitsTouched) {
-      json.remove('splits');
-    } else {
-      json['splits'] = t.splits
-          .map(
-            (s) => {
-              'categoryId': s.categoryId,
-              'amount': s.amount,
-              if (s.memo != null) 'memo': s.memo,
-            },
-          )
-          .toList();
-    }
+    final json = payloadFor(t, splitsTouched: splitsTouched);
     final version = t.version;
     final headers = <String, String>{
       if (t.id != null && version != null) 'If-Match': '"$version"',
@@ -288,6 +303,114 @@ class TransactionsRepository {
                   options: options,
                 ));
     return Transaction.fromJson(res.data!);
+  });
+
+  /// The body [save] sends for [t]: the fields the server takes, and splits
+  /// only when [splitsTouched] (an absent key means "unchanged" there).
+  /// Shared with [sendBatch], so a write sent either way is the same write.
+  static Map<String, dynamic> payloadFor(
+    Transaction t, {
+    required bool splitsTouched,
+  }) {
+    final json = t.toJson()
+      ..remove('id')
+      ..remove('fromAccountName')
+      ..remove('toAccountName')
+      ..remove('categoryName')
+      ..remove('assetName')
+      ..remove('status')
+      ..remove('version');
+    json['paymentMethod'] = t.paymentMethod ?? 'NONE';
+    if (!splitsTouched) {
+      json.remove('splits');
+    } else {
+      json['splits'] = t.splits
+          .map(
+            (s) => {
+              'categoryId': s.categoryId,
+              'amount': s.amount,
+              if (s.memo != null) 'memo': s.memo,
+            },
+          )
+          .toList();
+    }
+    return json;
+  }
+
+  /// The idempotency key a queued update is sent with: the entry, and what
+  /// it changes. A resend of the same update is recognised as one; editing
+  /// the queued update again makes it a different write, which must not be
+  /// answered with the result of the one it replaced.
+  static String updateKeyFor(PendingTransaction entry) {
+    final payload = jsonEncode([
+      entry.transaction.version,
+      payloadFor(entry.transaction, splitsTouched: entry.splitsTouched),
+    ]);
+    final digest = sha256.convert(utf8.encode(payload)).toString();
+    return 'u:${entry.localId}:${digest.substring(0, 16)}';
+  }
+
+  /// Sends queued writes in one request, each exactly as [save] or [delete]
+  /// would have sent it on its own. Answers with the server's result for
+  /// each, by [PendingTransaction.localId].
+  ///
+  /// Throws, as the single-item calls do, when the request as a whole got
+  /// no answer or was refused -- including a 404 or 405 from a server that
+  /// predates the batch endpoint.
+  Future<List<BatchItemResult>> sendBatch(
+    List<PendingTransaction> entries,
+  ) => guardApi(() async {
+    final operations = [
+      for (final e in entries)
+        switch (e.operation) {
+          PendingOperation.create => {
+            'clientId': e.localId,
+            'op': 'CREATE',
+            // The entry's local id, as [save] sends it.
+            'idempotencyKey': e.localId,
+            'transaction': payloadFor(
+              e.transaction,
+              splitsTouched: e.splitsTouched,
+            ),
+          },
+          PendingOperation.update => {
+            'clientId': e.localId,
+            'op': 'UPDATE',
+            'id': e.transaction.id,
+            if (e.transaction.version != null) 'version': e.transaction.version,
+            'idempotencyKey': updateKeyFor(e),
+            'transaction': payloadFor(
+              e.transaction,
+              splitsTouched: e.splitsTouched,
+            ),
+          },
+          PendingOperation.delete => {
+            'clientId': e.localId,
+            'op': 'DELETE',
+            'id': e.transaction.id,
+            if (e.transaction.version != null) 'version': e.transaction.version,
+          },
+        },
+    ];
+    final res = await _dio.post<dynamic>(
+      '/transactions/batch',
+      data: {'operations': operations},
+    );
+    final data = res.data;
+    final results = data is Map ? data['results'] : null;
+    // Answered, but not by the batch endpoint -- a catch-all page, say. No
+    // status: that is how the drain tells it from a real refusal.
+    if (results is! List) {
+      throw const ServerException('Unexpected response from server');
+    }
+    return [
+      for (final r in results.whereType<Map<String, dynamic>>())
+        BatchItemResult(
+          clientId: r['clientId'] as String?,
+          status: (r['status'] as num?)?.toInt() ?? 0,
+          error: r['error'] as String?,
+        ),
+    ];
   });
 
   /// Deletes a transaction. With [version], only if the row still has it:

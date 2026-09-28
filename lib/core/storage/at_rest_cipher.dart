@@ -80,6 +80,13 @@ class AesGcmAtRestCipher extends AtRestCipher {
   static const _keyName = 'at_rest_key_v1';
 
   final SecureStorage _storage;
+
+  /// The platform's own AES-GCM on Android and iOS: cryptography_flutter
+  /// registers itself as `Cryptography.instance` before main() runs. The
+  /// pure-Dart one it replaces ran on the UI isolate, and every cached
+  /// response and outbox entry goes through here. Plain AES-GCM either way,
+  /// so what one sealed the other opens. Under `flutter test`, where no
+  /// plugin registers, this stays pure Dart.
   final _algorithm = AesGcm.with256bits();
 
   /// The key being loaded or created, shared by every cipher over the same

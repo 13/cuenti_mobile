@@ -536,4 +536,50 @@ void main() {
       expect(await outbox.sidelinedQueues(), isEmpty);
     });
   });
+
+  group('reading without decrypting everything again', () {
+    test('an entry changed by another store over the same directory is '
+        'read fresh, not served from what this one remembered', () async {
+      await outbox.add(entry('a'));
+      expect((await outbox.all()).single.transaction.amount, 1);
+
+      await TransactionOutbox(dir).replace(entry('a', amount: 22.5));
+
+      expect((await outbox.all()).single.transaction.amount, 22.5);
+    });
+
+    test('an entry removed by another store is gone here too', () async {
+      await outbox.add(entry('a'));
+      await outbox.all();
+
+      await TransactionOutbox(dir).remove('a');
+
+      expect(await outbox.all(), isEmpty);
+    });
+
+    test('an owner claimed by another store is the owner here too', () async {
+      await outbox.setOwner('https://a#one');
+      expect(await outbox.owner(), 'https://a#one');
+
+      await TransactionOutbox(dir).setOwner('https://a#someone-else');
+
+      expect(await outbox.owner(), 'https://a#someone-else');
+    });
+
+    test('marking one entry refused leaves the others as they were', () async {
+      await outbox.add(entry('a', minute: 1));
+      await outbox.add(entry('b', minute: 2));
+
+      await outbox.markRejected('b', 'nope');
+
+      final all = await outbox.all();
+      expect(all.map((e) => e.rejection), [null, 'nope']);
+    });
+
+    test('marking an entry that is not there does nothing', () async {
+      await outbox.markRejected('missing', 'nope');
+
+      expect(await outbox.all(), isEmpty);
+    });
+  });
 }

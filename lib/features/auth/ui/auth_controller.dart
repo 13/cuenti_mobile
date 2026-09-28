@@ -155,6 +155,14 @@ class AuthController extends _$AuthController {
     // and so cannot lose it.
     UserProfile? user;
     var registrationEnabled = state.registrationEnabled;
+    // Started now, alongside the profile fetch, rather than after it:
+    // offline, one after the other was two connection timeouts before the
+    // app could leave the splash.
+    final registration = _repo.fetchRegistrationEnabled().then(
+      (enabled) => enabled,
+      // Whatever went wrong, the default is what the screen shows anyway.
+      onError: (Object _) => registrationEnabled,
+    );
     try {
       // A launch resumes the last session only behind the fingerprint.
       // Without biometric unlock nothing on the device confirms who is
@@ -197,7 +205,7 @@ class AuthController extends _$AuthController {
           }
         }
       }
-      registrationEnabled = await _repo.fetchRegistrationEnabled();
+      registrationEnabled = await registration;
     } finally {
       state = state.copyWith(
         // Never removes a user this run did not put there: `_init` can be

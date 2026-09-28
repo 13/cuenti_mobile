@@ -83,21 +83,91 @@ class ResponseCache {
 
   File _fileFor(String key) => File('${_directory.path}/$key.json');
 
-  Future<void> store(String key, Object? body) async {
-    await _fileFor(key).writeAsString(
-      await cipher.seal(
-        jsonEncode({
-          'storedAt': DateTime.now().toIso8601String(),
-          'body': body,
-        }),
-      ),
+  /// Bumped by [clear]. A write started under an earlier generation belongs
+  /// to data that has since been wiped -- a signed-out account, a server
+  /// moved away from -- and is dropped rather than written back.
+  int get generation => _generation;
+  int _generation = 0;
+
+  /// Writes still in flight, for [clear] and [flush] to wait on.
+  final Set<Future<void>> _pending = {};
+
+  /// The latest write per key, so two writes to one endpoint land in the
+  /// order they were made rather than whichever finished encrypting first.
+  final Map<String, Future<void>> _lastWrite = {};
+
+  /// What is on disk, so a write can tell whether the store has outgrown
+  /// [maxEntries] without listing the directory every time. Filled on the
+  /// first write.
+  Set<String>? _keys;
+
+  /// Keeps [body] as the last known answer for [key].
+  ///
+  /// [generation] is the [ResponseCache.generation] read when the request
+  /// that produced [body] went out; a [clear] since then means the answer
+  /// belongs to data that is gone, and it is not written. Omitted, it is the
+  /// current one.
+  Future<void> store(String key, Object? body, {int? generation}) {
+    final from = generation ?? _generation;
+    final previous = _lastWrite[key];
+    late final Future<void> write;
+    write =
+        (previous == null
+                ? _write(key, body, from)
+                // A failed earlier write does not stop this one.
+                : previous
+                      .then<void>((_) {}, onError: (Object _) {})
+                      .then(
+                        (_) => _write(key, body, from),
+                      ))
+            .whenComplete(() {
+              _pending.remove(write);
+              if (identical(_lastWrite[key], write)) {
+                // Dropping the map's reference, not a future to wait for.
+                // ignore: discarded_futures
+                _lastWrite.remove(key);
+              }
+            });
+    _pending.add(write);
+    _lastWrite[key] = write;
+    return write;
+  }
+
+  Future<void> _write(String key, Object? body, int generation) async {
+    if (generation != _generation) return;
+    final sealed = await cipher.seal(
+      jsonEncode({'storedAt': DateTime.now().toIso8601String(), 'body': body}),
     );
-    await _evictExcess();
+    if (generation != _generation) return;
+    // Written aside and renamed into place, so a read never meets half a
+    // file.
+    final temp = File('${_directory.path}/$key.json.tmp');
+    await temp.writeAsString(sealed);
+    if (generation != _generation) {
+      if (temp.existsSync()) await temp.delete();
+      return;
+    }
+    await temp.rename(_fileFor(key).path);
+    final keys = _keys ??= _scanKeys();
+    if (keys.add(key) && keys.length > maxEntries) await _evictExcess();
+  }
+
+  /// Waits for every write started so far.
+  Future<void> flush() => Future.wait(_pending.toList());
+
+  Set<String> _scanKeys() {
+    if (!_directory.existsSync()) return {};
+    return {
+      for (final f in _directory.listSync().whereType<File>())
+        if (f.path.endsWith('.json'))
+          f.uri.pathSegments.last.replaceFirst(RegExp(r'\.json$'), ''),
+    };
   }
 
   /// Drops the least recently written entries once the store is over its
-  /// cap. Modification time is the ordering: it is what writing an entry
-  /// already updates, so re-fetching an endpoint keeps it alive without any
+  /// cap, down to 90% of it so the next few writes need not do this again.
+  /// Modification time is the ordering: it is what writing an entry already
+  /// updates, so re-fetching an endpoint keeps it alive without any
   /// bookkeeping of our own.
   Future<void> _evictExcess() async {
     if (!_directory.existsSync()) return;
@@ -106,20 +176,32 @@ class ResponseCache {
         .whereType<File>()
         .where((f) => f.path.endsWith('.json'))
         .toList();
-    if (files.length <= maxEntries) return;
-    files.sort(
-      (a, b) => a.statSync().modified.compareTo(b.statSync().modified),
-    );
-    for (final file in files.take(files.length - maxEntries)) {
-      try {
-        await file.delete();
-        // A file that vanished under us is already evicted.
-        // ignore: avoid_catches_without_on_clauses
-      } catch (_) {}
+    final target = (maxEntries * 0.9).floor().clamp(1, maxEntries);
+    if (files.length > maxEntries) {
+      files.sort(
+        (a, b) => a.statSync().modified.compareTo(b.statSync().modified),
+      );
+      for (final file in files.take(files.length - target)) {
+        try {
+          await file.delete();
+          // A file that vanished under us is already evicted.
+          // ignore: avoid_catches_without_on_clauses
+        } catch (_) {}
+      }
     }
+    _keys = _scanKeys();
   }
 
   Future<CachedResponse?> read(String key) async {
+    // A write still in flight for this key is the newest answer there is.
+    final writing = _lastWrite[key];
+    if (writing != null) {
+      try {
+        await writing;
+        // A failed write leaves whatever was there before, which is read.
+        // ignore: avoid_catches_without_on_clauses
+      } catch (_) {}
+    }
     final file = _fileFor(key);
     if (!file.existsSync()) return null;
     final age = DateTime.now().difference(file.statSync().modified);
@@ -156,6 +238,16 @@ class ResponseCache {
   }
 
   Future<void> clear() async {
+    // Bumped first, so nothing that has not reached the disk yet will.
+    _generation++;
+    // Then every write already past that check is let finish, so none can
+    // land after the delete below and put the wiped figures back.
+    try {
+      await flush();
+      // A failed write is nothing to wait on and nothing to report here.
+      // ignore: avoid_catches_without_on_clauses
+    } catch (_) {}
+    _keys = {};
     if (!_directory.existsSync()) return;
     await _directory.delete(recursive: true);
     await _directory.create(recursive: true);

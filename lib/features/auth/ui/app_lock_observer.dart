@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/app_update/ui/update_check.dart';
 import 'package:cuentimobile/features/auth/ui/auth_controller.dart';
 import 'package:cuentimobile/l10n/app_localizations.dart';
@@ -57,6 +58,11 @@ class _AppLockObserverState extends ConsumerState<AppLockObserver>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Back from the background, possibly on another network: the server
+    // being unreachable before says nothing about now.
+    if (state == AppLifecycleState.resumed) {
+      ref.read(apiClientProvider).retryNetwork();
+    }
     final auth = ref.read(authControllerProvider);
     if (!auth.isLoggedIn) return;
     if (!auth.biometricEnabled) {

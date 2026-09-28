@@ -76,16 +76,23 @@ void main() {
   late TransactionOutbox outbox;
   late MockTransactionsRepository repo;
 
-  setUpAll(
-    () => registerFallbackValue(
+  setUpAll(() {
+    registerFallbackValue(
       Transaction(amount: 0, transactionDate: DateTime(2026)),
-    ),
-  );
+    );
+    registerFallbackValue(<PendingTransaction>[]);
+  });
 
   setUp(() {
     dir = Directory.systemTemp.createTempSync('claim_prompt');
     outbox = TransactionOutbox(dir);
     repo = MockTransactionsRepository();
+    // A server from before the batch endpoint: the production sync asks it
+    // for a batch once, then sends each entry through save() below.
+    when(() => repo.baseUrl).thenReturn('https://cuenti.muh/api');
+    when(() => repo.sendBatch(any())).thenThrow(
+      const ValidationException('Method Not Allowed', statusCode: 405),
+    );
     when(
       () => repo.save(
         any(),

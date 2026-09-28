@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cuentimobile/core/api/api_client.dart';
@@ -97,4 +98,61 @@ void main() {
     expect(client.baseUrl, 'https://second.example');
     expect(client.dio.options.baseUrl, 'https://second.example/api');
   });
+
+  group('token', () {
+    late _CountingStorage storage;
+    late ApiClient counted;
+
+    setUp(() {
+      storage = _CountingStorage();
+      counted = ApiClient(storage, dioOverride: Dio());
+    });
+
+    test('is read from SecureStorage once, not on every request', () async {
+      storage.data['jwt_token'] = 'abc';
+
+      expect(await counted.getToken(), 'abc');
+      expect(await counted.getToken(), 'abc');
+      expect(await counted.hasToken(), isTrue);
+
+      expect(storage.reads, 1);
+    });
+
+    test('a saved token is served without reading it back', () async {
+      await counted.saveToken('fresh');
+
+      expect(await counted.getToken(), 'fresh');
+      expect(storage.reads, 0);
+    });
+
+    test('is gone the moment a sign-out starts, before the delete lands, so '
+        'no request composed meanwhile carries it', () async {
+      await counted.saveToken('old');
+      storage.holdDeletes = Completer<void>();
+
+      final signingOut = counted.clearToken();
+
+      expect(await counted.getToken(), isNull);
+      storage.holdDeletes!.complete();
+      await signingOut;
+      expect(storage.data.containsKey('jwt_token'), isFalse);
+    });
+  });
+}
+
+class _CountingStorage extends _MemoryStorage {
+  int reads = 0;
+  Completer<void>? holdDeletes;
+
+  @override
+  Future<String?> read(String key) {
+    reads++;
+    return super.read(key);
+  }
+
+  @override
+  Future<void> delete(String key) async {
+    await holdDeletes?.future;
+    await super.delete(key);
+  }
 }

@@ -515,7 +515,12 @@ void _offlineFallbackTests() {
   Future<void> warm({
     TransactionFilter filter = const TransactionFilter(),
     int page = 0,
-  }) => repo.getPage(filter: filter, page: page);
+  }) async {
+    await repo.getPage(filter: filter, page: page);
+    // The copy is written behind the response; a test that goes on to
+    // tamper with it on disk needs it there first.
+    await interceptor.cache.flush();
+  }
 
   void serve(
     Map<String, dynamic> query,

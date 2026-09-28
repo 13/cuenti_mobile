@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cuentimobile/core/api/reachability.dart';
 import 'package:cuentimobile/core/api/response_cache.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -28,9 +31,14 @@ DateTime? staleSince(Response<Object?> response) {
 /// fails, because a wrong number is worse than a visible error in an app
 /// about money.
 class OfflineCacheInterceptor extends Interceptor {
-  OfflineCacheInterceptor(this._cache);
+  OfflineCacheInterceptor(this._cache, {Reachability? reachability})
+    : reachability = reachability ?? Reachability();
 
   final ResponseCache _cache;
+
+  /// Whether the server was just found to be unreachable, so this request
+  /// need not find out again the slow way.
+  final Reachability reachability;
 
   /// The backing store, so a sign-out can drop the previous account's data.
   ResponseCache get cache => _cache;
@@ -83,15 +91,91 @@ class OfflineCacheInterceptor extends Interceptor {
     _ => false,
   };
 
+  /// Where a request records the cache generation it went out under.
+  static const _generationKey = 'cuenti.cacheGeneration';
+
   @override
-  Future<void> onResponse(
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    // Noted now, not when the answer arrives: a sign-out that clears the
+    // cache while this request is in flight must also stop its answer --
+    // the previous account's figures -- from being written back afterwards.
+    options.extra[_generationKey] = _cache.generation;
+    if (reachability.admit()) {
+      handler.next(options);
+      return;
+    }
+    // The server could not be reached a moment ago. Answer now with what
+    // asking again would, after a connection timeout, have ended in: the
+    // cached copy for a GET that has one, the same offline failure for
+    // anything else -- which is what sends a save to the outbox, and a
+    // filtered list to the repository's own cache fallback.
+    if (options.method.toUpperCase() == 'GET') {
+      final cached = await _cache.read(cacheKeyFor(options));
+      if (cached != null) {
+        handler.resolve(_replay(options, cached));
+        return;
+      }
+    }
+    handler.reject(
+      DioException.connectionError(
+        requestOptions: options,
+        reason: 'The server could not be reached a moment ago',
+      ),
+    );
+  }
+
+  /// [cached] dressed as the answer to [options], marked as not live.
+  Response<dynamic> _replay(RequestOptions options, CachedResponse cached) {
+    stale.value = true;
+    staleSince.value = cached.storedAt;
+    return Response<dynamic>(
+      requestOptions: options,
+      data: cached.body,
+      statusCode: 200,
+      headers: Headers.fromMap({
+        staleResponseHeader: ['true'],
+        staleSinceHeader: [cached.storedAt.toIso8601String()],
+      }),
+    );
+  }
+
+  /// Whether [e] means the connection itself could not be made -- the one
+  /// failure that says the next request would fail the same way. Narrower
+  /// than [isOfflineFailure]: a receive timeout is a server that took the
+  /// request and was slow about it.
+  static bool _unreachable(DioException e) => switch (e.type) {
+    DioExceptionType.connectionError ||
+    DioExceptionType.connectionTimeout ||
+    DioExceptionType.sendTimeout => true,
+    _ => false,
+  };
+
+  @override
+  void onResponse(
     Response<dynamic> response,
     ResponseInterceptorHandler handler,
-  ) async {
-    if (response.requestOptions.method.toUpperCase() == 'GET' &&
+  ) {
+    reachability.recordReachable();
+    final options = response.requestOptions;
+    if (options.method.toUpperCase() == 'GET' &&
         (response.statusCode ?? 0) >= 200 &&
         (response.statusCode ?? 0) < 300) {
-      await _cache.store(cacheKeyFor(response.requestOptions), response.data);
+      // Not awaited: encrypting and writing the copy is no reason to keep
+      // the screen waiting for figures it already has. A read of this key
+      // waits for the write, so the copy is never missed.
+      unawaited(
+        _cache
+            .store(
+              cacheKeyFor(options),
+              response.data,
+              generation: options.extra[_generationKey] as int?,
+            )
+            // A copy that could not be kept is only a future cache miss.
+            .then<void>((_) {}, onError: (Object _) {}),
+      );
       stale.value = false;
       staleSince.value = null;
     }
@@ -103,6 +187,17 @@ class OfflineCacheInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
+    if (_unreachable(err)) {
+      reachability.recordOffline();
+    } else if (err.response != null ||
+        err.type == DioExceptionType.receiveTimeout) {
+      // An error status, or a slow answer: either way, somebody is there.
+      reachability.recordReachable();
+    } else {
+      // Cancelled, a certificate refused, something unforeseen: no word on
+      // the server either way.
+      reachability.release();
+    }
     if (err.requestOptions.method.toUpperCase() != 'GET' ||
         !isOfflineFailure(err)) {
       handler.next(err);
@@ -113,18 +208,6 @@ class OfflineCacheInterceptor extends Interceptor {
       handler.next(err);
       return;
     }
-    stale.value = true;
-    staleSince.value = cached.storedAt;
-    handler.resolve(
-      Response<dynamic>(
-        requestOptions: err.requestOptions,
-        data: cached.body,
-        statusCode: 200,
-        headers: Headers.fromMap({
-          staleResponseHeader: ['true'],
-          staleSinceHeader: [cached.storedAt.toIso8601String()],
-        }),
-      ),
-    );
+    handler.resolve(_replay(err.requestOptions, cached));
   }
 }

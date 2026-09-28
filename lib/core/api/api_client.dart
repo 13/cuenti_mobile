@@ -35,7 +35,10 @@ class ApiClient {
           // startup drain on auth being initialised -- and if that gate is
           // ever loosened, this default is what such a request would reach.
           baseUrl: '$defaultServerUrl/api',
-          connectTimeout: const Duration(seconds: 10),
+          // Short: a self-hosted server on a LAN name tends to hang rather than
+          // refuse, and every screen shown offline waits this long before
+          // it may fall back to the cache.
+          connectTimeout: const Duration(seconds: 5),
           receiveTimeout: const Duration(seconds: 30),
           headers: {'Content-Type': 'application/json'},
         ),
@@ -145,6 +148,13 @@ class ApiClient {
 
   String get baseUrl => _baseUrl;
 
+  /// Forgets that the server was just found unreachable, so the next
+  /// request asks the network rather than answering from cache. For moments
+  /// the last failure says nothing about: a person asking for fresh
+  /// figures, the app coming back to the foreground on what may be a
+  /// different network, a different server, a different account.
+  void retryNetwork() => offlineCache?.reachability.reset();
+
   Future<void> setServerUrl(String url) async {
     final normalized = url.endsWith('/')
         ? url.substring(0, url.length - 1)
@@ -153,6 +163,7 @@ class ApiClient {
     _baseUrl = normalized;
     await _storage.write(_serverUrlKey, _baseUrl);
     dio.options.baseUrl = '$_baseUrl/api';
+    retryNetwork();
     // Cached responses are keyed by endpoint, not by server, so figures
     // fetched from the old one would replay as this one's the moment it
     // could not be reached -- one instance's balances shown under
@@ -161,15 +172,35 @@ class ApiClient {
     if (movedServer) await offlineCache?.cache.clear();
   }
 
+  /// The token as last read or written, so a request does not pay a
+  /// platform-channel round trip to SecureStorage for it every time.
+  String? _token;
+  bool _tokenLoaded = false;
+
   Future<void> saveToken(String token) async {
     await _storage.write(_tokenKey, token);
+    _token = token;
+    _tokenLoaded = true;
   }
 
   Future<String?> getToken() async {
-    return _storage.read(_tokenKey);
+    if (_tokenLoaded) return _token;
+    final token = await _storage.read(_tokenKey);
+    // A sign-in or sign-out that finished while this read was in flight
+    // already knows better than the value read before it.
+    if (!_tokenLoaded) {
+      _token = token;
+      _tokenLoaded = true;
+    }
+    return _token;
   }
 
   Future<void> clearToken() async {
+    // Forgotten before the delete is awaited, so no request composed in the
+    // meantime can go out with the credential being signed out.
+    _token = null;
+    _tokenLoaded = true;
+    retryNetwork();
     await _storage.delete(_tokenKey);
     // Signing out must not leave the previous account's figures on disk for
     // the next one to be shown offline.

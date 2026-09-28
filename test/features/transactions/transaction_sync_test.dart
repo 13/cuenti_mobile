@@ -66,11 +66,12 @@ void main() {
   late MockTransactionsRepository repo;
   late TransactionSync sync;
 
-  setUpAll(
-    () => registerFallbackValue(
+  setUpAll(() {
+    registerFallbackValue(
       Transaction(amount: 0, transactionDate: DateTime(2026)),
-    ),
-  );
+    );
+    registerFallbackValue(<PendingTransaction>[]);
+  });
 
   setUp(() async {
     dir = Directory.systemTemp.createTempSync('sync_test');
@@ -837,6 +838,12 @@ void main() {
     });
 
     test('and our own queue is', () async {
+      // A server from before the batch endpoint, so the entry goes by
+      // itself -- through the path the stubs below can see.
+      when(() => repo.baseUrl).thenReturn('https://cuenti.muh/api');
+      when(() => repo.sendBatch(any())).thenThrow(
+        const ValidationException('Method Not Allowed', statusCode: 405),
+      );
       when(
         () => repo.save(
           any(),
@@ -861,6 +868,173 @@ void main() {
             'claims a queue under, not merely some non-null string',
       );
     });
+  });
+
+  group('sending the queue in batches', () {
+    late TransactionSync batchedSync;
+
+    setUp(() {
+      batchedSync = TransactionSync(outbox, repo, () => _ourKey, batched: true);
+      when(() => repo.baseUrl).thenReturn('https://cuenti.muh/api');
+    });
+
+    void answer(Map<String, int> statusByLocalId, {String? error}) {
+      when(() => repo.sendBatch(any())).thenAnswer(
+        (i) async => [
+          for (final e
+              in i.positionalArguments.first as List<PendingTransaction>)
+            if (statusByLocalId.containsKey(e.localId))
+              BatchItemResult(
+                clientId: e.localId,
+                status: statusByLocalId[e.localId]!,
+                error: error,
+              ),
+        ],
+      );
+    }
+
+    test('a whole queue goes in one request, not one per entry', () async {
+      await queue('local-1', minute: 1);
+      await queue('local-2', minute: 2);
+      await queue('local-3', minute: 3);
+      answer({'local-1': 200, 'local-2': 200, 'local-3': 200});
+
+      expect(await batchedSync.drain(), 3);
+
+      final sent =
+          verify(() => repo.sendBatch(captureAny())).captured.single
+              as List<PendingTransaction>;
+      expect(sent.map((e) => e.localId), ['local-1', 'local-2', 'local-3']);
+      expect(await outbox.all(), isEmpty);
+      verifyNever(
+        () => repo.save(
+          any(),
+          splitsTouched: any(named: 'splitsTouched'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
+      );
+    });
+
+    test('a long queue is split into requests the server will take', () async {
+      for (var i = 0; i < TransactionSync.batchSize + 5; i++) {
+        await queue('local-$i', minute: i);
+      }
+      when(() => repo.sendBatch(any())).thenAnswer(
+        (i) async => [
+          for (final e
+              in i.positionalArguments.first as List<PendingTransaction>)
+            BatchItemResult(clientId: e.localId, status: 200),
+        ],
+      );
+
+      expect(await batchedSync.drain(), TransactionSync.batchSize + 5);
+
+      final sizes = verify(
+        () => repo.sendBatch(captureAny()),
+      ).captured.map((c) => (c as List).length);
+      expect(sizes, [TransactionSync.batchSize, 5]);
+    });
+
+    test('each entry is settled by its own result: sent, refused with the '
+        "server's reason, or already deleted", () async {
+      await queue('ok', minute: 1);
+      await queue('conflict', minute: 2);
+      await queue(
+        'gone',
+        minute: 3,
+        operation: PendingOperation.delete,
+        transactionId: 7,
+      );
+      answer({'ok': 200, 'conflict': 409, 'gone': 404}, error: 'Changed');
+
+      expect(await batchedSync.drain(), 2);
+
+      final left = await outbox.all();
+      expect(left.single.localId, 'conflict');
+      expect(left.single.rejection, 'Changed');
+    });
+
+    test(
+      'an entry the server did not answer for stays queued, unmarked',
+      () async {
+        await queue('answered', minute: 1);
+        await queue('skipped', minute: 2);
+        answer({'answered': 200});
+
+        expect(await batchedSync.drain(), 1);
+
+        final left = await outbox.all();
+        expect(left.single.localId, 'skipped');
+        expect(left.single.isRejected, isFalse);
+      },
+    );
+
+    test('a batch that fails as a whole marks nothing: which of it the '
+        'server applied is not known, and it is resent as it was', () async {
+      await queue('local-1', minute: 1);
+      await queue('local-2', minute: 2);
+      when(() => repo.sendBatch(any())).thenThrow(
+        const ServerException('Server error (500)', statusCode: 500),
+      );
+
+      expect(await batchedSync.drain(), 0);
+
+      final left = await outbox.all();
+      expect(left, hasLength(2));
+      expect(left.where((e) => e.isRejected), isEmpty);
+    });
+
+    test('offline, the run just ends', () async {
+      await queue('local-1');
+      when(
+        () => repo.sendBatch(any()),
+      ).thenThrow(const NetworkException('Cannot connect to server'));
+
+      expect(await batchedSync.drain(), 0);
+      expect(await outbox.all(), hasLength(1));
+    });
+
+    test('a server that answers the batch with something else entirely '
+        'gets the queue one entry at a time', () async {
+      await queue('local-1');
+      when(() => repo.sendBatch(any())).thenThrow(
+        const ServerException('Unexpected response from server'),
+      );
+      when(
+        () => repo.save(
+          any(),
+          splitsTouched: any(named: 'splitsTouched'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
+      ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
+
+      expect(await batchedSync.drain(), 1);
+    });
+
+    for (final status in [404, 405]) {
+      test('a server without the endpoint ($status) gets the queue one entry '
+          'at a time, and is not asked for a batch again', () async {
+        await queue('local-1', minute: 1);
+        await queue('local-2', minute: 2);
+        when(() => repo.sendBatch(any())).thenThrow(
+          ValidationException('No such endpoint', statusCode: status),
+        );
+        when(
+          () => repo.save(
+            any(),
+            splitsTouched: any(named: 'splitsTouched'),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
+        ).thenAnswer((i) async => i.positionalArguments.first as Transaction);
+
+        expect(await batchedSync.drain(), 2);
+        await queue('local-3', minute: 3);
+        expect(await batchedSync.drain(), 1);
+
+        verify(() => repo.sendBatch(any())).called(1);
+        expect(await outbox.all(), isEmpty);
+      });
+    }
   });
 }
 

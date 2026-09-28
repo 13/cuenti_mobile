@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cuentimobile/core/api/response_cache.dart';
+import 'package:cuentimobile/core/storage/at_rest_cipher.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -196,4 +198,84 @@ void main() {
       isNot(cacheKeyFor(at('https://b.example/api'))),
     );
   });
+
+  group('writes in flight', () {
+    test('a clear while a write is still encrypting leaves nothing behind, '
+        "so a sign-out cannot have the old account's figures written back "
+        'after it', () async {
+      final gate = Completer<void>();
+      final slow = ResponseCache(dir, cipher: _GatedCipher(gate.future));
+
+      final writing = slow.store('k', {'total': 42});
+      final clearing = slow.clear();
+      gate.complete();
+      await writing;
+      await clearing;
+
+      expect(await slow.read('k'), isNull);
+      expect(dir.listSync(), isEmpty);
+    });
+
+    test('an answer to a request made before a clear is not written after '
+        'it', () async {
+      final before = cache.generation;
+      await cache.clear();
+
+      await cache.store('k', {'total': 42}, generation: before);
+
+      expect(await cache.read('k'), isNull);
+    });
+
+    test('a read waits for a write to the same key that is still going, '
+        'rather than missing it', () async {
+      final gate = Completer<void>();
+      final slow = ResponseCache(dir, cipher: _GatedCipher(gate.future));
+
+      unawaited(slow.store('k', {'total': 42}));
+      final reading = slow.read('k');
+      gate.complete();
+
+      expect((await reading)?.body, {'total': 42});
+    });
+
+    test('two writes to one key land in the order they were made', () async {
+      final gate = Completer<void>();
+      final slow = ResponseCache(dir, cipher: _GatedCipher(gate.future));
+
+      final first = slow.store('k', {'n': 1});
+      final second = slow.store('k', {'n': 2});
+      gate.complete();
+      await Future.wait([first, second]);
+
+      expect((await slow.read('k'))?.body, {'n': 2});
+    });
+
+    test('eviction trims below the cap, so it is not paid on every write '
+        'from then on', () async {
+      final capped = ResponseCache(dir, maxEntries: 10);
+      for (var i = 0; i < 11; i++) {
+        await capped.store('key$i', {'n': i});
+      }
+
+      expect(dir.listSync().length, 9);
+      expect(await capped.read('key10'), isNotNull);
+    });
+  });
+}
+
+/// Seals in the clear, but only once [gate] completes -- a stand-in for an
+/// encryption that is still running when something else happens.
+class _GatedCipher implements AtRestCipher {
+  _GatedCipher(this.gate);
+
+  final Future<void> gate;
+
+  @override
+  Future<String> seal(String plaintext) async {
+    await gate;
+    return AtRestCipher.none.seal(plaintext);
+  }
+
+  @override
+  Future<OpenedText> open(String stored) => AtRestCipher.none.open(stored);
 }

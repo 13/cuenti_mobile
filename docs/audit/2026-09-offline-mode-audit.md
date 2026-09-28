@@ -64,3 +64,11 @@
 - **Legacy plaintext:** a plaintext outbox file is still accepted as legacy and re-encrypted, so an attacker with app-private write access could inject an entry. That attacker already had that access before this change.
 - **Offline attempt limit:** it counts typed passwords, not devices. Clearing app data resets it, but that also deletes the token, so offline sign-in stops working.
 - **`updated_at` stamp:** set by `TransactionService`. Bulk JPQL updates that bypass it don't move the version, so a conflict with such an update isn't detected.
+
+## Addendum (2026-09-28): performance changes checked against this audit
+- **Reachability breaker** (`lib/core/api/reachability.dart`): after a real connection failure (`connectionError`, `connectionTimeout`, `sendTimeout`), requests are answered from cache or fail as offline for 15 s, doubling to at most 2 min, before one request tries the network again. Replay still needs an earlier genuine connection failure, so it doesn't widen what counts as offline:
+  - A 5xx, a receive timeout, or a certificate refusal never trips it.
+  - It is reset by a server change, sign-out, refresh-all, and the app coming back to the foreground.
+- **Cache writes behind the response:** a generation counter keeps a sign-out's wipe complete. `clear()` waits for writes already in flight, and a response to a request that went out before the clear is never written.
+- **Outbox read cache:** entries are cached per file, keyed on modification time and size, so a file changed on disk is read again rather than served stale. Ownership rules are unchanged.
+- **Native AES-GCM** via `cryptography_flutter`: same algorithm and on-disk format.

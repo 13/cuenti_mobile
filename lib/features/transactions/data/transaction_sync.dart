@@ -10,7 +10,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Sends what the outbox is holding, oldest first.
 class TransactionSync {
-  TransactionSync(this._outbox, this._repository, this._accountKey);
+  TransactionSync(
+    this._outbox,
+    this._repository,
+    this._accountKey, {
+    this.batched = false,
+  });
+
+  /// Sends the queue through the batch endpoint, [batchSize] entries per
+  /// request, rather than one request per entry -- a queue of fifty is one
+  /// round trip instead of fifty. A server without that endpoint is noticed
+  /// once and sent to one entry at a time from then on.
+  final bool batched;
+
+  /// Entries per batch request. The server takes up to a hundred.
+  static const batchSize = 50;
+
+  /// Servers, by API base URL, that answered the batch endpoint as one that
+  /// does not exist. Forgotten with the app, so an upgraded server is used
+  /// from the next launch.
+  final Set<String> _noBatchSupport = {};
 
   final TransactionOutbox _outbox;
   final TransactionsRepository _repository;
@@ -102,9 +121,88 @@ class TransactionSync {
   }
 
   Future<int> _drain() async {
+    final pending = [
+      for (final entry in await ownedEntries(_outbox, _accountKey()))
+        if (!entry.isRejected) entry,
+    ];
+    if (pending.isEmpty) return 0;
+    if (batched && !_noBatchSupport.contains(_repository.baseUrl)) {
+      final delivered = await _drainBatched(pending);
+      if (delivered != null) return delivered;
+      _noBatchSupport.add(_repository.baseUrl);
+    }
+    return _drainSingly(pending);
+  }
+
+  /// Sends [pending] in batches. Null when the server has no batch
+  /// endpoint, having sent nothing, for the caller to go one by one.
+  ///
+  /// Each result is handled as the single request it stands for would be:
+  /// delivered, or refused and marked with the server's reason. A batch
+  /// that fails as a whole ends the run with nothing in it marked -- which
+  /// of its entries the server applied is not known, and each is resent
+  /// under the same idempotency key next time.
+  Future<int?> _drainBatched(List<PendingTransaction> pending) async {
     var delivered = 0;
-    for (final entry in await ownedEntries(_outbox, _accountKey())) {
-      if (entry.isRejected) continue;
+    for (var start = 0; start < pending.length; start += batchSize) {
+      final chunk = pending.sublist(
+        start,
+        start + batchSize > pending.length ? pending.length : start + batchSize,
+      );
+      final List<BatchItemResult> results;
+      try {
+        results = await _repository.sendBatch(chunk);
+      } on ApiException catch (e) {
+        if (start == 0 && _isMissingEndpoint(e)) return null;
+        return delivered;
+      }
+      final byId = {for (final r in results) r.clientId: r};
+      final sent = <String>[];
+      for (final entry in chunk) {
+        final result = byId[entry.localId];
+        // Not answered for: left queued, to go with the next drain.
+        if (result == null) continue;
+        final status = result.status;
+        if ((status >= 200 && status < 300) ||
+            (entry.operation == PendingOperation.delete && status == 404)) {
+          // A delete answered 404: already gone, as [_alreadyDeleted] says.
+          sent.add(entry.localId);
+        } else if (status >= 400 && status != 401 && status != 403) {
+          await _record(
+            () => _outbox.markRejected(entry.localId, result.error ?? ''),
+          );
+        }
+        // Anything else -- no status, a refused credential -- says nothing
+        // about the entry, which stays queued as it was.
+      }
+      for (final localId in sent) {
+        await _record(() => _outbox.remove(localId));
+      }
+      delivered += sent.length;
+    }
+    return delivered;
+  }
+
+  /// The server will not take this queue as a batch: it predates the
+  /// endpoint -- `POST /transactions/batch` is a path it has no handler for
+  /// (404), or one it matches against `/transactions/{id}` and has no POST
+  /// for (405) -- or it refused the request as a whole for some other
+  /// reason. Either way the entries go one at a time, where each gets its
+  /// own answer, rather than the queue being stuck behind a batch that is
+  /// refused on every drain. A refused credential is not this: that is an
+  /// [UnauthorizedException], and ends the run.
+  ///
+  /// A server that answered with something other than batch results -- a
+  /// page from whatever serves unknown paths, with no error status -- is
+  /// the same case: a [ServerException] with no status is an answer that
+  /// did not parse.
+  static bool _isMissingEndpoint(ApiException e) =>
+      e is ValidationException ||
+      (e is ServerException && (e.statusCode == 501 || e.statusCode == null));
+
+  Future<int> _drainSingly(List<PendingTransaction> pending) async {
+    var delivered = 0;
+    for (final entry in pending) {
       try {
         await _send(entry);
       } on ValidationException catch (e) {
@@ -197,5 +295,6 @@ final transactionSyncProvider = Provider<TransactionSync>(
       ref.read(apiClientProvider).baseUrl,
       ref.read(authControllerProvider),
     ),
+    batched: true,
   ),
 );

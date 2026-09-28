@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cuentimobile/core/api/offline_cache_interceptor.dart';
+import 'package:cuentimobile/core/api/reachability.dart';
 import 'package:cuentimobile/core/api/response_cache.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,12 +47,17 @@ void main() {
   late _StubAdapter adapter;
   late Dio dio;
   late OfflineCacheInterceptor interceptor;
+  late DateTime now;
 
   setUp(() {
     dir = Directory.systemTemp.createTempSync('cuenti-interceptor-test');
     cache = ResponseCache(dir);
     adapter = _StubAdapter();
-    interceptor = OfflineCacheInterceptor(cache);
+    now = DateTime(2026, 9, 28, 12);
+    interceptor = OfflineCacheInterceptor(
+      cache,
+      reachability: Reachability(clock: () => now),
+    );
     dio = Dio(BaseOptions(baseUrl: 'https://cuenti.test'))
       ..httpClientAdapter = adapter
       ..interceptors.add(interceptor);
@@ -145,9 +151,131 @@ void main() {
     expect(interceptor.servingStaleData, isTrue);
 
     adapter.offline = false;
+    // Past the moment the breaker stops answering for the server.
+    now = now.add(Reachability.initialWindow);
     await dio.get<Object>('/transactions');
 
     expect(interceptor.servingStaleData, isFalse);
+  });
+
+  group('after the server was found unreachable', () {
+    Future<void> goOffline() async {
+      await dio.get<Object>('/transactions');
+      adapter.offline = true;
+      await dio.get<Object>('/transactions');
+      adapter.calls = 0;
+    }
+
+    test('a cached GET is answered without asking the network again, so '
+        'the next screen does not wait out another timeout', () async {
+      await goOffline();
+
+      final res = await dio.get<Object>('/transactions');
+
+      expect(adapter.calls, 0);
+      expect(res.data, {'total': 1});
+      expect(isStale(res), isTrue);
+    });
+
+    test('an uncached GET fails at once, the same way the network would '
+        'have', () async {
+      await goOffline();
+
+      await expectLater(
+        dio.get<Object>('/never-fetched'),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.type,
+            'type',
+            DioExceptionType.connectionError,
+          ),
+        ),
+      );
+      expect(adapter.calls, 0);
+    });
+
+    test('a write fails at once, as offline, so it goes to the outbox '
+        'without a wait', () async {
+      await goOffline();
+
+      await expectLater(
+        dio.post<Object>('/transactions', data: {'amount': 1}),
+        throwsA(
+          isA<DioException>().having(
+            OfflineCacheInterceptor.isOfflineFailure,
+            'offline',
+            isTrue,
+          ),
+        ),
+      );
+      expect(adapter.calls, 0);
+    });
+
+    test('once the window is over, one request asks the network; the '
+        'server answering puts everything back to live', () async {
+      await goOffline();
+      adapter.offline = false;
+      now = now.add(Reachability.initialWindow);
+
+      final res = await dio.get<Object>('/transactions');
+
+      expect(adapter.calls, 1);
+      expect(isStale(res), isFalse);
+      expect(interceptor.servingStaleData, isFalse);
+      await dio.get<Object>('/other');
+      expect(adapter.calls, 2);
+    });
+
+    test('forgetting the failure sends the next request to the network, '
+        'for a person asking for fresh figures', () async {
+      await goOffline();
+      adapter.offline = false;
+
+      interceptor.reachability.reset();
+      await dio.get<Object>('/transactions');
+
+      expect(adapter.calls, 1);
+      expect(interceptor.servingStaleData, isFalse);
+    });
+    test('a server error does not trip it: that server is there', () async {
+      final failing = Dio(BaseOptions(baseUrl: 'https://cuenti.test'))
+        ..httpClientAdapter = _ErrorAdapter()
+        ..interceptors.add(interceptor);
+
+      await expectLater(
+        failing.get<Object>('/transactions'),
+        throwsA(isA<DioException>()),
+      );
+
+      expect(interceptor.reachability.isOpen, isFalse);
+    });
+
+    test('an untrusted certificate does not trip it: that server answered, '
+        'and the sign-in screen is about to ask about it', () async {
+      final refusing = Dio(BaseOptions(baseUrl: 'https://cuenti.test'))
+        ..httpClientAdapter = _ThrowingAdapter(DioExceptionType.badCertificate)
+        ..interceptors.add(interceptor);
+
+      await expectLater(
+        refusing.get<Object>('/transactions'),
+        throwsA(isA<DioException>()),
+      );
+
+      expect(interceptor.reachability.isOpen, isFalse);
+    });
+
+    test('a slow answer does not trip it', () async {
+      final slow = Dio(BaseOptions(baseUrl: 'https://cuenti.test'))
+        ..httpClientAdapter = _ThrowingAdapter(DioExceptionType.receiveTimeout)
+        ..interceptors.add(interceptor);
+
+      await expectLater(
+        slow.get<Object>('/transactions'),
+        throwsA(isA<DioException>()),
+      );
+
+      expect(interceptor.reachability.isOpen, isFalse);
+    });
   });
 
   test('a fresh response replaces what was cached', () async {
@@ -261,6 +389,22 @@ class _ErrorAdapter implements HttpClientAdapter {
       Headers.contentTypeHeader: [Headers.jsonContentType],
     },
   );
+
+  @override
+  void close({bool force = false}) {}
+}
+
+class _ThrowingAdapter implements HttpClientAdapter {
+  _ThrowingAdapter(this.type);
+
+  final DioExceptionType type;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async => throw DioException(requestOptions: options, type: type);
 
   @override
   void close({bool force = false}) {}

@@ -209,9 +209,20 @@ class TransactionOutbox {
   /// An unreadable file reads as [unattributableOwner] rather than
   /// throwing, and never as unowned.
   Future<String?> owner() async {
-    if (!_ownerFile.existsSync()) return null;
-    return await _readOwnerFile(_ownerFile) ?? unattributableOwner;
+    final file = _ownerFile;
+    if (!file.existsSync()) return null;
+    final stamp = _Stamp.of(file);
+    final known = _ownerCache;
+    if (known != null && known.stamp == stamp) return known.value;
+    final value = await _readOwnerFile(file) ?? unattributableOwner;
+    _ownerCache = (stamp: _Stamp.of(file), value: value);
+    return value;
   }
+
+  /// The root owner as last read or written, with the file state it was
+  /// read from. [owner] is asked several times per saved transaction; it
+  /// decrypts only when the file has changed since.
+  ({_Stamp stamp, String value})? _ownerCache;
 
   /// Reads one owner file, wherever it is. Shared by [owner] for the root
   /// and [sidelinedQueues] for each subdirectory, so the two cannot
@@ -270,6 +281,7 @@ class TransactionOutbox {
       await _cipher.seal(jsonEncode({'account': account})),
     );
     await tempFile.rename(_ownerFile.path);
+    _ownerCache = (stamp: _Stamp.of(_ownerFile), value: account);
   }
 
   Future<void> add(PendingTransaction entry) async {
@@ -279,26 +291,50 @@ class TransactionOutbox {
       await _cipher.seal(jsonEncode(entry.toJson())),
     );
     await tempFile.rename(file.path);
+    _entryCache[file.path] = (stamp: _Stamp.of(file), entry: entry);
+  }
+
+  /// Entries as last decrypted, per file, with the file state they were
+  /// read from. The queue is read in full several times per saved
+  /// transaction and once per entry sent; without this, each read decrypted
+  /// every file again. A file anything has touched since -- this store, or
+  /// another over the same directory -- no longer matches and is re-read.
+  final Map<String, ({_Stamp stamp, PendingTransaction entry})> _entryCache =
+      {};
+
+  /// One entry file, from [_entryCache] when it has not changed. Throws
+  /// when the file cannot be read or parsed.
+  Future<PendingTransaction> _readEntry(File file) async {
+    final stamp = _Stamp.of(file);
+    final known = _entryCache[file.path];
+    if (known != null && known.stamp == stamp) return known.entry;
+    final opened = await _cipher.open(file.readAsStringSync());
+    final entry = PendingTransaction.fromJson(
+      jsonDecode(opened.text) as Map<String, dynamic>,
+    );
+    if (opened.legacy) {
+      // Written before encryption existed: seal it now, in place. An entry
+      // sealed under a key this install no longer has throws above and is
+      // skipped by the caller -- kept on disk, never guessed at.
+      await add(entry);
+    } else {
+      _entryCache[file.path] = (stamp: stamp, entry: entry);
+    }
+    return entry;
   }
 
   /// Oldest first, so entries send in the order they were made.
   Future<List<PendingTransaction>> all() async {
     if (!_directory.existsSync()) return [];
     final entries = <PendingTransaction>[];
+    final seen = <String>{};
     for (final file in _directory.listSync().whereType<File>()) {
       final name = file.uri.pathSegments.last;
       // Dot-files are the store's own bookkeeping, not entries.
       if (name.startsWith('.') || !name.endsWith('.json')) continue;
+      seen.add(file.path);
       try {
-        final opened = await _cipher.open(file.readAsStringSync());
-        final entry = PendingTransaction.fromJson(
-          jsonDecode(opened.text) as Map<String, dynamic>,
-        );
-        entries.add(entry);
-        // Written before encryption existed: seal it now, in place. An entry
-        // sealed under a key this install no longer has throws above and is
-        // skipped -- kept on disk, never guessed at.
-        if (opened.legacy) await add(entry);
+        entries.add(await _readEntry(file));
         // One unreadable file must not cost the user every other entry
         // behind it, so it is skipped rather than thrown -- but not in
         // silence: this is work the user typed and nothing else has a copy
@@ -312,6 +348,8 @@ class TransactionOutbox {
         continue;
       }
     }
+    // Files gone from disk -- sent, sidelined, discarded -- are forgotten.
+    _entryCache.removeWhere((path, _) => !seen.contains(path));
     entries.sort((a, b) => a.queuedAt.compareTo(b.queuedAt));
     return entries;
   }
@@ -319,13 +357,24 @@ class TransactionOutbox {
   Future<void> remove(String localId) async {
     final file = _fileFor(localId);
     if (file.existsSync()) await file.delete();
+    _entryCache.remove(file.path);
   }
 
   Future<void> replace(PendingTransaction entry) => add(entry);
 
   Future<void> markRejected(String localId, String reason) async {
-    final entry = (await all()).where((e) => e.localId == localId).firstOrNull;
-    if (entry == null) return;
+    // Just this entry's file: reading the whole queue here made a drain
+    // that refused many entries decrypt it once per refusal.
+    final file = _fileFor(localId);
+    if (!file.existsSync()) return;
+    final PendingTransaction entry;
+    try {
+      entry = await _readEntry(file);
+      // Unreadable is the same answer [all] gives it: skipped, left alone.
+      // ignore: avoid_catches_without_on_clauses
+    } catch (_) {
+      return;
+    }
     await replace(entry.copyWith(rejection: reason));
   }
 
@@ -468,6 +517,28 @@ class TransactionOutbox {
     await sub.delete(recursive: true);
     return true;
   }
+}
+
+/// What a file looked like when it was last read: changed by any write,
+/// ours or anyone's, since every write here replaces the file by rename.
+@immutable
+class _Stamp {
+  const _Stamp(this.modified, this.size);
+
+  factory _Stamp.of(File file) {
+    final stat = file.statSync();
+    return _Stamp(stat.modified, stat.size);
+  }
+
+  final DateTime modified;
+  final int size;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _Stamp && other.modified == modified && other.size == size;
+
+  @override
+  int get hashCode => Object.hash(modified, size);
 }
 
 /// Overridden at app start with [TransactionOutbox.open], the way the API
