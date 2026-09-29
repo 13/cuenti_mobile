@@ -387,6 +387,55 @@ void main() {
     );
 
     test(
+      'loginWithSavedCredentials asking for a second factor keeps the '
+      'password and retries with the code',
+      () async {
+        storage.data['saved_username'] = 'demo';
+        storage.data['saved_password'] = 'secret';
+        when(() => repo.login('demo', 'secret')).thenThrow(
+          const UnauthorizedException(twoFactorRequiredMessage),
+        );
+        when(
+          () => repo.login('demo', 'secret', code: '123456'),
+        ).thenAnswer((_) async => user);
+        final notifier = container.read(authControllerProvider.notifier);
+        await notifier.init();
+
+        final error = await notifier.loginWithSavedCredentials(LEn());
+
+        expect(error, 'Enter the code from your authenticator app');
+        expect(notifier.lastSignInNeedsCode(), isTrue);
+        expect(storage.data['saved_password'], 'secret');
+
+        final retry = await notifier.loginWithSavedCredentials(
+          LEn(),
+          code: '123456',
+        );
+        expect(retry, isNull);
+        expect(notifier.lastSignInNeedsCode(), isFalse);
+        expect(container.read(authControllerProvider).user, user);
+      },
+    );
+
+    test('login with a wrong code still asks for a code', () async {
+      when(() => repo.login('demo', 'secret', code: '000000')).thenThrow(
+        const UnauthorizedException(invalidCodeMessage),
+      );
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.init();
+
+      final error = await notifier.login(
+        LEn(),
+        'demo',
+        'secret',
+        code: '000000',
+      );
+
+      expect(error, 'That code is not valid');
+      expect(notifier.lastSignInNeedsCode(), isTrue);
+    });
+
+    test(
       'loginWithSavedCredentials on 403 keeps password, surfaces error',
       () async {
         storage.data['saved_username'] = 'demo';

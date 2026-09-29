@@ -418,5 +418,11 @@
   "outboxUnknownBody": "{count, plural, =1{1 nicht gesendete Buchung wurde vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehört. Als {account} senden? Wird hier vorher etwas gespeichert, wird sie beiseitegelegt.} other{{count} nicht gesendete Buchungen wurden vor dieser Version gespeichert; die App kann nicht feststellen, wem sie gehören. Als {account} senden? Wird hier vorher etwas gespeichert, werden sie beiseitegelegt.}}",
   "outboxKeep": "Behalten",
   "outboxSendAsThisAccount": "Als dieses Konto senden",
-  "outboxNotNow": "Jetzt nicht"
+  "outboxNotNow": "Jetzt nicht",
+  "errorTwoFactorRequired": "Code aus Ihrer Authenticator-App eingeben",
+  "errorInvalidCode": "Dieser Code ist ungültig",
+  "twoFactorTitle": "Zwei-Faktor-Anmeldung",
+  "twoFactorHint": "Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App oder einen Ihrer Wiederherstellungscodes ein.",
+  "twoFactorCodeLabel": "Code",
+  "twoFactorVerify": "Bestätigen"
 }

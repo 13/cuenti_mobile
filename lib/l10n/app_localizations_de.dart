@@ -1411,4 +1411,24 @@ class LDe extends L {
 
   @override
   String get outboxNotNow => 'Jetzt nicht';
+
+  @override
+  String get errorTwoFactorRequired =>
+      'Code aus Ihrer Authenticator-App eingeben';
+
+  @override
+  String get errorInvalidCode => 'Dieser Code ist ungültig';
+
+  @override
+  String get twoFactorTitle => 'Zwei-Faktor-Anmeldung';
+
+  @override
+  String get twoFactorHint =>
+      'Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App oder einen Ihrer Wiederherstellungscodes ein.';
+
+  @override
+  String get twoFactorCodeLabel => 'Code';
+
+  @override
+  String get twoFactorVerify => 'Bestätigen';
 }

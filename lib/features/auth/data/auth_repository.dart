@@ -16,7 +16,10 @@ class AuthRepository {
 
   final ApiClient _client;
 
-  Future<UserProfile> login(String username, String password) =>
+  /// [code] is the authenticator or recovery code, for accounts with
+  /// two-factor sign-in; without it such an account fails with
+  /// [twoFactorRequiredMessage].
+  Future<UserProfile> login(String username, String password, {String? code}) =>
       guardApi(() async {
         try {
           final response = await _client.dio.post<Map<String, dynamic>>(
@@ -24,6 +27,10 @@ class AuthRepository {
             data: {
               'username': username,
               'password': password,
+              // A short-lived access token plus a refresh token, renewed by
+              // ApiClient without asking for the password again.
+              'refresh': true,
+              if (code != null && code.isNotEmpty) 'code': code,
             },
           );
           return await _saveTokenAndBuildProfile(response.data!);
@@ -38,6 +45,16 @@ class AuthRepository {
           // generic 401 elsewhere means the session expired). 403 keeps its
           // own fromDio message.
           if (e.response?.statusCode == 401) {
+            // The password was right but a second factor is missing or wrong:
+            // the server says which in a JSON body.
+            final body = e.response?.data;
+            final error = body is Map ? body['error'] : null;
+            if (error == twoFactorRequiredMessage) {
+              throw const UnauthorizedException(twoFactorRequiredMessage);
+            }
+            if (error == invalidCodeMessage) {
+              throw const UnauthorizedException(invalidCodeMessage);
+            }
             throw const UnauthorizedException(invalidCredentialsMessage);
           }
           rethrow;
@@ -60,6 +77,7 @@ class AuthRepository {
           'password': password,
           'firstName': firstName,
           'lastName': lastName,
+          'refresh': true,
         },
       );
       return _saveTokenAndBuildProfile(response.data!);
@@ -98,7 +116,10 @@ class AuthRepository {
   Future<UserProfile> _saveTokenAndBuildProfile(
     Map<String, dynamic> data,
   ) async {
-    await _client.saveToken(data['token'] as String);
+    await _client.saveToken(
+      data['token'] as String,
+      refreshToken: data['refreshToken'] as String?,
+    );
     return UserProfile(
       username: data['username'] as String? ?? '',
       email: data['email'] as String? ?? '',

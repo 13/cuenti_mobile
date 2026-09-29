@@ -1,9 +1,22 @@
+import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/api_exception.dart';
+import 'package:cuentimobile/core/storage/secure_storage.dart';
 import 'package:cuentimobile/features/user/data/user_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../helpers/fake_dio.dart';
+
+class _MemoryStorage extends SecureStorage {
+  _MemoryStorage() : super();
+  final Map<String, String> data = {};
+  @override
+  Future<String?> read(String key) async => data[key];
+  @override
+  Future<void> write(String key, String value) async => data[key] = value;
+  @override
+  Future<void> delete(String key) async => data.remove(key);
+}
 
 void main() {
   late MockDio dio;
@@ -96,20 +109,43 @@ void main() {
 
   test('updatePassword PUTs old and new password', () async {
     when(
-      () => dio.put<void>('/user/password', data: any(named: 'data')),
-    ).thenAnswer((_) async => ok(null));
+      () => dio.put<Object?>('/user/password', data: any(named: 'data')),
+    ).thenAnswer((_) async => ok<Object?>(null));
 
     await repo.updatePassword('old', 'newPw');
 
     final captured =
         verify(
-              () => dio.put<void>(
+              () => dio.put<Object?>(
                 '/user/password',
                 data: captureAny(named: 'data'),
               ),
             ).captured.single
             as Map<String, dynamic>;
-    expect(captured, {'oldPassword': 'old', 'newPassword': 'newPw'});
+    expect(captured, {
+      'oldPassword': 'old',
+      'newPassword': 'newPw',
+      'refresh': true,
+    });
+  });
+
+  test('updatePassword keeps the fresh tokens the server returns', () async {
+    final storage = _MemoryStorage();
+    final client = ApiClient(storage, dioOverride: dio);
+    final withClient = UserRepository(dio, client: client);
+    when(
+      () => dio.put<Object?>('/user/password', data: any(named: 'data')),
+    ).thenAnswer(
+      (_) async => ok<Object?>(<String, dynamic>{
+        'token': 'new-access',
+        'refreshToken': 'new-refresh',
+      }),
+    );
+
+    await withClient.updatePassword('old', 'newPw');
+
+    expect(await client.getToken(), 'new-access');
+    expect(storage.data['refresh_token'], 'new-refresh');
   });
 
   test('updatePreferences sends only the provided sparse keys', () async {

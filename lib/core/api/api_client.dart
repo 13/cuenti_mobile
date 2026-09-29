@@ -68,21 +68,38 @@ class ApiClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await getToken();
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
+          // The refresh call authenticates with the refresh token in its
+          // body; an expired access token in the header would only confuse.
+          if (!options.path.contains('/auth/refresh')) {
+            final token = await getToken();
+            if (token != null) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
           }
           handler.next(options);
         },
-        onError: (error, handler) {
-          // A 401 anywhere but the sign-in endpoint means the token this
-          // client has been sending is no longer accepted. Without this the
-          // app stayed "signed in" around a dead token: every screen showed
+        onError: (error, handler) async {
+          // A 401 anywhere but the /auth endpoints means the token this
+          // client has been sending is no longer accepted. Access tokens are
+          // short-lived when the server handed out a refresh token, so the
+          // first answer is to renew it and send the request once more.
+          // Only when that fails is the session over. Without this the app
+          // stayed "signed in" around a dead token: every screen showed
           // "Not authenticated", none recovered, and the only way out was
           // finding Logout in the drawer. On /auth/login a 401 means the
           // password was wrong, which is not an expired session.
+          final options = error.requestOptions;
           if (error.response?.statusCode == 401 &&
-              !error.requestOptions.path.contains('/auth/login')) {
+              !options.path.contains('/auth/')) {
+            if (options.extra[_retriedKey] != true && await refreshSession()) {
+              options.extra[_retriedKey] = true;
+              try {
+                handler.resolve(await dio.fetch<dynamic>(options));
+              } on DioException catch (retryError) {
+                handler.next(retryError);
+              }
+              return;
+            }
             onSessionExpired?.call();
           }
           handler.next(error);
@@ -91,6 +108,8 @@ class ApiClient {
     );
   }
   static const String _tokenKey = 'jwt_token';
+  static const String _refreshTokenKey = 'refresh_token';
+  static const String _retriedKey = 'cuenti_retried_after_refresh';
   static const String _serverUrlKey = 'server_url';
   static const String defaultServerUrl = 'https://cuenti.muh';
 
@@ -177,10 +196,47 @@ class ApiClient {
   String? _token;
   bool _tokenLoaded = false;
 
-  Future<void> saveToken(String token) async {
+  /// Stores the access token, and the refresh token when the server issued
+  /// one (servers from before refresh tokens do not).
+  Future<void> saveToken(String token, {String? refreshToken}) async {
     await _storage.write(_tokenKey, token);
     _token = token;
     _tokenLoaded = true;
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _storage.write(_refreshTokenKey, refreshToken);
+    }
+  }
+
+  Future<bool>? _refreshing;
+
+  /// Exchanges the stored refresh token for a new access token (and the next
+  /// refresh token -- each one works once). Several requests failing at the
+  /// same time share one exchange: presenting the same refresh token twice
+  /// looks like theft to the server, which then revokes the whole chain.
+  Future<bool> refreshSession() =>
+      _refreshing ??= _refresh().whenComplete(() => _refreshing = null);
+
+  Future<bool> _refresh() async {
+    final refreshToken = await _storage.read(_refreshTokenKey);
+    if (refreshToken == null || refreshToken.isEmpty) return false;
+    try {
+      final response = await dio.post<Map<String, dynamic>>(
+        '/auth/refresh',
+        data: {'refreshToken': refreshToken},
+      );
+      final data = response.data;
+      final token = data?['token'] as String?;
+      if (token == null) return false;
+      await saveToken(token, refreshToken: data?['refreshToken'] as String?);
+      return true;
+    } on DioException catch (e) {
+      // Refused: the chain is over (expired, revoked, account changed).
+      // Anything else -- no network -- leaves it for the next attempt.
+      if (e.response?.statusCode == 401) {
+        await _storage.delete(_refreshTokenKey);
+      }
+      return false;
+    }
   }
 
   Future<String?> getToken() async {
@@ -202,6 +258,7 @@ class ApiClient {
     _tokenLoaded = true;
     retryNetwork();
     await _storage.delete(_tokenKey);
+    await _storage.delete(_refreshTokenKey);
     // Signing out must not leave the previous account's figures on disk for
     // the next one to be shown offline.
     await offlineCache?.cache.clear();

@@ -837,5 +837,17 @@
   "outboxSendAsThisAccount": "Send as this account",
   "@outboxSendAsThisAccount": {},
   "outboxNotNow": "Not now",
-  "@outboxNotNow": {}
+  "@outboxNotNow": {},
+  "errorTwoFactorRequired": "Enter the code from your authenticator app",
+  "@errorTwoFactorRequired": {},
+  "errorInvalidCode": "That code is not valid",
+  "@errorInvalidCode": {},
+  "twoFactorTitle": "Two-factor sign-in",
+  "@twoFactorTitle": {},
+  "twoFactorHint": "Enter the 6-digit code from your authenticator app, or one of your recovery codes.",
+  "@twoFactorHint": {},
+  "twoFactorCodeLabel": "Code",
+  "@twoFactorCodeLabel": {},
+  "twoFactorVerify": "Verify",
+  "@twoFactorVerify": {}
 }

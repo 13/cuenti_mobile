@@ -101,6 +101,8 @@ sealed class ApiException implements Exception {
       UnauthorizedException() => switch (this) {
         _ when message == invalidCredentialsMessage =>
           l.errorInvalidCredentials,
+        _ when message == twoFactorRequiredMessage => l.errorTwoFactorRequired,
+        _ when message == invalidCodeMessage => l.errorInvalidCode,
         _ when statusCode == 403 => l.errorApiDisabled,
         _ => l.errorNotAuthenticated,
       },
@@ -125,6 +127,13 @@ sealed class ApiException implements Exception {
 /// raises it, the controller that special-cases it, and
 /// [ApiException.localizedMessage] all agree on the one spelling.
 const invalidCredentialsMessage = 'Invalid username or password';
+
+/// The login endpoint's 401 when the password was right but the account has
+/// two-factor sign-in on and no code came with it (`{"error": ...}` body).
+const twoFactorRequiredMessage = 'two_factor_required';
+
+/// The login endpoint's 401 for a wrong or already used two-factor code.
+const invalidCodeMessage = 'invalid_code';
 
 /// Kept as a constant so [ApiException.localizedMessage] can tell a
 /// certificate refusal from an ordinary connection failure without adding a

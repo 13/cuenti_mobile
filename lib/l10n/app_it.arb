@@ -418,5 +418,11 @@
   "outboxUnknownBody": "{count, plural, =1{1 movimento non inviato è stato salvato prima di questa versione e l'app non può stabilire a chi appartiene. Inviarlo come {account}? Se salvi prima un movimento qui, verrà messo da parte.} other{{count} movimenti non inviati sono stati salvati prima di questa versione e l'app non può stabilire a chi appartengono. Inviarli come {account}? Se salvi prima un movimento qui, verranno messi da parte.}}",
   "outboxKeep": "Mantieni",
   "outboxSendAsThisAccount": "Invia come questo account",
-  "outboxNotNow": "Non ora"
+  "outboxNotNow": "Non ora",
+  "errorTwoFactorRequired": "Inserisci il codice dalla tua app di autenticazione",
+  "errorInvalidCode": "Questo codice non è valido",
+  "twoFactorTitle": "Accesso a due fattori",
+  "twoFactorHint": "Inserisci il codice a 6 cifre dalla tua app di autenticazione o uno dei tuoi codici di recupero.",
+  "twoFactorCodeLabel": "Codice",
+  "twoFactorVerify": "Verifica"
 }

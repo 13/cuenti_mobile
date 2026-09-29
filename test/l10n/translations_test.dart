@@ -60,6 +60,8 @@ void main() {
           'aboutVersion',
           'authServerLine',
           'aboutCopyright',
+          // A two-factor 'Code' is a 'Code' in German too.
+          'twoFactorCodeLabel',
         };
         final untranslated = [
           for (final k in keys)

@@ -82,6 +82,18 @@ abstract class AuthState with _$AuthState {
 
 @Riverpod(keepAlive: true)
 class AuthController extends _$AuthController {
+  /// Whether the last sign-in stopped at the second factor: the password was
+  /// right, and the account wants a code from an authenticator app.
+  bool _needsCode = false;
+
+  /// True when the last [login] / [loginWithSavedCredentials] failed only
+  /// for a missing or wrong two-factor code, so the screen should ask for
+  /// one and try again with it.
+  bool lastSignInNeedsCode() => _needsCode;
+
+  bool _isSecondFactor(UnauthorizedException e) =>
+      e.message == twoFactorRequiredMessage || e.message == invalidCodeMessage;
+
   @override
   AuthState build() {
     // A throw here used to vanish into an unhandled async error. `init()`
@@ -386,10 +398,19 @@ class AuthController extends _$AuthController {
     await _storage.delete(_offlineRetryAfterKey);
   }
 
-  Future<String?> login(L l, String username, String password) async {
+  Future<String?> login(
+    L l,
+    String username,
+    String password, {
+    String? code,
+  }) async {
+    _needsCode = false;
     final UserProfile user;
     try {
-      user = await _repo.login(username, password);
+      user = await _repo.login(username, password, code: code);
+    } on UnauthorizedException catch (e) {
+      if (_isSecondFactor(e)) _needsCode = true;
+      return _errorMessage(l, e);
     } on NetworkException catch (e) {
       // The server could not be reached, so nothing rejected these
       // credentials -- see [_signInOffline] for why that is the only failure
@@ -466,7 +487,8 @@ class AuthController extends _$AuthController {
   /// [login]/[register]. Returns null on success, else an error message.
   /// A 401 means the password changed server-side: the saved password is
   /// dropped (username kept) so the UI falls back to manual entry.
-  Future<String?> loginWithSavedCredentials(L l) async {
+  Future<String?> loginWithSavedCredentials(L l, {String? code}) async {
+    _needsCode = false;
     final username = state.savedUsername;
     final password = await _storage.read(_savedPasswordKey);
     if (username == null || password == null || password.isEmpty) {
@@ -474,11 +496,16 @@ class AuthController extends _$AuthController {
       return l.errorNoSavedCredentials;
     }
     try {
-      final user = await _repo.login(username, password);
+      final user = await _repo.login(username, password, code: code);
       await _resetOfflineFailures();
       state = state.copyWith(user: user, restoredSession: false);
       return null;
     } on UnauthorizedException catch (e) {
+      // The saved password was accepted; only the code is missing or wrong.
+      if (_isSecondFactor(e)) {
+        _needsCode = true;
+        return _errorMessage(l, e);
+      }
       if (e.message != invalidCredentialsMessage) return _errorMessage(l, e);
       await _storage.delete(_savedPasswordKey);
       state = state.copyWith(hasSavedPassword: false);

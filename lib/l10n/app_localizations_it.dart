@@ -1408,4 +1408,24 @@ class LIt extends L {
 
   @override
   String get outboxNotNow => 'Non ora';
+
+  @override
+  String get errorTwoFactorRequired =>
+      'Inserisci il codice dalla tua app di autenticazione';
+
+  @override
+  String get errorInvalidCode => 'Questo codice non è valido';
+
+  @override
+  String get twoFactorTitle => 'Accesso a due fattori';
+
+  @override
+  String get twoFactorHint =>
+      'Inserisci il codice a 6 cifre dalla tua app di autenticazione o uno dei tuoi codici di recupero.';
+
+  @override
+  String get twoFactorCodeLabel => 'Codice';
+
+  @override
+  String get twoFactorVerify => 'Verifica';
 }

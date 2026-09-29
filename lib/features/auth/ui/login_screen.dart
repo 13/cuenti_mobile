@@ -100,6 +100,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return attempt();
   }
 
+  /// Runs a sign-in and, while the account asks for a two-factor code,
+  /// prompts for one and runs it again with the code. Returns the last
+  /// error, or null once signed in; cancelling the prompt keeps the error.
+  Future<String?> _withSecondFactor(
+    Future<String?> Function(String? code) attempt,
+  ) async {
+    String? code;
+    while (true) {
+      final error = await attempt(code);
+      if (error == null ||
+          !mounted ||
+          !ref.read(authControllerProvider.notifier).lastSignInNeedsCode()) {
+        return error;
+      }
+      setState(() => _submitting = false);
+      code = await _askForCode(showInvalid: code != null);
+      if (code == null || !mounted) return error;
+      setState(() => _submitting = true);
+    }
+  }
+
+  Future<String?> _askForCode({required bool showInvalid}) async {
+    final code = await showDialog<String>(
+      context: context,
+      builder: (_) => _SecondFactorDialog(showInvalid: showInvalid),
+    );
+    return code == null || code.isEmpty ? null : code;
+  }
+
   void _applySavedCredentials(AuthState auth) {
     final saved = auth.savedUsername;
     if (saved == null || saved.isEmpty) return;
@@ -265,14 +294,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     final l = L.of(context);
-    final error = await _signingIn(
-      () => ref
-          .read(authControllerProvider.notifier)
-          .login(
-            l,
-            _usernameController.text.trim(),
-            _passwordController.text,
-          ),
+    final error = await _withSecondFactor(
+      (code) => _signingIn(
+        () => ref
+            .read(authControllerProvider.notifier)
+            .login(
+              l,
+              _usernameController.text.trim(),
+              _passwordController.text,
+              code: code,
+            ),
+      ),
     );
     if (!mounted) return;
     if (error == null) {
@@ -317,10 +349,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     final l = L.of(context);
-    final error = await _signingIn(
-      () => ref
-          .read(authControllerProvider.notifier)
-          .loginWithSavedCredentials(l),
+    final error = await _withSecondFactor(
+      (code) => _signingIn(
+        () => ref
+            .read(authControllerProvider.notifier)
+            .loginWithSavedCredentials(l, code: code),
+      ),
     );
     if (!mounted) return;
     if (error == null) {
@@ -340,6 +374,63 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _passwordController.dispose();
     _usernameFocus.dispose();
     _passwordFocus.dispose();
+    super.dispose();
+  }
+}
+
+/// Asks for the authenticator or recovery code. Its own widget so the text
+/// controller outlives the dialog's closing animation.
+class _SecondFactorDialog extends StatefulWidget {
+  const _SecondFactorDialog({required this.showInvalid});
+
+  final bool showInvalid;
+
+  @override
+  State<_SecondFactorDialog> createState() => _SecondFactorDialogState();
+}
+
+class _SecondFactorDialogState extends State<_SecondFactorDialog> {
+  final _controller = TextEditingController();
+
+  void _submit() => Navigator.of(context).pop(_controller.text.trim());
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return AlertDialog(
+      title: Text(l.twoFactorTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.twoFactorHint),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            autofillHints: const [AutofillHints.oneTimeCode],
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              labelText: l.twoFactorCodeLabel,
+              errorText: widget.showInvalid ? l.errorInvalidCode : null,
+            ),
+            onSubmitted: (_) => _submit(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.commonCancel),
+        ),
+        FilledButton(onPressed: _submit, child: Text(l.twoFactorVerify)),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
     super.dispose();
   }
 }

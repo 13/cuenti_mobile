@@ -1406,4 +1406,24 @@ class LEn extends L {
 
   @override
   String get outboxNotNow => 'Not now';
+
+  @override
+  String get errorTwoFactorRequired =>
+      'Enter the code from your authenticator app';
+
+  @override
+  String get errorInvalidCode => 'That code is not valid';
+
+  @override
+  String get twoFactorTitle => 'Two-factor sign-in';
+
+  @override
+  String get twoFactorHint =>
+      'Enter the 6-digit code from your authenticator app, or one of your recovery codes.';
+
+  @override
+  String get twoFactorCodeLabel => 'Code';
+
+  @override
+  String get twoFactorVerify => 'Verify';
 }

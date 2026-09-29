@@ -52,6 +52,73 @@ void main() {
     expect(await client.getToken(), 'jwt-abc');
   });
 
+  test(
+    'login asks for a refresh token, sends the code, keeps both tokens',
+    () async {
+      when(
+        () => dio.post<Map<String, dynamic>>(
+          '/auth/login',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => ok({
+          'token': 'jwt-abc',
+          'refreshToken': 'refresh-abc',
+          'username': 'demo',
+        }),
+      );
+
+      await repo.login('demo', 'pw', code: '123456');
+
+      final sent =
+          verify(
+                () => dio.post<Map<String, dynamic>>(
+                  '/auth/login',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(sent['refresh'], true);
+      expect(sent['code'], '123456');
+      expect(await client.getToken(), 'jwt-abc');
+    },
+  );
+
+  for (final (body, expected) in [
+    ({'error': 'two_factor_required'}, twoFactorRequiredMessage),
+    ({'error': 'invalid_code'}, invalidCodeMessage),
+  ]) {
+    test('login maps a 401 ${body['error']} body', () async {
+      when(
+        () => dio.post<Map<String, dynamic>>(
+          '/auth/login',
+          data: any(named: 'data'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/auth/login'),
+          type: DioExceptionType.badResponse,
+          response: Response(
+            requestOptions: RequestOptions(path: '/auth/login'),
+            statusCode: 401,
+            data: body,
+          ),
+        ),
+      );
+
+      expect(
+        () => repo.login('demo', 'pw'),
+        throwsA(
+          isA<UnauthorizedException>().having(
+            (e) => e.message,
+            'message',
+            expected,
+          ),
+        ),
+      );
+    });
+  }
+
   test('login maps 401 to UnauthorizedException', () async {
     when(
       () => dio.post<Map<String, dynamic>>(

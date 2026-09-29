@@ -1,3 +1,4 @@
+import 'package:cuentimobile/core/api/api_client.dart';
 import 'package:cuentimobile/core/api/api_guard.dart';
 import 'package:cuentimobile/core/api/dio_provider.dart';
 import 'package:cuentimobile/features/user/domain/user_profile.dart';
@@ -5,15 +6,22 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final userRepositoryProvider = Provider<UserRepository>(
-  (ref) => UserRepository(ref.watch(dioProvider)),
+  (ref) => UserRepository(
+    ref.watch(dioProvider),
+    client: ref.watch(apiClientProvider),
+  ),
 );
 
 /// Shape of `GET`/`PUT /user/admin/settings`.
 typedef AdminSettings = ({bool registrationEnabled, bool apiEnabled});
 
 class UserRepository {
-  UserRepository(this._dio);
+  UserRepository(this._dio, {ApiClient? client}) : _client = client;
   final Dio _dio;
+
+  /// Where a password change's fresh tokens are stored. The change revokes
+  /// every token issued so far, the one this app holds included.
+  final ApiClient? _client;
 
   Future<UserProfile> getProfile() => guardApi(() async {
     final res = await _dio.get<Map<String, dynamic>>('/user/profile');
@@ -37,15 +45,28 @@ class UserRepository {
   });
 
   Future<void> updatePassword(String oldPassword, String newPassword) =>
-      guardApi(
-        () => _dio.put<void>(
+      guardApi(() async {
+        final res = await _dio.put<Object?>(
           '/user/password',
           data: {
             'oldPassword': oldPassword,
             'newPassword': newPassword,
+            'refresh': true,
           },
-        ),
-      );
+        );
+        // Servers from before token revocation answer with an empty body.
+        final data = res.data;
+        final client = _client;
+        if (data is Map<String, dynamic> && client != null) {
+          final token = data['token'];
+          if (token is String) {
+            await client.saveToken(
+              token,
+              refreshToken: data['refreshToken'] as String?,
+            );
+          }
+        }
+      });
 
   /// The ONE sanctioned `Map`-typed request boundary in the app. User
   /// preferences (`darkMode`/`defaultCurrency`/`locale`/`apiEnabled`) are a

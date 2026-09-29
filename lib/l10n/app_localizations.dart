@@ -2617,6 +2617,42 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Not now'**
   String get outboxNotNow;
+
+  /// No description provided for @errorTwoFactorRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code from your authenticator app'**
+  String get errorTwoFactorRequired;
+
+  /// No description provided for @errorInvalidCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is not valid'**
+  String get errorInvalidCode;
+
+  /// No description provided for @twoFactorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor sign-in'**
+  String get twoFactorTitle;
+
+  /// No description provided for @twoFactorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code from your authenticator app, or one of your recovery codes.'**
+  String get twoFactorHint;
+
+  /// No description provided for @twoFactorCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get twoFactorCodeLabel;
+
+  /// No description provided for @twoFactorVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get twoFactorVerify;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
