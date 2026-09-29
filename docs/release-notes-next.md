@@ -1,9 +1,14 @@
-## Faster without a connection
+## Two-factor sign-in
 
-When the server can't be reached, the app now shows your saved figures right
-away instead of waiting on every screen for the connection to time out. A
-transaction you add in the meantime is queued straight away too.
+If your account has two-factor authentication turned on, the app now asks for
+the code from your authenticator app, or one of your recovery codes, when you
+sign in. This works with your password and with fingerprint unlock.
 
-Transactions queued while offline are sent together once the server is back,
-so a long queue goes up much faster. Account balances and the dashboard update
-as soon as they have been sent.
+## Stay signed in
+
+You stay signed in more reliably: the app renews its access in the background
+instead of sending you back to the sign-in screen. Changing your password no
+longer signs you out of the app you changed it in.
+
+These need Cuenti server 2.10.23 or later; with an older server the app works
+as before.
